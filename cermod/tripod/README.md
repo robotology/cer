@@ -1,4 +1,4 @@
-# cer
+# tripodMotionControl
 
 How it works:
 
