@@ -114,8 +114,12 @@ public:
     /****************************************************************/
     TripodState fkin(const Ipopt::Number *x) const
     {
+        double q33=sqrt(27.0)*params.r/sqrt(12.0*(x[2]*x[2]-(x[0]+x[1])*x[2]+
+                                            x[1]*x[1]-x[0]*x[1]+x[0]*x[0]+
+                                            (27.0/12.0)*params.r*params.r));
+
         TripodState d;
-        if ((x[0]==x[1]) && (x[1]==x[2]))
+        if ((q33>=1.0) || ((x[0]==x[1]) && (x[1]==x[2])))
         {
             d.n=params.z;
             d.u=0.0;
@@ -130,9 +134,6 @@ public:
             d.n=cross(v2-v1,v3-v1);
             d.n/=norm(d.n);
 
-            double q33=sqrt(27.0)*params.r/sqrt(12.0*(x[2]*x[2]-(x[0]+x[1])*x[2]+
-                                                x[1]*x[1]-x[0]*x[1]+x[0]*x[0]+
-                                                (27.0/12.0)*params.r*params.r));
             double sin_theta=sqrt(1.0-q33*q33);
             d.u[0]=-d.n[1]/sin_theta;
             d.u[1]=d.n[0]/sin_theta;
