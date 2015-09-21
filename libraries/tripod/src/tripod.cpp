@@ -119,12 +119,12 @@ public:
                                             (27.0/12.0)*params.r*params.r));
 
         TripodState d;
-        if ((q33>=1.0) || ((x[0]==x[1]) && (x[1]==x[2])))
+        if (q33>=1.0)
         {
             d.n=params.z;
             d.u=0.0;
             d.p[0]=d.p[1]=0.0;
-            d.p[2]=x[0];
+            d.p[2]=d.T(2,3)=x[0];
         }
         else
         {
