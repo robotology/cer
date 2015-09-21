@@ -95,13 +95,33 @@ public:
     }
 
     /**
-     * Return parameters of tripod mechanism.
+     * Retrieve parameters of tripod mechanism.
      * 
      * @return tripod parameters.
      */
     virtual TripodParameters getParameters() const
     {
         return parameters;
+    }
+
+    /**
+     * Specify new verbosity level.
+     * 
+     * @param verb   the verbosity level.
+     */
+    virtual void setVerbosity(const int verb)
+    {
+        verbosity=verb;
+    }
+
+    /**
+     * Retrieve verbosity level.
+     * 
+     * @return the current verbosity level.
+     */
+    virtual int getVerbosity() const
+    {
+        return verbosity;
     }
 
     /**
@@ -113,7 +133,7 @@ public:
     bool setInitialGuess(const yarp::sig::Vector lll0);
 
     /**
-     * Return the initial guess used for the elongations.
+     * Retrieve the initial guess used for the elongations.
      * 
      * @return the initial elongations values ([m]).
      */

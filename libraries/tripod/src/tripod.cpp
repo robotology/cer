@@ -22,7 +22,6 @@
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/math.h>
-#include <iCub/ctrl/minJerkCtrl.h>
 
 #include <IpTNLP.hpp>
 #include <IpIpoptApplication.hpp>
