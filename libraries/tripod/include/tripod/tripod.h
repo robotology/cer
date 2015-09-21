@@ -55,8 +55,8 @@ struct TripodParameters
      * @param l_max_    the maximum elongation ([m]).
      * @param alpha_max the maximum permitted bending angle ([deg]).
      */
-    TripodParameters(const double r_=0.09,const double l_min_=0.0,
-                     const double l_max_=0.2,const double alpha_max_=30.0) :
+    TripodParameters(const double r_=0.09, const double l_min_=0.0,
+                     const double l_max_=0.2, const double alpha_max_=30.0) :
                      r(r_), l_min(l_min_), l_max(l_max_), alpha_max(alpha_max_) { }
 };
 
