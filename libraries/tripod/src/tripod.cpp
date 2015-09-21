@@ -86,7 +86,7 @@ struct TripodState
 class TripodNLP : public Ipopt::TNLP
 {
 protected:
-    const TripodParametersExtended &params;
+    const TripodParametersExtended params;
 
     Vector ud;
     double zd;
@@ -95,14 +95,14 @@ protected:
 
 public:
     /****************************************************************/
-    TripodNLP(const TripodParametersExtended &p) : params(p)
+    TripodNLP(const TripodParameters &p) : params(p)
     {
         zd=(params.l_max+params.l_min)/2.0;
         ud.resize(3,0.0);
 
         rho0.resize(3,zd);
         rho=rho0;
-        drho=DELTA_RHO;        
+        drho=DELTA_RHO;
     }
 
     /****************************************************************/
@@ -380,7 +380,7 @@ TripodSolver::TripodSolver(const TripodParameters &params,
 
 
 /****************************************************************/
-bool TripodSolver::setInitialGuess(const Vector lll0)
+bool TripodSolver::setInitialGuess(const Vector &lll0)
 {
     if (lll0.length()<3)
     {
@@ -456,14 +456,14 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
     app->Initialize();
 
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(parameters);
-
+    
     nlp->set_rho0(lll0);
     nlp->set_zd(zd);
     nlp->set_ud(ud);
 
     double t0=Time::now();
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
-    double t1=Time::now();
+    double t1=Time::now();    
 
     lll=nlp->get_result();
     if (verbosity>0)
