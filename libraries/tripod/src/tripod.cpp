@@ -17,14 +17,18 @@
 
 #include <algorithm>
 #include <cmath>
+#include <deque>
 
 #include <yarp/os/Log.h>
+#include <yarp/os/Time.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/math.h>
 
 #include <IpTNLP.hpp>
 #include <IpIpoptApplication.hpp>
+
+#include <tripod/tripod.h>
 
 #define DELTA_RHO           1e-6
 
@@ -35,6 +39,7 @@ using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace tripod;
 
+namespace tripod {
 
 /****************************************************************/
 struct TripodParametersExtended : public TripodParameters
@@ -81,7 +86,7 @@ struct TripodState
 class TripodNLP : public Ipopt::TNLP
 {
 protected:
-    TripodParametersExtended &params;
+    const TripodParametersExtended &params;
 
     Vector ud;
     double zd;
@@ -200,7 +205,7 @@ public:
     {
         for (Ipopt::Index i=0; i<n; i++)
         {
-            x_l[i]=param.l_min;
+            x_l[i]=params.l_min;
             x_u[i]=params.l_max;
         }
 
@@ -363,7 +368,6 @@ public:
     }
 };
 
-
 }
 
 
@@ -401,7 +405,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u) const
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(parameters);
     TripodState d=nlp->fkin(lll);
     p=d.p;
-    u.d.u;
+    u=d.u;
 
     return true;
 }

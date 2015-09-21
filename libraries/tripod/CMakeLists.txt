@@ -23,7 +23,7 @@ set(sources src/tripod.cpp)
 source_group("Header Files" FILES ${headers})
 source_group("Source Files" FILES ${sources})
 
-include_directories(${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}
+include_directories(${PROJECT_SOURCE_DIR}/include
                     ${IPOPT_INCLUDE_DIRS}
                     ${ICUB_INCLUDE_DIRS}
                     ${YARP_INCLUDE_DIRS})
@@ -31,16 +31,10 @@ include_directories(${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}
 add_definitions(${IPOPT_DEFINITIONS})
 add_library(${PROJECT_NAME} ${headers} ${sources})
 set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${IPOPT_LINK_FLAGS}")
-if(WIN32)
-    set_target_properties(${PROJECT_NAME} PROPERTIES DEBUG_POSTFIX "d")
-endif ()
-
 target_link_libraries(${PROJECT_NAME} ctrlLib ${YARP_LIBRARIES} ${IPOPT_LIBRARIES})
 
-icubcontrib_export_library(${PROJECT_NAME} INTERNAL_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}
-                                           EXTERNAL_INCLUDE_DIRS ${ICUB_INCLUDE_DIRS} ${YARP_LIBRARIES} ${IPOPT_INCLUDE_DIRS}
+icubcontrib_export_library(${PROJECT_NAME} INTERNAL_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
                                            DESTINATION include/${PROJECT_NAME}
-                                           DEPENDS ctrlLib ${YARP_LIBRARIES} ${IPOPT_LIBRARIES}
                                            FILES ${headers})
 
 icubcontrib_finalize_export(${PROJECT_NAME})

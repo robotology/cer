@@ -70,7 +70,7 @@ class TripodSolver
 {
 protected:
     TripodParameters parameters;
-    yarp::sig Vector lll0;
+    yarp::sig::Vector lll0;
     int verbosity;
 
 public:
