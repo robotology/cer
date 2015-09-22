@@ -17,7 +17,7 @@
 
 #include <yarp/sig/Vector.h>
 
-namespace tripod
+namespace cer_kinematics
 {
 
 /**

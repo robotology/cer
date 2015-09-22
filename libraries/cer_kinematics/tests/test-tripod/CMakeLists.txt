@@ -12,10 +12,10 @@ list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH}
                               ${ICUB_MODULE_PATH}
                               ${ICUBCONTRIB_MODULE_PATH})
 
-find_package(tripod)
+find_package(cer_kinematics)
 
 source_group("Source Files" FILES main.cpp)
-include_directories(${ICUB_INCLUDE_DIRS} ${YARP_INCLUDE_DIRS} ${tripod_INCLUDE_DIRS})
+include_directories(${ICUB_INCLUDE_DIRS} ${YARP_INCLUDE_DIRS} ${cer_kinematics_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} main.cpp)
-target_link_libraries(${PROJECT_NAME} ctrlLib ${YARP_LIBRARIES} tripod)
+target_link_libraries(${PROJECT_NAME} ctrlLib ${YARP_LIBRARIES} cer_kinematics)
 

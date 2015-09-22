@@ -3,7 +3,7 @@
 # email:  ugo.pattacini@iit.it
 
 cmake_minimum_required(VERSION 2.8.9)
-project(tripod)
+project(cer_kinematics)
 
 find_package(YARP        REQUIRED)
 find_package(ICUB        REQUIRED)

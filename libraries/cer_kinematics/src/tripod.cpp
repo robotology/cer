@@ -28,7 +28,7 @@
 #include <IpTNLP.hpp>
 #include <IpIpoptApplication.hpp>
 
-#include <tripod/tripod.h>
+#include <cer_kinematics/tripod.h>
 
 #define DELTA_RHO           1e-6
 
@@ -37,9 +37,9 @@ using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::ctrl;
-using namespace tripod;
+using namespace cer_kinematics;
 
-namespace tripod {
+namespace cer_kinematics {
 
 /****************************************************************/
 struct TripodParametersExtended : public TripodParameters

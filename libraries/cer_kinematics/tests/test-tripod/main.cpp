@@ -21,13 +21,13 @@
 #include <iCub/ctrl/math.h>
 #include <iCub/ctrl/minJerkCtrl.h>
 
-#include <tripod/tripod.h>
+#include <cer_kinematics/tripod.h>
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
 using namespace iCub::ctrl;
-using namespace tripod;
+using namespace cer_kinematics;
 
 
 /****************************************************************/
