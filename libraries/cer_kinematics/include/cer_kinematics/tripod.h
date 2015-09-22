@@ -131,14 +131,14 @@ public:
      * @param lll0   initial elongations values ([m]). 
      * @return true/false on success/failure. 
      */
-    bool setInitialGuess(const yarp::sig::Vector &lll0);
+    virtual bool setInitialGuess(const yarp::sig::Vector &lll0);
 
     /**
      * Retrieve the initial guess used for the elongations.
      * 
      * @return the initial elongations values ([m]).
      */
-    yarp::sig::Vector getInitialGuess() const
+    virtual yarp::sig::Vector getInitialGuess() const
     {
         return lll0;
     }
@@ -178,7 +178,7 @@ public:
      * @return true/false on success/failure.
      */
     virtual bool ikin(const double zd, const yarp::sig::Vector &ud,
-                      yarp::sig::Vector &lll) const;
+                      yarp::sig::Vector &lll, int *exit_code=NULL) const;
 
     /**
      * Inverse Kinematics Law with heave-pitch-roll.
@@ -189,7 +189,8 @@ public:
      * @return true/false on success/failure.
      */
     virtual bool ikin(const yarp::sig::Vector &hpr,
-                      yarp::sig::Vector &lll) const;
+                      yarp::sig::Vector &lll,
+                      int *exit_code=NULL) const;
 
     /**
      * Destructor.

@@ -436,7 +436,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr) const
 
 /****************************************************************/
 bool TripodSolver::ikin(const double zd, const Vector &ud,
-                        Vector &lll) const
+                        Vector &lll, int *exit_code) const
 {
     if (ud.length()<3)
     {
@@ -467,6 +467,9 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
     double t1=Time::now();    
 
     lll=nlp->get_result();
+    if (exit_code!=NULL)
+        *exit_code=status;
+
     if (verbosity>0)
     {
         TripodState d=nlp->fkin(lll);
@@ -485,7 +488,8 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
 
 
 /****************************************************************/
-bool TripodSolver::ikin(const Vector &hpr, Vector &lll) const
+bool TripodSolver::ikin(const Vector &hpr, Vector &lll,
+                        int *exit_code) const
 {
     if (hpr.length()<3)
     {
@@ -501,6 +505,6 @@ bool TripodSolver::ikin(const Vector &hpr, Vector &lll) const
     ud=ud[3]*ud;
     ud.pop_back();
 
-    return ikin(hpr[0],ud,lll);
+    return ikin(hpr[0],ud,lll,exit_code);
 }
 
