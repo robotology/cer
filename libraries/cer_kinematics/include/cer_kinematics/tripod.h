@@ -160,7 +160,7 @@ public:
      * Forward Kinematics Law.
      * 
      * @param lll    the three elongations ([m]).
-     * @param hpr    the computed height ([m]), pitch ([deg]) and 
+     * @param hpr    the computed heave ([m]), pitch ([deg]) and 
      *               roll ([deg]).
      * @return true/false on success/failure.
      */
@@ -168,9 +168,10 @@ public:
                       yarp::sig::Vector &hpr) const;
 
     /**
-     * Inverse Kinematics Law with desired height and orientation (axis*angles).
+     * Inverse Kinematics Law with desired heave and orientation 
+     * (axis*angles). 
      * 
-     * @param zd     desired height ([m]).
+     * @param zd     desired heave ([m]).
      * @param ud     the desired orientation given as 3 components 
      *               vector (axis*angle) expressed in [rad].
      * @param lll    the solved three elongations ([m]).
@@ -180,10 +181,10 @@ public:
                       yarp::sig::Vector &lll) const;
 
     /**
-     * Inverse Kinematics Law with height-pitch-roll.
+     * Inverse Kinematics Law with heave-pitch-roll.
      * 
-     * @param hpr    the desired height ([m]), pitch ([deg]) and 
-     *               roll ([deg]) to solve for.
+     * @param hpr    the desired heave ([m]), pitch ([deg]) and roll
+     *               ([deg]) to solve for.
      * @param lll    the solved three elongations ([m]).
      * @return true/false on success/failure.
      */
