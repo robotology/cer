@@ -37,6 +37,7 @@ class IKSolver : public RFModule
     TripodSolver solver;
     minJerkTrajGen *gen;
     Vector rho;
+    bool use_hrp;
 
 public:
     /****************************************************************/
@@ -44,6 +45,19 @@ public:
     {
         iPort.open("/solver:i");
         oPort.open("/solver:o");
+
+        std::cout << rf.toString() << std::endl;
+
+        if(rf.check("hrp"))
+        {
+            std::cout << "Using hrp input" << std::endl;
+            use_hrp = true;
+        }
+        else
+        {
+            std::cout << "Using 'zd + ud' input" << std::endl;
+            use_hrp = false;
+        }
 
         rho.resize(3,0.0);
         gen=new minJerkTrajGen(rho,getPeriod(),2.0);
@@ -73,20 +87,40 @@ public:
         Bottle *ibData=iPort.read(false);
         if (ibData!=NULL)
         {
-            if (ibData->size()<4)
+            if(use_hrp)
             {
-                yError("wrong input!");
-                return true;
+                if (ibData->size() != 3)
+                {
+                    yError("wrong input!");
+                    return true;
+                }
+
+                Vector input(3), output(3);
+                std::cout << ibData->toString() << std::endl;
+                input[0] = ibData->get(0).asDouble();
+                input[1] = ibData->get(1).asDouble();
+                input[2] = ibData->get(2).asDouble();
+                solver.setInitialGuess(rho);
+                solver.ikin(input, output);
+
+                std::cout << "output is " << output.toString() << std::endl;
             }
+            else
+            {
+                if (ibData->size()<4)
+                {
+                    yError("wrong input!");
+                    return true;
+                }
 
-            Vector ud(3);
-            double zd=ibData->get(0).asDouble();        
-            ud[0]=ibData->get(1).asDouble();
-            ud[1]=ibData->get(2).asDouble();
-            ud[2]=ibData->get(3).asDouble();
-
-            solver.setInitialGuess(rho);
-            solver.ikin(zd,ud,rho);
+                Vector ud(3);
+                double zd=ibData->get(0).asDouble();
+                ud[0]=ibData->get(1).asDouble();
+                ud[1]=ibData->get(2).asDouble();
+                ud[2]=ibData->get(3).asDouble();
+                solver.setInitialGuess(rho);
+                solver.ikin(zd,ud,rho);
+            }
         }
         else
         {
@@ -102,7 +136,7 @@ public:
 
 
 /****************************************************************/
-int main()
+int main(int argc, char *argv[])
 {
     Network yarp;
     if (!yarp.checkNetwork())
@@ -113,6 +147,7 @@ int main()
 
     IKSolver solver;
     ResourceFinder rf;
+    rf.configure("", argc, argv);
     return solver.runModule(rf);
 }
 
