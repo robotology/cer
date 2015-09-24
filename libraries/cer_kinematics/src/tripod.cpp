@@ -438,6 +438,8 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr) const
 bool TripodSolver::ikin(const double zd, const Vector &ud,
                         Vector &lll, int *exit_code) const
 {
+    bool ret = true;
+
     if (ud.length()<3)
     {
         yError("mis-sized orientation vector!");
@@ -482,8 +484,24 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         yInfo(" *** Tripod Solver: alpha = %g [deg]",CTRL_RAD2DEG*acos(d.n[2]));
         yInfo(" *** Tripod Solver: solving time = %g [ms]",1000.0*(t1-t0));
     }
-    
-    return true;
+
+    switch(status)
+    {
+        case Ipopt::Solve_Succeeded:
+        case Ipopt::Solved_To_Acceptable_Level:
+        case Ipopt::Feasible_Point_Found:
+        {
+            ret = true;
+        } break;
+
+        default:
+        {
+            std::cout << " IpOpt error code  " << status << std::endl;
+            ret = false;
+        } break;
+    }
+
+    return ret;
 }
 
 
