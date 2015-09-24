@@ -24,4 +24,9 @@ find_package(YARP ${CER_REQYARP_VERSION} REQUIRED)
 message(STATUS "YARP is version: ${YARP_VERSION}")
 
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
+
+option(COMPILE_TESTS "Compile tests" off)
+
 add_subdirectory(cermod)
+add_subdirectory(libraries/cer_kinematics)
+

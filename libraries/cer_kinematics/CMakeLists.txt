@@ -29,7 +29,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include
                     ${YARP_INCLUDE_DIRS})
 
 add_definitions(${IPOPT_DEFINITIONS})
-add_library(${PROJECT_NAME} ${headers} ${sources})
+add_library(${PROJECT_NAME} SHARED ${headers} ${sources})
 set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${IPOPT_LINK_FLAGS}")
 target_link_libraries(${PROJECT_NAME} ctrlLib ${YARP_LIBRARIES} ${IPOPT_LIBRARIES})
 
@@ -39,3 +39,7 @@ icubcontrib_export_library(${PROJECT_NAME} INTERNAL_INCLUDE_DIRS ${PROJECT_SOURC
 
 icubcontrib_finalize_export(${PROJECT_NAME})
 icubcontrib_add_uninstall_target()
+
+if(COMPILE_TESTS)
+    add_subdirectory(tests)
+endif(COMPILE_TESTS)

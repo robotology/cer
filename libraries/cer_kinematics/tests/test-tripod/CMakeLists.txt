@@ -12,7 +12,6 @@ list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH}
                               ${ICUB_MODULE_PATH}
                               ${ICUBCONTRIB_MODULE_PATH})
 
-find_package(cer_kinematics)
 
 source_group("Source Files" FILES main.cpp)
 include_directories(${ICUB_INCLUDE_DIRS} ${YARP_INCLUDE_DIRS} ${cer_kinematics_INCLUDE_DIRS})
