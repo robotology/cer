@@ -51,6 +51,7 @@
 #include <yarp/dev/ControlBoardInterfacesImpl.h>
 #include <yarp/dev/ControlBoardInterfacesImpl.inl>
 
+#include <cer_kinematics/tripod.h>
 
 using namespace std;
 using namespace yarp::os;
@@ -123,9 +124,9 @@ class icub::dev::tripodMotionControl:   public DeviceDriver,
                                         public ImplementVelocityControl2,
                                         public IControlMode2Raw,
                                         public ImplementControlMode2,
-//                                         public IControlLimits2Raw,
+                                        public IControlLimits2Raw,
+                                        public ImplementControlLimits2,
 //                                         public IImpedanceControlRaw,
-//                                         public ImplementControlLimits2,
 //                                         public ImplementPidControl<tripodMotionControl, IPidControl>,
 //                                         public ImplementVelocityControl<tripodMotionControl, IVelocityControl>,
                                         public IPositionDirectRaw,
@@ -151,8 +152,8 @@ private:
     double *_limitsMax;                         /** joint limits, min*/
     double *_kinematic_mj;                      /** the kinematic coupling matrix from joints space to motor space */
     double *_currentLimits;                     /** current limits */
-    bool  *checking_motiondone;                 /* flag telling if I'm already waiting for motion done */
-    bool        useRawEncoderData;
+//     bool   *checking_motiondone;                 /* flag telling if I'm already waiting for motion done */
+    bool    useRawEncoderData;
 
     // basic knowledge of my joints
     int   _njoints;                             // Number of joints handled by this EMS; this values will be extracted by the config file
@@ -160,13 +161,13 @@ private:
 
     // internal stuff
     bool    *_calibrated;       // Flag to know if the calibrate function has been called for the joint
-    double  *_userRef_positions;     // used for position control.
-    double  *_robotRef_positions;    // used for position control.
     double  *_ref_speeds;       // used for position control.
     double  *_command_speeds;   // used for velocity control.
     double  *_ref_accs;         // for velocity control, in position min jerk eq is used.
-    double  *_lastUser_encoders;     // used for position control.
-    double  *_lastRobot_encoders;    // used for position control.
+    yarp::sig::Vector  _userRef_positions;     // used for position control.
+    yarp::sig::Vector  _robotRef_positions;    // used for position control.
+    yarp::sig::Vector  _lastUser_encoders;     // used for position control.
+    yarp::sig::Vector  _lastRobot_encoders;    // used for position control.
 
 #if 0
     float *_DEPRECATED_encoderconversionfactor;            /** iCubDegrees to encoder conversion factors */
@@ -201,6 +202,9 @@ private:
     double *_last_position_move_time;           /** time stamp for last received position move command*/
 #endif
 
+    // Kinematics stuff
+    cer_kinematics::TripodSolver solver;
+
 private:
 
     inline bool NOT_YET_IMPLEMENTED(const char *txt);
@@ -220,8 +224,10 @@ private:
     void copyPid_iCub2eo(const Pid *in, Pid *out);
     void copyPid_eo2iCub(Pid *in, Pid *out);
 
-    bool tripod_user2HW(double *user,  double *robot);
-    bool tripod_HW2user(double *robot, double *user);
+    bool initKinematics();
+
+    bool tripod_user2HW(yarp::sig::Vector &user,  yarp::sig::Vector &robot);
+    bool tripod_HW2user(yarp::sig::Vector &robot, yarp::sig::Vector &user);
 
 public:
 
@@ -237,7 +243,6 @@ public:
     virtual bool detachAll();
 
     bool refreshEncoders(double *times);
-    void refreshEncoderTimeStamp(int joint);
     Semaphore               semaphore;
     yarp::os::ConstString   deviceDescription;
 
@@ -387,14 +392,16 @@ public:
     virtual bool getAmpStatusRaw(int *st);
     virtual bool getAmpStatusRaw(int j, int *st);
     /////////////// END AMPLIFIER INTERFACE
-
+#endif
     // Limits
     bool setLimitsRaw(int axis, double min, double max);
     bool getLimitsRaw(int axis, double *min, double *max);
+
     // Limits 2
     bool setVelLimitsRaw(int axis, double min, double max);
     bool getVelLimitsRaw(int axis, double *min, double *max);
 
+    #if 0
     // Torque control
     bool setTorqueModeRaw();
     bool getTorqueRaw(int j, double *t);

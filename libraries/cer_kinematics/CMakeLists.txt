@@ -37,8 +37,20 @@ icubcontrib_export_library(${PROJECT_NAME} INTERNAL_INCLUDE_DIRS ${PROJECT_SOURC
                                            DESTINATION include/${PROJECT_NAME}
                                            FILES ${headers})
 
+yarp_install(TARGETS cer_kinematics
+             COMPONENT Runtime
+             LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR})
+
 icubcontrib_finalize_export(${PROJECT_NAME})
 icubcontrib_add_uninstall_target()
+
+message("*******************************************************************************")
+message(INFO " CER_DYNAMIC_PLUGINS_INSTALL_DIR is ${CER_DYNAMIC_PLUGINS_INSTALL_DIR}")
+message(INFO " CMAKE_INSTALL_LIBDIR is ${CMAKE_INSTALL_LIBDIR}")
+
+# Add install target
+install(TARGETS cer_kinematics
+                LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 if(COMPILE_TESTS)
     add_subdirectory(tests)
