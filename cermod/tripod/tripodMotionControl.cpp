@@ -141,9 +141,26 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
     // checking minimum set of intefaces required
     if( ! (pos || pos2) ) // One of the 2 is enough, therefore if both are missing I raise an error
     {
-        yError("tripodMotionControl: neither IPositionControl nor IPositionControl2 interface was not found in subdevice. Quitting");
+        yError("tripodMotionControl: neither IPositionControl nor IPositionControl2 interface was not found in the attached subdevice. Quitting");
         return false;
     }
+
+    if(!iJntEnc ) // One of the 2 is enough, therefore if both are missing I raise an error
+    {
+        yError("tripodMotionControl: Joint encoder interface was not found in the attached subdevice. Quitting");
+        return false;
+    }
+
+    // synch with remote device
+    int tmp;
+    if(pos)
+        pos->getAxes(&tmp);
+    if(pos2)
+        pos2->getAxes(&tmp);
+
+    yarp::sig::Vector tmp_encs; tmp_encs.resize(tmp);
+
+    while(!iJntEnc->getEncoders(tmp_encs.data()) )     yarp::os::Time::delay(0.1);
 
     configured = true;
     return true;
@@ -231,7 +248,7 @@ bool tripodMotionControl::extractGroup(Bottle &input, Bottle &out, const std::st
 
     if(tmp.size()!=size)
     {
-        yError () << key1.c_str() << " incorrect number of entries for param" << key1.c_str();
+        yError () << key1.c_str() << " incorrect number of entries for param" << key1.c_str() << " expected size is " << size-1 << " while size of param in config file was " << tmp.size() -1;
         return false;
     }
 
@@ -520,7 +537,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
        }
        else
        {
-            yDebug() << "Successfully connected to remote device, acquiring interfaces";
+            yInfo() << "Successfully connected to remote device, acquiring interfaces";
             ret = _device.attach(_polyDriverDevice);
 
             if(!ret && !remoteCB_config.check("debug"))
@@ -679,26 +696,47 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
         }
     }
 
-    /////// LIMITS
-    Bottle &limits=config.findGroup("LIMITS");
-    if (limits.isNull())
+    /////// Tripod solver configuration
+    Bottle &tripod_description=config.findGroup("TRIPOD");
+    if (tripod_description.isNull())
     {
-        yWarning() << "tripodMotionControl::fromConfig() detected that Group LIMITS is not found in configuration file";
+        yError() << " ***TripodMotionControl detects that Group TRIPOD is not found in configuration file***";
         return false;
     }
 
-    // max limit
-    if (!extractGroup(limits, xtmp, "Max","a list of maximum angles (in degrees)", _njoints))
+    // radius
+    double radius, lMax, lMin, alpha;
+    if (!extractGroup(tripod_description, xtmp, "Radius","The radius ([m])", 1))
         return false;
     else
-        for(i=1; i<xtmp.size(); i++) _limitsMax[i-1]=xtmp.get(i).asDouble();
+        radius = xtmp.get(1).asDouble();
+
+    // max limit
+        if (!extractGroup(tripod_description, xtmp, "Max_el","The minimum elongation ([m]).", 1))
+        return false;
+    else
+        lMax = xtmp.get(1).asDouble();
 
     // min limit
-    if (!extractGroup(limits, xtmp, "Min","a list of minimum angles (in degrees)", _njoints))
+        if (!extractGroup(tripod_description, xtmp, "Min_el","The maximum permitted bending angle ([deg]).", 1))
         return false;
     else
-        for(i=1; i<xtmp.size(); i++) _limitsMin[i-1]=xtmp.get(i).asDouble();
+        lMin = xtmp.get(1).asDouble();
 
+    // alpha max
+        if (!extractGroup(tripod_description, xtmp, "Max_alpha","The maximum permitted bending angle ([deg])", 1))
+        return false;
+    else
+        alpha = xtmp.get(1).asDouble();
+
+    for(i=0; i < _njoints; i++)
+    {
+        _limitsMax[i] = lMax;
+        _limitsMin[i] = lMin;
+    }
+
+    cer_kinematics::TripodParameters tParam(radius, lMin, lMax, alpha);
+    solver.setParameters(tParam);
     return true;
 }
 
