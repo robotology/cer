@@ -79,8 +79,8 @@ public:
      * Constructor.
      * 
      * @param params tripod parameters.
-     * @param verb   integers greater than 0 enable successive levels
-     *               ofverbosity (default=0).
+     * @param verb   integers greater than 0 enable successive 
+     *               levels of verbosity (default=0).
      */
     TripodSolver(const TripodParameters &params=TripodParameters(),
                  const int verb=0);
