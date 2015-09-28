@@ -9,7 +9,7 @@
  * later version published by the Free Software Foundation.
  *
  * A copy of the license can be found at
- * http://www.robotcub.org/icub/license/gpl.txt
+ * https://github.com/robotology/cer/license/gpl.txt
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -57,7 +57,7 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-namespace icub {
+namespace cer {
     namespace dev  {
     class tripodMotionControl;
         namespace impl {
@@ -68,7 +68,7 @@ namespace icub {
 
 using namespace yarp::dev;
 
-class icub::dev::impl::HW_deviceHelper
+class cer::dev::impl::HW_deviceHelper
 {
 public:
     bool _subDevVerbose;
@@ -107,7 +107,7 @@ private:
 };
 
 
-class icub::dev::tripodMotionControl:   public DeviceDriver,
+class cer::dev::tripodMotionControl:   public DeviceDriver,
                                         public IMultipleWrapper,
 //                                         public IPidControlRaw,
                                         public IControlCalibration2Raw,
@@ -141,7 +141,7 @@ private:
     bool useRemoteCB;                           /** if TRUE it means we want to connect the tripodMotionControl to real HW device using yarp network. This allows also to connect to a simulator                                                 * if FALSE then we wait for the 'attachAll' function to be called in order to get the pointer to the low-level device like canBus/embObjMotionControl. */
 
     yarp::os::Semaphore                      _mutex;
-    icub::dev::impl::HW_deviceHelper         _device;
+    cer::dev::impl::HW_deviceHelper         _device;
     yarp::dev::PolyDriver                   *_polyDriverDevice;
 
     int *_axisMap;                              /** axis remapping lookup-table */

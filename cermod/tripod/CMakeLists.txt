@@ -2,7 +2,7 @@
 # Authors: Alberto Cardellino <alberto.cardellino@iit.it>
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
-yarp_prepare_device(tripodMotionControl TYPE icub::dev::tripodMotionControl INCLUDE tripodMotionControl.h WRAPPER controlboardwrapper2)
+yarp_prepare_device(tripodMotionControl TYPE cer::dev::tripodMotionControl INCLUDE tripodMotionControl.h WRAPPER controlboardwrapper2)
 
 if(ENABLE_cermod_tripodMotionControl)
 

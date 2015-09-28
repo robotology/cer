@@ -7,7 +7,6 @@
 *
 */
 
-//#include <yarp/dev/CanBusInterface.h>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/LogStream.h>
@@ -17,8 +16,8 @@
 using namespace yarp::dev;
 using namespace yarp::os;
 using namespace yarp::os::impl;
-using namespace icub::dev;
-using namespace icub::dev::impl;
+using namespace cer::dev;
+using namespace cer::dev::impl;
 // using namespace yarp::dev::impl;
 
 HW_deviceHelper::HW_deviceHelper() : pid(NULL),
@@ -166,7 +165,7 @@ bool tripodMotionControl::tripod_HW2user(yarp::sig::Vector &robot, yarp::sig::Ve
 }
 
 #if 0
-void tripodMotionControl::copyPid_iCub2eo(const Pid *in, Pid *out)
+void tripodMotionControl::copyPid_cer2eo(const Pid *in, Pid *out)
 {
     memset(out, 0, sizeof(Pid));     // marco.accame: it is good thing to clear the out struct before copying. this prevent future members of struct not yet managed to be dirty.
     out->kp = (float) (in->kp);
@@ -181,7 +180,7 @@ void tripodMotionControl::copyPid_iCub2eo(const Pid *in, Pid *out)
     out->stiction_up_val = (float)(in->stiction_up_val);
 }
 
-void tripodMotionControl::copyPid_eo2iCub(Pid *in, Pid *out)
+void tripodMotionControl::copyPid_eo2cer(Pid *in, Pid *out)
 {
     // marco.accame: in here i dont clear the out class because there is not a clear() method
     out->kp = (double) in->kp;
@@ -785,7 +784,7 @@ bool tripodMotionControl::setPidRaw(int j, const Pid &pid)
         yError() << "Unknown _positionControlUnits";
     }
 
-//     copyPid_iCub2eo(&hwPid, &outPid);
+//     copyPid_cer2eo(&hwPid, &outPid);
 
     return true;
 }
