@@ -17,10 +17,12 @@ find_package(IPOPT REQUIRED)
 include(ICUBcontribHelpers)
 icubcontrib_set_default_prefix()
 
-set(headers include/${PROJECT_NAME}/tripod.h)
-set(sources src/tripod.cpp)
+set(headers_private include/${PROJECT_NAME}/private/helpers.h)
+set(headers         include/${PROJECT_NAME}/utils.h
+                    include/${PROJECT_NAME}/tripod.h)
+set(sources         src/tripod.cpp)
 
-source_group("Header Files" FILES ${headers})
+source_group("Header Files" FILES ${headers_private} ${headers})
 source_group("Source Files" FILES ${sources})
 
 include_directories(${PROJECT_SOURCE_DIR}/include
@@ -29,7 +31,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include
                     ${YARP_INCLUDE_DIRS})
 
 add_definitions(${IPOPT_DEFINITIONS})
-add_library(${PROJECT_NAME} SHARED ${headers} ${sources})
+add_library(${PROJECT_NAME} SHARED ${headers_private} ${headers} ${sources})
 set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${IPOPT_LINK_FLAGS}")
 target_link_libraries(${PROJECT_NAME} ctrlLib ${YARP_LIBRARIES} ${IPOPT_LIBRARIES})
 

@@ -15,51 +15,15 @@
  * Public License for more details
 */
 
+#ifndef __CER_KINEMATICS_TRIPOD_H__
+#define __CER_KINEMATICS_TRIPOD_H__
+
 #include <yarp/sig/Vector.h>
+
+#include <cer_kinematics/utils.h>
 
 namespace cer_kinematics
 {
-
-/**
- * Structure used to initialize a tripod mechanism.
- * 
- * @author Ugo Pattacini
- */
-struct TripodParameters
-{
-    /**
-     * the radius ([m]).
-     */
-    double r;
-
-    /**
-     * the minimum elongation ([m]).
-     */
-    double l_min;
-
-    /**
-     * the minimum elongation ([m]).
-     */
-    double l_max;
-
-    /**
-     * the maximum permitted bending angle ([deg]).
-     */
-    double alpha_max;
-
-    /**
-     * Constructor.
-     * 
-     * @param r_        the radius ([m]).
-     * @param l_min_    the minimum elongation ([m]).
-     * @param l_max_    the maximum elongation ([m]).
-     * @param alpha_max the maximum permitted bending angle ([deg]).
-     */
-    TripodParameters(const double r_=0.09, const double l_min_=0.0,
-                     const double l_max_=0.2, const double alpha_max_=30.0) :
-                     r(r_), l_min(l_min_), l_max(l_max_), alpha_max(alpha_max_) { }
-};
-
 
 /**
  * Class to handle direct and inverse kinematics of the tripod 
@@ -200,4 +164,5 @@ public:
 
 }
 
+#endif
 

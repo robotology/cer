@@ -23,12 +23,14 @@
 #include <yarp/os/Time.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
+
 #include <iCub/ctrl/math.h>
 
 #include <IpTNLP.hpp>
 #include <IpIpoptApplication.hpp>
 
 #include <cer_kinematics/tripod.h>
+#include <cer_kinematics/private/helpers.h>
 
 #define DELTA_RHO           1e-6
 
@@ -40,47 +42,6 @@ using namespace iCub::ctrl;
 using namespace cer_kinematics;
 
 namespace cer_kinematics {
-
-/****************************************************************/
-struct TripodParametersExtended : public TripodParameters
-{
-    double cos_alpha_max;
-    deque<Vector> s;
-    Vector z;
-
-    /****************************************************************/
-    TripodParametersExtended(const TripodParameters &parameters) :
-                             TripodParameters(parameters)
-    {
-        cos_alpha_max=cos(CTRL_DEG2RAD*alpha_max);
-
-        z.resize(3,0.0);
-        z[2]=1.0;
-
-        Vector v(3,0.0);
-        double theta=0.0;
-        for (int i=0; i<3; i++)
-        {            
-            v[0]=r*cos(theta);
-            v[1]=r*sin(theta);
-            s.push_back(v);
-
-            theta+=CTRL_DEG2RAD*120.0;
-        }
-    }
-};
-
-
-/****************************************************************/
-struct TripodState
-{
-    Vector n,u,p;
-    Matrix T;
-
-    /****************************************************************/
-    TripodState():n(3,0.0),u(3,0.0),p(3,0.0),T(eye(4,4)) { }
-};
-
 
 /****************************************************************/
 class TripodNLP : public Ipopt::TNLP
