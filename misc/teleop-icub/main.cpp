@@ -28,9 +28,9 @@ protected:
     PolyDriver         drvCart;
     PolyDriver         drvHand;
     ICartesianControl *iarm;
+	IControlMode2     *imod;
     IPositionControl2 *ipos;
-    IVelocityControl2 *ivel;
-    IControlMode2     *imod;
+    IVelocityControl2 *ivel;    
     
     BufferedPort<Bottle> inPort;
     RpcClient            simPort;
@@ -98,6 +98,7 @@ public:
             drvCart.close();
             return false;
         }
+		drvHand.view(imod);
         drvHand.view(ipos);
         drvHand.view(ivel);
 
@@ -117,7 +118,8 @@ public:
             vels.push_back(100.0);
             poss.push_back(0.0);
         }
-        poss[1]=90.0;
+        poss[0]=40.0;
+		poss[1]=90.0;
         
         imod->setControlModes(joints.size(),joints.getFirst(),modes.getFirst());
         ipos->setRefAccelerations(joints.size(),joints.getFirst(),accs.data());
@@ -131,7 +133,7 @@ public:
         {
             joints.push_back(7+i);
             modes.push_back(VOCAB_CM_VELOCITY);
-            vels.push_back(100.0);
+            vels.push_back(40.0);
         }
 
         inPort.open(("/"+name+"/geomagic:i").c_str());
@@ -260,7 +262,7 @@ public:
                 s0=triggered;
             else if (s0==triggered)
             {
-                if (++c0*getPeriod()>0.2)
+                if (++c0*getPeriod()>0.1)
                 {
                     pos0[0]=data.get(0).asDouble();
                     pos0[1]=data.get(1).asDouble();
@@ -347,8 +349,11 @@ public:
                 s1=triggered;
             else if (s1==triggered)
             {
-                if (++c1*getPeriod()>0.2)
+                if (++c1*getPeriod()>0.1)
+				{
+					imod->setControlModes(joints.size(),joints.getFirst(),modes.getFirst());
                     s1=running;
+				}
             }
             else
                 ivel->velocityMove(joints.size(),joints.getFirst(),vels.data());
