@@ -28,6 +28,7 @@ protected:
     ICartesianControl *iarm;
     
     BufferedPort<Bottle> inPort;
+    RpcClient simPort;
 
     string type;
     int startup_context;
@@ -40,8 +41,9 @@ protected:
 
     int state;
     int triggerCnt;
+    bool simulator;
 
-    Matrix T,H0;
+    Matrix T,Tsim,H0;
     Bottle data;
     Vector pos0,rpy0;
 
@@ -52,6 +54,43 @@ public:
         string name=rf.check("name",Value("teleop-icub")).asString().c_str();
         string robot=rf.check("robot",Value("icub")).asString().c_str();
         type=rf.check("type",Value("right")).asString().c_str();
+        simulator=rf.check("simualtor");
+
+        if (simulator)
+        {
+            simPort.open(("/"+name+"/simulator:rpc").c_str());
+            if (Network::connect(simPort.getName().c_str(),"/icubSim/world"))
+            {
+                Bottle cmd,reply;
+                cmd.addString("world");
+                cmd.addString("mk");
+                cmd.addString("sph");
+                
+                // radius
+                cmd.addDouble(0.01);
+
+                // position
+                cmd.addDouble(0.0);
+                cmd.addDouble(0.0);
+                cmd.addDouble(0.0);
+                
+                // color
+                cmd.addInt(1);
+                cmd.addInt(0);
+                cmd.addInt(0);
+
+                // collision
+                cmd.addString("false");
+
+                simPort.write(cmd,reply);
+            }
+            else
+            {
+                yError("iCub simulator is not running!");
+                simPort.close();
+                return false;
+            }
+        }
 
         Property option("(device cartesiancontrollerclient)");
         option.put("remote",("/"+robot+"/cartesianController/"+type+"_arm").c_str());
@@ -72,6 +111,12 @@ public:
         triggerCnt=0;
 
         T=eye(4,4);
+        Tsim=zeros(4,4);
+        Tsim(0,1)=-1.0;
+        Tsim(1,2)=1.0;  Tsim(1,3)=0.5976;
+        Tsim(2,0)=-1.0; Tsim(2,3)=-0.026;
+        Tsim(3,3)=1.0;
+
         H0=zeros(4,4);
         pos0.resize(3,0.0);
         rpy0.resize(3,0.0);
@@ -90,6 +135,8 @@ public:
         driver.close();
 
         inPort.close();
+        if (simulator)
+            simPort.close();
 
         return true;
     }
@@ -154,6 +201,26 @@ public:
 
                 H=H0*T*H;
                 iarm->goToPose(H.getCol(3),dcm2axis(H));
+
+                if (simulator)
+                {
+                    H=Tsim*H;
+
+                    Bottle cmd,reply;
+                    cmd.addString("world");
+                    cmd.addString("set");
+                    cmd.addString("sph");
+
+                    // obj #
+                    cmd.addInt(1);
+
+                    // position
+                    cmd.addDouble(H(0,3));
+                    cmd.addDouble(H(1,3));
+                    cmd.addDouble(H(2,3));
+
+                    simPort.write(cmd,reply);
+                }
             }
         }
         else
@@ -174,7 +241,10 @@ int main(int argc,char *argv[])
 {
     Network yarp;
     if (!yarp.checkNetwork())
+    {
+        yError("YARP server not found!");
         return 1;
+    }
 
     ResourceFinder rf;
     rf.configure(argc,argv);
