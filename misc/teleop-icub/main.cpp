@@ -160,10 +160,18 @@ public:
         return true;
     }
 
-	/**********************************************************/
-	void updateSim(const Matrix &H_)
-	{
-        Matrix H=Tsim*H_;
+    /**********************************************************/
+    void updateSim(const Vector &c_)
+    {
+        if ((c_.length()!=3) && (c_.length()!=4))
+            return;
+
+        Vector c=c_;        
+        if (c.length()==3)
+            c.push_back(1.0);
+        c[3]=1.0;
+
+        c=Tsim*c;
 
         Bottle cmd,reply;
         cmd.addString("world");
@@ -174,14 +182,14 @@ public:
         cmd.addInt(1);
 
         // position
-        cmd.addDouble(H(0,3));
-        cmd.addDouble(H(1,3));
-        cmd.addDouble(H(2,3));
+        cmd.addDouble(c[0]);
+        cmd.addDouble(c[1]);
+        cmd.addDouble(c[2]);
 
         simPort.write(cmd,reply);
 
-		yInfo("%s",cmd.toString().c_str());
-	}
+        yInfo("%s",cmd.toString().c_str());
+    }
 
     /**********************************************************/
     double getPeriod()
@@ -259,7 +267,7 @@ public:
 					  xd.toString(3,3).c_str(),od.toString(3,3).c_str());
 
                 if (simulator)
-					updateSim(H);
+					updateSim(H.getCol(3));
             }
         }
         else
@@ -272,12 +280,7 @@ public:
 				{
 					Vector x,o;
 					iarm->getPose(x,o);
-					Matrix H=zeros(4,4);
-					H(0,3)=x[0];
-					H(1,3)=x[1];
-					H(2,3)=x[2];
-					H(3,3)=1.0;
-					updateSim(H);
+					updateSim(x);
 				}
 			}
             triggerCnt=0;
