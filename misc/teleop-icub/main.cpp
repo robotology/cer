@@ -42,6 +42,7 @@ protected:
     int state;
     int triggerCnt;
     bool simulator;
+    bool onlyXYZ;
 
     Matrix T,Tsim;
     Bottle data;
@@ -57,6 +58,7 @@ public:
 		double Tp2p=rf.check("Tp2p",Value(1.0)).asDouble();
         part=rf.check("part",Value("right_arm")).asString().c_str();
         simulator=rf.check("simulator");
+        onlyXYZ=rf.check("onlyXYZ");
 
         if (simulator)
         {
@@ -187,8 +189,6 @@ public:
         cmd.addDouble(c[2]);
 
         simPort.write(cmd,reply);
-
-        yInfo("%s",cmd.toString().c_str());
     }
 
     /**********************************************************/
@@ -231,43 +231,45 @@ public:
             }
             else
             {
-                Vector rpy(3);
-                rpy[0]=data.get(3).asDouble()-rpy0[0];
-                rpy[1]=data.get(4).asDouble()-rpy0[1];
-                rpy[2]=data.get(5).asDouble()-rpy0[2];
-
-				Vector ax(4,0.0),ay(4,0.0),az(4,0.0);
-				ax[0]=1.0; ax[3]=rpy[2];
-				ay[1]=1.0; ay[3]=-rpy[1];
-				az[2]=1.0; az[3]=rpy[0];
-                Matrix H=axis2dcm(ax)*axis2dcm(ay)*axis2dcm(az);
-
-                H(0,3)=0.001*(data.get(0).asDouble()-pos0[0]);
-                H(1,3)=0.001*(data.get(1).asDouble()-pos0[1]);
-                H(2,3)=0.001*(data.get(2).asDouble()-pos0[2]);
+                Vector xd(4,0.0);
+                xd[0]=0.001*(data.get(0).asDouble()-pos0[0]);
+                xd[1]=0.001*(data.get(1).asDouble()-pos0[1]);
+                xd[2]=0.001*(data.get(2).asDouble()-pos0[2]);
+                xd[3]=1.0;
 
 				Matrix H0=eye(4,4);
                 H0(0,3)=x0[0];
                 H0(1,3)=x0[1];
                 H0(2,3)=x0[2];
 
-                H=H0*T*H;
-				Vector xd=H.getCol(3).subVector(0,2);
+                xd=H0*(T*xd);
 				
-				//Vector od=dcm2axis(H);				
-			    Matrix Rd=zeros(3,3);
-				Rd(0,0)=-1.0;
-				Rd(2,1)=-1.0;
-				Rd(1,2)=-1.0;
-				Vector od=dcm2axis(Rd);
-                
+                Matrix Rd=zeros(3,3);
+                if (onlyXYZ)
+                    Rd(0,0)=Rd(2,1)=Rd(1,2)=-1.0;
+                else
+                {
+                    Vector rpy(3);
+                    rpy[0]=data.get(3).asDouble()-rpy0[0];
+                    rpy[1]=data.get(4).asDouble()-rpy0[1];
+                    rpy[2]=data.get(5).asDouble()-rpy0[2];
+
+                    Vector ax(4,0.0),ay(4,0.0),az(4,0.0);
+                    ax[0]=1.0; ax[3]=rpy[2];
+                    ay[1]=1.0; ay[3]=rpy[1];
+                    az[2]=1.0; az[3]=rpy[0];
+
+                    Rd=axis2dcm(o0)*axis2dcm(ax);
+                }
+
+                Vector od=dcm2axis(Rd);
 				iarm->goToPose(xd,od);
 				
 				yInfo("going to (%s) (%s)",
 					  xd.toString(3,3).c_str(),od.toString(3,3).c_str());
 
                 if (simulator)
-					updateSim(H.getCol(3));
+					updateSim(xd);
             }
         }
         else
