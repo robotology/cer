@@ -158,7 +158,7 @@ public:
                 this->data=*data;
         }
 
-        bool buttonsPressed=(data.get(6).asInt()!=0)&&(data.get(7).asInt()!=0);
+        bool buttonsPressed=(data.get(6).asInt()!=0)||(data.get(7).asInt()!=0);
         if (buttonsPressed)
         {
             if (state==idle)
