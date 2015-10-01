@@ -63,32 +63,7 @@ public:
         if (simulator)
         {
             simPort.open(("/"+name+"/simulator:rpc").c_str());
-            if (Network::connect(simPort.getName().c_str(),"/icubSim/world"))
-            {
-                Bottle cmd,reply;
-                cmd.addString("world");
-                cmd.addString("mk");
-                cmd.addString("ssph");
-                
-                // radius
-                cmd.addDouble(0.02);
-
-                // position
-                cmd.addDouble(0.0);
-                cmd.addDouble(0.0);
-                cmd.addDouble(0.0);
-                
-                // color
-                cmd.addInt(1);
-                cmd.addInt(0);
-                cmd.addInt(0);
-
-                // collision
-                cmd.addString("FALSE");
-
-                simPort.write(cmd,reply);
-            }
-            else
+            if (!Network::connect(simPort.getName().c_str(),"/icubSim/world"))
             {
                 yError("iCub simulator is not running!");
                 simPort.close();
@@ -101,7 +76,10 @@ public:
         option.put("local",("/"+name+"/cartesianController/"+part).c_str());
 
         if (!driver.open(option))
+		{
+			simPort.close();
             return false;
+		}
         driver.view(iarm);
 
         iarm->storeContext(&startup_context);
@@ -136,6 +114,32 @@ public:
 
         for (int i=0; i<8; i++)
             data.addDouble(0.0);
+
+		if (simulator)
+        {
+            Bottle cmd,reply;
+            cmd.addString("world");
+            cmd.addString("mk");
+            cmd.addString("ssph");
+                
+            // radius
+            cmd.addDouble(0.02);
+
+            // position
+            cmd.addDouble(0.0);
+            cmd.addDouble(0.0);
+            cmd.addDouble(0.0);
+                
+            // color
+            cmd.addInt(1);
+            cmd.addInt(0);
+            cmd.addInt(0);
+
+            // collision
+            cmd.addString("FALSE");
+
+            simPort.write(cmd,reply);
+        }
 
         return true;
     }
