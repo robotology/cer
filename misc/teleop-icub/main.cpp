@@ -256,10 +256,10 @@ public:
 
                     Vector ax(4,0.0),ay(4,0.0),az(4,0.0);
                     ax[0]=1.0; ax[3]=rpy[2];
-                    ay[1]=1.0; ay[3]=rpy[1];
-                    az[2]=1.0; az[3]=rpy[0];
+                    ay[1]=1.0; ay[3]=rpy[1]*((part=="left_arm")?1.0:-1.0);
+                    az[2]=1.0; az[3]=rpy[0]*((part=="left_arm")?1.0:-1.0);
 
-                    Rd=axis2dcm(o0)*axis2dcm(ax);
+                    Rd=axis2dcm(o0)*axis2dcm(ax)*axis2dcm(ay)*axis2dcm(az);
                 }
 
                 Vector od=dcm2axis(Rd);
