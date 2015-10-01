@@ -4,6 +4,7 @@
 
 #include <string>
 #include <cmath>
+#include <map>
 
 #include <yarp/os/all.h>
 #include <yarp/dev/all.h>
@@ -35,7 +36,7 @@ protected:
 
     enum {
         idle,
-        trigger,
+        triggered,
         running
     };
 
@@ -43,6 +44,7 @@ protected:
     int triggerCnt;
     bool simulator;
     bool onlyXYZ;
+    map<int,string> stateStr;
 
     Matrix T,Tsim;
     Bottle data;
@@ -57,8 +59,7 @@ public:
         string robot=rf.check("robot",Value("icub")).asString().c_str();
 		double Tp2p=rf.check("Tp2p",Value(1.0)).asDouble();
         part=rf.check("part",Value("right_arm")).asString().c_str();
-        simulator=rf.check("simulator");
-        onlyXYZ=rf.check("onlyXYZ");
+        simulator=rf.check("simulator");        
 
         if (simulator)
         {
@@ -92,6 +93,11 @@ public:
         inPort.open(("/"+name+"/geomagic:i").c_str());
         state=idle;
         triggerCnt=0;
+        onlyXYZ=true;
+        
+        stateStr[idle]="idle";
+        stateStr[triggered]="triggered";
+        stateStr[running]="running";
 
         T=zeros(4,4);
 		T(0,1)=1.0;
@@ -212,14 +218,16 @@ public:
                 this->data=*data;
         }
 
-        bool buttonsPressed=(data.get(6).asInt()!=0)||(data.get(7).asInt()!=0);
-        if (buttonsPressed)
+        bool button_0=(data.get(6).asInt()!=0);
+        bool button_1=(data.get(7).asInt()!=0);
+        
+        if (button_0)
         {
             if (state==idle)
-                state=trigger;
-            else if (state==trigger)
+                state=triggered;
+            else if (state==triggered)
             {
-                if (++triggerCnt>10)
+                if (++triggerCnt*getPeriod()>0.2)
                 {
                     pos0[0]=data.get(0).asDouble();
                     pos0[1]=data.get(1).asDouble();
@@ -250,7 +258,7 @@ public:
 				
                 Matrix Rd=zeros(3,3);
                 if (onlyXYZ)
-                    Rd(0,0)=Rd(2,1)=Rd(1,2)=-1.0;
+                    Rd=axis2dcm(o0);
                 else
                 {
                     Vector rpy(3);
@@ -277,8 +285,10 @@ public:
             }
         }
         else
-        {
-            state=idle;
+        {            
+            if (state==triggered)
+                onlyXYZ=!onlyXYZ;
+
             if (triggerCnt!=0)
 			{
                 iarm->stopControl();
@@ -289,10 +299,14 @@ public:
 					updateSim(x);
 				}
 			}
+
+            state=idle;
             triggerCnt=0;
         }
 
-		yInfo("state=%d;",state);
+        yInfo("state=%s; pose=%s;",
+              stateStr[state].c_str(),
+              onlyXYZ?"xyz":"full");
 
         return true;
     }
