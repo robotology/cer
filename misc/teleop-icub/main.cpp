@@ -30,7 +30,7 @@ protected:
     BufferedPort<Bottle> inPort;
     RpcClient simPort;
 
-    string type;
+    string part;
     int startup_context;
 
     enum {
@@ -43,9 +43,10 @@ protected:
     int triggerCnt;
     bool simulator;
 
-    Matrix T,Tsim,H0;
+    Matrix T,Tsim;
     Bottle data;
     Vector pos0,rpy0;
+	Vector x0,o0;
 
 public:
     /**********************************************************/
@@ -53,8 +54,9 @@ public:
     {
         string name=rf.check("name",Value("teleop-icub")).asString().c_str();
         string robot=rf.check("robot",Value("icub")).asString().c_str();
-        type=rf.check("type",Value("right")).asString().c_str();
-        simulator=rf.check("simualtor");
+		double Tp2p=rf.check("Tp2p",Value(1.0)).asDouble();
+        part=rf.check("part",Value("right_arm")).asString().c_str();
+        simulator=rf.check("simulator");
 
         if (simulator)
         {
@@ -64,10 +66,10 @@ public:
                 Bottle cmd,reply;
                 cmd.addString("world");
                 cmd.addString("mk");
-                cmd.addString("sph");
+                cmd.addString("ssph");
                 
                 // radius
-                cmd.addDouble(0.01);
+                cmd.addDouble(0.02);
 
                 // position
                 cmd.addDouble(0.0);
@@ -80,7 +82,7 @@ public:
                 cmd.addInt(0);
 
                 // collision
-                cmd.addString("false");
+                cmd.addString("FALSE");
 
                 simPort.write(cmd,reply);
             }
@@ -93,8 +95,8 @@ public:
         }
 
         Property option("(device cartesiancontrollerclient)");
-        option.put("remote",("/"+robot+"/cartesianController/"+type+"_arm").c_str());
-        option.put("local",("/"+name+"/cartesianController/"+type+"_arm").c_str());
+        option.put("remote",("/"+robot+"/cartesianController/"+part).c_str());
+        option.put("local",("/"+name+"/cartesianController/"+part).c_str());
 
         if (!driver.open(option))
             return false;
@@ -105,21 +107,30 @@ public:
 
         Vector dof(10,1.0);
         iarm->setDOF(dof,dof);
+		iarm->setTrajTime(Tp2p);
 
         inPort.open(("/"+name+"/geomagic:i").c_str());
         state=idle;
         triggerCnt=0;
 
-        T=eye(4,4);
-        Tsim=zeros(4,4);
+        T=zeros(4,4);
+		T(0,1)=1.0;
+		T(1,2)=1.0;
+		T(2,0)=1.0;
+		T(3,3)=1.0;
+		T=SE3inv(T);
+        
+		Tsim=zeros(4,4);
         Tsim(0,1)=-1.0;
         Tsim(1,2)=1.0;  Tsim(1,3)=0.5976;
         Tsim(2,0)=-1.0; Tsim(2,3)=-0.026;
         Tsim(3,3)=1.0;
 
-        H0=zeros(4,4);
         pos0.resize(3,0.0);
         rpy0.resize(3,0.0);
+
+		x0.resize(3,0.0);
+        o0.resize(4,0.0);
 
         for (int i=0; i<8; i++)
             data.addDouble(0.0);
@@ -136,15 +147,46 @@ public:
 
         inPort.close();
         if (simulator)
+		{
+			Bottle cmd,reply;
+			cmd.addString("world");
+			cmd.addString("del");
+			cmd.addString("all");
+			simPort.write(cmd,reply);
+
             simPort.close();
+		}
 
         return true;
     }
 
+	/**********************************************************/
+	void updateSim(const Matrix &H_)
+	{
+        Matrix H=Tsim*H_;
+
+        Bottle cmd,reply;
+        cmd.addString("world");
+        cmd.addString("set");
+        cmd.addString("ssph");
+
+        // obj #
+        cmd.addInt(1);
+
+        // position
+        cmd.addDouble(H(0,3));
+        cmd.addDouble(H(1,3));
+        cmd.addDouble(H(2,3));
+
+        simPort.write(cmd,reply);
+
+		yInfo("%s",cmd.toString().c_str());
+	}
+
     /**********************************************************/
     double getPeriod()
     {
-        return 0.1;
+        return 0.01;
     }
 
     /**********************************************************/
@@ -174,62 +216,74 @@ public:
                     rpy0[0]=data.get(3).asDouble();
                     rpy0[1]=data.get(4).asDouble();
                     rpy0[2]=data.get(5).asDouble();
-
-                    Vector x0,o0;
-                    iarm->getPose(x0,o0);
-
-                    H0=axis2dcm(o0);
-                    H0(0,3)=x0[0];
-                    H0(1,3)=x0[1];
-                    H0(2,3)=x0[2];
                     
+                    iarm->getPose(x0,o0);
                     state=running;
                 }
             }
             else
             {
                 Vector rpy(3);
-                rpy[0]=DEG2RAD*(data.get(3).asDouble()-rpy0[0]);
-                rpy[1]=DEG2RAD*(data.get(4).asDouble()-rpy0[1]);
-                rpy[2]=DEG2RAD*(data.get(5).asDouble()-rpy0[2]);
+                rpy[0]=data.get(3).asDouble()-rpy0[0];
+                rpy[1]=data.get(4).asDouble()-rpy0[1];
+                rpy[2]=data.get(5).asDouble()-rpy0[2];
 
-                Matrix H=rpy2dcm(rpy);
-                
+				Vector ax(4,0.0),ay(4,0.0),az(4,0.0);
+				ax[0]=1.0; ax[3]=rpy[2];
+				ay[1]=1.0; ay[3]=-rpy[1];
+				az[2]=1.0; az[3]=rpy[0];
+                Matrix H=axis2dcm(ax)*axis2dcm(ay)*axis2dcm(az);
+
                 H(0,3)=0.001*(data.get(0).asDouble()-pos0[0]);
                 H(1,3)=0.001*(data.get(1).asDouble()-pos0[1]);
                 H(2,3)=0.001*(data.get(2).asDouble()-pos0[2]);
 
+				Matrix H0=eye(4,4);
+                H0(0,3)=x0[0];
+                H0(1,3)=x0[1];
+                H0(2,3)=x0[2];
+
                 H=H0*T*H;
-                iarm->goToPose(H.getCol(3),dcm2axis(H));
+				Vector xd=H.getCol(3).subVector(0,2);
+				
+				//Vector od=dcm2axis(H);				
+			    Matrix Rd=zeros(3,3);
+				Rd(0,0)=-1.0;
+				Rd(2,1)=-1.0;
+				Rd(1,2)=-1.0;
+				Vector od=dcm2axis(Rd);
+                
+				iarm->goToPose(xd,od);
+				
+				yInfo("going to (%s) (%s)",
+					  xd.toString(3,3).c_str(),od.toString(3,3).c_str());
 
                 if (simulator)
-                {
-                    H=Tsim*H;
-
-                    Bottle cmd,reply;
-                    cmd.addString("world");
-                    cmd.addString("set");
-                    cmd.addString("sph");
-
-                    // obj #
-                    cmd.addInt(1);
-
-                    // position
-                    cmd.addDouble(H(0,3));
-                    cmd.addDouble(H(1,3));
-                    cmd.addDouble(H(2,3));
-
-                    simPort.write(cmd,reply);
-                }
+					updateSim(H);
             }
         }
         else
         {
             state=idle;
             if (triggerCnt!=0)
+			{
                 iarm->stopControl();
+				if (simulator)
+				{
+					Vector x,o;
+					iarm->getPose(x,o);
+					Matrix H=zeros(4,4);
+					H(0,3)=x[0];
+					H(1,3)=x[1];
+					H(2,3)=x[2];
+					H(3,3)=1.0;
+					updateSim(H);
+				}
+			}
             triggerCnt=0;
         }
+
+		yInfo("state=%d;",state);
 
         return true;
     }
@@ -252,6 +306,4 @@ int main(int argc,char *argv[])
     TeleOp teleop;
     return teleop.runModule(rf);
 }
-
-
 
