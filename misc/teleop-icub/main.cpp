@@ -25,11 +25,15 @@ using namespace yarp::math;
 class TeleOp: public RFModule
 {
 protected:
-    PolyDriver         driver;
+    PolyDriver         drvCart;
+    PolyDriver         drvHand;
     ICartesianControl *iarm;
+    IPositionControl2 *ipos;
+    IVelocityControl2 *ivel;
+    IControlMode2     *imod;
     
     BufferedPort<Bottle> inPort;
-    RpcClient simPort;
+    RpcClient            simPort;
 
     string part;
     int startup_context;
@@ -40,8 +44,8 @@ protected:
         running
     };
 
-    int state;
-    int triggerCnt;
+    int s0,s1;
+    int c0,c1;
     bool simulator;
     bool onlyXYZ;
     map<int,string> stateStr;
@@ -51,6 +55,9 @@ protected:
     Vector pos0,rpy0;
 	Vector x0,o0;
 
+    VectorOf<int> joints,modes;
+    Vector vels;
+
 public:
     /**********************************************************/
     bool configure(ResourceFinder &rf)
@@ -59,7 +66,7 @@ public:
         string robot=rf.check("robot",Value("icub")).asString().c_str();
 		double Tp2p=rf.check("Tp2p",Value(1.0)).asDouble();
         part=rf.check("part",Value("right_arm")).asString().c_str();
-        simulator=rf.check("simulator");        
+        simulator=rf.check("simulator");
 
         if (simulator)
         {
@@ -72,16 +79,27 @@ public:
             }
         }
 
-        Property option("(device cartesiancontrollerclient)");
-        option.put("remote",("/"+robot+"/cartesianController/"+part).c_str());
-        option.put("local",("/"+name+"/cartesianController/"+part).c_str());
-
-        if (!driver.open(option))
+        Property optCart("(device cartesiancontrollerclient)");
+        optCart.put("remote",("/"+robot+"/cartesianController/"+part).c_str());
+        optCart.put("local",("/"+name+"/cartesianController/"+part).c_str());
+        if (!drvCart.open(optCart))
 		{
 			simPort.close();
             return false;
 		}
-        driver.view(iarm);
+        drvCart.view(iarm);
+
+        Property optHand("(device remote_controlboard)");
+        optHand.put("remote",("/"+robot+"/"+part).c_str());
+        optHand.put("local",("/"+name+"/"+part).c_str());
+        if (!drvHand.open(optHand))
+        {
+            simPort.close();
+            drvCart.close();
+            return false;
+        }
+        drvHand.view(ipos);
+        drvHand.view(ivel);
 
         iarm->storeContext(&startup_context);
         iarm->restoreContext(0);
@@ -89,10 +107,36 @@ public:
         Vector dof(10,1.0);
         iarm->setDOF(dof,dof);
 		iarm->setTrajTime(Tp2p);
+        
+        Vector accs,poss;
+        for (int i=0; i<9; i++)
+        {
+            joints.push_back(7+i);
+            modes.push_back(VOCAB_CM_POSITION);
+            accs.push_back(1e9);
+            vels.push_back(100.0);
+            poss.push_back(0.0);
+        }
+        poss[1]=90.0;
+        
+        imod->setControlModes(joints.size(),joints.getFirst(),modes.getFirst());
+        ipos->setRefAccelerations(joints.size(),joints.getFirst(),accs.data());
+        ipos->setRefSpeeds(joints.size(),joints.getFirst(),vels.data());
+        ipos->positionMove(joints.size(),joints.getFirst(),poss.data());
+
+        joints.clear();
+        modes.clear();
+        vels.clear();
+        for (int i=2; i<9; i++)
+        {
+            joints.push_back(7+i);
+            modes.push_back(VOCAB_CM_VELOCITY);
+            vels.push_back(100.0);
+        }
 
         inPort.open(("/"+name+"/geomagic:i").c_str());
-        state=idle;
-        triggerCnt=0;
+        s0=s1=idle;
+        c0=c1=0;
         onlyXYZ=true;
         
         stateStr[idle]="idle";
@@ -155,7 +199,13 @@ public:
     {
         iarm->stopControl();
         iarm->restoreContext(startup_context);
-        driver.close();
+        drvCart.close();
+
+        ivel->stop(joints.size(),joints.getFirst());
+        for (size_t i=0; i<modes.size(); i++)
+            modes[i]=VOCAB_CM_POSITION;
+        imod->setControlModes(joints.size(),joints.getFirst(),modes.getFirst());
+        drvHand.close();
 
         inPort.close();
         if (simulator)
@@ -202,32 +252,15 @@ public:
     }
 
     /**********************************************************/
-    double getPeriod()
+    void reachingHandler(const bool b)
     {
-        return 0.01;
-    }
-
-    /**********************************************************/
-    bool updateModule()
-    {
-        if (Bottle *data=inPort.read(false))
+        if (b)
         {
-            if (data->size()!=this->data.size())
-                yWarning("wrong incoming data");
-            else
-                this->data=*data;
-        }
-
-        bool button_0=(data.get(6).asInt()!=0);
-        bool button_1=(data.get(7).asInt()!=0);
-        
-        if (button_0)
-        {
-            if (state==idle)
-                state=triggered;
-            else if (state==triggered)
+            if (s0==idle)
+                s0=triggered;
+            else if (s0==triggered)
             {
-                if (++triggerCnt*getPeriod()>0.2)
+                if (++c0*getPeriod()>0.2)
                 {
                     pos0[0]=data.get(0).asDouble();
                     pos0[1]=data.get(1).asDouble();
@@ -236,9 +269,9 @@ public:
                     rpy0[0]=data.get(3).asDouble();
                     rpy0[1]=data.get(4).asDouble();
                     rpy0[2]=data.get(5).asDouble();
-                    
+
                     iarm->getPose(x0,o0);
-                    state=running;
+                    s0=running;
                 }
             }
             else
@@ -249,13 +282,13 @@ public:
                 xd[2]=0.001*(data.get(2).asDouble()-pos0[2]);
                 xd[3]=1.0;
 
-				Matrix H0=eye(4,4);
+                Matrix H0=eye(4,4);
                 H0(0,3)=x0[0];
                 H0(1,3)=x0[1];
                 H0(2,3)=x0[2];
 
                 xd=H0*(T*xd);
-				
+
                 Matrix Rd;
                 if (onlyXYZ)
                     Rd=axis2dcm(o0);
@@ -275,38 +308,93 @@ public:
                 }
 
                 Vector od=dcm2axis(Rd);
-				iarm->goToPose(xd,od);
-				
-				yInfo("going to (%s) (%s)",
-					  xd.toString(3,3).c_str(),od.toString(3,3).c_str());
+                iarm->goToPose(xd,od);
+
+                yInfo("going to (%s) (%s)",
+                      xd.toString(3,3).c_str(),od.toString(3,3).c_str());
 
                 if (simulator)
-					updateSim(xd);
+                    updateSim(xd);
             }
         }
         else
-        {            
-            if (state==triggered)
+        {
+            if (s0==triggered)
                 onlyXYZ=!onlyXYZ;
 
-            if (triggerCnt!=0)
-			{
+            if (c0!=0)
+            {
                 iarm->stopControl();
-				if (simulator)
-				{
-					Vector x,o;
-					iarm->getPose(x,o);
-					updateSim(x);
-				}
-			}
+                if (simulator)
+                {
+                    Vector x,o;
+                    iarm->getPose(x,o);
+                    updateSim(x);
+                }
+            }
 
-            state=idle;
-            triggerCnt=0;
+            s0=idle;
+            c0=0;
+        }
+    }
+
+    /**********************************************************/
+    void handHandler(const bool b)
+    {
+        if (b)
+        {
+            if (s1==idle)
+                s1=triggered;
+            else if (s1==triggered)
+            {
+                if (++c1*getPeriod()>0.2)
+                    s1=running;
+            }
+            else
+                ivel->velocityMove(joints.size(),joints.getFirst(),vels.data());
+        }
+        else
+        {
+            if (s1==triggered)
+                vels=-1.0*vels;
+
+            if (c1!=0)
+            {
+                iarm->stopControl();
+                ivel->stop(joints.size(),joints.getFirst());
+            }
+
+            s1=idle;
+            c1=0;
+        }
+    }
+
+    /**********************************************************/
+    double getPeriod()
+    {
+        return 0.01;
+    }
+
+    /**********************************************************/
+    bool updateModule()
+    {
+        if (Bottle *data=inPort.read(false))
+        {
+            if (data->size()!=this->data.size())
+                yWarning("wrong incoming data");
+            else
+                this->data=*data;
         }
 
-        yInfo("state=%s; pose=%s;",
-              stateStr[state].c_str(),
-              onlyXYZ?"xyz":"full");
+        bool b0=(data.get(6).asInt()!=0);
+        bool b1=(data.get(7).asInt()!=0);
+
+        reachingHandler(b0);
+        handHandler(b1);
+
+        yInfo("[reaching=%s; pose=%s;] [hand=%s; movement=%s;]",
+              stateStr[s0].c_str(),onlyXYZ?"xyz":"full",
+              stateStr[s1].c_str(),vels[0]>0.0?"closing":"opening");
 
         return true;
     }
