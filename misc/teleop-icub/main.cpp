@@ -256,7 +256,7 @@ public:
 
                 xd=H0*(T*xd);
 				
-                Matrix Rd=zeros(3,3);
+                Matrix Rd;
                 if (onlyXYZ)
                     Rd=axis2dcm(o0);
                 else
