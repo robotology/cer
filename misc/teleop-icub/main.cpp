@@ -71,6 +71,7 @@ public:
         part=rf.check("part",Value("right_arm")).asString().c_str();
         simulator=rf.check("simulator",Value("off")).asString()=="on";
         gaze=rf.check("gaze",Value("off")).asString()=="on";
+		bool torso=rf.check("torso",Value("on")).asString()=="on";
 
         if (simulator)
         {
@@ -129,6 +130,8 @@ public:
         iarm->restoreContext(0);
 
         Vector dof(10,1.0);
+		if (!torso)
+			dof[0]=dof[1]=dof[2]=0.0;
         iarm->setDOF(dof,dof);
 		iarm->setTrajTime(Tp2p);
         
