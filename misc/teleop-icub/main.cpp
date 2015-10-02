@@ -27,10 +27,12 @@ class TeleOp: public RFModule
 protected:
     PolyDriver         drvCart;
     PolyDriver         drvHand;
+    PolyDriver         drvGaze;
     ICartesianControl *iarm;
 	IControlMode2     *imod;
     IPositionControl2 *ipos;
-    IVelocityControl2 *ivel;    
+    IVelocityControl2 *ivel;
+    IGazeControl      *igaze;
     
     BufferedPort<Bottle> inPort;
     RpcClient            simPort;
@@ -47,6 +49,7 @@ protected:
     int s0,s1;
     int c0,c1;
     bool simulator;
+    bool gaze;
     bool onlyXYZ;
     map<int,string> stateStr;
 
@@ -66,7 +69,8 @@ public:
         string robot=rf.check("robot",Value("icub")).asString().c_str();
 		double Tp2p=rf.check("Tp2p",Value(1.0)).asDouble();
         part=rf.check("part",Value("right_arm")).asString().c_str();
-        simulator=rf.check("simulator");
+        simulator=rf.check("simulator",Value("off")).asString()=="on";
+        gaze=rf.check("gaze",Value("off")).asString()=="on";
 
         if (simulator)
         {
@@ -79,12 +83,28 @@ public:
             }
         }
 
+        if (gaze)
+        {
+            Property optGaze("(device gazecontrollerclient)");
+            optGaze.put("remote","/iKinGazeCtrl");
+            optGaze.put("local",("/"+name+"/gaze").c_str());
+            if (!drvGaze.open(optGaze))
+            {
+                simPort.close();
+                return false;
+            }
+            drvGaze.view(igaze);
+        }
+
         Property optCart("(device cartesiancontrollerclient)");
         optCart.put("remote",("/"+robot+"/cartesianController/"+part).c_str());
         optCart.put("local",("/"+name+"/cartesianController/"+part).c_str());
         if (!drvCart.open(optCart))
 		{
-			simPort.close();
+            if (simulator)
+			    simPort.close();
+            if (gaze)
+                drvGaze.close();
             return false;
 		}
         drvCart.view(iarm);
@@ -94,7 +114,10 @@ public:
         optHand.put("local",("/"+name+"/"+part).c_str());
         if (!drvHand.open(optHand))
         {
-            simPort.close();
+            if (simulator)
+                simPort.close();
+            if (gaze)
+                drvGaze.close();
             drvCart.close();
             return false;
         }
@@ -221,6 +244,12 @@ public:
             simPort.close();
 		}
 
+        if (gaze)
+        {
+            igaze->stopControl();
+            drvGaze.close();
+        }
+
         return true;
     }
 
@@ -312,6 +341,9 @@ public:
                 Vector od=dcm2axis(Rd);
                 iarm->goToPose(xd,od);
 
+                if (gaze)
+                    igaze->lookAtFixationPoint(xd);
+
                 yInfo("going to (%s) (%s)",
                       xd.toString(3,3).c_str(),od.toString(3,3).c_str());
 
@@ -333,6 +365,8 @@ public:
                     iarm->getPose(x,o);
                     updateSim(x);
                 }
+                if (gaze)
+                    igaze->stopControl();
             }
 
             s0=idle;
@@ -364,10 +398,7 @@ public:
                 vels=-1.0*vels;
 
             if (c1!=0)
-            {
-                iarm->stopControl();
                 ivel->stop(joints.size(),joints.getFirst());
-            }
 
             s1=idle;
             c1=0;
