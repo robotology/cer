@@ -15,6 +15,8 @@
  * Public License for more details
 */
 
+#include <string>
+
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
 
@@ -22,6 +24,9 @@
 #include <iCub/ctrl/minJerkCtrl.h>
 
 #include <cer_kinematics/tripod.h>
+
+#define MODE_HPR    "hpr"
+#define MODE_ZD_UD  "zd+ud"
 
 using namespace std;
 using namespace yarp::os;
@@ -37,31 +42,27 @@ class IKSolver : public RFModule
     TripodSolver solver;
     minJerkTrajGen *gen;
     Vector rho;
-    bool use_hrp;
+    bool use_hpr;
 
 public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
+        string mode=rf.check("mode",Value(MODE_ZD_UD)).asString().c_str();
+        if ((mode!=MODE_ZD_UD) && (mode!=MODE_HPR))
+        {
+            yWarning("Unrecognized input mode!");
+            mode=MODE_ZD_UD;
+        }
+        use_hpr=(mode==MODE_HPR); 
+
         iPort.open("/solver:i");
         oPort.open("/solver:o");
-
-        std::cout << rf.toString() << std::endl;
-
-        if(rf.check("hrp"))
-        {
-            std::cout << "Using hrp input" << std::endl;
-            use_hrp = true;
-        }
-        else
-        {
-            std::cout << "Using 'zd + ud' input" << std::endl;
-            use_hrp = false;
-        }
 
         rho.resize(3,0.0);
         gen=new minJerkTrajGen(rho,getPeriod(),2.0);
 
+        yInfo("Using \"%s\" input mode",mode.c_str());
         return true;
     }
 
@@ -87,32 +88,27 @@ public:
         Bottle *ibData=iPort.read(false);
         if (ibData!=NULL)
         {
-            if(use_hrp)
+            if (ibData->size()!=(use_hpr?3:4))
             {
-                if (ibData->size() != 3)
-                {
-                    yError("wrong input!");
-                    return true;
-                }
+                yError("Wrong \"%s\" input size!",mode.c_str());
+                return true;
+            }
 
-                Vector input(3), output(3);
-                std::cout << ibData->toString() << std::endl;
-                input[0] = ibData->get(0).asDouble();
-                input[1] = ibData->get(1).asDouble();
-                input[2] = ibData->get(2).asDouble();
+            if (use_hpr)
+            {
+                Vector hpr(3);
+                hpr[0]=ibData->get(0).asDouble();
+                hpr[1]=ibData->get(1).asDouble();
+                hpr[2]=ibData->get(2).asDouble();
                 solver.setInitialGuess(rho);
-                solver.ikin(input, output);
+                solver.ikin(hpr,rho);
 
-                std::cout << "output is " << output.toString() << std::endl;
+                yInfo("hpr=(%s); rho=(%s);",
+                      hpr.toString(5,5).c_str(),
+                      rho.toString(5,5).c_str());
             }
             else
             {
-                if (ibData->size()<4)
-                {
-                    yError("wrong input!");
-                    return true;
-                }
-
                 Vector ud(3);
                 double zd=ibData->get(0).asDouble();
                 ud[0]=ibData->get(1).asDouble();
@@ -120,6 +116,10 @@ public:
                 ud[2]=ibData->get(3).asDouble();
                 solver.setInitialGuess(rho);
                 solver.ikin(zd,ud,rho);
+
+                yInfo("zd=%g; ud=(%s); rho=(%s);",
+                      zd,ud.toString(5,5).c_str(),
+                      rho.toString(5,5).c_str());
             }
         }
         else
@@ -144,10 +144,11 @@ int main(int argc, char *argv[])
         yError("YARP server not available!");
         return 1;
     }
+    
+    ResourceFinder rf;
+    rf.configure(argc,argv);
 
     IKSolver solver;
-    ResourceFinder rf;
-    rf.configure("", argc, argv);
     return solver.runModule(rf);
 }
 
