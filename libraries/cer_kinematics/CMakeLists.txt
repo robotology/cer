@@ -50,3 +50,7 @@ icubcontrib_export_library(${PROJECT_NAME} INTERNAL_INCLUDE_DIRS ${PROJECT_SOURC
 icubcontrib_finalize_export(${PROJECT_NAME})
 icubcontrib_add_uninstall_target()
 
+if(COMPILE_KIN_TESTS)
+    add_subdirectory(tests)
+endif()
+

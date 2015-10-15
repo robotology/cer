@@ -15,6 +15,8 @@
  * Public License for more details
 */
 
+#include <algorithm>
+
 #include <yarp/os/Log.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
@@ -105,6 +107,8 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         return false;
     }
 
+    int print_level=std::max(verbosity-5,0);
+
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
     app->Options()->SetNumericValue("tol",1e-3);
     app->Options()->SetNumericValue("acceptable_tol",1e-3);
@@ -113,8 +117,8 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetIntegerValue("max_iter",1000);
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetStringValue("hessian_approximation","limited-memory");
-    app->Options()->SetStringValue("derivative_test","none");
-    app->Options()->SetIntegerValue("print_level",0);
+    app->Options()->SetStringValue("derivative_test",print_level>4?"first-order":"none");
+    app->Options()->SetIntegerValue("print_level",print_level);
     app->Initialize();
 
     Ipopt::SmartPtr<ArmCommonNLP> nlp;

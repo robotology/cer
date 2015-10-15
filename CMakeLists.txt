@@ -25,6 +25,8 @@ message(STATUS "YARP is version: ${YARP_VERSION}")
 
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 
+option(COMPILE_KIN_TESTS "Compile CER Kinematics Tests" OFF)
+
 add_subdirectory(cermod)
 add_subdirectory(libraries/cer_kinematics)
 

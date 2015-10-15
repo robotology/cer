@@ -406,6 +406,8 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         return false;
     }
 
+    int print_level=std::max(verbosity-5,0);
+
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication; 
     app->Options()->SetNumericValue("tol",1e-6);
     app->Options()->SetNumericValue("acceptable_tol",1e-6);
@@ -414,8 +416,8 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
     app->Options()->SetIntegerValue("max_iter",200);
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetStringValue("hessian_approximation","limited-memory");
-    app->Options()->SetStringValue("derivative_test","none");
-    app->Options()->SetIntegerValue("print_level",0);
+    app->Options()->SetStringValue("derivative_test",print_level>4?"first-order":"none");
+    app->Options()->SetIntegerValue("print_level",print_level);
     app->Initialize();
 
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(parameters);

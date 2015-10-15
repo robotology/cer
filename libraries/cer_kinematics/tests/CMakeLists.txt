@@ -3,6 +3,7 @@
 # email:  ugo.pattacini@iit.it
 
 cmake_minimum_required(VERSION 2.8.9)
+project(cer_kinematics-tests)
 
 find_package(YARP        REQUIRED)
 find_package(ICUB        REQUIRED)
@@ -10,7 +11,5 @@ find_package(ICUBcontrib REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH}
                               ${ICUB_MODULE_PATH}
                               ${ICUBCONTRIB_MODULE_PATH})
-
-find_package(cer_kinematics REQUIRED)
 
 add_subdirectory(test-tripod)
