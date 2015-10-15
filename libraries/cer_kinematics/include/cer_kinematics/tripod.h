@@ -118,7 +118,7 @@ public:
      * @return true/false on success/failure.
      */
     virtual bool fkin(const yarp::sig::Vector &lll,
-                      yarp::sig::Vector &p, yarp::sig::Vector &u) const;
+                      yarp::sig::Vector &p, yarp::sig::Vector &u);
 
     /**
      * Forward Kinematics Law.
@@ -129,7 +129,7 @@ public:
      * @return true/false on success/failure.
      */
     virtual bool fkin(const yarp::sig::Vector &lll,
-                      yarp::sig::Vector &hpr) const;
+                      yarp::sig::Vector &hpr);
 
     /**
      * Inverse Kinematics Law with desired heave and orientation 
@@ -142,7 +142,7 @@ public:
      * @return true/false on success/failure.
      */
     virtual bool ikin(const double zd, const yarp::sig::Vector &ud,
-                      yarp::sig::Vector &lll, int *exit_code=NULL) const;
+                      yarp::sig::Vector &lll, int *exit_code=NULL);
 
     /**
      * Inverse Kinematics Law with heave-pitch-roll.
@@ -154,7 +154,7 @@ public:
      */
     virtual bool ikin(const yarp::sig::Vector &hpr,
                       yarp::sig::Vector &lll,
-                      int *exit_code=NULL) const;
+                      int *exit_code=NULL);
 
     /**
      * Destructor.

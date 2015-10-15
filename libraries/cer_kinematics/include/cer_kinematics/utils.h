@@ -18,6 +18,10 @@
 #ifndef __CER_KINEMATICS_UTILS_H__
 #define __CER_KINEMATICS_UTILS_H__
 
+#include <string>
+#include <yarp/sig/Matrix.h>
+#include <iCub/iKin/iKinFwd.h>
+
 namespace cer_kinematics
 {
 
@@ -56,9 +60,97 @@ struct TripodParameters
      * @param l_max_    the maximum elongation ([m]).
      * @param alpha_max the maximum permitted bending angle ([deg]).
      */
-    TripodParameters(const double r_=0.09, const double l_min_=0.0,
-                     const double l_max_=0.2, const double alpha_max_=30.0) :
+    TripodParameters(const double r_=0.09, const double l_min_=-0.05,
+                     const double l_max_=0.15, const double alpha_max_=30.0) :
                      r(r_), l_min(l_min_), l_max(l_max_), alpha_max(alpha_max_) { }
+};
+
+
+/**
+ * Structure used to initialize a robot arm.
+ * 
+ * @author Ugo Pattacini
+ */
+struct ArmParameters
+{
+    /**
+     * the 4-by-4 homogeneous matrix linking the root frame and the 
+     * torso. 
+     */
+    yarp::sig::Matrix T0;
+
+    /**
+     * the tripod mechanism for the torso.
+     */
+    TripodParameters torso;
+
+    /**
+     * the serial chain for the upper_arm.
+     */
+    iCub::iKin::iKinLimb upper_arm;
+
+    /**
+     * the tripod mechanism for the lower_arm.
+     */
+    TripodParameters lower_arm;
+
+    /**
+     * the 4-by-4 homogeneous matrix linking the lower_arm with the 
+     * end-effector frame. 
+     */
+    yarp::sig::Matrix TN;
+
+    /**
+     * Constructor. 
+     *  
+     * @param type  a string ["left"|"right"] accounting for the 
+     *              hand type.
+     */
+    ArmParameters(const std::string &type="left");
+};
+
+
+/**
+ * Structure used to initialize a solver.
+ * 
+ * @author Ugo Pattacini
+ */
+struct SolverParameters
+{
+    /**
+     * if true reaching in position and orientation is enabled; 
+     * reaching only in position is selected otherwise. 
+     */
+    bool full_pose;
+
+    /**
+     * if true the robot is allowed to heave.
+     */
+    bool can_heave;
+
+    /**
+     * desired heave assumed by the torso.
+     */
+    double torso_heave;
+
+    /**
+     * desired heave assumed by the lower_arm.
+     */
+    double lower_arm_heave;
+
+    /**
+     * Constructor. 
+     *  
+     * @param full_pose_        enable/disable full pose reaching. 
+     * @param can_heave_        enable/disable robot heave. 
+     * @param torso_heave_      the desired heave assumed by the torso. 
+     * @param lower_arm_heave_  the desired heave assumed by the 
+     *                          lower arm.
+     */
+    SolverParameters(const bool full_pose_=true, const bool can_heave_=false,
+                     const double torso_heave_=0.0, const double lower_arm_heave_=0.0) :
+                     full_pose(full_pose_), can_heave(can_heave_),
+                     torso_heave(torso_heave_), lower_arm_heave(lower_arm_heave_) { }
 };
 
 }

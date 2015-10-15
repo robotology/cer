@@ -21,6 +21,7 @@
 
 #include <yarp/os/Log.h>
 #include <yarp/os/Time.h>
+#include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
 
@@ -356,7 +357,7 @@ bool TripodSolver::setInitialGuess(const Vector &lll0)
 
 
 /****************************************************************/
-bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u) const
+bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u)
 {
     if (lll.length()<3)
     {
@@ -374,7 +375,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u) const
 
 
 /****************************************************************/
-bool TripodSolver::fkin(const Vector &lll, Vector &hpr) const
+bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
 {
     if (lll.length()<3)
     {
@@ -397,7 +398,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr) const
 
 /****************************************************************/
 bool TripodSolver::ikin(const double zd, const Vector &ud,
-                        Vector &lll, int *exit_code) const
+                        Vector &lll, int *exit_code)
 {
     if (ud.length()<3)
     {
@@ -467,7 +468,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
 
 /****************************************************************/
 bool TripodSolver::ikin(const Vector &hpr, Vector &lll,
-                        int *exit_code) const
+                        int *exit_code)
 {
     if (hpr.length()<3)
     {

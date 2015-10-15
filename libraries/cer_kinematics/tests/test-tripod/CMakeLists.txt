@@ -5,14 +5,6 @@
 cmake_minimum_required(VERSION 2.8.9)
 project(test-tripod)
 
-find_package(YARP        REQUIRED)
-find_package(ICUB        REQUIRED)
-find_package(ICUBcontrib REQUIRED)
-list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH}
-                              ${ICUB_MODULE_PATH}
-                              ${ICUBCONTRIB_MODULE_PATH})
-
-
 source_group("Source Files" FILES main.cpp)
 include_directories(${ICUB_INCLUDE_DIRS} ${YARP_INCLUDE_DIRS} ${cer_kinematics_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} main.cpp)

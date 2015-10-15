@@ -42,13 +42,15 @@ class IKSolver : public RFModule
     TripodSolver solver;
     minJerkTrajGen *gen;
     Vector rho;
+
+    string mode;
     bool use_hpr;
 
 public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        string mode=rf.check("mode",Value(MODE_ZD_UD)).asString().c_str();
+        mode=rf.check("mode",Value(MODE_ZD_UD)).asString().c_str();
         if ((mode!=MODE_ZD_UD) && (mode!=MODE_HPR))
         {
             yWarning("Unrecognized input mode!");

@@ -1,4 +1,4 @@
-function arm
+function leftArm
 %
 % Copyright (C) 2015 iCub Facility - Istituto Italiano di Tecnologia
 % Author: Ugo Pattacini <ugo.pattacini@iit.it>
@@ -371,3 +371,4 @@ global rx;
 
 yarpClose(rx);
 delete(src);
+
