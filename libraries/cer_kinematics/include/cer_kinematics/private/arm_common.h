@@ -57,7 +57,7 @@ public:
     }
 
     /****************************************************************/
-    virtual string get_type() const=0;
+    virtual string get_mode() const=0;
 
     /****************************************************************/
     TripodState tripod_fkin(const int which, const Vector &x) const

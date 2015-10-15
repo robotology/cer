@@ -26,7 +26,7 @@ public:
     }
 
     /****************************************************************/
-    string get_type() const
+    string get_mode() const
     {
         return "full+heave";
     }

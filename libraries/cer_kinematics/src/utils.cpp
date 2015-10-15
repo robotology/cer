@@ -94,3 +94,32 @@ ArmParameters::ArmParameters(const string &type) :
 }
 
 
+/****************************************************************/
+bool SolverParameters::setMode(const string &mode)
+{
+    if (mode=="full")
+    {
+        full_pose=true;
+        can_heave=false;
+    }
+    else if (mode=="full+heave")
+    {
+        full_pose=true;
+        can_heave=true;
+    }
+    else if (mode=="xyz")
+    {
+        full_pose=false;
+        can_heave=false;
+    }
+    else if (mode=="xyz+heave")
+    {
+        full_pose=false;
+        can_heave=true;
+    }
+    else
+        return false;
+
+    return true;
+}
+

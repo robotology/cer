@@ -78,23 +78,25 @@ public:
         Bottle *target=portTarget.read(false);
         if (target!=NULL)
         {
-            if (target->size()<8)
+            if (target->size()<9)
             {
                 yError("wrong target size!");
                 return true;
             }
 
+            string mode;
             double zd1,zd2;
             Vector xd(3),ud(3);
 
-            zd1=target->get(0).asDouble();
-            zd2=target->get(1).asDouble();
-            xd[0]=target->get(2).asDouble();
-            xd[1]=target->get(3).asDouble();
-            xd[2]=target->get(4).asDouble();
-            ud[0]=target->get(5).asDouble();
-            ud[1]=target->get(6).asDouble();
-            ud[2]=target->get(7).asDouble();
+            mode=target->get(0).asString().c_str();
+            zd1=target->get(1).asDouble();
+            zd2=target->get(2).asDouble();
+            xd[0]=target->get(3).asDouble();
+            xd[1]=target->get(4).asDouble();
+            xd[2]=target->get(5).asDouble();
+            ud[0]=target->get(6).asDouble();
+            ud[1]=target->get(7).asDouble();
+            ud[2]=target->get(8).asDouble();
             
             double n=norm(ud);
             Vector ud_=(1.0/n)*ud;
@@ -105,8 +107,9 @@ public:
             Hd(2,3)=xd[2];
 
             SolverParameters p=solver.getSolverParameters();
+            p.setMode(mode);
             p.torso_heave=zd1;
-            p.lower_arm_heave=zd2;
+            p.lower_arm_heave=zd2;            
 
             solver.setSolverParameters(p);
             solver.setInitialGuess(q);

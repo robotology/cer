@@ -151,6 +151,16 @@ struct SolverParameters
                      const double torso_heave_=0.0, const double lower_arm_heave_=0.0) :
                      full_pose(full_pose_), can_heave(can_heave_),
                      torso_heave(torso_heave_), lower_arm_heave(lower_arm_heave_) { }
+
+    /**
+     * Helper that sets full_pose and can_heave according to a mode 
+     * string 
+     *  
+     * @param mode  a string that can be: 
+     *              ["full"|"full+heave"|"xyz"|"xyz+heave"].
+     * @return true/false on success/failure. 
+     */
+    bool setMode(const std::string &mode);
 };
 
 }
