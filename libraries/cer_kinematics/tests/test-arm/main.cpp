@@ -43,6 +43,8 @@ public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
+        int verbosity=rf.check("verbosity",Value(1)).asInt();
+
         q.resize(12,0.0);
         portTarget.open("/solver/target:i");
         portSolution.open("/solver/solution:o");
@@ -52,7 +54,7 @@ public:
         p.can_heave=false;
 
         solver.setSolverParameters(p);
-        solver.setVerbosity(1);
+        solver.setVerbosity(verbosity);
 
         return true;
     }
