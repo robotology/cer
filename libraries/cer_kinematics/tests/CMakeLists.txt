@@ -13,3 +13,4 @@ list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH}
                               ${ICUBCONTRIB_MODULE_PATH})
 
 add_subdirectory(test-tripod)
+add_subdirectory(test-arm)
