@@ -18,6 +18,7 @@ include(ICUBcontribHelpers)
 icubcontrib_set_default_prefix()
 
 set(headers_private include/${PROJECT_NAME}/private/helpers.h
+                    include/${PROJECT_NAME}/private/arm_common.h
                     include/${PROJECT_NAME}/private/arm_full.h
                     include/${PROJECT_NAME}/private/arm_xyz.h
                     include/${PROJECT_NAME}/private/arm_full_heave.h
