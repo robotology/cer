@@ -15,6 +15,7 @@
  * Public License for more details
 */
 
+#include <cmath>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/math.h>
 #include <cer_kinematics/utils.h>

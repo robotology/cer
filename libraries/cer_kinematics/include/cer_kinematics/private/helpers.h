@@ -18,6 +18,7 @@
 #ifndef __CER_KINEMATICS_HELPERS_H__
 #define __CER_KINEMATICS_HELPERS_H__
 
+#include <cmath>
 #include <deque>
 
 #include <yarp/sig/Vector.h>
