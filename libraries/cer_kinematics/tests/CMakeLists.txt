@@ -18,7 +18,7 @@ add_executable(test-tripod    test-tripod.cpp)
 add_executable(test-arm       test-arm.cpp)
 add_executable(test-stability test-stability.cpp)
 
-target_link_libraries(test-tripod    ${YARP_LIBRARIES} ctrlLib  cer_kinematics)
+target_link_libraries(test-tripod    ${YARP_LIBRARIES} ctrlLib cer_kinematics)
 target_link_libraries(test-arm       ${YARP_LIBRARIES} cer_kinematics)
 target_link_libraries(test-stability ${YARP_LIBRARIES} cer_kinematics)
 
