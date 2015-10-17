@@ -109,31 +109,8 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     int print_level=std::max(verbosity-5,0);
 
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
-    Ipopt::SmartPtr<ArmCommonNLP> nlp;
-    if (slvParameters.full_pose)
-    {
-        app->Options()->SetNumericValue("tol",1e-2);
-        app->Options()->SetNumericValue("constr_viol_tol",2e-6);
-        if (slvParameters.can_heave)
-            nlp=new ArmFullHeaveNLP(armParameters,slvParameters);
-        else
-            nlp=new ArmFullNLP(armParameters,slvParameters);
-    }
-    else
-    {
-        app->Options()->SetNumericValue("tol",1e-3);
-        if (slvParameters.can_heave)
-        {
-            app->Options()->SetNumericValue("constr_viol_tol",1e-4);
-            nlp=new ArmXyzHeaveNLP(armParameters,slvParameters);
-        }
-        else
-        {
-            app->Options()->SetNumericValue("constr_viol_tol",1e-5);
-            nlp=new ArmXyzNLP(armParameters,slvParameters);
-        }
-    }
-
+    app->Options()->SetNumericValue("tol",slvParameters.tol);
+    app->Options()->SetNumericValue("constr_viol_tol",slvParameters.constr_viol_tol);
     app->Options()->SetIntegerValue("acceptable_iter",0);
     app->Options()->SetStringValue("mu_strategy","adaptive");
     app->Options()->SetIntegerValue("max_iter",2000);
@@ -142,6 +119,22 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetStringValue("derivative_test",print_level>4?"first-order":"none");
     app->Options()->SetIntegerValue("print_level",print_level);
     app->Initialize();
+
+    Ipopt::SmartPtr<ArmCommonNLP> nlp;
+    if (slvParameters.full_pose)
+    {
+        if (slvParameters.can_heave)
+            nlp=new ArmFullHeaveNLP(armParameters,slvParameters);
+        else
+            nlp=new ArmFullNLP(armParameters,slvParameters);
+    }
+    else
+    {
+        if (slvParameters.can_heave)
+            nlp=new ArmXyzHeaveNLP(armParameters,slvParameters);
+        else
+            nlp=new ArmXyzNLP(armParameters,slvParameters);
+    }
 
     nlp->set_q0(q0);
     nlp->set_target(Hd);

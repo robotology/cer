@@ -154,6 +154,16 @@ struct SolverParameters
     double weight_postural_lower_arm;
 
     /**
+     * cost function tolerance.
+     */
+    double tol;
+
+    /**
+     * constraint violation tolerance.
+     */
+    double constr_viol_tol;
+
+    /**
      * Constructor. 
      *  
      * @param full_pose_                    enable/disable full pose
@@ -171,21 +181,26 @@ struct SolverParameters
      *                                      of the upper_arm.
      * @param weight_postural_lower_arm_    weight for postural task
      *                                      of the lower_arm.
+     * @param tol_                          cost function tolerance.
+     * @param constr_viol_tol_              constraint violation 
+     *                                      tolerance.
      */
     SolverParameters(const bool full_pose_=true, const bool can_heave_=false,
                      const double torso_heave_=0.0, const double lower_arm_heave_=0.0,
                      const double weight_postural_torso_=0.0,
                      const double weight_postural_upper_arm_=0.0,
-                     const double weight_postural_lower_arm_=0.0) :
+                     const double weight_postural_lower_arm_=0.0,
+                     const double tol_=1e-2, const double constr_viol_tol_=2e-6) :
                      full_pose(full_pose_), can_heave(can_heave_),
                      torso_heave(torso_heave_), lower_arm_heave(lower_arm_heave_),
                      weight_postural_torso(weight_postural_torso_),
                      weight_postural_upper_arm(weight_postural_upper_arm_),
-                     weight_postural_lower_arm(weight_postural_lower_arm_){ }
+                     weight_postural_lower_arm(weight_postural_lower_arm_),
+                     tol(tol_), constr_viol_tol(constr_viol_tol_) { }
 
     /**
      * Helper that sets full_pose and can_heave according to a mode 
-     * string.
+     * string. This helper does also set suitable tolerance values. 
      *  
      * @param mode  a string that can be: 
      *              ["full"|"full+heave"|"xyz"|"xyz+heave"].
