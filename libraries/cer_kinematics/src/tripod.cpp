@@ -406,17 +406,13 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         return false;
     }
 
-    Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication; 
-    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(parameters);
     int print_level=std::max(verbosity-5,0);
-    
-    nlp->set_rho0(lll0);
-    nlp->set_zd(zd);
-    nlp->set_ud(ud);
-    
-    app->Options()->SetNumericValue("tol",1e-6);
+
+    Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
+    app->Options()->SetNumericValue("tol",1e-4);
+    app->Options()->SetNumericValue("constr_viol_tol",1e-6);
     app->Options()->SetIntegerValue("acceptable_iter",0);
-    app->Options()->SetStringValue("mu_strategy","monotone");
+    app->Options()->SetStringValue("mu_strategy","adaptive");
     app->Options()->SetIntegerValue("max_iter",200);
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetStringValue("hessian_approximation","limited-memory");
@@ -424,6 +420,11 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
     app->Options()->SetIntegerValue("print_level",print_level);
     app->Initialize();
 
+    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(parameters);    
+    nlp->set_rho0(lll0);
+    nlp->set_zd(zd);
+    nlp->set_ud(ud);
+    
     double t0=Time::now();
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
     double t1=Time::now();    

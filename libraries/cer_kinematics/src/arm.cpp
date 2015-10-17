@@ -106,12 +106,14 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         return false;
     }
 
-    Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
-    Ipopt::SmartPtr<ArmCommonNLP> nlp;
     int print_level=std::max(verbosity-5,0);
 
+    Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
+    Ipopt::SmartPtr<ArmCommonNLP> nlp;
     if (slvParameters.full_pose)
     {
+        app->Options()->SetNumericValue("tol",1e-2);
+        app->Options()->SetNumericValue("constr_viol_tol",2e-6);
         if (slvParameters.can_heave)
             nlp=new ArmFullHeaveNLP(armParameters,slvParameters);
         else
@@ -119,25 +121,30 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     }
     else
     {
+        app->Options()->SetNumericValue("tol",2e-6);
         if (slvParameters.can_heave)
+        {
+            app->Options()->SetNumericValue("constr_viol_tol",1e-4);
             nlp=new ArmXyzHeaveNLP(armParameters,slvParameters);
+        }
         else
+        {
+            app->Options()->SetNumericValue("constr_viol_tol",1e-5);
             nlp=new ArmXyzNLP(armParameters,slvParameters);
+        }
     }
 
-    nlp->set_q0(q0);
-    nlp->set_target(Hd);
-
-    app->Options()->SetNumericValue("tol",1e-3);
-    app->Options()->SetIntegerValue("acceptable_iter",0);   // 0 ==> "acceptable_*" heuristic disabled
-    app->Options()->SetNumericValue("acceptable_tol",3e-3);    
-    app->Options()->SetStringValue("mu_strategy","monotone");
+    app->Options()->SetIntegerValue("acceptable_iter",0);
+    app->Options()->SetStringValue("mu_strategy","adaptive");
     app->Options()->SetIntegerValue("max_iter",2000);
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetStringValue("hessian_approximation","limited-memory");
     app->Options()->SetStringValue("derivative_test",print_level>4?"first-order":"none");
     app->Options()->SetIntegerValue("print_level",print_level);
     app->Initialize();
+
+    nlp->set_q0(q0);
+    nlp->set_target(Hd);
 
     double t0=Time::now();
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
