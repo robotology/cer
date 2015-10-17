@@ -12,10 +12,6 @@ yarp_begin_plugin_library(cermod)
   add_subdirectory(tripod)
 yarp_end_plugin_library(cermod)
 
-yarp_add_plugin_yarpdev_executable(cermoddev cermod)
-target_link_libraries(cermoddev cermod ${YARP_LIBRARIES})
-
-install(TARGETS cermoddev DESTINATION bin)
 install(TARGETS cermod EXPORT cermod
 		LIBRARY DESTINATION lib COMPONENT shlib
 		ARCHIVE DESTINATION lib
