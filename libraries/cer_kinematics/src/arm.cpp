@@ -121,7 +121,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     }
     else
     {
-        app->Options()->SetNumericValue("tol",2e-6);
+        app->Options()->SetNumericValue("tol",1e-3);
         if (slvParameters.can_heave)
         {
             app->Options()->SetNumericValue("constr_viol_tol",1e-4);
