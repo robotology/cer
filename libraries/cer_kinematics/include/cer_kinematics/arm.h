@@ -135,11 +135,15 @@ public:
      * Forward Kinematics Law.
      * 
      * @param q      the DOFs values ([m]-[deg]-[m]).
-     * @param H      the 4-by-4 homogeneous matrix of the 
-     *               end-effector frame ([m]).
+     * @param H      the 4-by-4 homogeneous matrix of the specified 
+     *               frame ([m]).
+     * @param frame  specify the DOF number whose frame is returned. 
+     *               Thus, frame is in [0...nDOF-1]; negative
+     *               numbers account for the end-effector frame.
      * @return true/false on success/failure.
      */
-    virtual bool fkin(const yarp::sig::Vector &q, yarp::sig::Matrix &H);
+    virtual bool fkin(const yarp::sig::Vector &q, yarp::sig::Matrix &H,
+                      const int frame=-1);
 
     /**
      * Inverse Kinematics Law.

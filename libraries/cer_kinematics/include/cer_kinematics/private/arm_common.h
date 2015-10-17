@@ -128,6 +128,30 @@ public:
     }
 
     /****************************************************************/
+    Matrix fkin(const Vector &x, const int frame)
+    {
+        if ((frame<0) || (frame>11))
+            return fkin(x);
+
+        TripodState d1=tripod_fkin(1,x);
+        Matrix T=T0*d1.T;
+
+        if (frame>=3)
+        {
+            upper_arm.setAng(CTRL_DEG2RAD*x.subVector(3,8));
+            T*=upper_arm.getH(std::min(frame-3,(int)upper_arm.getDOF()-1));
+        }
+        
+        if (frame>=9)
+        {
+            TripodState d2=tripod_fkin(2,x);
+            T*=d2.T;
+        }
+
+        return T;
+    }
+
+    /****************************************************************/
     void set_q0(const Vector &x0)
     {
         this->x0[0]=std::max(torso.l_min,std::min(torso.l_max,x0[0]));

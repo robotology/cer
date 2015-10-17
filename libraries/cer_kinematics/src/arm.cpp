@@ -81,7 +81,7 @@ bool ArmSolver::setInitialGuess(const Vector &q0)
 
 
 /****************************************************************/
-bool ArmSolver::fkin(const Vector &q, Matrix &H)
+bool ArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
 {
     size_t L=3+armParameters.upper_arm.getDOF()+3;
     if (q.length()<L)
@@ -91,7 +91,7 @@ bool ArmSolver::fkin(const Vector &q, Matrix &H)
     }
 
     Ipopt::SmartPtr<ArmFullNLP> nlp=new ArmFullNLP(armParameters,slvParameters);
-    H=nlp->fkin(q);
+    H=nlp->fkin(q,frame);
 
     return true;
 }
