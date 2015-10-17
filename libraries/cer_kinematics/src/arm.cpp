@@ -34,9 +34,7 @@
 #include <cer_kinematics/private/helpers.h>
 
 // COMMON PART -- begin
-#define DELTA_RHO               1e-6
-#define WEIGHT_POSTURAL_TORSO   0.01
-#define WEIGHT_POSTURAL_ARM     0.0
+#define DELTA_RHO       1e-6
 
 using namespace std;
 using namespace yarp::os;
