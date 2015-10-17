@@ -53,12 +53,15 @@ void signal_handler(int signal)
 
 
 /****************************************************************/
-int main()
+int main(int argc, char *argv[])
 {
-    std::signal(SIGINT,signal_handler);    
+    std::signal(SIGINT,signal_handler);
 
-    ofstream fout;
-    fout.open("data.log");
+    ResourceFinder rf;
+    rf.configure(argc,argv);
+
+    double table_height=rf.check("table_height",Value(0.7)).asDouble();
+    string grasp_type=rf.check("grasp_type",Value("top")).asString().c_str();
 
     ArmSolver solver;
     Vector q(12,0.0);
@@ -70,16 +73,25 @@ int main()
     solver.setSolverParameters(p);    
 
     Vector ud(4,0.0);
-    ud[1]=1.0; ud[3]=M_PI/2.0;
+    if (grasp_type=="top")
+        ud[1]=1.0;
+    else
+        ud[0]=-1.0;
+    ud[3]=M_PI/2.0;     
+
     Matrix Hd=axis2dcm(ud);
     ud*=ud[3]; ud.pop_back();
-    Hd(2,3)=0.7-0.63;   // table height - root frame's height
+    Hd(2,3)=table_height-0.63;
     
     double maxT=0.0;
     double minT=std::numeric_limits<double>::max();
 
     double avgT=0.0;
-    double avgN=0.0;
+    double stdT=0.0;
+    double N=0.0;
+
+    ofstream fout;
+    fout.open("data.log");
 
     for (Hd(0,3)=0.3; Hd(0,3)<1.0; Hd(0,3)+=0.01)
     {
@@ -94,8 +106,10 @@ int main()
             maxT=std::max(maxT,dt);
             minT=std::min(minT,dt);
 
-            avgT=(avgT*avgN+dt)/(avgN+1.0);
-            avgN+=1.0;
+            double avgT_n1=(avgT*N+dt)/(N+1.0);
+            stdT=sqrt((N*(stdT*stdT+avgT*avgT)+dt*dt)/(N+1)-avgT_n1*avgT_n1);
+            avgT=avgT_n1;
+            N+=1.0;
 
             Matrix T;
             solver.fkin(q,T);
@@ -119,8 +133,8 @@ int main()
             
             fout<<stream.str()<<endl;
             yInfo("%s",stream.str().c_str());
-            yInfo("solving time [ms]: min=%d, avg=%d, max=%d;",
-                  (int)minT,(int)avgT,(int)maxT);
+            yInfo("solving time [ms]: min=%d, avg=%d, std=%d, max=%d;",
+                  (int)minT,(int)avgT,(int)stdT,(int)maxT);
 
             if (gSignalStatus==SIGINT)
             {
