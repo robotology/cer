@@ -60,27 +60,35 @@ int main()
     fout.open("data.log");
 
     ArmSolver solver;
+    Vector q(12,0.0);
 
     SolverParameters p=solver.getSolverParameters();
     p.setMode("full");
     p.torso_heave=0.1;
     p.lower_arm_heave=0.01;
-
-    solver.setSolverParameters(p);
-    solver.setInitialGuess(Vector(12,0.0));
+    solver.setSolverParameters(p);    
 
     Vector ud(4,0.0);
     ud[1]=1.0; ud[3]=M_PI/2.0;
     Matrix Hd=axis2dcm(ud);
     ud*=ud[3]; ud.pop_back();
     Hd(2,3)=0.7-0.63;   // table height - root frame's height
+    
+    double cumT=0.0;
+    double cumN=0.0;
 
     for (Hd(0,3)=0.3; Hd(0,3)<1.0; Hd(0,3)+=0.01)
     {
         for (Hd(1,3)=0.3; Hd(1,3)>0.0; Hd(1,3)-=0.01)
         {
-            Vector q;
+            solver.setInitialGuess(q);
+
+            double t0=Time::now();
             solver.ikin(Hd,q);
+            double t1=Time::now();
+
+            cumT=(cumT*cumN+(t1-t0))/(cumN+1.0);
+            cumN+=1.0;
 
             Matrix T;
             solver.fkin(q,T);
@@ -104,6 +112,7 @@ int main()
             
             fout<<stream.str()<<endl;
             yInfo("%s",stream.str().c_str());
+            yInfo("average solving time = %g [ms]",1000.0*cumT);
 
             if (gSignalStatus==SIGINT)
             {
