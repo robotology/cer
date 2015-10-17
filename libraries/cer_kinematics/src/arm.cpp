@@ -164,6 +164,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         u*=u[3];
         u.pop_back();
 
+        yInfo(" *** Arm Solver: arm    = %s",armParameters.upper_arm.getType().c_str());
         yInfo(" *** Arm Solver: mode   = %s",nlp->get_mode().c_str());
         yInfo(" *** Arm Solver: q0     = (%s) [*]",q0.toString(3,3).c_str());
         yInfo(" *** Arm Solver: zd1    = %g [m]",slvParameters.torso_heave);

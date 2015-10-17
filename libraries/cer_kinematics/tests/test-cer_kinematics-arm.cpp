@@ -43,7 +43,8 @@ public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        int verbosity=rf.check("verbosity",Value(1)).asInt();
+        string arm=rf.check("arm",Value("left")).asString().c_str();
+        int verbosity=rf.check("verbosity",Value(1)).asInt();        
 
         q.resize(12,0.0);
         portTarget.open("/solver/target:i");
@@ -53,6 +54,7 @@ public:
         p.full_pose=true;
         p.can_heave=false;
 
+        solver.setArmParameters(ArmParameters(arm));
         solver.setSolverParameters(p);
         solver.setVerbosity(verbosity);
 
