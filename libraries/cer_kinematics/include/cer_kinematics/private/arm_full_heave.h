@@ -23,8 +23,6 @@ public:
     /****************************************************************/
     ArmFullHeaveNLP(ArmParameters &pa, SolverParameters &ps) : ArmFullNLP(pa,ps)
     {
-        lambda0.resize(3,0.0);  // m=3
-        lambda=lambda0;
     }
 
     /****************************************************************/

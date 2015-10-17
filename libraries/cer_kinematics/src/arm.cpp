@@ -62,8 +62,7 @@ ArmSolver::ArmSolver(const ArmParameters &armParams,
                      const int verb) :
                      armParameters(armParams),
                      slvParameters(slvParams),
-                     verbosity(verb),
-                     warm_start_ok(false)
+                     verbosity(verb)
 {
 }
 
@@ -130,21 +129,11 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 
     nlp->set_q0(q0);
     nlp->set_target(Hd);
-    if (slvParameters.warm_start)
-    {
-        if (warm_start_ok)
-        {
-            nlp->set_warm_start_params(z_L,z_U,lambda); 
-            app->Options()->SetStringValue("warm_start_init_point","yes");
-        }
-    }
-    else
-        warm_start_ok=false;
 
     app->Options()->SetNumericValue("tol",1e-3);
-    app->Options()->SetNumericValue("acceptable_tol",1e-3);
-    app->Options()->SetIntegerValue("acceptable_iter",10);
-    app->Options()->SetStringValue("mu_strategy","adaptive");
+    app->Options()->SetIntegerValue("acceptable_iter",0);   // 0 ==> "acceptable_*" heuristic disabled
+    app->Options()->SetNumericValue("acceptable_tol",3e-3);    
+    app->Options()->SetStringValue("mu_strategy","monotone");
     app->Options()->SetIntegerValue("max_iter",2000);
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetStringValue("hessian_approximation","limited-memory");
@@ -157,9 +146,6 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     double t1=Time::now();    
 
     q=nlp->get_result();
-    nlp->get_warm_start_params(z_L,z_U,lambda);
-    warm_start_ok=true;
-
     if (exit_code!=NULL)
         *exit_code=status;
 

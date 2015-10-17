@@ -33,9 +33,6 @@ protected:
     Vector x0,x;
     Vector xd,ud;
 
-    Vector z_L0,z_U0,lambda0;
-    Vector z_L,z_U,lambda;
-
 public:
     /****************************************************************/
     ArmCommonNLP(ArmParameters &pa, SolverParameters &ps) :
@@ -49,17 +46,12 @@ public:
         HN=upper_arm.getHN();
 
         x0.resize(12,0.0);
-        z_L0=x0;
-        z_U0=x0;
 
         iKinChain *chain=upper_arm.asChain();
         for (size_t i=0; i<upper_arm.getDOF(); i++)
             x0[3+i]=0.5*((*chain)[i].getMin()+(*chain)[i].getMax());
         
         x=x0;
-        z_L=z_L0;
-        z_U=z_U0;
-
         set_target(eye(4,4));
     }
 
@@ -149,23 +141,6 @@ public:
     }
 
     /****************************************************************/
-    void set_warm_start_params(const Vector &z_L, const Vector &z_U,
-                               const Vector &lambda)
-    {
-        size_t nL=std::min(z_L0.length(),z_L.length());
-        for (size_t i=0; i<nL; i++)
-            z_L0[i]=z_L[i];
-
-        size_t nU=std::min(z_U0.length(),z_U.length());
-        for (size_t i=0; i<nU; i++)
-            z_U0[i]=z_U[i];
-
-        size_t nl=std::min(lambda0.length(),lambda.length());
-        for (size_t i=0; i<nl; i++)
-            lambda0[i]=lambda[i];
-    }
-
-    /****************************************************************/
     void set_target(const Matrix &Hd)
     {
         xd=Hd.getCol(3).subVector(0,2);
@@ -189,33 +164,12 @@ public:
     }
 
     /****************************************************************/
-    void get_warm_start_params(Vector &z_L, Vector &z_U, Vector &lambda) const
-    {
-        z_L=this->z_L;
-        z_U=this->z_U;
-        lambda=this->lambda;
-    }
-
-    /****************************************************************/
     bool get_starting_point(Ipopt::Index n, bool init_x, Ipopt::Number *x,
                             bool init_z, Ipopt::Number *z_L, Ipopt::Number *z_U,
                             Ipopt::Index m, bool init_lambda, Ipopt::Number *lambda)
     {
         for (Ipopt::Index i=0; i<n; i++)
             x[i]=x0[i];
-
-        if (init_z)
-        {
-            for (Ipopt::Index i=0; i<n; i++)
-            {
-                z_L[i]=z_L0[i];
-                z_U[i]=z_U0[i];
-            }
-        }
-
-        if (init_lambda)
-            for (Ipopt::Index i=0; i<m; i++)
-                lambda[i]=lambda0[i];
 
         return true;
     }
@@ -238,14 +192,7 @@ public:
                            Ipopt::IpoptCalculatedQuantities *ip_cq)
     {
         for (Ipopt::Index i=0; i<n; i++)
-        {
             this->x[i]=x[i];
-            this->z_L[i]=z_L[i];
-            this->z_U[i]=z_U[i];
-        }
-
-        for (Ipopt::Index i=0; i<m; i++)
-            this->lambda[i]=lambda[i];
     }
 };
 

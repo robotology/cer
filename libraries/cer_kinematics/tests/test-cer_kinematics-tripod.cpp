@@ -51,6 +51,8 @@ public:
     bool configure(ResourceFinder &rf)
     {
         mode=rf.check("mode",Value(MODE_ZD_UD)).asString().c_str();
+        int verbosity=rf.check("verbosity",Value(1)).asInt();        
+
         if ((mode!=MODE_ZD_UD) && (mode!=MODE_HPR))
         {
             yWarning("Unrecognized input mode!");
@@ -62,6 +64,7 @@ public:
         oPort.open("/solver:o");
 
         rho.resize(3,0.0);
+        solver.setVerbosity(verbosity);
         gen=new minJerkTrajGen(rho,getPeriod(),2.0);
 
         yInfo("Using \"%s\" input mode",mode.c_str());

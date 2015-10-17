@@ -415,9 +415,8 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
     nlp->set_ud(ud);
     
     app->Options()->SetNumericValue("tol",1e-6);
-    app->Options()->SetNumericValue("acceptable_tol",1e-6);
-    app->Options()->SetIntegerValue("acceptable_iter",10);
-    app->Options()->SetStringValue("mu_strategy","adaptive");
+    app->Options()->SetIntegerValue("acceptable_iter",0);
+    app->Options()->SetStringValue("mu_strategy","monotone");
     app->Options()->SetIntegerValue("max_iter",200);
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetStringValue("hessian_approximation","limited-memory");
