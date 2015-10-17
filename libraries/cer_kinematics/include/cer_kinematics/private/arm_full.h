@@ -23,6 +23,8 @@ public:
     /****************************************************************/
     ArmFullNLP(ArmParameters &pa, SolverParameters &ps) : ArmCommonNLP(pa,ps)
     {
+        lambda0.resize(5,0.0);
+        lambda=lambda0;
     }
 
     /****************************************************************/

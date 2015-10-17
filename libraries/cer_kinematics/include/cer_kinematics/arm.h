@@ -38,9 +38,12 @@ protected:
     ArmParameters armParameters;
     SolverParameters slvParameters;
     yarp::sig::Vector q0;
+    int verbosity;
+
+    bool warm_start_ok;
     yarp::sig::Vector z_L;
     yarp::sig::Vector z_U;
-    int verbosity;
+    yarp::sig::Vector lambda;
 
 public:
     /**

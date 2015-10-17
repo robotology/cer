@@ -32,8 +32,9 @@ protected:
     Matrix H0,HN,Rd;
     Vector x0,x;
     Vector xd,ud;
-    Vector z_L0,z_U0;
-    Vector z_L,z_U;
+
+    Vector z_L0,z_U0,lambda0;
+    Vector z_L,z_U,lambda;
 
 public:
     /****************************************************************/
@@ -148,15 +149,20 @@ public:
     }
 
     /****************************************************************/
-    void set_boundmult(const Vector &z_L, const Vector &z_U)
+    void set_warm_start_params(const Vector &z_L, const Vector &z_U,
+                               const Vector &lambda)
     {
         size_t nL=std::min(z_L0.length(),z_L.length());
         for (size_t i=0; i<nL; i++)
-            z_L0[i]=z_L[i]; 
+            z_L0[i]=z_L[i];
 
         size_t nU=std::min(z_U0.length(),z_U.length());
         for (size_t i=0; i<nU; i++)
-            z_U0[i]=z_U[i]; 
+            z_U0[i]=z_U[i];
+
+        size_t nl=std::min(lambda0.length(),lambda.length());
+        for (size_t i=0; i<nl; i++)
+            lambda0[i]=lambda[i];
     }
 
     /****************************************************************/
@@ -183,10 +189,11 @@ public:
     }
 
     /****************************************************************/
-    void get_boundmult(Vector &z_L, Vector &z_U) const
+    void get_warm_start_params(Vector &z_L, Vector &z_U, Vector &lambda) const
     {
         z_L=this->z_L;
         z_U=this->z_U;
+        lambda=this->lambda;
     }
 
     /****************************************************************/
@@ -205,6 +212,10 @@ public:
                 z_U[i]=z_U0[i];
             }
         }
+
+        if (init_lambda)
+            for (Ipopt::Index i=0; i<m; i++)
+                lambda[i]=lambda0[i];
 
         return true;
     }
@@ -232,6 +243,9 @@ public:
             this->z_L[i]=z_L[i];
             this->z_U[i]=z_U[i];
         }
+
+        for (Ipopt::Index i=0; i<m; i++)
+            this->lambda[i]=lambda[i];
     }
 };
 

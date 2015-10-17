@@ -62,7 +62,8 @@ ArmSolver::ArmSolver(const ArmParameters &armParams,
                      const int verb) :
                      armParameters(armParams),
                      slvParameters(slvParams),
-                     verbosity(verb)
+                     verbosity(verb),
+                     warm_start_ok(false)
 {
 }
 
@@ -129,14 +130,16 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 
     nlp->set_q0(q0);
     nlp->set_target(Hd);
-    if (slvParameters.warm_start && (z_L.length()>0) && (z_U.length()>0))
+    if (slvParameters.warm_start)
     {
-        nlp->set_boundmult(z_L,z_U);
-        app->Options()->SetStringValue("warm_start_init_point","yes");
-        app->Options()->SetNumericValue("warm_start_bound_push",1.0);
-        app->Options()->SetNumericValue("warm_start_mult_bound_push",1.0);
-        app->Options()->SetNumericValue("mu_init",1.0);
+        if (warm_start_ok)
+        {
+            nlp->set_warm_start_params(z_L,z_U,lambda); 
+            app->Options()->SetStringValue("warm_start_init_point","yes");
+        }
     }
+    else
+        warm_start_ok=false;
 
     app->Options()->SetNumericValue("tol",1e-3);
     app->Options()->SetNumericValue("acceptable_tol",1e-3);
@@ -154,7 +157,9 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     double t1=Time::now();    
 
     q=nlp->get_result();
-    nlp->get_boundmult(z_L,z_U);
+    nlp->get_warm_start_params(z_L,z_U,lambda);
+    warm_start_ok=true;
+
     if (exit_code!=NULL)
         *exit_code=status;
 

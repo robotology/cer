@@ -23,6 +23,8 @@ public:
     /****************************************************************/
     ArmXyzNLP(ArmParameters &pa, SolverParameters &ps) : ArmCommonNLP(pa,ps)
     {
+        lambda0.resize(4,0.0);
+        lambda=lambda0;
     }
 
     /****************************************************************/

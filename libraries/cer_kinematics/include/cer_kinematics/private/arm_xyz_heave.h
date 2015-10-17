@@ -23,6 +23,8 @@ public:
     /****************************************************************/
     ArmXyzHeaveNLP(ArmParameters &pa, SolverParameters &ps) : ArmXyzNLP(pa,ps)
     {
+        lambda0.resize(2,0.0);
+        lambda=lambda0;
     }
 
     /****************************************************************/
