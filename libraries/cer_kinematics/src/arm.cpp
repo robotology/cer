@@ -115,7 +115,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetNumericValue("acceptable_tol",1e-3);
     app->Options()->SetIntegerValue("acceptable_iter",10);
     app->Options()->SetStringValue("mu_strategy","adaptive");
-    app->Options()->SetIntegerValue("max_iter",1000);
+    app->Options()->SetIntegerValue("max_iter",2000);
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetStringValue("hessian_approximation","limited-memory");
     app->Options()->SetStringValue("derivative_test",print_level>4?"first-order":"none");
@@ -164,6 +164,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         u*=u[3];
         u.pop_back();
 
+        yInfo(" *** Arm Solver");
         yInfo(" *** Arm Solver: arm    = %s",armParameters.upper_arm.getType().c_str());
         yInfo(" *** Arm Solver: mode   = %s",nlp->get_mode().c_str());
         yInfo(" *** Arm Solver: q0     = (%s) [*]",q0.toString(3,3).c_str());
@@ -179,6 +180,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         yInfo(" *** Arm Solver: e_z2   = %g [m]",fabs(slvParameters.lower_arm_heave-d2.p[2]));
         yInfo(" *** Arm Solver: alpha2 = %g [deg]",CTRL_RAD2DEG*acos(d2.n[2]));
         yInfo(" *** Arm Solver: dt     = %g [ms]",1000.0*(t1-t0));
+        yInfo(" *** Arm Solver");
     }
 
     switch (status)
