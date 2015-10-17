@@ -21,6 +21,7 @@
 #include <fstream>
 #include <iomanip>
 #include <cmath>
+#include <limits>
 #include <algorithm>
 #include <deque>
 
@@ -74,8 +75,11 @@ int main()
     ud*=ud[3]; ud.pop_back();
     Hd(2,3)=0.7-0.63;   // table height - root frame's height
     
-    double cumT=0.0;
-    double cumN=0.0;
+    double maxT=0.0;
+    double minT=std::numeric_limits<double>::max();
+
+    double avgT=0.0;
+    double avgN=0.0;
 
     for (Hd(0,3)=0.3; Hd(0,3)<1.0; Hd(0,3)+=0.01)
     {
@@ -85,10 +89,13 @@ int main()
 
             double t0=Time::now();
             solver.ikin(Hd,q);
-            double t1=Time::now();
+            double dt=1000.0*(Time::now()-t0);
 
-            cumT=(cumT*cumN+(t1-t0))/(cumN+1.0);
-            cumN+=1.0;
+            maxT=std::max(maxT,dt);
+            minT=std::min(minT,dt);
+
+            avgT=(avgT*avgN+dt)/(avgN+1.0);
+            avgN+=1.0;
 
             Matrix T;
             solver.fkin(q,T);
@@ -112,7 +119,8 @@ int main()
             
             fout<<stream.str()<<endl;
             yInfo("%s",stream.str().c_str());
-            yInfo("average solving time = %d [ms]",(int)(1000.0*cumT));
+            yInfo("solving time: min=%d, avg=%d, max=%d [ms]",
+                  (int)minT,(int)avgT,(int)maxT);
 
             if (gSignalStatus==SIGINT)
             {
