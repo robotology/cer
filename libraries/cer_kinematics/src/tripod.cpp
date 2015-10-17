@@ -436,7 +436,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
     {
         TripodState d=nlp->fkin(lll);
 
-        yInfo(" *** Tripod Solver");
+        yInfo(" *** Tripod Solver ******************************");
         yInfo(" *** Tripod Solver: lll0 = (%s) [m]",lll0.toString(15,15).c_str());
         yInfo(" *** Tripod Solver: zd = %g [m]",zd);
         yInfo(" *** Tripod Solver: ud = (%s) [rad]",ud.toString(15,15).c_str());
@@ -445,7 +445,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         yInfo(" *** Tripod Solver: p = (%s) [m]",d.p.toString(15,15).c_str());
         yInfo(" *** Tripod Solver: alpha = %g [deg]",CTRL_RAD2DEG*acos(d.n[2]));
         yInfo(" *** Tripod Solver: solving time = %g [ms]",1000.0*(t1-t0));
-        yInfo(" *** Tripod Solver");
+        yInfo(" *** Tripod Solver ******************************");
     }
 
     switch (status)

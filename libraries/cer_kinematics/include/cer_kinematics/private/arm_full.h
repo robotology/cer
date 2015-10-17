@@ -99,22 +99,39 @@ public:
         e*=e[3]; e.pop_back();
 
         Ipopt::Number postural_torso=0.0;
-        Ipopt::Number postural_arm=0.0;
+        Ipopt::Number postural_upper_arm=0.0;
+        Ipopt::Number postural_lower_arm=0.0;
         Ipopt::Number tmp;
 
-        tmp=x[0]-x[1];
-        postural_torso+=tmp*tmp;
-        tmp=x[1]-x[2];
-        postural_torso+=tmp*tmp;
-
-        for (size_t i=0; i<upper_arm.getDOF(); i++)
+        if (wpostural_torso!=0.0)
         {
-            tmp=x[3+i]-x0[3+i];
-            postural_arm+=tmp*tmp;
+            tmp=x[0]-x[1]; 
+            postural_torso+=tmp*tmp;
+            tmp=x[1]-x[2];
+            postural_torso+=tmp*tmp;
         }
-        
-        obj_value=norm2(e)+wpostural_torso*postural_torso+
-                           wpostural_upper_arm*postural_arm;
+
+        if (wpostural_upper_arm!=0.0)
+        {
+            for (size_t i=0; i<upper_arm.getDOF(); i++)
+            {
+                tmp=x[3+i]-x0[3+i];
+                postural_upper_arm+=tmp*tmp;
+            }
+        }
+
+        if (wpostural_lower_arm!=0.0)
+        {
+            tmp=x[9]-x[10];
+            postural_lower_arm+=tmp*tmp;
+            tmp=x[10]-x[11];
+            postural_lower_arm+=tmp*tmp;
+        }
+
+        obj_value=norm2(e)+
+                  wpostural_torso*postural_torso+
+                  wpostural_upper_arm*postural_upper_arm+
+                  wpostural_lower_arm*postural_lower_arm;
 
         return true;
     }
@@ -196,7 +213,7 @@ public:
         x_dx[9]=x[9]-drho;
         d_bw=tripod_fkin(2,x_dx);
         de_bw=dcm2axis(Rd*SE3inv(M*d_bw.T*TN)); de_bw*=de_bw[3]; de_bw.pop_back();
-        grad_f[9]=dot(e,de_fw-de_bw)/drho;
+        grad_f[9]=dot(e,de_fw-de_bw)/drho + 2.0*wpostural_lower_arm*(x[9]-x[10]);
         x_dx[9]=x[9];
 
         x_dx[10]=x[10]+drho;
@@ -205,7 +222,7 @@ public:
         x_dx[10]=x[10]-drho;
         d_bw=tripod_fkin(2,x_dx);
         de_bw=dcm2axis(Rd*SE3inv(M*d_bw.T*TN)); de_bw*=de_bw[3]; de_bw.pop_back();
-        grad_f[10]=dot(e,de_fw-de_bw)/drho;
+        grad_f[10]=dot(e,de_fw-de_bw)/drho + 2.0*wpostural_lower_arm*(2.0*x[10]-x[9]-x[11]);
         x_dx[10]=x[10];
 
         x_dx[11]=x[11]+drho;
@@ -214,7 +231,7 @@ public:
         x_dx[11]=x[11]-drho;
         d_bw=tripod_fkin(2,x_dx);
         de_bw=dcm2axis(Rd*SE3inv(M*d_bw.T*TN)); de_bw*=de_bw[3]; de_bw.pop_back();
-        grad_f[11]=dot(e,de_fw-de_bw)/drho;
+        grad_f[11]=dot(e,de_fw-de_bw)/drho + 2.0*wpostural_lower_arm*(x[11]-x[10]);
         x_dx[11]=x[11];
 
         return true;
