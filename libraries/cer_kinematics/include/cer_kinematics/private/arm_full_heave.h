@@ -74,7 +74,7 @@ public:
             x_u[offs+i]=lower_arm.l_max;
         }
 
-        g_l[0]=torso.cos_alpha_max; g_u[0]=1.0;
+        g_l[0]=torso.cos_alpha_max;     g_u[0]=1.0;
         g_l[1]=lower_arm.cos_alpha_max; g_u[1]=1.0;
         g_l[2]=g_u[2]=0.0;
 
