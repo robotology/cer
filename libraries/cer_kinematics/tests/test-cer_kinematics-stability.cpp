@@ -119,7 +119,7 @@ int main()
             
             fout<<stream.str()<<endl;
             yInfo("%s",stream.str().c_str());
-            yInfo("solving time: min=%d, avg=%d, max=%d [ms]",
+            yInfo("solving time [ms]: min=%d, avg=%d, max=%d;",
                   (int)minT,(int)avgT,(int)maxT);
 
             if (gSignalStatus==SIGINT)
