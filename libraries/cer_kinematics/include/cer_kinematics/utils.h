@@ -129,6 +129,11 @@ struct SolverParameters
     bool can_heave;
 
     /**
+     * if true enable "warm start" of the solver.
+     */
+    bool warm_start;
+
+    /**
      * desired heave assumed by the torso.
      */
     double torso_heave;
@@ -148,13 +153,14 @@ struct SolverParameters
      *                          lower arm.
      */
     SolverParameters(const bool full_pose_=true, const bool can_heave_=false,
-                     const double torso_heave_=0.0, const double lower_arm_heave_=0.0) :
-                     full_pose(full_pose_), can_heave(can_heave_),
+                     const bool warm_start_=true, const double torso_heave_=0.0,
+                     const double lower_arm_heave_=0.0) :
+                     full_pose(full_pose_), can_heave(can_heave_), warm_start(warm_start_),
                      torso_heave(torso_heave_), lower_arm_heave(lower_arm_heave_) { }
 
     /**
      * Helper that sets full_pose and can_heave according to a mode 
-     * string 
+     * string.
      *  
      * @param mode  a string that can be: 
      *              ["full"|"full+heave"|"xyz"|"xyz+heave"].

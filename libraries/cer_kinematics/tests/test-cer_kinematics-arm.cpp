@@ -100,7 +100,7 @@ public:
             ud[0]=target->get(6).asDouble();
             ud[1]=target->get(7).asDouble();
             ud[2]=target->get(8).asDouble();
-            
+
             double n=norm(ud);
             Vector ud_=(1.0/n)*ud;
             ud_.push_back(n);
@@ -112,7 +112,7 @@ public:
             SolverParameters p=solver.getSolverParameters();
             p.setMode(mode);
             p.torso_heave=zd1;
-            p.lower_arm_heave=zd2;            
+            p.lower_arm_heave=zd2;
 
             solver.setSolverParameters(p);
             solver.setInitialGuess(q);

@@ -108,21 +108,10 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         return false;
     }
 
+    Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
+    Ipopt::SmartPtr<ArmCommonNLP> nlp;
     int print_level=std::max(verbosity-5,0);
 
-    Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
-    app->Options()->SetNumericValue("tol",1e-3);
-    app->Options()->SetNumericValue("acceptable_tol",1e-3);
-    app->Options()->SetIntegerValue("acceptable_iter",10);
-    app->Options()->SetStringValue("mu_strategy","adaptive");
-    app->Options()->SetIntegerValue("max_iter",2000);
-    app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
-    app->Options()->SetStringValue("hessian_approximation","limited-memory");
-    app->Options()->SetStringValue("derivative_test",print_level>4?"first-order":"none");
-    app->Options()->SetIntegerValue("print_level",print_level);
-    app->Initialize();
-
-    Ipopt::SmartPtr<ArmCommonNLP> nlp;
     if (slvParameters.full_pose)
     {
         if (slvParameters.can_heave)
@@ -140,12 +129,32 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 
     nlp->set_q0(q0);
     nlp->set_target(Hd);
+    if (slvParameters.warm_start && (z_L.length()>0) && (z_U.length()>0))
+    {
+        nlp->set_boundmult(z_L,z_U);
+        app->Options()->SetStringValue("warm_start_init_point","yes");
+        app->Options()->SetNumericValue("warm_start_bound_push",1.0);
+        app->Options()->SetNumericValue("warm_start_mult_bound_push",1.0);
+        app->Options()->SetNumericValue("mu_init",1.0);
+    }
+
+    app->Options()->SetNumericValue("tol",1e-3);
+    app->Options()->SetNumericValue("acceptable_tol",1e-3);
+    app->Options()->SetIntegerValue("acceptable_iter",10);
+    app->Options()->SetStringValue("mu_strategy","adaptive");
+    app->Options()->SetIntegerValue("max_iter",2000);
+    app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
+    app->Options()->SetStringValue("hessian_approximation","limited-memory");
+    app->Options()->SetStringValue("derivative_test",print_level>4?"first-order":"none");
+    app->Options()->SetIntegerValue("print_level",print_level);
+    app->Initialize();
 
     double t0=Time::now();
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
     double t1=Time::now();    
 
     q=nlp->get_result();
+    nlp->get_boundmult(z_L,z_U);
     if (exit_code!=NULL)
         *exit_code=status;
 

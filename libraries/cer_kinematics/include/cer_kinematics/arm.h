@@ -38,6 +38,8 @@ protected:
     ArmParameters armParameters;
     SolverParameters slvParameters;
     yarp::sig::Vector q0;
+    yarp::sig::Vector z_L;
+    yarp::sig::Vector z_U;
     int verbosity;
 
 public:

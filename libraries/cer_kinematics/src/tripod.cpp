@@ -406,9 +406,14 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         return false;
     }
 
-    int print_level=std::max(verbosity-5,0);
-
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication; 
+    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(parameters);
+    int print_level=std::max(verbosity-5,0);
+    
+    nlp->set_rho0(lll0);
+    nlp->set_zd(zd);
+    nlp->set_ud(ud);
+    
     app->Options()->SetNumericValue("tol",1e-6);
     app->Options()->SetNumericValue("acceptable_tol",1e-6);
     app->Options()->SetIntegerValue("acceptable_iter",10);
@@ -419,12 +424,6 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
     app->Options()->SetStringValue("derivative_test",print_level>4?"first-order":"none");
     app->Options()->SetIntegerValue("print_level",print_level);
     app->Initialize();
-
-    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(parameters);
-    
-    nlp->set_rho0(lll0);
-    nlp->set_zd(zd);
-    nlp->set_ud(ud);
 
     double t0=Time::now();
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
