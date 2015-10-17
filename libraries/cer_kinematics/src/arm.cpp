@@ -163,21 +163,23 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         u.pop_back();
 
         yInfo(" *** Arm Solver ******************************");
-        yInfo(" *** Arm Solver: arm    = %s",armParameters.upper_arm.getType().c_str());
-        yInfo(" *** Arm Solver: mode   = %s",nlp->get_mode().c_str());
-        yInfo(" *** Arm Solver: q0     = (%s) [*]",q0.toString(3,3).c_str());
-        yInfo(" *** Arm Solver: zd1    = %g [m]",slvParameters.torso_heave);
-        yInfo(" *** Arm Solver: zd2    = %g [m]",slvParameters.lower_arm_heave);
-        yInfo(" *** Arm Solver: xd     = (%s) [m]",xd.toString(3,3).c_str());
-        yInfo(" *** Arm Solver: ud     = (%s) [rad]",ud.toString(3,3).c_str());
-        yInfo(" *** Arm Solver: q      = (%s) [*]",q.toString(15,15).c_str());
-        yInfo(" *** Arm Solver: e_x    = %g [m]",norm(xd-x));
-        yInfo(" *** Arm Solver: e_u    = %g [rad]",norm(ud-u));
-        yInfo(" *** Arm Solver: e_z1   = %g [m]",fabs(slvParameters.torso_heave-d1.p[2]));
-        yInfo(" *** Arm Solver: alpha1 = %g [deg]",CTRL_RAD2DEG*acos(d1.n[2]));
-        yInfo(" *** Arm Solver: e_z2   = %g [m]",fabs(slvParameters.lower_arm_heave-d2.p[2]));
-        yInfo(" *** Arm Solver: alpha2 = %g [deg]",CTRL_RAD2DEG*acos(d2.n[2]));
-        yInfo(" *** Arm Solver: dt     = %g [ms]",1000.0*(t1-t0));
+        yInfo(" *** Arm Solver:             arm = %s",armParameters.upper_arm.getType().c_str());
+        yInfo(" *** Arm Solver:            mode = %s",nlp->get_mode().c_str());
+        yInfo(" *** Arm Solver:             tol = %g",slvParameters.tol);
+        yInfo(" *** Arm Solver: constr_viol_tol = %g",slvParameters.constr_viol_tol);
+        yInfo(" *** Arm Solver:          q0 [*] = (%s)",q0.toString(3,3).c_str());
+        yInfo(" *** Arm Solver:         zd1 [m] = %g",slvParameters.torso_heave);
+        yInfo(" *** Arm Solver:         zd2 [m] = %g",slvParameters.lower_arm_heave);
+        yInfo(" *** Arm Solver:          xd [m] = (%s)",xd.toString(3,3).c_str());
+        yInfo(" *** Arm Solver:        ud [rad] = (%s)",ud.toString(3,3).c_str());
+        yInfo(" *** Arm Solver:           q [*] = (%s)",q.toString(15,15).c_str());
+        yInfo(" *** Arm Solver:         e_x [m] = %g",norm(xd-x));
+        yInfo(" *** Arm Solver:       e_u [rad] = %g",norm(ud-u));
+        yInfo(" *** Arm Solver:        e_z1 [m] = %g",fabs(slvParameters.torso_heave-d1.p[2]));
+        yInfo(" *** Arm Solver:    alpha1 [deg] = %g",CTRL_RAD2DEG*acos(d1.n[2]));
+        yInfo(" *** Arm Solver:        e_z2 [m] = %g",fabs(slvParameters.lower_arm_heave-d2.p[2]));
+        yInfo(" *** Arm Solver:    alpha2 [deg] = %g",CTRL_RAD2DEG*acos(d2.n[2]));
+        yInfo(" *** Arm Solver:         dt [ms] = %g",1000.0*(t1-t0));
         yInfo(" *** Arm Solver ******************************");
     }
 
