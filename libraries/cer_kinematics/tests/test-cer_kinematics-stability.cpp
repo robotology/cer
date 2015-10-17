@@ -112,7 +112,7 @@ int main()
             
             fout<<stream.str()<<endl;
             yInfo("%s",stream.str().c_str());
-            yInfo("average solving time = %g [ms]",1000.0*cumT);
+            yInfo("average solving time = %d [ms]",(int)(1000.0*cumT));
 
             if (gSignalStatus==SIGINT)
             {
