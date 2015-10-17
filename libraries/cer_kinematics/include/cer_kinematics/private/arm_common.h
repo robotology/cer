@@ -26,10 +26,10 @@ protected:
 
     double drho;
 
-    Matrix &T0,&TN;
-    double &zd1,&zd2;
-    double &wpostural_torso;
-    double &wpostural_upper_arm;
+    Matrix T0,TN;
+    double zd1,zd2;
+    double wpostural_torso;
+    double wpostural_upper_arm;
 
     Matrix H0,HN,Rd;
     Vector x0,x;
