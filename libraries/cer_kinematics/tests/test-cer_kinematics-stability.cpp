@@ -55,23 +55,59 @@ void signal_handler(int signal)
 /****************************************************************/
 int main(int argc, char *argv[])
 {
-    std::signal(SIGINT,signal_handler);
-
     ResourceFinder rf;
     rf.configure(argc,argv);
 
+    // command line options
     double table_height=rf.check("table_height",Value(0.7)).asDouble();
     string grasp_type=rf.check("grasp_type",Value("top")).asString().c_str();
 
-    ArmSolver solver;
+    // declare solver and set parameters
+    ArmSolver solver(ArmParameters("left"));
     Vector q(12,0.0);
 
     SolverParameters p=solver.getSolverParameters();
     p.setMode("full");
-    p.torso_heave=0.1;
+    p.torso_heave=0.0;
     p.lower_arm_heave=0.01;
-    solver.setSolverParameters(p);    
+    solver.setSolverParameters(p);
 
+    // CoM relative positions with weights
+    Vector com_mobilebase_lowertorso(4,1.0);
+    com_mobilebase_lowertorso[0]=0.0264;
+    com_mobilebase_lowertorso[1]=0.0;
+    com_mobilebase_lowertorso[2]=0.215;
+    double weight_mobilebase_lowertorso=27.5;
+
+    Vector com_l0(4,1.0);
+    com_l0[0]=0.074;
+    com_l0[1]=0.0;
+    com_l0[2]=0.79;
+    double weight_l0=5.6654233;
+
+    Vector com_l3(4,1.0);
+    com_l3[0]=-0.00945;
+    com_l3[1]=0.117;
+    com_l3[2]=0.96;
+    double weight_l3=2.82328;
+
+    Vector com_l5(4,1.0);
+    com_l5[0]=-0.01;
+    com_l5[1]=0.191;
+    com_l5[2]=0.541;
+    double weight_l5=0.596;
+
+    Vector com_hand(4,1.0);
+    com_hand[0]=0.0;
+    com_hand[1]=0.0;
+    com_hand[2]=0.0;
+    double weight_hand=0.6+2.0;
+
+    double weight_tot=weight_mobilebase_lowertorso+
+                      weight_l0+weight_l3+weight_l5+
+                      weight_hand;
+
+    // targets
     Vector ud(4,0.0);
     if (grasp_type=="top")
         ud[1]=1.0;
@@ -83,6 +119,7 @@ int main(int argc, char *argv[])
     ud*=ud[3]; ud.pop_back();
     Hd(2,3)=table_height-0.63;
     
+    // timing statistics
     double maxT=0.0;
     double minT=std::numeric_limits<double>::max();
 
@@ -93,6 +130,7 @@ int main(int argc, char *argv[])
     ofstream fout;
     fout.open("data.log");
 
+    std::signal(SIGINT,signal_handler);
     for (Hd(0,3)=0.3; Hd(0,3)<1.0; Hd(0,3)+=0.01)
     {
         for (Hd(1,3)=0.3; Hd(1,3)>0.0; Hd(1,3)-=0.01)
@@ -111,12 +149,27 @@ int main(int argc, char *argv[])
             avgT=avgT_n1;
             N+=1.0;
 
-            Matrix T;
-            solver.fkin(q,T);
+            Matrix frame_l0;
+            solver.fkin(q,frame_l0,3+0);
+
+            Matrix frame_l3;
+            solver.fkin(q,frame_l3,3+3);
+
+            Matrix frame_l5;
+            solver.fkin(q,frame_l5,3+5);
+
+            Matrix frame_hand;
+            solver.fkin(q,frame_hand);
+
+            Vector com=weight_mobilebase_lowertorso*com_mobilebase_lowertorso+
+                       weight_l0*frame_l0*com_l0+weight_l3*frame_l3*com_l3+
+                       weight_l5*frame_l5*com_l5+weight_hand*frame_hand*com_hand;
+            com.pop_back();
+            com/=weight_tot;
 
             Vector xd=Hd.getCol(3).subVector(0,2);
-            Vector x=T.getCol(3).subVector(0,2);
-            Vector u=dcm2axis(T);
+            Vector x=frame_hand.getCol(3).subVector(0,2);
+            Vector u=dcm2axis(frame_hand);
             u*=u[3]; u.pop_back();
 
             ostringstream stream;
@@ -125,12 +178,14 @@ int main(int argc, char *argv[])
 
             stream<<xd.toString(3,3).c_str();
             stream<<"\t";
-            stream<<q.toString(3,3).c_str();
+            stream<<x.toString(3,3).c_str();
             stream<<"\t";
             stream<<norm(xd-x);
             stream<<"\t";
             stream<<norm(ud-u);
-            
+            stream<<"\t";
+            stream<<com.toString(3,3).c_str();
+
             fout<<stream.str()<<endl;
             yInfo("%s",stream.str().c_str());
             yInfo("solving time [ms]: min=%d, avg=%d, std=%d, max=%d;",
@@ -148,7 +203,6 @@ int main(int argc, char *argv[])
     }
 
     fout.close();
-
     return 0;
 }
 
