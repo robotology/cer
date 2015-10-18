@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
             minT=std::min(minT,dt);
 
             double avgT_n1=(avgT*N+dt)/(N+1.0);
-            stdT=sqrt((N*(stdT*stdT+avgT*avgT)+dt*dt)/(N+1)-avgT_n1*avgT_n1);
+            stdT=sqrt((N*(stdT*stdT+avgT*avgT)+dt*dt)/(N+1.0)-avgT_n1*avgT_n1);
             avgT=avgT_n1;
             N+=1.0;
 
@@ -165,10 +165,10 @@ int main(int argc, char *argv[])
             solver.fkin(q,frame_hand);
 
             Vector com=weight_mobilebase_lowertorso*com_mobilebase_lowertorso+
-                       weight_l0*frame_l0*com_l0+weight_l3*frame_l3*com_l3+
-                       weight_l5*frame_l5*com_l5+weight_hand*frame_hand*com_hand;
+                       weight_l0*(frame_l0*com_l0)+weight_l3*(frame_l3*com_l3)+
+                       weight_l5*(frame_l5*com_l5)+weight_hand*(frame_hand*com_hand);
             com.pop_back();
-            com/=weight_tot;
+            com/=weight_tot;            
 
             Vector xd=Hd.getCol(3).subVector(0,2);
             Vector x=frame_hand.getCol(3).subVector(0,2);
