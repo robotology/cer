@@ -34,8 +34,11 @@ class UpperArm : public iKinLimb
 {
 public:
     /****************************************************************/
-    UpperArm(const string &type) : iKinLimb(type)
+    UpperArm(const string &type_) : iKinLimb(type_)
     {
+        if ((type!="right") && (type!="left"))
+            type="left";
+
         allocate(type);
     }
 
@@ -43,15 +46,11 @@ protected:
     /****************************************************************/
     void allocate(const string &type)
     {
-        string type_=type;
-        if ((type_!="right") && (type_!="left"))
-            type_="left";
-
         Matrix HN=eye(4,4); 
         HN(2,3)=0.22;
         setHN(HN);
 
-        if (type_=="left")
+        if (type=="left")
         {
             pushLink(new iKinLink(-0.084, 0.312317,100.0*CTRL_DEG2RAD, 180.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD)); 
             pushLink(new iKinLink(   0.0,-0.159422, 90.0*CTRL_DEG2RAD,  90.0*CTRL_DEG2RAD,-20.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));

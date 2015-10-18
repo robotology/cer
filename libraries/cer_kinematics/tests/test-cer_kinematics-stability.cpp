@@ -17,13 +17,13 @@
 */
 
 #include <csignal>
+#include <string>
 #include <sstream>
 #include <fstream>
 #include <iomanip>
 #include <cmath>
 #include <limits>
 #include <algorithm>
-#include <deque>
 
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
@@ -58,51 +58,54 @@ int main(int argc, char *argv[])
     ResourceFinder rf;
     rf.configure(argc,argv);
 
-    // command line options
-    double table_height=rf.check("table_height",Value(0.7)).asDouble();
-    string grasp_type=rf.check("grasp_type",Value("top")).asString().c_str();
+    // command-line options
+    string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
+    string grasp_type=rf.check("grasp-type",Value("top")).asString().c_str();
+    double table_height=rf.check("table-height",Value(0.7)).asDouble();
 
-    // declare solver and set parameters
-    ArmSolver solver(ArmParameters("left"));
+    // define solver and set parameters
+    ArmParameters armp(arm_type);
+    ArmSolver solver(armp);
     Vector q(12,0.0);
 
-    SolverParameters p=solver.getSolverParameters();
-    p.setMode("full");
-    p.torso_heave=0.0;
-    p.lower_arm_heave=0.01;
-    solver.setSolverParameters(p);
+    SolverParameters slvp=solver.getSolverParameters();
+    slvp.setMode("full");
+    slvp.torso_heave=0.0;
+    slvp.lower_arm_heave=0.01;
+    solver.setSolverParameters(slvp);
 
-    // CoM relative positions with weights
+    // CoM positions relative to frames
     Vector com_mobilebase_lowertorso(4,1.0);
     com_mobilebase_lowertorso[0]=0.0264;
     com_mobilebase_lowertorso[1]=0.0;
     com_mobilebase_lowertorso[2]=0.215;
-    double weight_mobilebase_lowertorso=27.5;
-
+    
     Vector com_l0(4,1.0);
     com_l0[0]=0.074;
     com_l0[1]=0.0;
     com_l0[2]=0.79;
-    double weight_l0=5.6654233;
 
     Vector com_l3(4,1.0);
     com_l3[0]=-0.00945;
     com_l3[1]=0.117;
     com_l3[2]=0.96;
-    double weight_l3=2.82328;
-
+    
     Vector com_l5(4,1.0);
     com_l5[0]=-0.01;
     com_l5[1]=0.191;
     com_l5[2]=0.541;
-    double weight_l5=0.596;
-
+    
     Vector com_hand(4,1.0);
     com_hand[0]=0.0;
     com_hand[1]=0.0;
     com_hand[2]=0.0;
+    
+    // weights
+    double weight_mobilebase_lowertorso=27.5;
+    double weight_l0=5.6654233;
+    double weight_l3=2.82328;
+    double weight_l5=0.596;
     double weight_hand=0.6+2.0;
-
     double weight_tot=weight_mobilebase_lowertorso+
                       weight_l0+weight_l3+weight_l5+
                       weight_hand;
@@ -131,9 +134,9 @@ int main(int argc, char *argv[])
     fout.open("data.log");
 
     std::signal(SIGINT,signal_handler);
-    for (Hd(0,3)=0.3; Hd(0,3)<1.0; Hd(0,3)+=0.01)
+    for (Hd(0,3)=0.3; Hd(0,3)<=1.0; Hd(0,3)+=0.02)
     {
-        for (Hd(1,3)=0.3; Hd(1,3)>0.0; Hd(1,3)-=0.01)
+        for (Hd(1,3)=0.3; Hd(1,3)>=-0.3; Hd(1,3)-=0.02)
         {
             solver.setInitialGuess(q);
 
