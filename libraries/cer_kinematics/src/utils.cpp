@@ -103,28 +103,28 @@ bool SolverParameters::setMode(const string &mode)
         full_pose=true;
         can_heave=false;
         tol=1e-2;
-        constr_viol_tol=2e-6;
+        constr_tol=2e-6;
     }
     else if (mode=="full+heave")
     {
         full_pose=true;
         can_heave=true;
         tol=1e-2;
-        constr_viol_tol=2e-6;
+        constr_tol=2e-6;
     }
     else if (mode=="xyz")
     {
         full_pose=false;
         can_heave=false;
         tol=1e-3;
-        constr_viol_tol=1e-5;
+        constr_tol=1e-5;
     }
     else if (mode=="xyz+heave")
     {
         full_pose=false;
         can_heave=true;
         tol=1e-3;
-        constr_viol_tol=1e-4;
+        constr_tol=1e-4;
     }
     else
         return false;
