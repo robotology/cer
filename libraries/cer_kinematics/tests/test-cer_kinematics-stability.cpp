@@ -102,9 +102,9 @@ int main(int argc, char *argv[])
     
     // weights
     double weight_mobilebase_lowertorso=27.5;
-    double weight_l0=5.6654233;
-    double weight_l3=2.82328;
-    double weight_l5=0.596;
+    double weight_l0=5.67;
+    double weight_l3=2.83;
+    double weight_l5=0.6;
     double weight_hand=0.6+2.0;
     double weight_tot=weight_mobilebase_lowertorso+
                       weight_l0+weight_l3+weight_l5+
