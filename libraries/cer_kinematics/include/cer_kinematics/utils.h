@@ -164,6 +164,13 @@ struct SolverParameters
     double constr_tol;
 
     /**
+     * if true compute gradients resorting to central finite 
+     * difference approximation instead of forward difference 
+     * formula. 
+     */
+    bool enable_central_difference;
+
+    /**
      * Constructor. 
      *  
      * @param full_pose_                    enable/disable full pose
@@ -182,20 +189,28 @@ struct SolverParameters
      * @param weight_postural_lower_arm_    weight for postural task
      *                                      of the lower_arm.
      * @param tol_                          cost function tolerance.
-     * @param constr_tol_                   constraints tolerance.
+     * @param constr_tol_                   constraints tolerance. 
+     * @param enable_central_difference_    compute gradients 
+     *                                      resorting to central
+     *                                      finite difference
+     *                                      approximation instead of
+     *                                      forward difference
+     *                                      formula.
      */
     SolverParameters(const bool full_pose_=true, const bool can_heave_=false,
                      const double torso_heave_=0.0, const double lower_arm_heave_=0.0,
                      const double weight_postural_torso_=0.0,
                      const double weight_postural_upper_arm_=0.0,
                      const double weight_postural_lower_arm_=0.0,
-                     const double tol_=1e-2, const double constr_tol_=2e-6) :
+                     const double tol_=1e-2, const double constr_tol_=2e-6,
+                     const bool enable_central_difference_=false) :
                      full_pose(full_pose_), can_heave(can_heave_),
                      torso_heave(torso_heave_), lower_arm_heave(lower_arm_heave_),
                      weight_postural_torso(weight_postural_torso_),
                      weight_postural_upper_arm(weight_postural_upper_arm_),
                      weight_postural_lower_arm(weight_postural_lower_arm_),
-                     tol(tol_), constr_tol(constr_tol_) { }
+                     tol(tol_), constr_tol(constr_tol_),
+                     enable_central_difference(enable_central_difference_) { }
 
     /**
      * Helper that sets full_pose and can_heave according to a mode 

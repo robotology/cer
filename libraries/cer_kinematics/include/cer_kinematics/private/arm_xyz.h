@@ -17,18 +17,19 @@
 
 
 /****************************************************************/
-class ArmXyzNLP : public ArmCommonNLP
+class ArmXyzNLP_ForwardDiff : public ArmCommonNLP
 {
 public:
     /****************************************************************/
-    ArmXyzNLP(ArmParameters &pa, SolverParameters &ps) : ArmCommonNLP(pa,ps)
+    ArmXyzNLP_ForwardDiff(ArmParameters &pa, SolverParameters &ps) :
+                          ArmCommonNLP(pa,ps)
     {
     }
 
     /****************************************************************/
     string get_mode() const
     {
-        return "xyz";
+        return "xyz+forward_diff";
     }
 
     /****************************************************************/
@@ -132,43 +133,34 @@ public:
         computeQuantities(x,new_x);
 
         Vector e=xd-T.getCol(3).subVector(0,2);
-        Vector de_fw,de_bw;
+        Vector e_fw;
         Matrix M;
 
         Ipopt::Number x_dx[12];
         for (Ipopt::Index i=0; i<n; i++)
             x_dx[i]=x[i];
 
-        TripodState d_fw,d_bw;
+        TripodState d_fw;
 
         // g[4] (torso)
         M=H*d2.T*TN;
 
         x_dx[0]=x[0]+drho;
         d_fw=tripod_fkin(1,x_dx);
-        de_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
-        x_dx[0]=x[0]-drho;
-        d_bw=tripod_fkin(1,x_dx);
-        de_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
-        grad_f[0]=dot(e,de_fw-de_bw)/drho + 2.0*wpostural_torso*(x[0]-x[1]);
+        e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+        grad_f[0]=2.0*(dot(e,e_fw-e)/drho + wpostural_torso*(x[0]-x[1]));
         x_dx[0]=x[0];
 
         x_dx[1]=x[1]+drho;
         d_fw=tripod_fkin(1,x_dx);
-        de_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
-        x_dx[1]=x[1]-drho;
-        d_bw=tripod_fkin(1,x_dx);
-        de_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
-        grad_f[1]=dot(e,de_fw-de_bw)/drho + 2.0*wpostural_torso*(2.0*x[1]-x[0]-x[2]);
+        e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+        grad_f[1]=2.0*(dot(e,e_fw-e)/drho + wpostural_torso*(2.0*x[1]-x[0]-x[2]));
         x_dx[1]=x[1];
 
         x_dx[2]=x[2]+drho;
         d_fw=tripod_fkin(1,x_dx);
-        de_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
-        x_dx[2]=x[2]-drho;
-        d_bw=tripod_fkin(1,x_dx);
-        de_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
-        grad_f[2]=dot(e,de_fw-de_bw)/drho + 2.0*wpostural_torso*(x[2]-x[1]);
+        e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+        grad_f[2]=2.0*(dot(e,e_fw-e)/drho + wpostural_torso*(x[2]-x[1]));
         x_dx[2]=x[2];
 
         // g[4] (upper_arm)
@@ -181,29 +173,20 @@ public:
 
         x_dx[9]=x[9]+drho;
         d_fw=tripod_fkin(2,x_dx);
-        de_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
-        x_dx[9]=x[9]-drho;
-        d_bw=tripod_fkin(2,x_dx);
-        de_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
-        grad_f[9]=dot(e,de_fw-de_bw)/drho + 2.0*wpostural_lower_arm*(x[9]-x[10]);
+        e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
+        grad_f[9]=2.0*(dot(e,e_fw-e)/drho + wpostural_lower_arm*(x[9]-x[10]));
         x_dx[9]=x[9];
 
         x_dx[10]=x[10]+drho;
         d_fw=tripod_fkin(2,x_dx);
-        de_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
-        x_dx[10]=x[10]-drho;
-        d_bw=tripod_fkin(2,x_dx);
-        de_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
-        grad_f[10]=dot(e,de_fw-de_bw)/drho + 2.0*wpostural_lower_arm*(2.0*x[10]-x[9]-x[11]);
+        e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
+        grad_f[10]=2.0*(dot(e,e_fw-e)/drho + wpostural_lower_arm*(2.0*x[10]-x[9]-x[11]));
         x_dx[10]=x[10];
 
         x_dx[11]=x[11]+drho;
         d_fw=tripod_fkin(2,x_dx);
-        de_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
-        x_dx[11]=x[11]-drho;
-        d_bw=tripod_fkin(2,x_dx);
-        de_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
-        grad_f[11]=dot(e,de_fw-de_bw)/drho + 2.0*wpostural_lower_arm*(x[11]-x[10]);
+        e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
+        grad_f[11]=2.0*(dot(e,e_fw-e)/drho + wpostural_lower_arm*(x[11]-x[10]));
         x_dx[11]=x[11];
 
         return true;
@@ -222,6 +205,191 @@ public:
         double e2=zd2-d2.p[2];
         g[2]=e2*e2;
         g[3]=d2.n[2];
+
+        return true;
+    }
+
+    /****************************************************************/
+    bool eval_jac_g(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
+                    Ipopt::Index m, Ipopt::Index nele_jac, Ipopt::Index *iRow,
+                    Ipopt::Index *jCol, Ipopt::Number *values)
+    {
+        if (values==NULL)
+        {
+            // g[0] (torso)
+            iRow[0]=0; jCol[0]=0;
+            iRow[1]=0; jCol[1]=1;
+            iRow[2]=0; jCol[2]=2;
+
+            // g[1] (torso)
+            iRow[3]=1; jCol[3]=0;
+            iRow[4]=1; jCol[4]=1;
+            iRow[5]=1; jCol[5]=2;
+
+            // g[2] (lower_arm)
+            iRow[6]=2; jCol[6]=9;
+            iRow[7]=2; jCol[7]=10;
+            iRow[8]=2; jCol[8]=11;
+
+            // g[3] (lower_arm)
+            iRow[9]=3;  jCol[9]=9;
+            iRow[10]=3; jCol[10]=10;
+            iRow[11]=3; jCol[11]=11;
+        }
+        else
+        {
+            computeQuantities(x,new_x);
+
+            Ipopt::Number x_dx[12];
+            for (Ipopt::Index i=0; i<n; i++)
+                x_dx[i]=x[i];
+
+            TripodState d_fw;
+
+            // g[0,1] (torso)
+            double e1=zd1-d1.p[2];
+
+            x_dx[0]=x[0]+drho;
+            d_fw=tripod_fkin(1,x_dx);
+            values[0]=-2.0*e1*(d_fw.p[2]-d1.p[2])/drho;
+            values[3]=(d_fw.n[2]-d1.n[2])/drho;
+            x_dx[0]=x[0];
+
+            x_dx[1]=x[1]+drho;
+            d_fw=tripod_fkin(1,x_dx);
+            values[1]=-2.0*e1*(d_fw.p[2]-d1.p[2])/drho;
+            values[4]=(d_fw.n[2]-d1.n[2])/drho;
+            x_dx[1]=x[1];
+
+            x_dx[2]=x[2]+drho;
+            d_fw=tripod_fkin(1,x_dx);
+            values[2]=-2.0*e1*(d_fw.p[2]-d1.p[2])/drho;
+            values[5]=(d_fw.n[2]-d1.n[2])/drho;
+            x_dx[2]=x[2];
+
+            // g[2,3] (lower_arm)
+            double e2=zd2-d2.p[2];
+
+            x_dx[9]=x[9]+drho;
+            d_fw=tripod_fkin(2,x_dx);
+            values[6]=-2.0*e2*(d_fw.p[2]-d2.p[2])/drho;
+            values[9]=(d_fw.n[2]-d2.n[2])/drho;
+            x_dx[9]=x[9];
+
+            x_dx[10]=x[10]+drho;
+            d_fw=tripod_fkin(2,x_dx);
+            values[7]=-2.0*e2*(d_fw.p[2]-d2.p[2])/drho;
+            values[10]=(d_fw.n[2]-d2.n[2])/drho;
+            x_dx[10]=x[10];
+
+            x_dx[11]=x[11]+drho;
+            d_fw=tripod_fkin(2,x_dx);
+            values[8]=-2.0*e2*(d_fw.p[2]-d2.p[2])/drho;
+            values[11]=(d_fw.n[2]-d2.n[2])/drho;
+            x_dx[11]=x[11];
+        }
+
+        return true;
+    }
+};
+
+
+/****************************************************************/
+class ArmXyzNLP_CentralDiff : public ArmXyzNLP_ForwardDiff
+{
+public:
+    /****************************************************************/
+    ArmXyzNLP_CentralDiff(ArmParameters &pa, SolverParameters &ps) :
+                          ArmXyzNLP_ForwardDiff(pa,ps)
+    {
+    }
+
+    /****************************************************************/
+    string get_mode() const
+    {
+        return "xyz+central_diff";
+    }
+
+    /****************************************************************/
+    bool eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
+                     Ipopt::Number *grad_f)
+    {
+        computeQuantities(x,new_x);
+
+        Vector e=xd-T.getCol(3).subVector(0,2);
+        Vector e_fw,e_bw;
+        Matrix M;
+
+        Ipopt::Number x_dx[12];
+        for (Ipopt::Index i=0; i<n; i++)
+            x_dx[i]=x[i];
+
+        TripodState d_fw,d_bw;
+
+        // g[4] (torso)
+        M=H*d2.T*TN;
+
+        x_dx[0]=x[0]+drho;
+        d_fw=tripod_fkin(1,x_dx);
+        e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+        x_dx[0]=x[0]-drho;
+        d_bw=tripod_fkin(1,x_dx);
+        e_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
+        grad_f[0]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_torso*(x[0]-x[1]);
+        x_dx[0]=x[0];
+
+        x_dx[1]=x[1]+drho;
+        d_fw=tripod_fkin(1,x_dx);
+        e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+        x_dx[1]=x[1]-drho;
+        d_bw=tripod_fkin(1,x_dx);
+        e_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
+        grad_f[1]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_torso*(2.0*x[1]-x[0]-x[2]);
+        x_dx[1]=x[1];
+
+        x_dx[2]=x[2]+drho;
+        d_fw=tripod_fkin(1,x_dx);
+        e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+        x_dx[2]=x[2]-drho;
+        d_bw=tripod_fkin(1,x_dx);
+        e_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
+        grad_f[2]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_torso*(x[2]-x[1]);
+        x_dx[2]=x[2];
+
+        // g[4] (upper_arm)
+        Vector grad=-2.0*(J_.submatrix(0,2,0,upper_arm.getDOF()-1).transposed()*e);
+        for (size_t i=0; i<grad.length(); i++)
+            grad_f[3+i]=grad[i] + 2.0*wpostural_upper_arm*(x[3+i]-x0[3+i]);
+
+        // g[4] (lower_arm)
+        M=T0*d1.T*H;
+
+        x_dx[9]=x[9]+drho;
+        d_fw=tripod_fkin(2,x_dx);
+        e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
+        x_dx[9]=x[9]-drho;
+        d_bw=tripod_fkin(2,x_dx);
+        e_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
+        grad_f[9]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(x[9]-x[10]);
+        x_dx[9]=x[9];
+
+        x_dx[10]=x[10]+drho;
+        d_fw=tripod_fkin(2,x_dx);
+        e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
+        x_dx[10]=x[10]-drho;
+        d_bw=tripod_fkin(2,x_dx);
+        e_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
+        grad_f[10]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(2.0*x[10]-x[9]-x[11]);
+        x_dx[10]=x[10];
+
+        x_dx[11]=x[11]+drho;
+        d_fw=tripod_fkin(2,x_dx);
+        e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
+        x_dx[11]=x[11]-drho;
+        d_bw=tripod_fkin(2,x_dx);
+        e_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
+        grad_f[11]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(x[11]-x[10]);
+        x_dx[11]=x[11];
 
         return true;
     }

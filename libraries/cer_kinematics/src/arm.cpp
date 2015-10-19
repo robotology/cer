@@ -90,7 +90,7 @@ bool ArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
         return false;
     }
 
-    Ipopt::SmartPtr<ArmFullNLP> nlp=new ArmFullNLP(armParameters,slvParameters);
+    Ipopt::SmartPtr<ArmFullNLP_CentralDiff> nlp=new ArmFullNLP_CentralDiff(armParameters,slvParameters);
     H=nlp->fkin(q,frame);
 
     return true;
@@ -124,16 +124,26 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     if (slvParameters.full_pose)
     {
         if (slvParameters.can_heave)
-            nlp=new ArmFullHeaveNLP(armParameters,slvParameters);
+            if (slvParameters.enable_central_difference)
+                nlp=new ArmFullHeaveNLP_CentralDiff(armParameters,slvParameters); 
+            else
+                nlp=new ArmFullHeaveNLP_ForwardDiff(armParameters,slvParameters); 
+        else if (slvParameters.enable_central_difference)
+            nlp=new ArmFullNLP_CentralDiff(armParameters,slvParameters);
         else
-            nlp=new ArmFullNLP(armParameters,slvParameters);
+            nlp=new ArmFullNLP_ForwardDiff(armParameters,slvParameters);
     }
     else
     {
         if (slvParameters.can_heave)
-            nlp=new ArmXyzHeaveNLP(armParameters,slvParameters);
+            if (slvParameters.enable_central_difference)
+                nlp=new ArmXyzHeaveNLP_CentralDiff(armParameters,slvParameters); 
+            else
+                nlp=new ArmXyzHeaveNLP_ForwardDiff(armParameters,slvParameters); 
+        else if (slvParameters.enable_central_difference)
+            nlp=new ArmXyzNLP_CentralDiff(armParameters,slvParameters);
         else
-            nlp=new ArmXyzNLP(armParameters,slvParameters);
+            nlp=new ArmXyzNLP_ForwardDiff(armParameters,slvParameters);
     }
 
     nlp->set_q0(q0);
