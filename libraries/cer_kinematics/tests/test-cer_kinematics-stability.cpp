@@ -62,6 +62,7 @@ int main(int argc, char *argv[])
     string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
     string grasp_type=rf.check("grasp-type",Value("top")).asString().c_str();
     double table_height=rf.check("table-height",Value(0.7)).asDouble();
+    double external_weight=rf.check("external-weight",Value(2.0)).asDouble();
 
     // define solver and set parameters
     ArmParameters armp(arm_type);
@@ -111,7 +112,7 @@ int main(int argc, char *argv[])
     double weight_l0=5.67;
     double weight_l3=2.83;
     double weight_l5=0.6;
-    double weight_hand=0.6+2.0;
+    double weight_hand=0.6+external_weight;
     double weight_tot=weight_mobilebase_lowertorso+weight_head+
                       weight_l0+weight_l3+weight_l5+
                       weight_hand;
