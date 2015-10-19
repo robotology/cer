@@ -46,7 +46,7 @@ z=[0 0 1]';
 pitch=0;
 roll=0;
 
-hfig=figure('Name','Tripod');
+hfig=figure('Name','Tripod','Color','w');
 set(hfig,'Toolbar','figure');
 hold on; view([1 1 1]); grid;
 xlim(1.5*P.l*[-1 1]); xlabel('x [m]');

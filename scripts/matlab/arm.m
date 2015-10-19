@@ -51,7 +51,7 @@ T2.theta0=0;
 T2.transparency=0.3;
 T2.marker_size=2;
 
-hfig=figure('Name','Arm');
+hfig=figure('Name','Arm','Color','w');
 set(hfig,'Toolbar','figure');
 hold on; view([1 1 1]); grid;
 xlim(0.7*[-0.5 1.5]); xlabel('x [m]');
