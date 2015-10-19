@@ -125,28 +125,9 @@ public:
         Vector w1(4,1.0);
         w1[0]=0.0; w1[1]=0.17;
         Vector w2(4,1.0);
-        w2[0]=w1[1]; w2[1]=-w1[1];
+        w2[0]=w1[0]; w2[1]=-w1[1];
 
         c1[2]=c2[2]=c3[2]=w1[2]=w2[2]=floor_z;
-
-        // apply caster reduction
-        double caster_red=0.023;
-        double r,theta;
-
-        r=norm(c1)-caster_red;
-        theta=atan2(c1[1],c1[0]);
-        c1[0]=r*cos(theta);
-        c1[1]=r*sin(theta);
-
-        r=norm(c2)-caster_red;
-        theta=atan2(c2[1],c2[0]);
-        c2[0]=r*cos(theta);
-        c2[1]=r*sin(theta);
-
-        r=norm(c3)-caster_red;
-        theta=atan2(c3[1],c3[0]);
-        c3[0]=r*cos(theta);
-        c3[1]=r*sin(theta);
 
         supPolygon.push_back(c1);
         supPolygon.push_back(c3);

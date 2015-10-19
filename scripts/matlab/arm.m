@@ -391,6 +391,13 @@ if ~strcmp(tline,'do')
                           [com(3) -0.63],'rd--','LineWidth',2,'MarkerSize',5);
                 set(hcom,'Parent',hg_target);
                 
+                margin=yarpData(end);
+                hmrg=annotation('textbox',[0.1 0.1 0.1 0.1],...
+                                'string',sprintf('%.3f m',margin),...
+                                'FaceAlpha',0,'edgecolor','w',...
+                                'backgroundcolor','w');
+                set(hmrg,'Parent',hg_target);
+                
                 drawnow;
             end
         end
