@@ -22,6 +22,7 @@
 #include <yarp/math/Math.h>
 
 #include <cer_kinematics/arm.h>
+#include <utils.h>
 
 using namespace std;
 using namespace yarp::os;
@@ -39,12 +40,16 @@ class IKSolver : public RFModule
     ArmSolver solver;
     Vector q;
 
+    ComData *comData;
+
 public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        string arm=rf.check("arm",Value("left")).asString().c_str();
-        int verbosity=rf.check("verbosity",Value(1)).asInt();        
+        string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
+        double external_weight=rf.check("external-weight",Value(2.0)).asDouble();
+        double floor_z=rf.check("floor-z",Value(-0.63)).asDouble();
+        int verbosity=rf.check("verbosity",Value(1)).asInt();
 
         q.resize(12,0.0);
         portTarget.open("/solver/target:i");
@@ -53,10 +58,11 @@ public:
         SolverParameters p=solver.getSolverParameters();
         p.setMode("full");
 
-        solver.setArmParameters(ArmParameters(arm));
+        solver.setArmParameters(ArmParameters(arm_type));
         solver.setSolverParameters(p);
         solver.setVerbosity(verbosity);
 
+        comData=new ComData(solver,external_weight,floor_z);
         return true;
     }
 
@@ -65,6 +71,7 @@ public:
     {
         portTarget.close();
         portSolution.close();
+        delete comData;
 
         return true;
     }
@@ -118,7 +125,15 @@ public:
             solver.setInitialGuess(q);
             solver.ikin(Hd,q);
 
+            deque<Vector> coms=comData->getCOMs(q);
+            Vector &com=coms.back();
+            double margin=comData->getSupportMargin(com);
+
             Vector solution=cat(cat(xd,ud),q);
+            for (size_t i=0; i<coms.size(); i++)
+                solution=cat(solution,coms[i].subVector(0,2));
+            solution.push_back(margin);
+
             portSolution.prepare().read(solution);
             portSolution.writeStrict();
         }

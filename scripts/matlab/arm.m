@@ -4,7 +4,7 @@ function arm(varargin)
 % Author: Ugo Pattacini <ugo.pattacini@iit.it>
 
 global T1 T2 DH q;
-global hfig hg_arm hg_target;
+global hfig hg_arm hg_target hg_coms;
 global rx;
 global init_done;
 
@@ -54,8 +54,8 @@ T2.marker_size=2;
 hfig=figure('Name','Arm');
 set(hfig,'Toolbar','figure');
 hold on; view([1 1 1]); grid;
-xlim(0.7*[-1 1]); xlabel('x [m]');
-ylim(0.7*[-1 1]); ylabel('y [m]');
+xlim(0.7*[-0.5 1.5]); xlabel('x [m]');
+ylim(0.7*[-1.5 1.5]); ylabel('y [m]');
 zlim(0.7*[-1 1]); zlabel('z [m]');
 
 hax=get(hfig,'CurrentAxes');
@@ -68,9 +68,16 @@ quiver3(hax,0,0,0,1,0,0,A,'Color','r','Linewidth',2);
 quiver3(hax,0,0,0,0,1,0,A,'Color','g','Linewidth',2);
 quiver3(hax,0,0,0,0,0,1,A,'Color','b','Linewidth',2);
 
+% support polygon
+hp=patch([0.152 0.152 0.0 -0.17 0.0],...
+         [0.09 -0.09 -0.17 0.0 0.17],...
+         -0.63*ones(1,5),[0.65 0.65 0.65]);
+alpha(hp,0.75);
+
 q=zeros(12,1);
 hg_arm=DrawArm;
 hg_target=[];
+hg_coms=[];
 
 set(hfig,'CloseRequestFcn',@Quit);
 init_done=true;
@@ -317,7 +324,7 @@ function yarpRxCallback(obj,~)
 
 global q;
 global hfig;
-global hg_arm hg_target;
+global hg_arm hg_target hg_coms;
 global init_done;
 
 tline=fgetl(obj);
@@ -327,7 +334,7 @@ if ~strcmp(tline,'do')
         if init_done
             [yarpData,status]=str2num(tline); %#ok<ST2NM>
             if status~=0
-                q=reshape(yarpData(7:end),size(q));
+                q=reshape(yarpData(7:7+length(q)-1),size(q));
 
                 set(0,'CurrentFigure',hfig);
                 hax=get(hfig,'CurrentAxes');
@@ -338,6 +345,10 @@ if ~strcmp(tline,'do')
 
                 if ~isempty(hg_target)
                     delete(hg_target)
+                end
+                
+                if ~isempty(hg_coms)
+                    delete(hg_coms)
                 end
 
                 hg_arm=DrawArm;
@@ -364,7 +375,22 @@ if ~strcmp(tline,'do')
                 set(hx,'Parent',hg_target);
                 set(hy,'Parent',hg_target);
                 set(hz,'Parent',hg_target);
-
+                
+                hg_coms=hggroup;                
+                for i=1:7
+                    j=3*(i-1);
+                    com=yarpData(19+j:19+j+2);
+                    if i<7
+                        hcom=plot3(hax,com(1),com(2),com(3),...
+                                  'bs','LineWidth',2,'MarkerSize',5);
+                        set(hcom,'Parent',hg_target);
+                    end
+                end
+                
+                hcom=plot3(hax,[com(1) com(1)],[com(2) com(2)],...
+                          [com(3) -0.63],'rd--','LineWidth',2,'MarkerSize',5);
+                set(hcom,'Parent',hg_target);
+                
                 drawnow;
             end
         end
