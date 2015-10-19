@@ -379,7 +379,7 @@ if ~strcmp(tline,'do')
                 hg_coms=hggroup;                
                 for i=1:7
                     j=3*(i-1);
-                    com=yarpData(19+j:19+j+2);
+                    com=yarpData(7+length(q)+(j:j+2));
                     if i<7
                         hcom=plot3(hax,com(1),com(2),com(3),...
                                   'bs','LineWidth',2,'MarkerSize',5);

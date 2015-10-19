@@ -104,18 +104,16 @@ public:
         // compute CoMs relative positions wrt q0
         Vector q0(12,0.0);
 
-        Matrix frame_l0;
-        solver.fkin(q0,frame_l0,3+0);
-        relComs[1]=SE3inv(frame_l0)*relComs[1];
-        relComs[2]=SE3inv(frame_l0)*relComs[2];
+        Matrix frame;
+        solver.fkin(q0,frame,3+0);
+        relComs[1]=SE3inv(frame)*relComs[1];
+        relComs[2]=SE3inv(frame)*relComs[2];
 
-        Matrix frame_l3;
-        solver.fkin(q0,frame_l3,3+3);
-        relComs[3]=SE3inv(frame_l3)*relComs[3];
+        solver.fkin(q0,frame,3+3);
+        relComs[3]=SE3inv(frame)*relComs[3];
 
-        Matrix frame_l5;
-        solver.fkin(q0,frame_l5,3+5);
-        relComs[4]=SE3inv(frame_l5)*relComs[4];
+        solver.fkin(q0,frame,3+5);
+        relComs[4]=SE3inv(frame)*relComs[4];
 
         // support polygon    
         Vector c1(4,1.0);
@@ -161,25 +159,22 @@ public:
     /****************************************************************/
     deque<Vector> getCOMs(const Vector &q) const
     {
-        Matrix frame_l0;
-        solver.fkin(q,frame_l0,3+0);
-
-        Matrix frame_l3;
-        solver.fkin(q,frame_l3,3+3);
-
-        Matrix frame_l5;
-        solver.fkin(q,frame_l5,3+5);
-
-        Matrix frame_hand;
-        solver.fkin(q,frame_hand);
-
         deque<Vector> coms;
         coms.push_back(relComs[0]);
-        coms.push_back(frame_l0*relComs[1]);
-        coms.push_back(frame_l0*relComs[2]);
-        coms.push_back(frame_l3*relComs[3]);
-        coms.push_back(frame_l5*relComs[4]);
-        coms.push_back(frame_hand*relComs[5]);
+
+        Matrix frame;
+        solver.fkin(q,frame,3+0);
+        coms.push_back(frame*relComs[1]);
+        coms.push_back(frame*relComs[2]);
+
+        solver.fkin(q,frame,3+3);
+        coms.push_back(frame*relComs[3]);
+
+        solver.fkin(q,frame,3+5);
+        coms.push_back(frame*relComs[4]);
+
+        solver.fkin(q,frame);
+        coms.push_back(frame*relComs[5]);
 
         Vector com_tot(4,0.0);
         for (size_t i=0; i<coms.size(); i++)
