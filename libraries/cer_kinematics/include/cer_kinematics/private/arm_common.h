@@ -36,6 +36,11 @@ protected:
     Vector x0,x;
     Vector xd,ud;
 
+    bool firstGo;
+    TripodState d1,d2;
+    Matrix H,H_,J_,T;
+    Vector q;
+
 public:
     /****************************************************************/
     ArmCommonNLP(ArmParameters &pa, SolverParameters &ps) :
@@ -58,6 +63,9 @@ public:
         
         x=x0;
         set_target(eye(4,4));
+
+        firstGo=true;
+        q=x0.subVector(3,3+upper_arm.getDOF()-1);
     }
 
     /****************************************************************/
@@ -192,6 +200,29 @@ public:
         return x_;
     }
 
+    /************************************************************************/
+    virtual void computeQuantities(const Ipopt::Number *x,
+                                   const bool new_x)
+    {        
+        if (firstGo || new_x)
+        {
+            for (size_t i=0; i<q.length(); i++)
+                q[i]=x[3+i];
+
+            d1=tripod_fkin(1,x);
+            d2=tripod_fkin(2,x);
+            H=upper_arm.getH(q);
+            T=T0*d1.T*H*d2.T*TN;
+
+            upper_arm.setH0(T0*d1.T*H0); upper_arm.setHN(HN*d2.T*TN);
+            H_=upper_arm.getH(q);
+            J_=upper_arm.GeoJacobian();
+            upper_arm.setH0(H0); upper_arm.setHN(HN);
+
+            firstGo=false;
+        }
+    }
+
     /****************************************************************/
     bool get_starting_point(Ipopt::Index n, bool init_x, Ipopt::Number *x,
                             bool init_z, Ipopt::Number *z_L, Ipopt::Number *z_U,
@@ -224,4 +255,5 @@ public:
             this->x[i]=x[i];
     }
 };
+
 

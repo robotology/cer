@@ -82,14 +82,8 @@ public:
     bool eval_g(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                 Ipopt::Index m, Ipopt::Number *g)
     {
-        Vector q(upper_arm.getDOF());
-        for (size_t i=0; i<q.length(); i++)
-            q[i]=x[3+i];
-
-        TripodState d1=tripod_fkin(1,x);
+        computeQuantities(x,new_x);
         g[0]=d1.n[2];
-
-        TripodState d2=tripod_fkin(2,x);
         g[1]=d2.n[2];
 
         return true;
@@ -114,6 +108,8 @@ public:
         }
         else
         {
+            computeQuantities(x,new_x);
+
             Ipopt::Number x_dx[12];
             for (Ipopt::Index i=0; i<n; i++)
                 x_dx[i]=x[i];
@@ -121,8 +117,6 @@ public:
             TripodState d_fw,d_bw;
 
             // g[0] (torso)
-            TripodState d1=tripod_fkin(1,x);
-
             x_dx[0]=x[0]+drho;
             d_fw=tripod_fkin(1,x_dx);
             x_dx[0]=x[0]-drho;
@@ -145,8 +139,6 @@ public:
             x_dx[2]=x[2];
 
             // g[1] (lower_arm)
-            TripodState d2=tripod_fkin(2,x);
-
             x_dx[9]=x[9]+drho;
             d_fw=tripod_fkin(2,x_dx);
             x_dx[9]=x[9]-drho;

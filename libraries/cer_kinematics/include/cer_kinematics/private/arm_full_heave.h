@@ -83,17 +83,10 @@ public:
     bool eval_g(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                 Ipopt::Index m, Ipopt::Number *g)
     {
-        Vector q(upper_arm.getDOF());
-        for (size_t i=0; i<q.length(); i++)
-            q[i]=x[3+i];
+        computeQuantities(x,new_x);
 
-        TripodState d1=tripod_fkin(1,x);
         g[0]=d1.n[2];
-
-        TripodState d2=tripod_fkin(2,x);
         g[1]=d2.n[2];
-
-        Matrix T=T0*d1.T*upper_arm.getH(q)*d2.T*TN;
         g[2]=norm2(xd-T.getCol(3).subVector(0,2));
 
         return true;
@@ -126,6 +119,8 @@ public:
         }
         else
         {
+            computeQuantities(x,new_x);
+
             Ipopt::Number x_dx[12];
             for (Ipopt::Index i=0; i<n; i++)
                 x_dx[i]=x[i];
@@ -133,8 +128,6 @@ public:
             TripodState d_fw,d_bw;
 
             // g[0] (torso)
-            TripodState d1=tripod_fkin(1,x);
-
             x_dx[0]=x[0]+drho;
             d_fw=tripod_fkin(1,x_dx);
             x_dx[0]=x[0]-drho;
@@ -157,8 +150,6 @@ public:
             x_dx[2]=x[2];
 
             // g[1] (lower_arm)
-            TripodState d2=tripod_fkin(2,x);
-
             x_dx[9]=x[9]+drho;
             d_fw=tripod_fkin(2,x_dx);
             x_dx[9]=x[9]-drho;
@@ -181,12 +172,6 @@ public:
             x_dx[11]=x[11];
 
             // g[3] (init)
-            Vector q(upper_arm.getDOF());
-            for (size_t i=0; i<q.length(); i++)
-                q[i]=x[3+i];
-
-            Matrix H=upper_arm.getH(q);
-            Matrix T=T0*d1.T*H*d2.T*TN;
             Vector e=xd-T.getCol(3).subVector(0,2);
             Vector de_fw,de_bw;
             Matrix M;
@@ -222,13 +207,7 @@ public:
             x_dx[2]=x[2];
 
             // g[3] (upper_arm)
-            upper_arm.setH0(T0*d1.T*H0); upper_arm.setHN(HN*d2.T*TN);
-
-            Matrix J=upper_arm.GeoJacobian().submatrix(0,2,0,upper_arm.getDOF()-1);
-            Vector grad=-2.0*(J.transposed()*e);
-
-            upper_arm.setH0(H0); upper_arm.setHN(HN);
-
+            Vector grad=-2.0*(J_.submatrix(0,2,0,upper_arm.getDOF()-1).transposed()*e);
             for (size_t i=0; i<grad.length(); i++)
                 values[9+i]=grad[i];
 

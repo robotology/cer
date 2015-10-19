@@ -85,14 +85,7 @@ public:
     bool eval_f(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                 Ipopt::Number &obj_value)
     {
-        Vector q(upper_arm.getDOF());
-        for (size_t i=0; i<q.length(); i++)
-            q[i]=x[3+i];
-
-        TripodState d1=tripod_fkin(1,x);
-        TripodState d2=tripod_fkin(2,x);
-
-        Matrix T=T0*d1.T*upper_arm.getH(q)*d2.T*TN;
+        computeQuantities(x,new_x);
 
         Ipopt::Number postural_torso=0.0;
         Ipopt::Number postural_upper_arm=0.0;
@@ -136,15 +129,8 @@ public:
     bool eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
                      Ipopt::Number *grad_f)
     {
-        Vector q(upper_arm.getDOF());
-        for (size_t i=0; i<q.length(); i++)
-            q[i]=x[3+i];
+        computeQuantities(x,new_x);
 
-        TripodState d1=tripod_fkin(1,x);
-        TripodState d2=tripod_fkin(2,x);
-
-        Matrix H=upper_arm.getH(q);
-        Matrix T=T0*d1.T*H*d2.T*TN;
         Vector e=xd-T.getCol(3).subVector(0,2);
         Vector de_fw,de_bw;
         Matrix M;
@@ -186,13 +172,7 @@ public:
         x_dx[2]=x[2];
 
         // g[4] (upper_arm)
-        upper_arm.setH0(T0*d1.T*H0); upper_arm.setHN(HN*d2.T*TN);
-
-        Matrix J=upper_arm.GeoJacobian().submatrix(0,2,0,upper_arm.getDOF()-1);
-        Vector grad=-2.0*(J.transposed()*e);
-
-        upper_arm.setH0(H0); upper_arm.setHN(HN);
-
+        Vector grad=-2.0*(J_.submatrix(0,2,0,upper_arm.getDOF()-1).transposed()*e);
         for (size_t i=0; i<grad.length(); i++)
             grad_f[3+i]=grad[i] + 2.0*wpostural_upper_arm*(x[3+i]-x0[3+i]);
 
@@ -233,16 +213,12 @@ public:
     bool eval_g(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                 Ipopt::Index m, Ipopt::Number *g)
     {
-        Vector q(upper_arm.getDOF());
-        for (size_t i=0; i<q.length(); i++)
-            q[i]=x[3+i];
+        computeQuantities(x,new_x);
 
-        TripodState d1=tripod_fkin(1,x);
         double e1=zd1-d1.p[2];
         g[0]=e1*e1;
         g[1]=d1.n[2];
 
-        TripodState d2=tripod_fkin(2,x);
         double e2=zd2-d2.p[2];
         g[2]=e2*e2;
         g[3]=d2.n[2];
@@ -279,6 +255,8 @@ public:
         }
         else
         {
+            computeQuantities(x,new_x);
+
             Ipopt::Number x_dx[12];
             for (Ipopt::Index i=0; i<n; i++)
                 x_dx[i]=x[i];
@@ -286,7 +264,6 @@ public:
             TripodState d_fw,d_bw;
 
             // g[0,1] (torso)
-            TripodState d1=tripod_fkin(1,x);
             double e1=zd1-d1.p[2];
 
             x_dx[0]=x[0]+drho;
@@ -314,7 +291,6 @@ public:
             x_dx[2]=x[2];
 
             // g[2,3] (lower_arm)
-            TripodState d2=tripod_fkin(2,x);
             double e2=zd2-d2.p[2];
 
             x_dx[9]=x[9]+drho;
