@@ -76,13 +76,13 @@ public:
        
         // l3
         tmp[0]=-0.01;
-        tmp[1]=0.191*(arm_type=="left")?1.0:-1.0;
+        tmp[1]=0.191*((arm_type=="left")?1.0:-1.0);
         tmp[2]=0.215;
         relComs.push_back(tmp);
        
         // l5
         tmp[0]=-0.01;
-        tmp[1]=0.191*(arm_type=="left")?1.0:-1.0;
+        tmp[1]=0.191*((arm_type=="left")?1.0:-1.0);
         tmp[2]=-0.089;
         relComs.push_back(tmp);
         
@@ -109,7 +109,7 @@ public:
         relComs[1]=SE3inv(frame)*relComs[1];
         relComs[2]=SE3inv(frame)*relComs[2];
 
-        solver.fkin(q0,frame,3+3);
+        solver.fkin(q0,frame,3+3);        
         relComs[3]=SE3inv(frame)*relComs[3];
 
         solver.fkin(q0,frame,3+5);
