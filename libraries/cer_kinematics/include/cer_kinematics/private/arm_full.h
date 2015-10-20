@@ -94,6 +94,7 @@ public:
         e*=e[3]; e.pop_back();
 
         Ipopt::Number postural_torso=0.0;
+        Ipopt::Number postural_torso_yaw=0.0;
         Ipopt::Number postural_upper_arm=0.0;
         Ipopt::Number postural_lower_arm=0.0;
         Ipopt::Number tmp;
@@ -106,9 +107,12 @@ public:
             postural_torso+=tmp*tmp;
         }
 
+        if (wpostural_torso_yaw!=0.0)
+            postural_torso_yaw+=x[3]*x[3];
+
         if (wpostural_upper_arm!=0.0)
         {
-            for (size_t i=0; i<upper_arm.getDOF(); i++)
+            for (size_t i=1; i<upper_arm.getDOF(); i++)
             {
                 tmp=x[3+i]-x0[3+i];
                 postural_upper_arm+=tmp*tmp;
@@ -125,6 +129,7 @@ public:
 
         obj_value=norm2(e)+
                   wpostural_torso*postural_torso+
+                  wpostural_torso_yaw*postural_torso_yaw+
                   wpostural_upper_arm*postural_upper_arm+
                   wpostural_lower_arm*postural_lower_arm;
 
@@ -173,7 +178,8 @@ public:
         Vector eax=dcm2axis(Rd*SE3inv(H_));
         eax*=eax[3]; eax.pop_back();
         Vector grad=-2.0*(J_.submatrix(3,5,0,upper_arm.getDOF()-1).transposed()*eax);
-        for (size_t i=0; i<grad.length(); i++)
+        grad_f[3]=grad[0] + 2.0*wpostural_torso_yaw*x[3];
+        for (size_t i=1; i<grad.length(); i++)
             grad_f[3+i]=grad[i] + 2.0*wpostural_upper_arm*(x[3+i]-x0[3+i]);
 
         // lower_arm
@@ -431,7 +437,8 @@ public:
         Vector eax=dcm2axis(Rd*SE3inv(H_));
         eax*=eax[3]; eax.pop_back();
         Vector grad=-2.0*(J_.submatrix(3,5,0,upper_arm.getDOF()-1).transposed()*eax);
-        for (size_t i=0; i<grad.length(); i++)
+        grad_f[3]=grad[0] + 2.0*wpostural_torso_yaw*x[3];
+        for (size_t i=1; i<grad.length(); i++)
             grad_f[3+i]=grad[i] + 2.0*wpostural_upper_arm*(x[3+i]-x0[3+i]);
 
         // lower_arm

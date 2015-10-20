@@ -139,9 +139,14 @@ struct SolverParameters
     double lower_arm_heave;
 
     /**
-     * weight for postural task of the torso.
+     * weight for postural task of the torso pitch and roll.
      */
     double weight_postural_torso;
+
+    /**
+     * weight for postural task of the torso yaw.
+     */
+    double weight_postural_torso_yaw;
 
     /**
      * weight for postural task of the upper_arm.
@@ -183,7 +188,10 @@ struct SolverParameters
      *                                      assumed by the lower
      *                                      arm.
      * @param weight_postural_torso_        weight for postural task
-     *                                      of the torso.
+     *                                      of the torso pitch and
+     *                                      roll.
+     * @param weight_postural_torso_yaw_    weight for postural task
+     *                                      of the torso yaw.
      * @param weight_postural_upper_arm_    weight for postural task
      *                                      of the upper_arm.
      * @param weight_postural_lower_arm_    weight for postural task
@@ -200,6 +208,7 @@ struct SolverParameters
     SolverParameters(const bool full_pose_=true, const bool can_heave_=false,
                      const double torso_heave_=0.0, const double lower_arm_heave_=0.0,
                      const double weight_postural_torso_=0.0,
+                     const double weight_postural_torso_yaw_=0.001,
                      const double weight_postural_upper_arm_=0.0,
                      const double weight_postural_lower_arm_=0.0,
                      const double tol_=1e-2, const double constr_tol_=2e-6,
@@ -207,6 +216,7 @@ struct SolverParameters
                      full_pose(full_pose_), can_heave(can_heave_),
                      torso_heave(torso_heave_), lower_arm_heave(lower_arm_heave_),
                      weight_postural_torso(weight_postural_torso_),
+                     weight_postural_torso_yaw(weight_postural_torso_yaw_),
                      weight_postural_upper_arm(weight_postural_upper_arm_),
                      weight_postural_lower_arm(weight_postural_lower_arm_),
                      tol(tol_), constr_tol(constr_tol_),

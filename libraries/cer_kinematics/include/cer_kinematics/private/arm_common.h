@@ -29,6 +29,7 @@ protected:
     Matrix T0,TN;
     double zd1,zd2;
     double wpostural_torso;
+    double wpostural_torso_yaw;
     double wpostural_upper_arm;
     double wpostural_lower_arm;
 
@@ -47,6 +48,7 @@ public:
                  torso(pa.torso), upper_arm(pa.upper_arm), lower_arm(pa.lower_arm),
                  T0(pa.T0), TN(pa.TN), zd1(ps.torso_heave), zd2(ps.lower_arm_heave),
                  wpostural_torso(ps.weight_postural_torso),
+                 wpostural_torso_yaw(ps.weight_postural_torso_yaw),
                  wpostural_upper_arm(ps.weight_postural_upper_arm),
                  wpostural_lower_arm(ps.weight_postural_lower_arm)
     {
