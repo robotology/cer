@@ -406,7 +406,7 @@ if ~strcmp(tline,'do')
                     if i<7
                         hcom=plot3(hax,com(1),com(2),com(3),...
                                   'bs','LineWidth',2,'MarkerSize',5);
-                        set(hcom,'Parent',hg_target);
+                        set(hcom,'Parent',hg_coms);
                     end
                 end
                 
@@ -422,14 +422,14 @@ if ~strcmp(tline,'do')
                 hcom=plot3(hax,[com(1) com(1)],[com(2) com(2)],...
                           [com(3) floor_z],proj_color,'LineWidth',2,...
                           'MarkerSize',5);
-                set(hcom,'Parent',hg_target);
+                set(hcom,'Parent',hg_coms);
                 
                 hmrg=annotation('textbox',[0.1 0.1 0.1 0.1],...
                                 'string',sprintf('%.3f m',margin),...
                                 'color',note_color,...
                                 'FaceAlpha',0,'edgecolor','w',...
                                 'backgroundcolor','w');
-                set(hmrg,'Parent',hg_target);
+                set(hmrg,'Parent',hg_coms);
                 
                 drawnow;
             end
