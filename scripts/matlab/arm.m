@@ -68,9 +68,28 @@ quiver3(hax,0,0,0,1,0,0,A,'Color','r','Linewidth',2);
 quiver3(hax,0,0,0,0,1,0,A,'Color','g','Linewidth',2);
 quiver3(hax,0,0,0,0,0,1,A,'Color','b','Linewidth',2);
 
+% casters
+c1=[0.152  0.09];
+c2=[-0.17; 0.0];
+c3=[c1(1) -c1(2)];
+
+caster_reduction=0.023;
+
+r=norm(c1)-caster_reduction;
+theta=atan2(c1(2),c1(1));
+c1=r*[cos(theta) sin(theta)];
+
+r=norm(c2)-caster_reduction;
+theta=atan2(c2(2),c2(1));
+c2=r*[cos(theta) sin(theta)];
+
+r=norm(c3)-caster_reduction;
+theta=atan2(c3(2),c3(1));
+c3=r*[cos(theta) sin(theta)];
+
 % support polygon
-hp=patch([0.152 0.152 0.0 -0.17 0.0],...
-         [0.09 -0.09 -0.17 0.0 0.17],...
+hp=patch([c1(1) c3(1) 0.0 c2(1) 0.0],...
+         [c1(2) c3(2) -0.17 c2(2) 0.17],...
          -0.63*ones(1,5),[0.65 0.65 0.65]);
 alpha(hp,0.75);
 
