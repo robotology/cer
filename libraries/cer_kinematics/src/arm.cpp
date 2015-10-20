@@ -383,16 +383,16 @@ bool ArmCOM::getSupportMargin(const Vector &com, double &margin) const
             neg_mrg.push_back(mrg);
     }
 
-    if (margin>=0.0)
-        return true;
+    if (margin<0.0)
+    {
+        margin=-std::numeric_limits<double>::max();
+        for (size_t i=0; i<neg_mrg.length(); i++)
+            margin=std::max(neg_mrg[i],margin);
 
-    margin=-std::numeric_limits<double>::max();
-    for (size_t i=0; i<neg_mrg.length(); i++)
-        margin=std::max(neg_mrg[i],margin);
-
-    Vector com_xy=com.subVector(0,1);
-    for (size_t i=0; i<supPolygon.size(); i++)
-        margin=std::max(-norm(com_xy-supPolygon[i].subVector(0,1)),margin);
+        Vector com_xy=com.subVector(0,1);
+        for (size_t i=0; i<supPolygon.size(); i++)
+            margin=std::max(-norm(com_xy-supPolygon[i].subVector(0,1)),margin);
+    }
 
     return true;
 }
