@@ -63,9 +63,9 @@ for i=1:sz(1)
           'LineWidth',2,'MarkerSize',4);
     plot3([data(i,1) data(i,4)],[data(i,2) data(i,5)],...
           [data(i,3) data(i,6)],'k-');
-    quiver3(data(i,4),data(i,5),data(i,6),R(1,1),R(2,1),R(3,1),0.1*A,'r');
-    quiver3(data(i,4),data(i,5),data(i,6),R(1,2),R(2,2),R(3,2),0.1*A,'g');
-    quiver3(data(i,4),data(i,5),data(i,6),R(1,3),R(2,3),R(3,3),0.1*A,'b');
+    quiver3(data(i,4),data(i,5),data(i,6),R(1,1),R(2,1),R(3,1),0.3*A,'r');
+    quiver3(data(i,4),data(i,5),data(i,6),R(1,2),R(2,2),R(3,2),0.3*A,'g');
+    quiver3(data(i,4),data(i,5),data(i,6),R(1,3),R(2,3),R(3,3),0.3*A,'b');
     plot3(data(i,10),data(i,11),floor_z,'kd',...
           'MarkerSize',2);
       
