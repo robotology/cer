@@ -231,6 +231,8 @@ struct SolverParameters
      *              Examples: "full_pose+central_diff",
      *              "xyz_pose+no_heave",
      *              "full_pose+heave+forward_diff".
+     * @note the order might have affect the setting of internal 
+     *       state.
      * @return true/false on success/failure. 
      */
     bool setMode(const std::string &mode);

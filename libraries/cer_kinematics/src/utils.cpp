@@ -98,17 +98,17 @@ ArmParameters::ArmParameters(const string &type) :
 bool SolverParameters::stepModeParser(string &mode, string &submode)
 {
     submode=mode;
-    size_t found=mode.find_first_of("+");
+    size_t found=mode.find_first_of('+');
     if ((found>0) && (found!=string::npos))
     {
-        submode=mode.substr(0,found-1);
+        submode=mode.substr(0,found);
         if (found+1<mode.length())
-            mode=mode.substr(found+1,mode.length()-1);
+            mode=mode.substr(found+1,mode.length()-found);
         else
             mode.clear();
     }
     else
-        mode.clear();
+        mode.clear();    
 
     return !submode.empty();
 }
@@ -150,7 +150,7 @@ bool SolverParameters::setMode(const string &mode)
                     constr_tol=1e-5;
             }
             else if (submode=="forward_diff")
-                enable_central_difference=false;
+                enable_central_difference=false;                
             else if (submode=="central_diff")
                 enable_central_difference=true;
             else
