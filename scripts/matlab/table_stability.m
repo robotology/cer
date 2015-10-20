@@ -23,8 +23,8 @@ quiver3(hax,0,0,0,0,0,1,A,'Color','b','Linewidth',2);
 floor_z=-0.63;
 
 % casters
-c1=[0.152  0.09];
-c2=[-0.17; 0.0];
+c1=[0.078  0.09];
+c2=[-0.244 0.0];
 c3=[c1(1) -c1(2)];
 
 caster_reduction=0.023;
@@ -42,7 +42,7 @@ theta=atan2(c3(2),c3(1));
 c3=r*[cos(theta) sin(theta)];
 
 % support polygon
-hp=patch([c1(1) c3(1) 0.0 c2(1) 0.0],...
+hp=patch([c1(1) c3(1) -0.074 c2(1) -0.074],...
          [c1(2) c3(2) -0.17 c2(2) 0.17],...
          floor_z*ones(1,5),[0.65 0.65 0.65]);
 alpha(hp,0.75);

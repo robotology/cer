@@ -225,31 +225,31 @@ ArmCOM::ArmCOM(ArmSolver &solver_, const double external_weight,
     // CoM absolute positions
     // mobilebase_lowertorso
     Vector tmp(4,1.0);
-    tmp[0]=0.026;
+    tmp[0]=-0.048;
     tmp[1]=0.0;
     tmp[2]=-0.415;
     relComs.push_back(tmp);
     
     // head
-    tmp[0]=0.046;
+    tmp[0]=-0.028;
     tmp[1]=0.0;
     tmp[2]=0.521;
     relComs.push_back(tmp);
 
     // l0
-    tmp[0]=0.06;
+    tmp[0]=-0.014;
     tmp[1]=0.0;
     tmp[2]=0.18;
     relComs.push_back(tmp);
    
     // l3
-    tmp[0]=-0.01;
+    tmp[0]=-0.084;
     tmp[1]=0.191*((arm_type=="left")?1.0:-1.0);
     tmp[2]=0.215;
     relComs.push_back(tmp);
    
     // l5
-    tmp[0]=-0.01;
+    tmp[0]=-0.084;
     tmp[1]=0.191*((arm_type=="left")?1.0:-1.0);
     tmp[2]=-0.089;
     relComs.push_back(tmp);
@@ -285,13 +285,13 @@ ArmCOM::ArmCOM(ArmSolver &solver_, const double external_weight,
 
     // support polygon
     Vector c1(4,1.0);
-    c1[0]=0.152; c1[1]=0.09;
+    c1[0]=0.078; c1[1]=0.09;
     Vector c2(4,1.0);
-    c2[0]=-0.17; c2[1]=0.0;
+    c2[0]=-0.244; c2[1]=0.0;
     Vector c3(4,1.0);
     c3[0]=c1[0]; c3[1]=-c1[1];
     Vector w1(4,1.0);
-    w1[0]=0.0; w1[1]=0.17;
+    w1[0]=-0.074; w1[1]=0.17;
     Vector w2(4,1.0);
     w2[0]=w1[0]; w2[1]=-w1[1];
 

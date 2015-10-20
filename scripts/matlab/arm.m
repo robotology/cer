@@ -72,8 +72,8 @@ quiver3(hax,0,0,0,0,0,1,A,'Color','b','Linewidth',2);
 floor_z=-0.63;
 
 % casters
-c1=[0.152  0.09];
-c2=[-0.17; 0.0];
+c1=[0.078  0.09];
+c2=[-0.244 0.0];
 c3=[c1(1) -c1(2)];
 
 caster_reduction=0.023;
@@ -91,7 +91,7 @@ theta=atan2(c3(2),c3(1));
 c3=r*[cos(theta) sin(theta)];
 
 % support polygon
-hp=patch([c1(1) c3(1) 0.0 c2(1) 0.0],...
+hp=patch([c1(1) c3(1) -0.074 c2(1) -0.074],...
          [c1(2) c3(2) -0.17 c2(2) 0.17],...
          floor_z*ones(1,5),[0.65 0.65 0.65]);
 alpha(hp,0.75);
@@ -410,19 +410,23 @@ if ~strcmp(tline,'do')
                     end
                 end
                 
-                hcom=plot3(hax,[com(1) com(1)],[com(2) com(2)],...
-                          [com(3) floor_z],'rd--','LineWidth',2,'MarkerSize',5);
-                set(hcom,'Parent',hg_target);
-                
                 margin=yarpData(end);
                 if margin>0
-                    text_color='k';
+                    proj_color='gd--';
+                    note_color='k';
                 else
-                    text_color='r';
+                    proj_color='rd--';
+                    note_color='r';
                 end
+                
+                hcom=plot3(hax,[com(1) com(1)],[com(2) com(2)],...
+                          [com(3) floor_z],proj_color,'LineWidth',2,...
+                          'MarkerSize',5);
+                set(hcom,'Parent',hg_target);
+                
                 hmrg=annotation('textbox',[0.1 0.1 0.1 0.1],...
                                 'string',sprintf('%.3f m',margin),...
-                                'color',text_color,...
+                                'color',note_color,...
                                 'FaceAlpha',0,'edgecolor','w',...
                                 'backgroundcolor','w');
                 set(hmrg,'Parent',hg_target);
