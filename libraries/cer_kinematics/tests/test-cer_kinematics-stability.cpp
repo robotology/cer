@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
     double table_height=rf.check("table-height",Value(0.7)).asDouble();
     double external_weight=rf.check("external-weight",Value(2.0)).asDouble();
     double floor_z=rf.check("floor-z",Value(-0.63)).asDouble();
+    double step=rf.check("step",Value(0.05)).asDouble();
 
     // define solver and its parameters
     ArmParameters armp(arm_type);
@@ -104,9 +105,9 @@ int main(int argc, char *argv[])
     fout.open("data.log");
 
     std::signal(SIGINT,signal_handler);
-    for (Hd(0,3)=0.3; Hd(0,3)<=1.0; Hd(0,3)+=0.02)
+    for (Hd(0,3)=0.3; Hd(0,3)<=1.0; Hd(0,3)+=step)
     {
-        for (Hd(1,3)=0.3; Hd(1,3)>=-0.3; Hd(1,3)-=0.02)
+        for (Hd(1,3)=0.3; Hd(1,3)>=-0.3; Hd(1,3)-=step)
         {
             // inverse kinematics
             solver.setInitialGuess(q);
