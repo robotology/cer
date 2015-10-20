@@ -147,9 +147,7 @@ int main(int argc, char *argv[])
             stream<<"\t";
             stream<<x.toString(3,3).c_str();
             stream<<"\t";
-            stream<<norm(xd-x);
-            stream<<"\t";
-            stream<<norm(ud-u);
+            stream<<u.toString(3,3).c_str();
             stream<<"\t";
             stream<<com.subVector(0,2).toString(3,3).c_str();
             stream<<"\t";
