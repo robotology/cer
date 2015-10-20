@@ -118,7 +118,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetIntegerValue("max_iter",2000);
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetStringValue("hessian_approximation","limited-memory");
-    app->Options()->SetStringValue("derivative_test",print_level>4?"first-order":"none");
+    app->Options()->SetStringValue("derivative_test",print_level>=4?"first-order":"none");
     app->Options()->SetIntegerValue("print_level",print_level);
     app->Initialize();
 
