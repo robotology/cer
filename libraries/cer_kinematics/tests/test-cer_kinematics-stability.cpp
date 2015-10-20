@@ -74,9 +74,9 @@ int main(int argc, char *argv[])
 
     SolverParameters slvp=solver.getSolverParameters();
     if (table_height>0.7)
-        slvp.setMode("full+heave");
+        slvp.setMode("full_pose+heave");
     else
-        slvp.setMode("full");
+        slvp.setMode("full_pose");
     slvp.torso_heave=0.1;
     slvp.lower_arm_heave=0.01;
     slvp.weight_postural_torso_yaw=0.0;

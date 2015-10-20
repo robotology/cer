@@ -95,39 +95,69 @@ ArmParameters::ArmParameters(const string &type) :
 
 
 /****************************************************************/
-bool SolverParameters::setMode(const string &mode)
+bool SolverParameters::stepModeParser(string &mode, string &submode)
 {
-    if (mode=="full")
+    submode=mode;
+    size_t found=mode.find_first_of("+");
+    if ((found>0) && (found!=string::npos))
     {
-        full_pose=true;
-        can_heave=false;
-        tol=1e-2;
-        constr_tol=2e-6;
-    }
-    else if (mode=="full+heave")
-    {
-        full_pose=true;
-        can_heave=true;
-        tol=1e-2;
-        constr_tol=2e-6;
-    }
-    else if (mode=="xyz")
-    {
-        full_pose=false;
-        can_heave=false;
-        tol=1e-3;
-        constr_tol=1e-5;
-    }
-    else if (mode=="xyz+heave")
-    {
-        full_pose=false;
-        can_heave=true;
-        tol=1e-3;
-        constr_tol=1e-4;
+        submode=mode.substr(0,found-1);
+        if (found+1<mode.length())
+            mode=mode.substr(found+1,mode.length()-1);
+        else
+            mode.clear();
     }
     else
-        return false;
+        mode.clear();
 
-    return true;
+    return !submode.empty();
+}
+
+
+/****************************************************************/
+bool SolverParameters::setMode(const string &mode)
+{
+    string mode_=mode;
+    string submode;
+    bool ret=true;
+
+    while (!mode_.empty())
+    {
+        if (stepModeParser(mode_,submode))
+        {            
+            if (submode=="full_pose")
+            {
+                full_pose=true;
+                tol=1e-2;
+                constr_tol=2e-6;
+            }
+            else if (submode=="xyz_pose")
+            {
+                full_pose=false;
+                tol=1e-3;
+                constr_tol=(can_heave?1e-4:1e-5); 
+            }
+            if (submode=="heave")
+            {
+                can_heave=true;
+                if (!full_pose)
+                    constr_tol=1e-4;
+            }
+            else if (submode=="no_heave")
+            {
+                can_heave=false;
+                if (!full_pose)
+                    constr_tol=1e-5;
+            }
+            else if (submode=="forward_diff")
+                enable_central_difference=false;
+            else if (submode=="central_diff")
+                enable_central_difference=true;
+            else
+                ret=false;
+        }
+    }
+
+    return ret;
 }
 

@@ -29,7 +29,7 @@ public:
     /****************************************************************/
     string get_mode() const
     {
-        return "xyz+heave+forward_diff";
+        return "xyz_pose+heave+forward_diff";
     }
 
     /****************************************************************/
@@ -168,7 +168,7 @@ public:
     /****************************************************************/
     string get_mode() const
     {
-        return "xyz+heave+central_diff";
+        return "xyz_pose+heave+central_diff";
     }
 
     /****************************************************************/

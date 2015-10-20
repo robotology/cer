@@ -55,7 +55,7 @@ public:
         portSolution.open("/solver/solution:o");
 
         SolverParameters p=solver.getSolverParameters();
-        p.setMode("full");
+        p.setMode("full_pose");
 
         solver.setArmParameters(ArmParameters(arm_type));
         solver.setSolverParameters(p);

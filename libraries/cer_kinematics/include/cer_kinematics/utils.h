@@ -223,14 +223,20 @@ struct SolverParameters
                      enable_central_difference(enable_central_difference_) { }
 
     /**
-     * Helper that sets full_pose and can_heave according to a mode 
-     * string. This helper does also set suitable tolerance values. 
+     * Helper that sets internal state according to a mode string. 
+     * This helper does also set suitable tolerance values. 
      *  
-     * @param mode  a string that can be: 
-     *              ["full"|"full+heave"|"xyz"|"xyz+heave"].
+     * @param mode  a string that can be a combination of  
+     *              ["full_pose"|"xyz_pose"]+["heave"|+"no_heave"]+["forward_diff"|"central_diff"].
+     *              Examples: "full_pose+central_diff",
+     *              "xyz_pose+no_heave",
+     *              "full_pose+heave+forward_diff".
      * @return true/false on success/failure. 
      */
     bool setMode(const std::string &mode);
+
+protected:
+    bool stepModeParser(std::string &mode, std::string &submode);
 };
 
 }
