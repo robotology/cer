@@ -73,8 +73,11 @@ int main(int argc, char *argv[])
     Vector q(12,0.0);
 
     SolverParameters slvp=solver.getSolverParameters();
-    slvp.setMode("full");
-    slvp.torso_heave=0.05;
+    if (table_height>0.7)
+        slvp.setMode("full+heave");
+    else
+        slvp.setMode("full");
+    slvp.torso_heave=0.1;
     slvp.lower_arm_heave=0.01;
     solver.setSolverParameters(slvp);
 

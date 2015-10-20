@@ -72,3 +72,6 @@ for i=1:sz(1)
     drawnow;
 end
 
+view([90 90]);
+
+
