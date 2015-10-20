@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     std::signal(SIGINT,signal_handler);
     for (Hd(0,3)=0.3; Hd(0,3)<=1.0; Hd(0,3)+=step)
     {
-        for (Hd(1,3)=0.3; Hd(1,3)>=-0.3; Hd(1,3)-=step)
+        for (Hd(1,3)=0.5; Hd(1,3)>=-0.5; Hd(1,3)-=step)
         {
             // inverse kinematics
             solver.setInitialGuess(q);
