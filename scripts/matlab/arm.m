@@ -392,8 +392,14 @@ if ~strcmp(tline,'do')
                 set(hcom,'Parent',hg_target);
                 
                 margin=yarpData(end);
+                if margin>0
+                    text_color='k';
+                else
+                    text_color='r';
+                end
                 hmrg=annotation('textbox',[0.1 0.1 0.1 0.1],...
                                 'string',sprintf('%.3f m',margin),...
+                                'color',text_color,...
                                 'FaceAlpha',0,'edgecolor','w',...
                                 'backgroundcolor','w');
                 set(hmrg,'Parent',hg_target);

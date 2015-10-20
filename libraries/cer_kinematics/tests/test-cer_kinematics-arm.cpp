@@ -22,7 +22,6 @@
 #include <yarp/math/Math.h>
 
 #include <cer_kinematics/arm.h>
-#include <utils.h>
 
 using namespace std;
 using namespace yarp::os;
@@ -40,7 +39,7 @@ class IKSolver : public RFModule
     ArmSolver solver;
     Vector q;
 
-    ComData *comData;
+    ArmCOM *armCOM;
 
 public:
     /****************************************************************/
@@ -62,7 +61,7 @@ public:
         solver.setSolverParameters(p);
         solver.setVerbosity(verbosity);
 
-        comData=new ComData(solver,external_weight,floor_z);
+        armCOM=new ArmCOM(solver,external_weight,floor_z);
         return true;
     }
 
@@ -71,7 +70,7 @@ public:
     {
         portTarget.close();
         portSolution.close();
-        delete comData;
+        delete armCOM;
 
         return true;
     }
@@ -125,9 +124,12 @@ public:
             solver.setInitialGuess(q);
             solver.ikin(Hd,q);
 
-            deque<Vector> coms=comData->getCOMs(q);
+            deque<Vector> coms;
+            armCOM->getCOMs(q,coms);
             Vector &com=coms.back();
-            double margin=comData->getSupportMargin(com);
+
+            double margin;
+            armCOM->getSupportMargin(com,margin);
 
             Vector solution=cat(cat(xd,ud),q);
             for (size_t i=0; i<coms.size(); i++)

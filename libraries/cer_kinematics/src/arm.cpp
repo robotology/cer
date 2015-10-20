@@ -15,7 +15,9 @@
  * Public License for more details
 */
 
+#include <string>
 #include <cmath>
+#include <limits>
 #include <algorithm>
 
 #include <yarp/os/Log.h>
@@ -211,5 +213,187 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
             return false;
         } 
     }
+}
+
+
+/****************************************************************/
+ArmCOM::ArmCOM(ArmSolver &solver_, const double external_weight,
+               const double floor_z) : solver(solver_)
+{
+    string arm_type=solver.getArmParameters().upper_arm.getType();
+
+    // CoM absolute positions
+    // mobilebase_lowertorso
+    Vector tmp(4,1.0);
+    tmp[0]=0.026;
+    tmp[1]=0.0;
+    tmp[2]=-0.415;
+    relComs.push_back(tmp);
+    
+    // head
+    tmp[0]=0.046;
+    tmp[1]=0.0;
+    tmp[2]=0.521;
+    relComs.push_back(tmp);
+
+    // l0
+    tmp[0]=0.06;
+    tmp[1]=0.0;
+    tmp[2]=0.18;
+    relComs.push_back(tmp);
+   
+    // l3
+    tmp[0]=-0.01;
+    tmp[1]=0.191*((arm_type=="left")?1.0:-1.0);
+    tmp[2]=0.215;
+    relComs.push_back(tmp);
+   
+    // l5
+    tmp[0]=-0.01;
+    tmp[1]=0.191*((arm_type=="left")?1.0:-1.0);
+    tmp[2]=-0.089;
+    relComs.push_back(tmp);
+    
+    // hand
+    tmp[0]=0.0;
+    tmp[1]=0.0;
+    tmp[2]=0.0;
+    relComs.push_back(tmp);
+
+    // compute CoMs relative positions wrt q0
+    Vector q0(12,0.0);
+
+    Matrix frame;
+    solver.fkin(q0,frame,3+0);
+    relComs[1]=SE3inv(frame)*relComs[1];
+    relComs[2]=SE3inv(frame)*relComs[2];
+
+    solver.fkin(q0,frame,3+3);        
+    relComs[3]=SE3inv(frame)*relComs[3];
+
+    solver.fkin(q0,frame,3+5);
+    relComs[4]=SE3inv(frame)*relComs[4];
+
+    // same order as per relComs
+    weights.push_back(25.0);
+    weights.push_back(2.5);
+    weights.push_back(7.5);
+    weights.push_back(1.5);
+    weights.push_back(1.0);
+    weights.push_back(0.6+external_weight);
+    weight_tot=dot(weights,Vector(weights.length(),1.0));
+
+    // support polygon
+    Vector c1(4,1.0);
+    c1[0]=0.152; c1[1]=0.09;
+    Vector c2(4,1.0);
+    c2[0]=-0.17; c2[1]=0.0;
+    Vector c3(4,1.0);
+    c3[0]=c1[0]; c3[1]=-c1[1];
+    Vector w1(4,1.0);
+    w1[0]=0.0; w1[1]=0.17;
+    Vector w2(4,1.0);
+    w2[0]=w1[0]; w2[1]=-w1[1];
+
+    c1[2]=c2[2]=c3[2]=w1[2]=w2[2]=floor_z;
+
+    supPolygon.push_back(c1);
+    supPolygon.push_back(c3);
+    supPolygon.push_back(w2);
+    supPolygon.push_back(c2);
+    supPolygon.push_back(w1);
+}
+
+
+/****************************************************************/
+bool ArmCOM::getCOMs(const Vector &q, deque<Vector> &coms) const
+{
+    int nJoints=3+solver.getArmParameters().upper_arm.getDOF()+3;
+    if (q.length()!=nJoints)
+    {
+        yError(" *** Arm COM: input joints are fewer than %d!",nJoints);
+        return false;
+    }
+
+    coms.clear(); 
+    coms.push_back(relComs[0]);
+
+    Matrix frame;
+    solver.fkin(q,frame,3+0);
+    coms.push_back(frame*relComs[1]);
+    coms.push_back(frame*relComs[2]);
+
+    solver.fkin(q,frame,3+3);
+    coms.push_back(frame*relComs[3]);
+
+    solver.fkin(q,frame,3+5);
+    coms.push_back(frame*relComs[4]);
+
+    solver.fkin(q,frame);
+    coms.push_back(frame*relComs[5]);
+
+    Vector com_tot(4,0.0);
+    for (size_t i=0; i<coms.size(); i++)
+        com_tot+=weights[i]*coms[i];
+    
+    com_tot/=weight_tot;
+    com_tot[3]=1.0; // reinforce
+
+    coms.push_back(com_tot);
+    return true;
+}
+
+
+/****************************************************************/
+bool ArmCOM::getSupportMargin(const Vector &com, double &margin) const
+{
+    if (com.length()!=4)
+    {
+        yError(" *** Arm COM: input CoM is not homogeneous!");
+        return false;
+    }
+
+    margin=std::numeric_limits<double>::max();
+    Vector neg_mrg;
+
+    for (size_t i=0; i<supPolygon.size(); i++)
+    {
+        const Vector &p0=supPolygon[i];
+        const Vector &p1=supPolygon[(i+1)%supPolygon.size()];
+
+        Vector d=p0-p1;
+        Vector rot(4,0.0);
+        rot[2]=1.0;
+        rot[3]=(d[0]!=0.0)?atan2(d[1],d[0]):M_PI/2.0;
+        Matrix R=SE3inv(axis2dcm(rot));
+
+        Vector p0_rot=R*p0;
+        if (p0_rot[1]<0.0)
+        {
+            rot[3]+=M_PI;
+            R=SE3inv(axis2dcm(rot));
+            p0_rot=R*p0;
+        }
+
+        Vector com_rot=R*com;
+        double mrg=p0_rot[1]-com_rot[1];
+        margin=std::min(mrg,margin);
+
+        if (mrg<0.0)
+            neg_mrg.push_back(mrg);
+    }
+
+    if (margin>=0.0)
+        return true;
+
+    margin=-std::numeric_limits<double>::max();
+    for (size_t i=0; i<neg_mrg.length(); i++)
+        margin=std::max(neg_mrg[i],margin);
+
+    Vector com_xy=com.subVector(0,1);
+    for (size_t i=0; i<supPolygon.size(); i++)
+        margin=std::max(-norm(com_xy-supPolygon[i].subVector(0,1)),margin);
+
+    return true;
 }
 

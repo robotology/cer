@@ -31,7 +31,6 @@
 #include <yarp/math/Math.h>
 
 #include <cer_kinematics/arm.h>
-#include <utils.h>
 
 using namespace std;
 using namespace yarp::os;
@@ -79,7 +78,7 @@ int main(int argc, char *argv[])
     solver.setSolverParameters(slvp);
 
     // init CoMs, weights and support polygon
-    ComData comData(solver,external_weight,floor_z);
+    ArmCOM armCOM(solver,external_weight,floor_z);
 
     // targets
     Vector ud(4,0.0);
@@ -127,9 +126,12 @@ int main(int argc, char *argv[])
             avgT=avgT_n1;
             N+=1.0;
 
-            deque<Vector> coms=comData.getCOMs(q);
+            deque<Vector> coms;
+            armCOM.getCOMs(q,coms);
             Vector &com=coms.back();
-            double margin=comData.getSupportMargin(com);
+
+            double margin;
+            armCOM.getSupportMargin(com,margin);
 
             Vector xd=Hd.getCol(3).subVector(0,2);
             Vector x=H.getCol(3).subVector(0,2);

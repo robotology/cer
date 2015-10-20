@@ -18,6 +18,8 @@
 #ifndef __CER_KINEMATICS_ARM_H__
 #define __CER_KINEMATICS_ARM_H__
 
+#include <deque>
+
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
 
@@ -161,6 +163,63 @@ public:
      */
     virtual ~ArmSolver() { }
 };
+
+
+/**
+ * Class to compute useful information of the arm, such as CoMs,
+ * and stability margin.
+ * 
+ * @author Ugo Pattacini
+ */
+class ArmCOM
+{
+    ArmSolver &solver;
+    std::deque<yarp::sig::Vector> supPolygon;
+    std::deque<yarp::sig::Vector> relComs;
+    yarp::sig::Vector weights;
+    double weight_tot;
+    
+    ArmCOM();  // not implemented
+
+public:
+    /**
+     * Constructor.
+     * 
+     * @param solver_           the arm solver.
+     * @param external_weight   the weight [Kg] attached to the 
+     *                          hand.
+     * @param floor_z           the z-coordinate of the floor in the 
+     *                          root frame.
+     */
+    ArmCOM(ArmSolver &solver_, const double external_weight=0.0,
+           const double floor_z=-0.63);
+
+    /**
+     * CoM computation.
+     * 
+     * @param q     the DOFs configuration ([m]-[deg]-[m]).
+     * @param coms  a deque of vectors, accounting each for the 
+     *              single CoM of the links; the last vector is the
+     *              CoM of the whole structure.
+     * @return true/false on success/failure.  
+     */
+    bool getCOMs(const yarp::sig::Vector &q, std::deque<yarp::sig::Vector> &coms) const;
+
+    /**
+     * CoM computation.
+     * 
+     * @param com       the homogeneous vector representing the CoM 
+     *                  of the structure ([m]).
+     * @param margin    the stability margin given as the distance 
+     *                  from the border of the support polygon;
+     *                  positive values mean we are inside the
+     *                  polygon.
+     * @return true/false on success/failure. 
+     */
+    bool getSupportMargin(const yarp::sig::Vector &com, double &margin) const;
+};
+
+
 
 }
 
