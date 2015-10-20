@@ -4,6 +4,7 @@ function arm(varargin)
 % Author: Ugo Pattacini <ugo.pattacini@iit.it>
 
 global T1 T2 DH q;
+global floor_z;
 global hfig hg_arm hg_target hg_coms;
 global rx;
 global init_done;
@@ -68,6 +69,8 @@ quiver3(hax,0,0,0,1,0,0,A,'Color','r','Linewidth',2);
 quiver3(hax,0,0,0,0,1,0,A,'Color','g','Linewidth',2);
 quiver3(hax,0,0,0,0,0,1,A,'Color','b','Linewidth',2);
 
+floor_z=-0.63;
+
 % casters
 c1=[0.152  0.09];
 c2=[-0.17; 0.0];
@@ -90,7 +93,7 @@ c3=r*[cos(theta) sin(theta)];
 % support polygon
 hp=patch([c1(1) c3(1) 0.0 c2(1) 0.0],...
          [c1(2) c3(2) -0.17 c2(2) 0.17],...
-         -0.63*ones(1,5),[0.65 0.65 0.65]);
+         floor_z*ones(1,5),[0.65 0.65 0.65]);
 alpha(hp,0.75);
 
 q=zeros(12,1);
@@ -342,6 +345,7 @@ fprintf(t,'r\n');
 function yarpRxCallback(obj,~)
 
 global q;
+global floor_z;
 global hfig;
 global hg_arm hg_target hg_coms;
 global init_done;
@@ -407,7 +411,7 @@ if ~strcmp(tline,'do')
                 end
                 
                 hcom=plot3(hax,[com(1) com(1)],[com(2) com(2)],...
-                          [com(3) -0.63],'rd--','LineWidth',2,'MarkerSize',5);
+                          [com(3) floor_z],'rd--','LineWidth',2,'MarkerSize',5);
                 set(hcom,'Parent',hg_target);
                 
                 margin=yarpData(end);
