@@ -30,6 +30,26 @@ using namespace cer_kinematics;
 namespace cer_kinematics {
 
 /****************************************************************/
+bool stepModeParser(string &mode, string &submode)
+{
+    submode=mode;
+    size_t found=mode.find_first_of('+');
+    if ((found>0) && (found!=string::npos))
+    {
+        submode=mode.substr(0,found);
+        if (found+1<mode.length())
+            mode=mode.substr(found+1,mode.length()-found);
+        else
+            mode.clear();
+    }
+    else
+        mode.clear();    
+
+    return !submode.empty();
+}
+
+
+/****************************************************************/
 class UpperArm : public iKinLimb
 {
 public:
@@ -91,26 +111,6 @@ ArmParameters::ArmParameters(const string &type) :
     TN=axis2dcm(rot);
     TN(0,3)=hand_dist*sin(hand_ang);
     TN(2,3)=hand_dist*cos(hand_ang);
-}
-
-
-/****************************************************************/
-bool SolverParameters::stepModeParser(string &mode, string &submode)
-{
-    submode=mode;
-    size_t found=mode.find_first_of('+');
-    if ((found>0) && (found!=string::npos))
-    {
-        submode=mode.substr(0,found);
-        if (found+1<mode.length())
-            mode=mode.substr(found+1,mode.length()-found);
-        else
-            mode.clear();
-    }
-    else
-        mode.clear();    
-
-    return !submode.empty();
 }
 
 

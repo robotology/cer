@@ -236,9 +236,6 @@ struct SolverParameters
      * @return true/false on success/failure. 
      */
     bool setMode(const std::string &mode);
-
-protected:
-    bool stepModeParser(std::string &mode, std::string &submode);
 };
 
 }
