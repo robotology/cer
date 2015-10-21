@@ -45,13 +45,13 @@ public:
     /**
     * Defines the callback body to be called at each iteration. 
     * @param iter   the number of the current iteration. 
-    * @param Hd     the desired 4-by-4 homogeneous matrix 
-    *               representing the end-effector frame ([m]).
+    * @param Hd     the desired 4-by-4 homogeneous matrix [m].
     * @param q      the solved DOFs ([m]-[deg]-[m]). 
+    * @param Hee    the enf-effector 4-by-4 homogeneous matrix [m]. 
     * @return true to stop the solver abruptly, false to let it run.
     */ 
     virtual bool exec(const int iter, const yarp::sig::Matrix &Hd,
-                      const yarp::sig::Vector &q)=0;
+                      const yarp::sig::Vector &q, const yarp::sig::Matrix &Hee)=0;
 
     /**
      * Destructor.

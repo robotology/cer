@@ -264,7 +264,7 @@ public:
                                Ipopt::IpoptCalculatedQuantities* ip_cq)
     {
         if (slv.callback!=NULL)
-            return slv.callback->exec(iter,Hd,x);
+            return slv.callback->exec(iter,Hd,x,T);
         else
             return true;
     }

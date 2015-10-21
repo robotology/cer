@@ -35,7 +35,8 @@ class Callback : public ArmSolverIterateCallback
 {
 public:
     /****************************************************************/
-    bool exec(const int iter, const Matrix &Hd, const Vector &q)
+    bool exec(const int iter, const Matrix &Hd, const Vector &q,
+              const Matrix &Hee)
     {
         yDebug("q[%d]=(%s)",iter,q.toString(3,3).c_str());
         return true;
