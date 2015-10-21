@@ -31,12 +31,26 @@ using namespace cer_kinematics;
 
 
 /****************************************************************/
+class Callback : public ArmSolverIterateCallback
+{
+public:
+    /****************************************************************/
+    bool exec(const int iter, const Matrix &Hd, const Vector &q)
+    {
+        yDebug("q[%d]=(%s)",iter,q.toString(3,3).c_str());
+        return true;
+    }
+};
+
+
+/****************************************************************/
 class IKSolver : public RFModule
 {
     BufferedPort<Bottle> portTarget;
     BufferedPort<Bottle> portSolution;
 
     ArmSolver solver;
+    Callback callback;
     Vector q;
 
     ArmCOM *armCOM;
@@ -49,6 +63,7 @@ public:
         double external_weight=rf.check("external-weight",Value(2.0)).asDouble();
         double floor_z=rf.check("floor-z",Value(-0.63)).asDouble();
         int verbosity=rf.check("verbosity",Value(1)).asInt();
+        bool enable_callback=rf.check("enable-callback");
 
         q.resize(12,0.0);
         portTarget.open("/solver/target:i");
@@ -60,6 +75,8 @@ public:
         solver.setArmParameters(ArmParameters(arm_type));
         solver.setSolverParameters(p);
         solver.setVerbosity(verbosity);
+        if (enable_callback)
+            solver.enableIterateCallback(callback); 
 
         armCOM=new ArmCOM(solver,external_weight,floor_z);
         return true;

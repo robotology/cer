@@ -60,6 +60,7 @@ namespace cer_kinematics {
 ArmSolver::ArmSolver(const ArmParameters &armParams,
                      const SolverParameters &slvParams,
                      const int verb) :
+                     callback(NULL),
                      armParameters(armParams),
                      slvParameters(slvParams),
                      verbosity(verb)
@@ -92,7 +93,7 @@ bool ArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
         return false;
     }
 
-    Ipopt::SmartPtr<ArmFullNLP_CentralDiff> nlp=new ArmFullNLP_CentralDiff(armParameters,slvParameters);
+    Ipopt::SmartPtr<ArmFullNLP_ForwardDiff> nlp=new ArmFullNLP_ForwardDiff(*this);
     H=nlp->fkin(q,frame);
 
     return true;
@@ -126,26 +127,30 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     if (slvParameters.full_pose)
     {
         if (slvParameters.can_heave)
+        {
             if (slvParameters.enable_central_difference)
-                nlp=new ArmFullHeaveNLP_CentralDiff(armParameters,slvParameters); 
+                nlp=new ArmFullHeaveNLP_CentralDiff(*this); 
             else
-                nlp=new ArmFullHeaveNLP_ForwardDiff(armParameters,slvParameters); 
+                nlp=new ArmFullHeaveNLP_ForwardDiff(*this); 
+        }
         else if (slvParameters.enable_central_difference)
-            nlp=new ArmFullNLP_CentralDiff(armParameters,slvParameters);
+            nlp=new ArmFullNLP_CentralDiff(*this);
         else
-            nlp=new ArmFullNLP_ForwardDiff(armParameters,slvParameters);
+            nlp=new ArmFullNLP_ForwardDiff(*this);
     }
     else
     {
         if (slvParameters.can_heave)
+        {
             if (slvParameters.enable_central_difference)
-                nlp=new ArmXyzHeaveNLP_CentralDiff(armParameters,slvParameters); 
+                nlp=new ArmXyzHeaveNLP_CentralDiff(*this); 
             else
-                nlp=new ArmXyzHeaveNLP_ForwardDiff(armParameters,slvParameters); 
+                nlp=new ArmXyzHeaveNLP_ForwardDiff(*this); 
+        }
         else if (slvParameters.enable_central_difference)
-            nlp=new ArmXyzNLP_CentralDiff(armParameters,slvParameters);
+            nlp=new ArmXyzNLP_CentralDiff(*this);
         else
-            nlp=new ArmXyzNLP_ForwardDiff(armParameters,slvParameters);
+            nlp=new ArmXyzNLP_ForwardDiff(*this);
     }
 
     nlp->set_q0(q0);

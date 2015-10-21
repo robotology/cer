@@ -21,8 +21,7 @@ class ArmFullNLP_ForwardDiff : public ArmCommonNLP
 {
 public:
     /****************************************************************/
-    ArmFullNLP_ForwardDiff(ArmParameters &pa, SolverParameters &ps) :
-                           ArmCommonNLP(pa,ps)
+    ArmFullNLP_ForwardDiff(ArmSolver &slv_) : ArmCommonNLP(slv_)
     {
     }
 
@@ -375,8 +374,7 @@ class ArmFullNLP_CentralDiff : public ArmFullNLP_ForwardDiff
 {
 public:
     /****************************************************************/
-    ArmFullNLP_CentralDiff(ArmParameters &pa, SolverParameters &ps) :
-                           ArmFullNLP_ForwardDiff(pa,ps)
+    ArmFullNLP_CentralDiff(ArmSolver &slv_) : ArmFullNLP_ForwardDiff(slv_)
     {
     }
 

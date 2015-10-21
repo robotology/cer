@@ -21,8 +21,7 @@ class ArmXyzHeaveNLP_ForwardDiff : public ArmXyzNLP_ForwardDiff
 {
 public:
     /****************************************************************/
-    ArmXyzHeaveNLP_ForwardDiff(ArmParameters &pa, SolverParameters &ps) :
-                               ArmXyzNLP_ForwardDiff(pa,ps)
+    ArmXyzHeaveNLP_ForwardDiff(ArmSolver &slv_) : ArmXyzNLP_ForwardDiff(slv_)
     {
     }
 
@@ -160,8 +159,7 @@ class ArmXyzHeaveNLP_CentralDiff : public ArmXyzNLP_CentralDiff
 {
 public:
     /****************************************************************/
-    ArmXyzHeaveNLP_CentralDiff(ArmParameters &pa, SolverParameters &ps) :
-                               ArmXyzNLP_CentralDiff(pa,ps)
+    ArmXyzHeaveNLP_CentralDiff(ArmSolver &slv_) : ArmXyzNLP_CentralDiff(slv_)
     {
     }
 

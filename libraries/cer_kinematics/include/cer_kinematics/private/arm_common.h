@@ -20,6 +20,7 @@
 class ArmCommonNLP : public Ipopt::TNLP
 {
 protected:
+    ArmSolver &slv;
     const TripodParametersExtended torso;    
     const TripodParametersExtended lower_arm;
     iKinLimb &upper_arm;
@@ -33,7 +34,7 @@ protected:
     double wpostural_upper_arm;
     double wpostural_lower_arm;
 
-    Matrix H0,HN,Rd;
+    Matrix H0,HN,Hd,Rd;
     Vector x0,x;
     Vector xd,ud;
 
@@ -44,13 +45,17 @@ protected:
 
 public:
     /****************************************************************/
-    ArmCommonNLP(ArmParameters &pa, SolverParameters &ps) :
-                 torso(pa.torso), upper_arm(pa.upper_arm), lower_arm(pa.lower_arm),
-                 T0(pa.T0), TN(pa.TN), zd1(ps.torso_heave), zd2(ps.lower_arm_heave),
-                 wpostural_torso(ps.weight_postural_torso),
-                 wpostural_torso_yaw(ps.weight_postural_torso_yaw),
-                 wpostural_upper_arm(ps.weight_postural_upper_arm),
-                 wpostural_lower_arm(ps.weight_postural_lower_arm)
+    ArmCommonNLP(ArmSolver &slv_) :
+                 slv(slv_), torso(slv_.armParameters.torso),
+                 upper_arm(slv_.armParameters.upper_arm),
+                 lower_arm(slv_.armParameters.lower_arm),
+                 T0(slv_.armParameters.T0), TN(slv_.armParameters.TN),
+                 zd1(slv_.slvParameters.torso_heave),
+                 zd2(slv_.slvParameters.lower_arm_heave),
+                 wpostural_torso(slv_.slvParameters.weight_postural_torso),
+                 wpostural_torso_yaw(slv_.slvParameters.weight_postural_torso_yaw),
+                 wpostural_upper_arm(slv_.slvParameters.weight_postural_upper_arm),
+                 wpostural_lower_arm(slv_.slvParameters.weight_postural_lower_arm)
     {
         drho=DELTA_RHO;
 
@@ -182,6 +187,7 @@ public:
     /****************************************************************/
     void set_target(const Matrix &Hd)
     {
+        this->Hd=Hd;
         xd=Hd.getCol(3).subVector(0,2);
 
         Rd=Hd;
@@ -208,6 +214,9 @@ public:
     {        
         if (firstGo || new_x)
         {
+            for (size_t i=0; i<this->x.length(); i++)
+                this->x[i]=x[i];
+
             for (size_t i=0; i<q.length(); i++)
                 q[i]=x[3+i];
 
@@ -243,6 +252,21 @@ public:
                 Ipopt::Index *jCol, Ipopt::Number *values)
     {
         return true;
+    }
+    
+    /************************************************************************/
+    bool intermediate_callback(Ipopt::AlgorithmMode mode, Ipopt::Index iter,
+                               Ipopt::Number obj_value, Ipopt::Number inf_pr,
+                               Ipopt::Number inf_du, Ipopt::Number mu,
+                               Ipopt::Number d_norm, Ipopt::Number regularization_size,
+                               Ipopt::Number alpha_du, Ipopt::Number alpha_pr,
+                               Ipopt::Index ls_trials, const Ipopt::IpoptData* ip_data,
+                               Ipopt::IpoptCalculatedQuantities* ip_cq)
+    {
+        if (slv.callback!=NULL)
+            return slv.callback->exec(iter,Hd,x);
+        else
+            return true;
     }
 
     /****************************************************************/
