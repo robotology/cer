@@ -39,7 +39,11 @@ include_directories(${PROJECT_SOURCE_DIR}/include
                     ${YARP_INCLUDE_DIRS})
 
 add_definitions(${IPOPT_DEFINITIONS})
-add_library(${PROJECT_NAME} ${headers_private} ${headers} ${sources})
+if(COMPILE_KIN_TESTS)
+    add_library(${PROJECT_NAME} ${headers_private} ${headers} ${sources})
+else()
+    add_library(${PROJECT_NAME} SHARED ${headers_private} ${headers} ${sources})
+endif()
 set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${IPOPT_LINK_FLAGS}")
 target_link_libraries(${PROJECT_NAME} ctrlLib iKin ${YARP_LIBRARIES} ${IPOPT_LIBRARIES})
 
