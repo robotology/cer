@@ -105,7 +105,7 @@ public:
      * 
      * @return arm parameters.
      */
-    virtual ArmParameters getArmParameters() const
+    virtual const ArmParameters& getArmParameters() const
     {
         return armParameters;
     }
@@ -125,7 +125,7 @@ public:
      * 
      * @return solver parameters.
      */
-    virtual SolverParameters getSolverParameters() const
+    virtual const SolverParameters& getSolverParameters() const
     {
         return slvParameters;
     }

@@ -64,7 +64,7 @@ public:
      * 
      * @return tripod parameters.
      */
-    virtual TripodParameters getParameters() const
+    virtual const TripodParameters& getParameters() const
     {
         return parameters;
     }
