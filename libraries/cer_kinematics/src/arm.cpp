@@ -361,7 +361,7 @@ bool ArmCOM::getCOMs(const Vector &q, deque<Vector> &coms) const
         com_tot+=weights[i]*coms[i];
     
     com_tot/=weight_tot;
-    com_tot[3]=1.0; // reinforce
+    com_tot[3]=1.0; // reinforce homogeneity 
 
     coms.push_back(com_tot);
     return true;

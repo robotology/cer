@@ -409,8 +409,8 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
     int print_level=std::max(verbosity-5,0);
 
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
-    app->Options()->SetNumericValue("tol",1e-4);
-    app->Options()->SetNumericValue("constr_viol_tol",1e-6);
+    app->Options()->SetNumericValue("tol",1e-6);
+    app->Options()->SetNumericValue("constr_viol_tol",1e-8);
     app->Options()->SetIntegerValue("acceptable_iter",0);
     app->Options()->SetStringValue("mu_strategy","adaptive");
     app->Options()->SetIntegerValue("max_iter",200);
@@ -444,6 +444,8 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         yInfo(" *** Tripod Solver:     lll [m] = (%s)",lll.toString(15,15).c_str());
         yInfo(" *** Tripod Solver:     u [rad] = (%s)",d.u.toString(15,15).c_str());
         yInfo(" *** Tripod Solver:       p [m] = (%s)",d.p.toString(15,15).c_str());
+        yInfo(" *** Tripod Solver:   e_u [rad] = %g",norm(ud-d.u));
+        yInfo(" *** Tripod Solver:     e_z [m] = %g",fabs(zd-d.p[2]));
         yInfo(" *** Tripod Solver: alpha [deg] = %g",CTRL_RAD2DEG*acos(d.n[2]));
         yInfo(" *** Tripod Solver:     dt [ms] = %g",1000.0*(t1-t0));
         yInfo(" *** Tripod Solver ******************************");
