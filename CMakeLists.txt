@@ -27,6 +27,14 @@ set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "cer is always built with dyn
 include(YarpInstallationHelpers)
 yarp_configure_external_installation(cer WITH_PLUGINS)
 
+
+include(AddInstallRPATHSupport)
+
+add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"                                   # Libraries
+                          BIN_DIRS "${CMAKE_INSTALL_FULL_BINDIR}"                                   # Binaries
+                                   "${CMAKE_INSTALL_PREFIX}/${CER_DYNAMIC_PLUGINS_INSTALL_DIR}"     # Plugins
+                          USE_LINK_PATH)
+
 # Everything is configured now, we can start adding source code
 add_subdirectory(libraries/cer_kinematics)
 add_subdirectory(cermod)
