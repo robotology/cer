@@ -60,10 +60,9 @@ namespace cer_kinematics {
 ArmSolver::ArmSolver(const ArmParameters &armParams,
                      const SolverParameters &slvParams,
                      const int verb) :
-                     callback(NULL),
+                     Solver(verb),
                      armParameters(armParams),
-                     slvParameters(slvParams),
-                     verbosity(verb)
+                     slvParameters(slvParams)
 {
 }
 

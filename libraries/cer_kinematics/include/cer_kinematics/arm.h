@@ -34,46 +34,12 @@ namespace cer_kinematics
  * 
  * @author Ugo Pattacini
  */
-class ArmSolverIterateCallback
-{
-public:
-    /**
-     * Constructor.
-     */
-    ArmSolverIterateCallback() { }
-
-    /**
-    * Defines the callback body to be called at each iteration. 
-    * @param iter   the number of the current iteration. 
-    * @param Hd     the desired 4-by-4 homogeneous matrix [m].
-    * @param q      the solved DOFs ([m]-[deg]-[m]). 
-    * @param Hee    the enf-effector 4-by-4 homogeneous matrix [m]. 
-    * @return true to stop the solver abruptly, false to let it run.
-    */ 
-    virtual bool exec(const int iter, const yarp::sig::Matrix &Hd,
-                      const yarp::sig::Vector &q, const yarp::sig::Matrix &Hee)=0;
-
-    /**
-     * Destructor.
-     */
-    virtual ~ArmSolverIterateCallback() { }
-};
-
-
-/**
- * Class to handle direct and inverse kinematics of the robot 
- * arm. 
- * 
- * @author Ugo Pattacini
- */
-class ArmSolver
+class ArmSolver : public Solver
 {
 protected:
-    ArmSolverIterateCallback *callback;
     ArmParameters armParameters;
     SolverParameters slvParameters;
     yarp::sig::Vector q0;    
-    int verbosity;
 
     friend class ArmCommonNLP;
 
@@ -131,26 +97,6 @@ public:
     }
 
     /**
-     * Specify new verbosity level.
-     * 
-     * @param verb   the verbosity level.
-     */
-    virtual void setVerbosity(const int verb)
-    {
-        verbosity=verb;
-    }
-
-    /**
-     * Retrieve verbosity level.
-     * 
-     * @return the current verbosity level.
-     */
-    virtual int getVerbosity() const
-    {
-        return verbosity;
-    }
-
-    /**
      * Specify the initial DOFs values.
      * 
      * @param q0   initial DOFs values ([m]-[deg]-[m]). 
@@ -166,27 +112,6 @@ public:
     virtual yarp::sig::Vector getInitialGuess() const
     {
         return q0;
-    }
-
-    /**
-     * Enable iterate callbacks.
-     *  
-     * @param clbk  the object defining the callback.
-     * @return true/false on success/failure.
-     */
-    virtual void enableIterateCallback(ArmSolverIterateCallback &clbk)
-    {
-        callback=&clbk;
-    }
-
-    /**
-     * Disable iterate callbacks.
-     *  
-     * @return true/false on success/failure.
-     */
-    virtual void disableIterateCallback()
-    {
-        callback=NULL;
     }
 
     /**

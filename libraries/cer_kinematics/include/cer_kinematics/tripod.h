@@ -31,12 +31,13 @@ namespace cer_kinematics
  * 
  * @author Ugo Pattacini
  */
-class TripodSolver
+class TripodSolver : public Solver
 {
 protected:
     TripodParameters parameters;
     yarp::sig::Vector lll0;
-    int verbosity;
+
+    friend class TripodNLP;
 
 public:
     /**
@@ -67,26 +68,6 @@ public:
     virtual const TripodParameters& getParameters() const
     {
         return parameters;
-    }
-
-    /**
-     * Specify new verbosity level.
-     * 
-     * @param verb   the verbosity level.
-     */
-    virtual void setVerbosity(const int verb)
-    {
-        verbosity=verb;
-    }
-
-    /**
-     * Retrieve verbosity level.
-     * 
-     * @return the current verbosity level.
-     */
-    virtual int getVerbosity() const
-    {
-        return verbosity;
     }
 
     /**

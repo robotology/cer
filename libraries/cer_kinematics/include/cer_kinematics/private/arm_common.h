@@ -209,8 +209,7 @@ public:
     }
 
     /************************************************************************/
-    virtual void computeQuantities(const Ipopt::Number *x,
-                                   const bool new_x)
+    virtual void computeQuantities(const Ipopt::Number *x, const bool new_x)
     {        
         if (firstGo || new_x)
         {

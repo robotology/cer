@@ -21,6 +21,7 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 
+#include <cer_kinematics/utils.h>
 #include <cer_kinematics/arm.h>
 
 using namespace std;
@@ -31,7 +32,7 @@ using namespace cer_kinematics;
 
 
 /****************************************************************/
-class Callback : public ArmSolverIterateCallback
+class Callback : public SolverIterateCallback
 {
 public:
     /****************************************************************/

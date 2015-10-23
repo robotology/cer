@@ -48,6 +48,7 @@ namespace cer_kinematics {
 class TripodNLP : public Ipopt::TNLP
 {
 protected:
+    TripodSolver &slv;
     const TripodParametersExtended params;
 
     Vector ud;
@@ -55,9 +56,13 @@ protected:
     Vector rho0,rho;
     double drho;
 
+    TripodState d;
+    Vector lll;
+    bool firstGo;
+
 public:
     /****************************************************************/
-    TripodNLP(const TripodParameters &p) : params(p)
+    TripodNLP(TripodSolver &slv_) : slv(slv_), params(slv.parameters)
     {
         zd=(params.l_max+params.l_min)/2.0;
         ud.resize(3,0.0);
@@ -65,6 +70,9 @@ public:
         rho0.resize(3,zd);
         rho=rho0;
         drho=DELTA_RHO;
+
+        lll=rho0;
+        firstGo=true;
     }
 
     /****************************************************************/
@@ -180,6 +188,19 @@ public:
         return true;
     }
 
+    /************************************************************************/
+    virtual void computeQuantities(const Ipopt::Number *x, const bool new_x)
+    {        
+        if (firstGo || new_x)
+        {
+            for (size_t i=0; i<this->lll.length(); i++)
+                this->lll[i]=x[i];
+
+            d=fkin(x);
+            firstGo=false;
+        }
+    }
+
     /****************************************************************/
     bool get_starting_point(Ipopt::Index n, bool init_x, Ipopt::Number *x,
                             bool init_z, Ipopt::Number *z_L, Ipopt::Number *z_U,
@@ -195,7 +216,7 @@ public:
     bool eval_f(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                 Ipopt::Number &obj_value)
     {
-        TripodState d=fkin(x);
+        computeQuantities(x,new_x);
         obj_value=norm2(ud-d.u);
 
         return true;
@@ -205,7 +226,7 @@ public:
     bool eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
                      Ipopt::Number *grad_f)
     {
-        TripodState d=fkin(x);
+        computeQuantities(x,new_x);
 
         Ipopt::Number x_dx[3];
         TripodState d_fw,d_bw;
@@ -242,7 +263,7 @@ public:
     bool eval_g(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                 Ipopt::Index m, Ipopt::Number *g)
     {
-        TripodState d=fkin(x);
+        computeQuantities(x,new_x);
 
         Ipopt::Number tmp=(zd-d.p[2]);
         g[0]=tmp*tmp;
@@ -271,7 +292,7 @@ public:
         }
         else
         {
-            TripodState d=fkin(x);
+            computeQuantities(x,new_x);
 
             Ipopt::Number x_dx[3];
             TripodState d_fw,d_bw;
@@ -317,6 +338,34 @@ public:
         return true;
     }
 
+    /************************************************************************/
+    bool intermediate_callback(Ipopt::AlgorithmMode mode, Ipopt::Index iter,
+                               Ipopt::Number obj_value, Ipopt::Number inf_pr,
+                               Ipopt::Number inf_du, Ipopt::Number mu,
+                               Ipopt::Number d_norm, Ipopt::Number regularization_size,
+                               Ipopt::Number alpha_du, Ipopt::Number alpha_pr,
+                               Ipopt::Index ls_trials, const Ipopt::IpoptData* ip_data,
+                               Ipopt::IpoptCalculatedQuantities* ip_cq)
+    {
+        if (slv.callback!=NULL)
+        {
+            double n=norm(ud);
+            Vector ud_=(1.0/n)*ud;
+            ud_.push_back(n);
+            Matrix Hd=axis2dcm(ud_);
+            Hd(2,3)=zd;
+
+            Matrix Hee=d.T;
+            Hd(0,3)=d.p[0];
+            Hd(1,3)=d.p[1];
+            Hd(2,3)=d.p[2];
+
+            return slv.callback->exec(iter,Hd,lll,Hee);
+        }
+        else
+            return true;
+    }
+
     /****************************************************************/
     void finalize_solution(Ipopt::SolverReturn status, Ipopt::Index n,
                            const Ipopt::Number *x, const Ipopt::Number *z_L,
@@ -337,7 +386,8 @@ public:
 /****************************************************************/
 TripodSolver::TripodSolver(const TripodParameters &params,
                            const int verb) :
-                           parameters(params), verbosity(verb)
+                           Solver(verb),
+                           parameters(params)
 {
 }
 
@@ -365,7 +415,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u)
         return false;
     }
 
-    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(parameters);
+    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(lll);
     p=d.p;
     u=d.u;
@@ -383,7 +433,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
         return false;
     }
 
-    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(parameters);
+    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(lll);
     
     Vector rpy=dcm2rpy(d.T);
@@ -420,7 +470,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
     app->Options()->SetIntegerValue("print_level",print_level);
     app->Initialize();
 
-    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(parameters);    
+    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);    
     nlp->set_rho0(lll0);
     nlp->set_zd(zd);
     nlp->set_ud(ud);

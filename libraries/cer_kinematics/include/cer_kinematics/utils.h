@@ -238,6 +238,121 @@ struct SolverParameters
     bool setMode(const std::string &mode);
 };
 
+
+/**
+ * Class to handle callbacks to be attached to solver iterates.
+ * 
+ * @author Ugo Pattacini
+ */
+class SolverIterateCallback
+{
+public:
+    /**
+     * Constructor.
+     */
+    SolverIterateCallback() { }
+
+    /**
+    * Defines the callback body to be called at each iteration. 
+    * @param iter   the number of the current iteration. 
+    * @param Hd     the desired 4-by-4 homogeneous matrix [m].
+    * @param q      the DOFs of the iteration.
+    * @param Hee    the enf-effector 4-by-4 homogeneous matrix [m]. 
+    * @return true to stop the solver abruptly, false to let it run.
+    */ 
+    virtual bool exec(const int iter, const yarp::sig::Matrix &Hd,
+                      const yarp::sig::Vector &q, const yarp::sig::Matrix &Hee)=0;
+
+    /**
+     * Destructor.
+     */
+    virtual ~SolverIterateCallback() { }
+};
+
+
+/**
+ * Class to handle direct and inverse kinematics of the robot 
+ * arm. 
+ * 
+ * @author Ugo Pattacini
+ */
+class Solver
+{
+protected:
+    SolverIterateCallback *callback;
+    int verbosity;
+
+public:
+    /**
+     * Constructor.
+     * 
+     * @param verb  integers greater than 0 enable successive levels 
+     *              of verbosity (default=0).
+     */
+    Solver(const int verb=0) : callback(NULL), verbosity(verb) { }
+
+    /**
+     * Specify new verbosity level.
+     * 
+     * @param verb   the verbosity level.
+     */
+    virtual void setVerbosity(const int verb)
+    {
+        verbosity=verb;
+    }
+
+    /**
+     * Retrieve verbosity level.
+     * 
+     * @return the current verbosity level.
+     */
+    virtual int getVerbosity() const
+    {
+        return verbosity;
+    }
+
+    /**
+     * Specify the initial DOFs values.
+     * 
+     * @param q0   initial DOFs values. 
+     * @return true/false on success/failure. 
+     */
+    virtual bool setInitialGuess(const yarp::sig::Vector &q0)=0;
+
+    /**
+     * Retrieve the initial guess used for DOFs.
+     * 
+     * @return the initial DOFs values.
+     */
+    virtual yarp::sig::Vector getInitialGuess() const=0;
+
+    /**
+     * Enable iterate callbacks.
+     *  
+     * @param clbk  the object defining the callback.
+     * @return true/false on success/failure.
+     */
+    virtual void enableIterateCallback(SolverIterateCallback &clbk)
+    {
+        callback=&clbk;
+    }
+
+    /**
+     * Disable iterate callbacks.
+     *  
+     * @return true/false on success/failure.
+     */
+    virtual void disableIterateCallback()
+    {
+        callback=NULL;
+    }
+
+    /**
+     * Destructor.
+     */
+    virtual ~Solver() { }
+};
+
 }
 
 #endif
