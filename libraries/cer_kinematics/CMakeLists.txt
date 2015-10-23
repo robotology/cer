@@ -4,10 +4,6 @@
 
 project(cer_kinematics)
 
-
-include(ICUBcontribHelpers)
-icubcontrib_set_default_prefix()
-
 set(headers_private include/${PROJECT_NAME}/private/helpers.h
                     include/${PROJECT_NAME}/private/arm_common.h
                     include/${PROJECT_NAME}/private/arm_full.h
@@ -38,15 +34,16 @@ endif()
 set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${IPOPT_LINK_FLAGS}")
 target_link_libraries(${PROJECT_NAME} ctrlLib iKin ${YARP_LIBRARIES} ${IPOPT_LIBRARIES})
 
-icubcontrib_export_library(${PROJECT_NAME} INTERNAL_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
-                                           DESTINATION include/${PROJECT_NAME}
-                                           FILES ${headers})
+# Add install target
+yarp_install(TARGETS ${PROJECT_NAME}
+             COMPONENT Runtime
+             LIBRARY DESTINATION  ${CMAKE_INSTALL_LIBDIR})
+
+set_property(TARGET ${PROJECT_NAME}
+             PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include
+                                                          ${ICUB_INCLUDE_DIRS})
 
 option(COMPILE_KIN_TESTS "Compile CER Kinematics Tests" OFF)
 if(COMPILE_KIN_TESTS)
     add_subdirectory(tests)
 endif()
-
-icubcontrib_finalize_export(${PROJECT_NAME})
-icubcontrib_add_uninstall_target()
-

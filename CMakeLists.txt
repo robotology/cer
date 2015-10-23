@@ -14,11 +14,19 @@ list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 find_package(ICUB REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 
-find_package(ICUBcontrib REQUIRED)
-list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
-
 find_package(IPOPT REQUIRED)
 
-add_subdirectory(cermod)
-add_subdirectory(libraries/cer_kinematics)
 
+if(NOT WIN32)
+    option(CER_SHARED_LIBRARY "Compile shared libraries rather than static libraries" ON)
+    if(CER_SHARED_LIBRARY)
+        set(BUILD_SHARED_LIBS ON)
+    endif()
+endif()
+set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "cer is always built with dynamic plugins")
+include(YarpInstallationHelpers)
+yarp_configure_external_installation(cer WITH_PLUGINS)
+
+# Everything is configured now, we can start adding source code
+add_subdirectory(libraries/cer_kinematics)
+add_subdirectory(cermod)
