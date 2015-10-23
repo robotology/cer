@@ -51,6 +51,7 @@ icubcontrib_export_library(${PROJECT_NAME} INTERNAL_INCLUDE_DIRS ${PROJECT_SOURC
                                            DESTINATION include/${PROJECT_NAME}
                                            FILES ${headers})
 
+option(COMPILE_KIN_TESTS "Compile CER Kinematics Tests" OFF)
 if(COMPILE_KIN_TESTS)
     add_subdirectory(tests)
 endif()

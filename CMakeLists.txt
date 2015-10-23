@@ -11,7 +11,6 @@ project(cer)
 find_package(YARP 2.3.64.4 REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 
-option(COMPILE_KIN_TESTS "Compile CER Kinematics Tests" OFF)
 
 add_subdirectory(cermod)
 add_subdirectory(libraries/cer_kinematics)
