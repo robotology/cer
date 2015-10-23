@@ -168,6 +168,7 @@ private:
     yarp::sig::Vector  _robotRef_positions;    // used for position control.
     yarp::sig::Vector  _lastUser_encoders;     // used for position control.
     yarp::sig::Vector  _lastRobot_encoders;    // used for position control.
+    double            *_stamps;
 
 #if 0
     float *_DEPRECATED_encoderconversionfactor;            /** iCubDegrees to encoder conversion factors */

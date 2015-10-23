@@ -281,6 +281,8 @@ bool tripodMotionControl::alloc(int nj)
     _ref_speeds = allocAndCheck<double>(nj);
     _ref_accs = allocAndCheck<double>(nj);
     _calibrated = allocAndCheck<bool>(nj);
+    _stamps = allocAndCheck<double>(nj);
+
 #if 0
     checking_motiondone=allocAndCheck<bool>(nj);
     _pids=allocAndCheck<Pid>(nj);
@@ -327,6 +329,8 @@ bool tripodMotionControl::dealloc()
     checkAndDestroy(_ref_speeds);
     checkAndDestroy(_ref_accs);
     checkAndDestroy(_calibrated);
+    checkAndDestroy(_stamps);
+
 #if 0
     checkAndDestroy(checking_motiondone);
     checkAndDestroy(_pids);
@@ -394,6 +398,7 @@ tripodMotionControl::tripodMotionControl() :
     // Check status of joints
     _calibrated         = NULL;
     useRawEncoderData   = false;
+    _stamps              = NULL;
 
 #if 0
     checking_motiondone = NULL;
@@ -558,6 +563,7 @@ bool tripodMotionControl::initKinematics()
         _lastRobot_encoders.zero();
 
     solver.setInitialGuess(_lastRobot_encoders);     // TODO: ask Ugo if it make sense
+    return true;
 }
 
 bool tripodMotionControl::attachAll(const PolyDriverList& p)
@@ -1338,10 +1344,9 @@ bool tripodMotionControl::getEncodersTimedRaw(double *encs, double *stamps)
 
 bool tripodMotionControl::getEncoderTimedRaw(int j, double *value, double *stamp)
 {
-    double tmp_stamps[_njoints];
-    bool ret = refreshEncoders(tmp_stamps);
+    bool ret = refreshEncoders(_stamps);
     *value = _lastUser_encoders[j];
-    *stamp = tmp_stamps[j];
+    *stamp = _stamps[j];
     return ret;
 }
 
