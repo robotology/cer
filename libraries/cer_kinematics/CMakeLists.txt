@@ -26,18 +26,15 @@ include_directories(${PROJECT_SOURCE_DIR}/include
                     ${YARP_INCLUDE_DIRS})
 
 add_definitions(${IPOPT_DEFINITIONS})
-if(COMPILE_KIN_TESTS)
-    add_library(${PROJECT_NAME} ${headers_private} ${headers} ${sources})
-else()
-    add_library(${PROJECT_NAME} SHARED ${headers_private} ${headers} ${sources})
-endif()
+add_library(${PROJECT_NAME} ${headers_private} ${headers} ${sources})
 set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${IPOPT_LINK_FLAGS}")
 target_link_libraries(${PROJECT_NAME} ctrlLib iKin ${YARP_LIBRARIES} ${IPOPT_LIBRARIES})
 
 # Add install target
 yarp_install(TARGETS ${PROJECT_NAME}
              COMPONENT Runtime
-             LIBRARY DESTINATION  ${CMAKE_INSTALL_LIBDIR})
+             LIBRARY DESTINATION  ${CMAKE_INSTALL_LIBDIR}
+             ARCHIVE DESTINATION  ${CMAKE_INSTALL_LIBDIR})
 
 set_property(TARGET ${PROJECT_NAME}
              PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include
