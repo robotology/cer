@@ -11,6 +11,13 @@ project(cer)
 find_package(YARP 2.3.64.4 REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 
+find_package(ICUB REQUIRED)
+list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
+
+find_package(ICUBcontrib REQUIRED)
+list(APPEND CMAKE_MODULE_PATH ${ICUBCONTRIB_MODULE_PATH})
+
+find_package(IPOPT REQUIRED)
 
 add_subdirectory(cermod)
 add_subdirectory(libraries/cer_kinematics)
