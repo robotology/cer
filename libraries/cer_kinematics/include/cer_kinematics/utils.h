@@ -20,6 +20,7 @@
 
 #include <string>
 #include <yarp/sig/Matrix.h>
+#include <yarp/math/Math.h>
 #include <iCub/iKin/iKinFwd.h>
 
 namespace cer_kinematics
@@ -53,6 +54,12 @@ struct TripodParameters
     double alpha_max;
 
     /**
+     * the 4-by-4 homogeneous matrix linking the root frame to the 
+     * tripod ([m]).
+     */
+    yarp::sig::Matrix T0;
+
+    /**
      * Constructor.
      * 
      * @param r_        the radius ([m]).
@@ -61,8 +68,13 @@ struct TripodParameters
      * @param alpha_max the maximum permitted bending angle ([deg]).
      */
     TripodParameters(const double r_=0.09, const double l_min_=-0.05,
-                     const double l_max_=0.15, const double alpha_max_=30.0) :
-                     r(r_), l_min(l_min_), l_max(l_max_), alpha_max(alpha_max_) { }
+                     const double l_max_=0.15, const double alpha_max_=30.0,
+                     const yarp::sig::Matrix T0_=yarp::math::eye(4,4)) :
+                     r(r_), l_min(l_min_),  l_max(l_max_),
+                     alpha_max(alpha_max_), T0(T0_)
+    {
+        yAssert((T0.rows()==4) && (T0.cols()==4));
+    }
 };
 
 
@@ -73,12 +85,6 @@ struct TripodParameters
  */
 struct ArmParameters
 {
-    /**
-     * the 4-by-4 homogeneous matrix linking the root frame and the 
-     * torso. 
-     */
-    yarp::sig::Matrix T0;
-
     /**
      * the tripod mechanism for the torso.
      */
@@ -96,7 +102,7 @@ struct ArmParameters
 
     /**
      * the 4-by-4 homogeneous matrix linking the lower_arm with the 
-     * end-effector frame. 
+     * end-effector frame ([m]).
      */
     yarp::sig::Matrix TN;
 

@@ -169,19 +169,19 @@ public:
 
             x_dx[0]=x[0]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             values[6]=2.0*dot(e,e_fw-e)/drho;
             x_dx[0]=x[0];
 
             x_dx[1]=x[1]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             values[7]=2.0*dot(e,e_fw-e)/drho;
             x_dx[1]=x[1];
 
             x_dx[2]=x[2]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             values[8]=2.0*dot(e,e_fw-e)/drho;
             x_dx[2]=x[2];
 
@@ -191,7 +191,7 @@ public:
                 values[9+i]=grad[i];
 
             // g[3] (lower_arm)
-            M=T0*d1.T*H;
+            M=d1.T*H;
 
             x_dx[9]=x[9]+drho;
             d_fw=tripod_fkin(2,x_dx);
@@ -382,28 +382,28 @@ public:
 
             x_dx[0]=x[0]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             x_dx[0]=x[0]-drho;
             d_bw=tripod_fkin(1,x_dx);
-            e_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
+            e_bw=xd-(d_bw.T*M).getCol(3).subVector(0,2);
             values[6]=dot(e,e_fw-e_bw)/drho;
             x_dx[0]=x[0];
 
             x_dx[1]=x[1]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             x_dx[1]=x[1]-drho;
             d_bw=tripod_fkin(1,x_dx);
-            e_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
+            e_bw=xd-(d_bw.T*M).getCol(3).subVector(0,2);
             values[7]=dot(e,e_fw-e_bw)/drho;
             x_dx[1]=x[1];
 
             x_dx[2]=x[2]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             x_dx[2]=x[2]-drho;
             d_bw=tripod_fkin(1,x_dx);
-            e_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
+            e_bw=xd-(d_bw.T*M).getCol(3).subVector(0,2);
             values[8]=dot(e,e_fw-e_bw)/drho;
             x_dx[2]=x[2];
 
@@ -413,7 +413,7 @@ public:
                 values[9+i]=grad[i];
 
             // g[3] (lower_arm)
-            M=T0*d1.T*H;
+            M=d1.T*H;
 
             x_dx[9]=x[9]+drho;
             d_fw=tripod_fkin(2,x_dx);

@@ -126,6 +126,11 @@ public:
             d.T(2,0)=q31; d.T(2,1)=q32; d.T(2,2)=q33;  d.T(2,3)=d.p[2];
         }
 
+        d.n=params.R0*d.n+params.p0;
+        d.u=params.R0*d.u+params.p0;
+        d.p=params.R0*d.p+params.p0;
+        d.T=params.T0*d.T;
+
         return d;
     }
 

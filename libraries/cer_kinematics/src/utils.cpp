@@ -102,7 +102,7 @@ ArmParameters::ArmParameters(const string &type) :
 {
     Vector rot(4,0.0);
     rot[2]=1.0; rot[3]=M_PI;
-    T0=axis2dcm(rot);
+    torso.T0=axis2dcm(rot);
 
     double hand_ang=CTRL_DEG2RAD*20.0;
     double hand_dist=0.07;

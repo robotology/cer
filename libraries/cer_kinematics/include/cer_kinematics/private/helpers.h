@@ -38,6 +38,9 @@ struct TripodParametersExtended : public TripodParameters
     std::deque<yarp::sig::Vector> s;
     yarp::sig::Vector z;
 
+    yarp::sig::Matrix R0;
+    yarp::sig::Vector p0;
+
     /****************************************************************/
     TripodParametersExtended(const TripodParameters &parameters) :
                              TripodParameters(parameters)
@@ -57,6 +60,9 @@ struct TripodParametersExtended : public TripodParameters
 
             theta+=CTRL_DEG2RAD*120.0;
         }
+
+        R0=T0.submatrix(0,2,0,2);
+        p0=T0.getCol(3).subVector(0,2);
     }
 };
 
