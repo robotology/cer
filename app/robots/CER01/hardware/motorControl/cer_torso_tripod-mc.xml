@@ -14,8 +14,8 @@
 
     <group name="TRIPOD">
       <param name="Radius">      0.09   </param>
-      <param name="Max_el">      0.15   </param>
-      <param name="Min_el">     -0.05   </param>
+      <param name="Max_el">      0.2   </param>
+      <param name="Min_el">      0.0   </param>
       <param name="Max_alpha">   30.0   </param>
     </group>
 

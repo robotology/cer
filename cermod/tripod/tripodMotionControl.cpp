@@ -569,7 +569,7 @@ bool tripodMotionControl::initKinematics()
 bool tripodMotionControl::attachAll(const PolyDriverList& p)
 {
     bool ret;
-    ret  = _device.attach(_polyDriverDevice);
+    ret  = _device.attach(p[0]->poly);
     ret &= initKinematics();
     return ret;
 }
@@ -793,6 +793,7 @@ bool tripodMotionControl::refreshEncoders(double *times)
         ret = tripod_HW2user( _lastRobot_encoders, _lastUser_encoders);
     }
 
+
     if(!ret)
     {
         // Becareful of overflowing of error messages
@@ -1010,10 +1011,12 @@ bool tripodMotionControl::positionMoveRaw(int j, double ref)
     // calling IK library before propagate the command to HW
     _mutex.wait();
     _userRef_positions[j] = ref;
+
     if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
     {
         yError() << "Requested position is not reachable";
     }
+
     _mutex.post();
 
     // all joints may need to move in order to achieve the new requested position

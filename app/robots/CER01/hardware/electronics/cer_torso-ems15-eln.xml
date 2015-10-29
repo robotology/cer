@@ -6,7 +6,7 @@
     
     <group name="ETH">
         <param name="IpAddress">	10.0.1.15	</param>
-        <param name="Ems">		    1	    	</param>
+        <param name="Ems">		    15	    	</param>
         <param name="CmdPort">		12345		</param>
         <param name="SrvPort">		4444		</param>
     </group>
@@ -21,6 +21,7 @@
         <param name="maxSizeROPframeOccasionals">   128	    </param>
         <param name="maxSizeROP">  		            256     </param>
         <param name="maxNumberRegularROPs">  		32      </param>
+        <param name="TXrate">  		                5       </param>
     </group>
     
     <group name="PROTOCOL">
@@ -34,10 +35,10 @@
             <param name="entityMCmotorNumberOf">                    4	</param>
             <param name="entityMCcontrollerNumberOf">               1	</param> 
             
-        <param name="endpointAnalogSensorsIsSupported">             1   </param> 
+        <param name="endpointAnalogSensorsIsSupported">             0   </param> 
             <param name="entityASstrainNumberOf">                   0	</param> 
             <param name="entityASmaisNumberOf">                     0	</param>
-            <param name="entityASextorqueNumberOf">                 1	</param>   
+            <param name="entityASextorqueNumberOf">                 0	</param>   
             
         <param name="endpointSkinIsSupported">                      0   </param> 
             <param name="entitySKskinNumberOf">                     0	</param>        

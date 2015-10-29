@@ -11,7 +11,7 @@
 
     <group name="LIMITS">
         <!--                            0             	1            2          3          -->
-        <param name="Max">              2000            2000         2000       90    </param>
+        <param name="Max">              0.2             0.2          0.2        90    </param>
         <param name="Min">              0               0            0         -90    </param>
         <param name="Currents">         5000            5000         5000       8000  </param>
         <param name="RotorMin">         0               0            0          0     </param> 
@@ -21,7 +21,7 @@
 
 	<group name="POSITION_CONTROL">
 	    <param name="controlLaw">    joint_pid_v1 </param> 
-        <param name="controlUnits">  metric_units </param> 
+        <param name="controlUnits">  machine_units </param> 
         <param name="kp">            3000        3000       3000          0 </param>       
         <param name="kd">               0           0          0          0 </param>       
         <param name="ki">            5000        5000       5000          0 </param>       
