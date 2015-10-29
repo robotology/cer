@@ -439,8 +439,8 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
     Vector rpy=dcm2rpy(d.T);
     hpr.resize(3);
     hpr[0]=d.p[2];
-    hpr[1]=rpy[1];
-    hpr[2]=rpy[0];
+    hpr[1]=CTRL_RAD2DEG*rpy[1];
+    hpr[2]=CTRL_RAD2DEG*rpy[0];
 
     return true;
 }
