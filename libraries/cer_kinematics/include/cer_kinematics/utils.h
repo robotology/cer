@@ -65,16 +65,12 @@ struct TripodParameters
      * @param r_        the radius ([m]).
      * @param l_min_    the minimum elongation ([m]).
      * @param l_max_    the maximum elongation ([m]).
-     * @param alpha_max the maximum permitted bending angle ([deg]).
+     * @param alpha_max the maximum permitted bending angle ([deg]). 
+     * @param T0_       the 4-by-4 root-to-tripod matrix. 
      */
     TripodParameters(const double r_=0.09, const double l_min_=-0.05,
                      const double l_max_=0.15, const double alpha_max_=30.0,
-                     const yarp::sig::Matrix T0_=yarp::math::eye(4,4)) :
-                     r(r_), l_min(l_min_),  l_max(l_max_),
-                     alpha_max(alpha_max_), T0(T0_)
-    {
-        yAssert((T0.rows()==4) && (T0.cols()==4));
-    }
+                     const yarp::sig::Matrix T0_=yarp::math::eye(4,4));
 };
 
 

@@ -16,7 +16,6 @@
 */
 
 #include <cmath>
-#include <yarp/math/Math.h>
 #include <iCub/ctrl/math.h>
 #include <cer_kinematics/utils.h>
 
@@ -91,6 +90,17 @@ protected:
     }
 };
 
+}
+
+
+/****************************************************************/
+TripodParameters::TripodParameters(const double r_, const double l_min_,
+                                   const double l_max_, const double alpha_max_,
+                                   const Matrix T0_) :
+                  r(r_), l_min(l_min_),  l_max(l_max_),
+                  alpha_max(alpha_max_), T0(T0_)
+{
+    yAssert((T0.rows()==4) && (T0.cols()==4));
 }
 
 
