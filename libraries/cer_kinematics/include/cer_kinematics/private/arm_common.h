@@ -38,7 +38,6 @@ protected:
     Vector x0,x;
     Vector xd,ud;
 
-    bool firstGo;
     TripodState d1,d2;
     Matrix H,H_,J_,T;
     Vector q;
@@ -70,8 +69,6 @@ public:
         
         x=x0;
         set_target(eye(4,4));
-
-        firstGo=true;
         q=x0.subVector(3,3+upper_arm.getDOF()-1);
     }
 
@@ -216,7 +213,7 @@ public:
     /************************************************************************/
     virtual void computeQuantities(const Ipopt::Number *x, const bool new_x)
     {        
-        if (firstGo || new_x)
+        if (new_x)
         {
             for (size_t i=0; i<this->x.length(); i++)
                 this->x[i]=x[i];
@@ -233,8 +230,6 @@ public:
             H_=upper_arm.getH(q);
             J_=upper_arm.GeoJacobian();
             upper_arm.setH0(H0); upper_arm.setHN(HN);
-
-            firstGo=false;
         }
     }
 

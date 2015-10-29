@@ -58,7 +58,6 @@ protected:
 
     TripodState d;
     Vector lll;
-    bool firstGo;
 
 public:
     /****************************************************************/
@@ -70,9 +69,7 @@ public:
         rho0.resize(3,zd);
         rho=rho0;
         drho=DELTA_RHO;
-
         lll=rho0;
-        firstGo=true;
     }
 
     /****************************************************************/
@@ -196,13 +193,12 @@ public:
     /************************************************************************/
     virtual void computeQuantities(const Ipopt::Number *x, const bool new_x)
     {        
-        if (firstGo || new_x)
+        if (new_x)
         {
             for (size_t i=0; i<this->lll.length(); i++)
                 this->lll[i]=x[i];
 
             d=fkin(x);
-            firstGo=false;
         }
     }
 
