@@ -667,7 +667,7 @@ bool tripodMotionControl::parseTorquePidsGroup(Bottle& pidsGroup, Pid myPid[], d
 bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
 {
     Bottle xtmp;
-    int i,j;
+    int i;
     Bottle general = config.findGroup("GENERAL");
 
     // leggere i valori da file
