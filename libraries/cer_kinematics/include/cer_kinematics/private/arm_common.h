@@ -27,7 +27,7 @@ protected:
 
     double drho;
 
-    Matrix T0,TN;
+    Matrix TN;
     double zd1,zd2;
     double wpostural_torso;
     double wpostural_torso_yaw;
@@ -49,7 +49,7 @@ public:
                  slv(slv_), torso(slv_.armParameters.torso),
                  upper_arm(slv_.armParameters.upper_arm),
                  lower_arm(slv_.armParameters.lower_arm),
-                 T0(slv_.armParameters.T0), TN(slv_.armParameters.TN),
+                 TN(slv_.armParameters.TN),
                  zd1(slv_.slvParameters.torso_heave),
                  zd2(slv_.slvParameters.lower_arm_heave),
                  wpostural_torso(slv_.slvParameters.weight_postural_torso),
@@ -132,6 +132,11 @@ public:
             d.T(2,0)=q31; d.T(2,1)=q32; d.T(2,2)=q33;  d.T(2,3)=d.p[2];
         }
 
+        d.n=params.R0*d.n+params.p0;
+        d.u=params.R0*d.u+params.p0;
+        d.p=params.R0*d.p+params.p0;
+        d.T=params.T0*d.T;
+
         return d;
     }
 
@@ -141,7 +146,7 @@ public:
         TripodState d1=tripod_fkin(1,x);
         TripodState d2=tripod_fkin(2,x);
 
-        return T0*d1.T*upper_arm.getH(CTRL_DEG2RAD*x.subVector(3,8))*d2.T*TN;
+        return d1.T*upper_arm.getH(CTRL_DEG2RAD*x.subVector(3,8))*d2.T*TN;
     }
 
     /****************************************************************/
@@ -151,7 +156,7 @@ public:
             return fkin(x);
 
         TripodState d1=tripod_fkin(1,x);
-        Matrix T=T0*d1.T;
+        Matrix T=d1.T;
 
         if (frame>=3)
         {
@@ -222,9 +227,9 @@ public:
             d1=tripod_fkin(1,x);
             d2=tripod_fkin(2,x);
             H=upper_arm.getH(q);
-            T=T0*d1.T*H*d2.T*TN;
+            T=d1.T*H*d2.T*TN;
 
-            upper_arm.setH0(T0*d1.T*H0); upper_arm.setHN(HN*d2.T*TN);
+            upper_arm.setH0(d1.T*H0); upper_arm.setHN(HN*d2.T*TN);
             H_=upper_arm.getH(q);
             J_=upper_arm.GeoJacobian();
             upper_arm.setH0(H0); upper_arm.setHN(HN);

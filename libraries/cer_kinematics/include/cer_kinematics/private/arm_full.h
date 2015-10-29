@@ -157,19 +157,19 @@ public:
 
         x_dx[0]=x[0]+drho;
         d_fw=tripod_fkin(1,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(T0*d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*SE3inv(d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
         grad_f[0]=2.0*(dot(e,e_fw-e)/drho + wpostural_torso*(x[0]-x[1]));
         x_dx[0]=x[0];
 
         x_dx[1]=x[1]+drho;
         d_fw=tripod_fkin(1,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(T0*d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*SE3inv(d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
         grad_f[1]=2.0*(dot(e,e_fw-e)/drho + wpostural_torso*(2.0*x[1]-x[0]-x[2]));
         x_dx[1]=x[1];
 
         x_dx[2]=x[2]+drho;
         d_fw=tripod_fkin(1,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(T0*d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*SE3inv(d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
         grad_f[2]=2.0*(dot(e,e_fw-e)/drho + wpostural_torso*(x[2]-x[1]));
         x_dx[2]=x[2];
 
@@ -182,7 +182,7 @@ public:
             grad_f[3+i]=grad[i] + 2.0*wpostural_upper_arm*(x[3+i]-x0[3+i]);
 
         // lower_arm
-        M=T0*d1.T*H;
+        M=d1.T*H;
 
         x_dx[9]=x[9]+drho;
         d_fw=tripod_fkin(2,x_dx);
@@ -321,19 +321,19 @@ public:
 
             x_dx[0]=x[0]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             values[12]=2.0*dot(e,e_fw-e)/drho;
             x_dx[0]=x[0];
 
             x_dx[1]=x[1]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             values[13]=2.0*dot(e,e_fw-e)/drho;
             x_dx[1]=x[1];
 
             x_dx[2]=x[2]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             values[14]=2.0*dot(e,e_fw-e)/drho;
             x_dx[2]=x[2];
 
@@ -343,7 +343,7 @@ public:
                 values[15+i]=grad[i];
 
             // g[4] (lower_arm)
-            M=T0*d1.T*H;
+            M=d1.T*H;
 
             x_dx[9]=x[9]+drho;
             d_fw=tripod_fkin(2,x_dx);
@@ -406,28 +406,28 @@ public:
 
         x_dx[0]=x[0]+drho;
         d_fw=tripod_fkin(1,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(T0*d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*SE3inv(d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
         x_dx[0]=x[0]-drho;
         d_bw=tripod_fkin(1,x_dx);
-        e_bw=dcm2axis(Rd*SE3inv(T0*d_bw.T*M)); e_bw*=e_bw[3]; e_bw.pop_back();
+        e_bw=dcm2axis(Rd*SE3inv(d_bw.T*M)); e_bw*=e_bw[3]; e_bw.pop_back();
         grad_f[0]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_torso*(x[0]-x[1]);
         x_dx[0]=x[0];
 
         x_dx[1]=x[1]+drho;
         d_fw=tripod_fkin(1,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(T0*d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*SE3inv(d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
         x_dx[1]=x[1]-drho;
         d_bw=tripod_fkin(1,x_dx);
-        e_bw=dcm2axis(Rd*SE3inv(T0*d_bw.T*M)); e_bw*=e_bw[3]; e_bw.pop_back();
+        e_bw=dcm2axis(Rd*SE3inv(d_bw.T*M)); e_bw*=e_bw[3]; e_bw.pop_back();
         grad_f[1]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_torso*(2.0*x[1]-x[0]-x[2]);
         x_dx[1]=x[1];
 
         x_dx[2]=x[2]+drho;
         d_fw=tripod_fkin(1,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(T0*d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*SE3inv(d_fw.T*M)); e_fw*=e_fw[3]; e_fw.pop_back();
         x_dx[2]=x[2]-drho;
         d_bw=tripod_fkin(1,x_dx);
-        e_bw=dcm2axis(Rd*SE3inv(T0*d_bw.T*M)); e_bw*=e_bw[3]; e_bw.pop_back();
+        e_bw=dcm2axis(Rd*SE3inv(d_bw.T*M)); e_bw*=e_bw[3]; e_bw.pop_back();
         grad_f[2]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_torso*(x[2]-x[1]);
         x_dx[2]=x[2];
 
@@ -440,7 +440,7 @@ public:
             grad_f[3+i]=grad[i] + 2.0*wpostural_upper_arm*(x[3+i]-x0[3+i]);
 
         // lower_arm
-        M=T0*d1.T*H;
+        M=d1.T*H;
 
         x_dx[9]=x[9]+drho;
         d_fw=tripod_fkin(2,x_dx);
@@ -581,28 +581,28 @@ public:
 
             x_dx[0]=x[0]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             x_dx[0]=x[0]-drho;
             d_bw=tripod_fkin(1,x_dx);
-            e_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
+            e_bw=xd-(d_bw.T*M).getCol(3).subVector(0,2);
             values[12]=dot(e,e_fw-e_bw)/drho;
             x_dx[0]=x[0];
 
             x_dx[1]=x[1]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             x_dx[1]=x[1]-drho;
             d_bw=tripod_fkin(1,x_dx);
-            e_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
+            e_bw=xd-(d_bw.T*M).getCol(3).subVector(0,2);
             values[13]=dot(e,e_fw-e_bw)/drho;
             x_dx[1]=x[1];
 
             x_dx[2]=x[2]+drho;
             d_fw=tripod_fkin(1,x_dx);
-            e_fw=xd-(T0*d_fw.T*M).getCol(3).subVector(0,2);
+            e_fw=xd-(d_fw.T*M).getCol(3).subVector(0,2);
             x_dx[2]=x[2]-drho;
             d_bw=tripod_fkin(1,x_dx);
-            e_bw=xd-(T0*d_bw.T*M).getCol(3).subVector(0,2);
+            e_bw=xd-(d_bw.T*M).getCol(3).subVector(0,2);
             values[14]=dot(e,e_fw-e_bw)/drho;
             x_dx[2]=x[2];
 
@@ -612,7 +612,7 @@ public:
                 values[15+i]=grad[i];
 
             // g[4] (lower_arm)
-            M=T0*d1.T*H;
+            M=d1.T*H;
 
             x_dx[9]=x[9]+drho;
             d_fw=tripod_fkin(2,x_dx);
