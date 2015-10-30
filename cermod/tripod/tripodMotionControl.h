@@ -161,9 +161,6 @@ private:
 
     // internal stuff
     bool    *_calibrated;       // Flag to know if the calibrate function has been called for the joint
-    double  *_ref_speeds;       // used for position control.
-    double  *_command_speeds;   // used for velocity control.
-    double  *_ref_accs;         // for velocity control, in position min jerk eq is used.
     double   _refSpeed;         // For the tripod device, only one velocity can be defined, it'll be used by all the joints
     yarp::sig::Vector  _userRef_positions;     // used for position control.
     yarp::sig::Vector  _robotRef_positions;    // used for position control.
@@ -172,39 +169,6 @@ private:
     yarp::sig::Vector  _robotRef_speeds;       // used for positionMove.
     yarp::sig::Vector  _posDeltas;             // used to compute _robotRef_speeds on the fly.
     double            *_stamps;
-
-#if 0
-    float *_DEPRECATED_encoderconversionfactor;            /** iCubDegrees to encoder conversion factors */
-    float *_DEPRECATED_encoderconversionoffset;            /** iCubDegrees offset */
-    uint8_t *_jointEncoderType;                 /** joint encoder type*/
-    int    *_jointEncoderRes;                   /** joint encoder resolution */
-    int    *_rotorEncoderRes;                   /** rotor encoder resolution */
-    uint8_t *_rotorEncoderType;                 /** rotor encoder type*/
-    double *_gearbox;                           /** the gearbox ratio */
-    bool   *_hasHallSensor;                     /** */
-    bool   *_hasTempSensor;                     /** */
-    bool   *_hasRotorEncoder;                   /** */
-    bool   *_hasRotorEncoderIndex;              /** */
-    int    *_rotorIndexOffset;                  /** */
-    int    *_motorPoles;                        /** */
-    bool   _pwmIsLimited;                       /** set to true if pwm is limited */
-    int *_velocityShifts;                       /** velocity shifts */
-    int *_velocityTimeout;                      /** velocity shifts */
-    double *_kbemf;                             /** back-emf compensation parameter */
-    double *_ktau;                              /** motor torque constant */
-    int * _filterType;                          /** the filter type (int value) used by the force control algorithm */
-    int *_torqueSensorId;                       /** Id of associated Joint Torque Sensor */
-    int *_torqueSensorChan;                     /** Channel of associated Joint Torque Sensor */
-    double *_maxTorque;                         /** Max torque of a joint */
-    double *_newtonsToSensor;                   /** Newtons to force sensor units conversion factors */
-    enum       positionControlUnitsType {P_MACHINE_UNITS=0, P_METRIC_UNITS=1};
-    positionControlUnitsType _positionControlUnits;
-    double       SAFETY_THRESHOLD;
-    Pid *_pids;                                 /** initial gains */
-    Pid *_tpids;                                /** initial torque gains */
-    Pid *_cpids;                                /** initial current gains */
-    double *_last_position_move_time;           /** time stamp for last received position move command*/
-#endif
 
     // Kinematics stuff
     cer_kinematics::TripodSolver solver;

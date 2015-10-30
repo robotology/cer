@@ -287,8 +287,6 @@ bool tripodMotionControl::alloc(int nj)
     _limitsMax=allocAndCheck<double>(nj);
     _limitsMin=allocAndCheck<double>(nj);
     _kinematic_mj=allocAndCheck<double>(16);
-    _currentLimits=allocAndCheck<double>(nj);
-
 
     // Reserve space for data stored locally. values are initialize to 0
     _userRef_positions.resize(nj);
@@ -303,9 +301,6 @@ bool tripodMotionControl::alloc(int nj)
     _robotRef_speeds.zero();
     _posDeltas.resize(nj);
     _posDeltas.zero();
-    _command_speeds = allocAndCheck<double>(nj);
-    _ref_speeds = allocAndCheck<double>(nj);
-    _ref_accs = allocAndCheck<double>(nj);
     _calibrated = allocAndCheck<bool>(nj);
     _stamps = allocAndCheck<double>(nj);
 
@@ -350,42 +345,9 @@ bool tripodMotionControl::dealloc()
     checkAndDestroy(_limitsMin);
     checkAndDestroy(_kinematic_mj);
     checkAndDestroy(_currentLimits);
-
-    checkAndDestroy(_command_speeds);
-    checkAndDestroy(_ref_speeds);
-    checkAndDestroy(_ref_accs);
     checkAndDestroy(_calibrated);
     checkAndDestroy(_stamps);
 
-#if 0
-    checkAndDestroy(checking_motiondone);
-    checkAndDestroy(_pids);
-    checkAndDestroy(_hasHallSensor);
-    checkAndDestroy(_hasTempSensor);
-    checkAndDestroy(_hasRotorEncoder);
-    checkAndDestroy(_hasRotorEncoderIndex);
-    checkAndDestroy(_rotorIndexOffset);
-    checkAndDestroy(_motorPoles);
-    checkAndDestroy(_velocityShifts);
-    checkAndDestroy(_velocityTimeout);
-    checkAndDestroy(_kbemf);
-    checkAndDestroy(_ktau);
-    checkAndDestroy(_filterType);
-    checkAndDestroy(_DEPRECATED_encoderconversionoffset);
-    checkAndDestroy(_DEPRECATED_encoderconversionfactor);
-    checkAndDestroy(_jointEncoderRes);
-    checkAndDestroy(_rotorEncoderRes);
-    checkAndDestroy(_jointEncoderType);
-    checkAndDestroy(_rotorEncoderType);
-    checkAndDestroy(_gearbox);
-    checkAndDestroy(_torqueSensorId);
-    checkAndDestroy(_torqueSensorChan);
-    checkAndDestroy(_maxTorque);
-    checkAndDestroy(_newtonsToSensor);
-    checkAndDestroy(_tpids);
-    checkAndDestroy(_cpids);
-
-    #endif
     return true;
 }
 
@@ -416,49 +378,12 @@ tripodMotionControl::tripodMotionControl() :
     _limitsMin          = NULL;
     _limitsMax          = NULL;
     _currentLimits      = NULL;
-    _ref_accs           = NULL;
-    _command_speeds     = NULL;
-    _ref_speeds         = NULL;
     _kinematic_mj       = NULL;
     _refSpeed           = 0.01;    // meters per sec, by default it is 1 cm/s  TODO: read it from config file
     _calibrated         = NULL;    // Check status of joints
 
-    // Check status of joints
-    _calibrated         = NULL;
     useRawEncoderData   = false;
     _stamps              = NULL;
-
-#if 0
-    checking_motiondone = NULL;
-    _pids               = NULL;
-    _tpids          = NULL;
-    _cpids          = NULL;
-    _pwmIsLimited     = false;
-    _last_position_move_time = NULL;
-    _kbemf            = NULL;
-    _ktau             = NULL;
-    _filterType       = NULL;
-    _positionControlUnits = P_MACHINE_UNITS;
-    _velocityShifts   = NULL;
-    _velocityTimeout  = NULL;
-    _torqueSensorId   = NULL;
-    _torqueSensorChan = NULL;
-    _maxTorque        = NULL;
-    _newtonsToSensor  = NULL;
-    _jointEncoderRes  = NULL;
-    _jointEncoderType = NULL;
-    _rotorEncoderRes  = NULL;
-    _rotorEncoderType = NULL;
-    _DEPRECATED_encoderconversionfactor = NULL;
-    _DEPRECATED_encoderconversionoffset = NULL;
-    _hasHallSensor      = NULL;
-    _hasTempSensor      = NULL;
-    _hasRotorEncoder    = NULL;
-    _hasRotorEncoderIndex = NULL;
-    _rotorIndexOffset = NULL;
-    _motorPoles       = NULL;
-    _gearbox        = 0;
-#endif
 }
 
 tripodMotionControl::~tripodMotionControl()
