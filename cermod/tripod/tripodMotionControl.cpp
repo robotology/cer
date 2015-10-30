@@ -205,6 +205,7 @@ bool tripodMotionControl::compute_speeds(yarp::sig::Vector& reference, yarp::sig
     return true;
 }
 
+
 #if 0
 void tripodMotionControl::copyPid_cer2eo(const Pid *in, Pid *out)
 {
@@ -1093,12 +1094,14 @@ bool tripodMotionControl::checkMotionDoneRaw(bool *flag)
 
 bool tripodMotionControl::setRefSpeedRaw(int j, double sp)
 {
-    return _device.pos->setRefSpeed(j, sp);
+    return _refSpeed = sp;
 }
 
 bool tripodMotionControl::setRefSpeedsRaw(const double *spds)
 {
-    return _device.pos->setRefSpeeds(spds);
+    yWarning() << "Only one vel can be set for the whole tripod device!! \n\tUsing spds[0]: " << spds[0] << " for all of them";
+    _refSpeed = spds[0];
+    return true;
 }
 
 bool tripodMotionControl::setRefAccelerationRaw(int j, double acc)
@@ -1113,12 +1116,14 @@ bool tripodMotionControl::setRefAccelerationsRaw(const double *accs)
 
 bool tripodMotionControl::getRefSpeedRaw(int j, double *spd)
 {
-    return _device.pos->getRefSpeed(j, spd);
+    return _refSpeed;
 }
 
 bool tripodMotionControl::getRefSpeedsRaw(double *spds)
 {
-    return _device.pos->getRefSpeeds(spds);
+    for(int i=0; i<_njoints; i++)
+        spds[i] = _refSpeed;
+    return true;
 }
 
 bool tripodMotionControl::getRefAccelerationRaw(int j, double *acc)
@@ -1205,7 +1210,9 @@ bool tripodMotionControl::checkMotionDoneRaw(const int n_joint, const int *joint
 
 bool tripodMotionControl::setRefSpeedsRaw(const int n_joint, const int *joints, const double *spds)
 {
-    return _device.pos2->setRefSpeeds(n_joint, joints, spds);
+    yWarning() << "Only one vel can be set for the whole tripod device!! \n\tUsing spds[0]: " << spds[0] << " for all of them";
+    _refSpeed = spds[0];
+    return true;
 }
 
 bool tripodMotionControl::setRefAccelerationsRaw(const int n_joint, const int *joints, const double *accs)
@@ -1215,7 +1222,9 @@ bool tripodMotionControl::setRefAccelerationsRaw(const int n_joint, const int *j
 
 bool tripodMotionControl::getRefSpeedsRaw(const int n_joint, const int *joints, double *spds)
 {
-    return _device.pos2->getRefSpeeds(n_joint, joints, spds);
+    for(int i=0; i<n_joint; i++)
+        spds[i] = _refSpeed;
+    return true;
 }
 
 bool tripodMotionControl::getRefAccelerationsRaw(const int n_joint, const int *joints, double *accs)
