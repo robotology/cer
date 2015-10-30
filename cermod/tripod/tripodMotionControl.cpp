@@ -7,12 +7,15 @@
 *
 */
 
+#include <cmath>
+#include <algorithm>
+
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/sig/Vector.h>
+
 #include <tripodMotionControl.h>
-#include <cmath>
 
 using namespace yarp::dev;
 using namespace yarp::os;
@@ -190,7 +193,7 @@ bool tripodMotionControl::compute_speeds(yarp::sig::Vector& reference, yarp::sig
     for(int i=0; i< _njoints; i++)
     {
         _posDeltas[i] = fabs(reference[i] - encoders[i]);
-        max_movement = max(_posDeltas[i], max_movement);
+        max_movement = std::max(_posDeltas[i], max_movement);
     }
 
     // Avoid divide by 0. If max movement is almost zero, we can safely use the old speed reference
@@ -1094,7 +1097,8 @@ bool tripodMotionControl::checkMotionDoneRaw(bool *flag)
 
 bool tripodMotionControl::setRefSpeedRaw(int j, double sp)
 {
-    return _refSpeed = sp;
+    _refSpeed = sp;
+    return true;
 }
 
 bool tripodMotionControl::setRefSpeedsRaw(const double *spds)
@@ -1116,7 +1120,13 @@ bool tripodMotionControl::setRefAccelerationsRaw(const double *accs)
 
 bool tripodMotionControl::getRefSpeedRaw(int j, double *spd)
 {
-    return _refSpeed;
+    if (spd!=NULL)
+    {
+        *spd=_refSpeed; 
+        return true;
+    }
+    else
+        return false;
 }
 
 bool tripodMotionControl::getRefSpeedsRaw(double *spds)
