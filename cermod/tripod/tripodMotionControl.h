@@ -164,10 +164,13 @@ private:
     double  *_ref_speeds;       // used for position control.
     double  *_command_speeds;   // used for velocity control.
     double  *_ref_accs;         // for velocity control, in position min jerk eq is used.
+    double   _refSpeed;         // For the tripod device, only one velocity can be defined, it'll be used by all the joints
     yarp::sig::Vector  _userRef_positions;     // used for position control.
     yarp::sig::Vector  _robotRef_positions;    // used for position control.
     yarp::sig::Vector  _lastUser_encoders;     // used for position control.
     yarp::sig::Vector  _lastRobot_encoders;    // used for position control.
+    yarp::sig::Vector  _robotRef_speeds;       // used for positionMove.
+    yarp::sig::Vector  _posDeltas;             // used to compute _robotRef_speeds on the fly.
     double            *_stamps;
 
 #if 0
@@ -229,6 +232,7 @@ private:
 
     bool tripod_user2HW(yarp::sig::Vector &user,  yarp::sig::Vector &robot);
     bool tripod_HW2user(yarp::sig::Vector &robot, yarp::sig::Vector &user);
+    bool compute_speeds(yarp::sig::Vector &reference,  yarp::sig::Vector &encoders);
 
 public:
 

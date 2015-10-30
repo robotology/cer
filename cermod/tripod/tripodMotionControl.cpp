@@ -12,6 +12,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/sig/Vector.h>
 #include <tripodMotionControl.h>
+#include <cmath>
 
 using namespace yarp::dev;
 using namespace yarp::os;
@@ -181,6 +182,27 @@ bool tripodMotionControl::tripod_HW2user(yarp::sig::Vector &robot, yarp::sig::Ve
     return solver.fkin(robot, user);
 }
 
+bool tripodMotionControl::compute_speeds(yarp::sig::Vector& reference, yarp::sig::Vector& encoders)
+{
+    double max_movement = 0.0;
+    for(int i=0; i< _njoints; i++)
+    {
+        _posDeltas[i] = fabs(reference[i] - encoders[i]);
+        max_movement = max(_posDeltas[i], max_movement);
+    }
+
+    // Avoid divide by 0. If max movement is almost zero, we can safely use the old speed reference
+    // since the movement (if any) will be completed soon anyway
+    if(max_movement <= 10e-6)
+        return true;
+
+    for(int i=0; i< _njoints; i++)
+    {
+        _robotRef_speeds[i] = _refSpeed * (_posDeltas[i] / max_movement);
+    }
+    return true;
+}
+
 #if 0
 void tripodMotionControl::copyPid_cer2eo(const Pid *in, Pid *out)
 {
@@ -277,6 +299,10 @@ bool tripodMotionControl::alloc(int nj)
     _lastUser_encoders.zero();
     _lastRobot_encoders.resize(nj);
     _lastRobot_encoders.zero();
+    _robotRef_speeds.resize(nj);
+    _robotRef_speeds.zero();
+    _posDeltas.resize(nj);
+    _posDeltas.zero();
     _command_speeds = allocAndCheck<double>(nj);
     _ref_speeds = allocAndCheck<double>(nj);
     _ref_accs = allocAndCheck<double>(nj);
@@ -394,6 +420,8 @@ tripodMotionControl::tripodMotionControl() :
     _command_speeds     = NULL;
     _ref_speeds         = NULL;
     _kinematic_mj       = NULL;
+    _refSpeed           = 0.01;    // meters per sec, by default it is 1 cm/s  TODO: read it from config file
+    _calibrated         = NULL;    // Check status of joints
 
     // Check status of joints
     _calibrated         = NULL;
@@ -756,6 +784,8 @@ bool tripodMotionControl::init()
 void tripodMotionControl::cleanup(void)
 {
     yTrace();
+    _robotRef_speeds.clear();
+    _posDeltas.clear();
 }
 
 bool tripodMotionControl::close()
@@ -1008,6 +1038,8 @@ bool tripodMotionControl::setPositionModeRaw()
 
 bool tripodMotionControl::positionMoveRaw(int j, double ref)
 {
+    bool ret = true;  // private var
+
     // calling IK library before propagate the command to HW
     _mutex.wait();
     _userRef_positions[j] = ref;
@@ -1017,15 +1049,20 @@ bool tripodMotionControl::positionMoveRaw(int j, double ref)
         yError() << "Requested position is not reachable";
     }
 
-    _mutex.post();
 
+    compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
-    // even if only one user virtual joint has got new reference
-    return _device.pos->positionMove(_robotRef_positions.data());
+    // even if only one user virtual joint has got new reference.
+    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+
+    _mutex.post();
+    return ret;
 }
 
 bool tripodMotionControl::positionMoveRaw(const double *refs)
 {
+    bool ret = true;
     _mutex.wait();
     for(int i=0, index=0; i< _njoints; i++, index++)
     {
@@ -1038,13 +1075,20 @@ bool tripodMotionControl::positionMoveRaw(const double *refs)
     }
     _mutex.post();
 
+ compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
-    // even if only one user virtual joint has got new reference
-    return _device.pos->positionMove(_robotRef_positions.data());
+    // even if only one user virtual joint has got new reference.
+    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+
+    _mutex.post();
+    return ret;
 }
 
 bool tripodMotionControl::relativeMoveRaw(int j, double delta)
 {
+    bool ret = true;
+
     _mutex.wait();
     // TODO does it make any sense to add values likt this?? Those could be angle or quaternion or whatever!!!!
     // How to sum those up depends on the chosen representation!! Verify and maybe add a parameter in config files
@@ -1058,14 +1102,21 @@ bool tripodMotionControl::relativeMoveRaw(int j, double delta)
     }
     _mutex.post();
 
+    compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
-    // even if only one user virtual joint has got new reference
-    return _device.pos->positionMove(_robotRef_positions.data());
+    // even if only one user virtual joint has got new reference.
+    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+
+    _mutex.post();
+    return ret;
 }
 
 bool tripodMotionControl::relativeMoveRaw(const double *deltas)
 {
-    // TODO does it make any sense to add values likt this?? Those could be angle or quaternion or whatever!!!!
+    bool ret = true;
+
+    // TODO does it make any sense to add values like this?? Those could be angle or quaternion or whatever!!!!
     // How to sum those up depends on the chosen representation!! Verify and maybe add a parameter in config files
     // to specify the type and choose correct sum procedure
     _mutex.wait();
@@ -1079,9 +1130,14 @@ bool tripodMotionControl::relativeMoveRaw(const double *deltas)
     }
     _mutex.post();
 
+    compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
-    // even if only one user virtual joint has got new reference
-    return _device.pos->positionMove(_robotRef_positions.data());
+    // even if only one user virtual joint has got new reference.
+    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+
+    _mutex.post();
+    return ret;
 }
 
 bool tripodMotionControl::checkMotionDoneRaw(int j, bool *flag)
@@ -1151,6 +1207,8 @@ bool tripodMotionControl::stopRaw()
 
 bool tripodMotionControl::positionMoveRaw(const int n_joint, const int *joints, const double *refs)
 {
+    bool ret = true;
+
     _mutex.wait();
     for(int i=0, index=0; i< n_joint; i++, index++)
     {
@@ -1163,13 +1221,20 @@ bool tripodMotionControl::positionMoveRaw(const int n_joint, const int *joints, 
     }
     _mutex.post();
 
+    compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
-    // even if only one user virtual joint has got new reference
-    return _device.pos->positionMove(_robotRef_positions.data());
+    // even if only one user virtual joint has got new reference.
+    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos2->positionMove(_njoints, _axisMap, _robotRef_positions.data());
+
+    _mutex.post();
+    return ret;
 }
 
 bool tripodMotionControl::relativeMoveRaw(const int n_joint, const int *joints, const double *deltas)
 {
+    bool ret = true;
+
     _mutex.wait();
     for(int i=0, index=0; i< n_joint; i++, index++)
     {
@@ -1182,9 +1247,14 @@ bool tripodMotionControl::relativeMoveRaw(const int n_joint, const int *joints, 
     }
     _mutex.post();
 
+    compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
-    // even if only one user virtual joint has got new reference
-    return _device.pos->positionMove(_robotRef_positions.data());
+    // even if only one user virtual joint has got new reference.
+    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos2->positionMove(_njoints, _axisMap, _robotRef_positions.data());
+
+    _mutex.post();
+    return ret;
 }
 
 bool tripodMotionControl::checkMotionDoneRaw(const int n_joint, const int *joints, bool *flag)
