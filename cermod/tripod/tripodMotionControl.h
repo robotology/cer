@@ -138,14 +138,17 @@ class cer::dev::tripodMotionControl:   public DeviceDriver,
 {
 private:
     bool verbose;
-    bool useRemoteCB;                           /** if TRUE it means we want to connect the tripodMotionControl to real HW device using yarp network. This allows also to connect to a simulator                                                 * if FALSE then we wait for the 'attachAll' function to be called in order to get the pointer to the low-level device like canBus/embObjMotionControl. */
+    bool useRemoteCB;                 /** if TRUE it means we want to connect the tripodMotionControl to real HW device using yarp network.
+                                       * This allows also to connect to a simulator
+                                       * if FALSE then we wait for the 'attachAll' function to be called in order to get the pointer to the
+                                       * low-level device like canBus/embObjMotionControl. */
 
     yarp::os::Semaphore                      _mutex;
     cer::dev::impl::HW_deviceHelper         _device;
     yarp::dev::PolyDriver                   *_polyDriverDevice;
 
-    int *_axisMap;                              /** axis remapping lookup-table */
-    double *_angleToEncoder;                    /** angle conversion factor, if any */
+    int     *_axisMap;                              /** axis remapping lookup-table */
+    double  *_angleToEncoder;                    /** angle conversion factor, if any */
     double  *_encodersStamp;                    /** keep information about acquisition time for encoders read */
 
     double *_limitsMin;                         /** joint limits, max*/
@@ -156,11 +159,11 @@ private:
     bool    useRawEncoderData;
 
     // basic knowledge of my joints
-    int   _njoints;                             // Number of joints handled by this EMS; this values will be extracted by the config file
-
+    int   _njoints;                             // Number of joints handled by this device; this values will be extracted by the config file
 
     // internal stuff
     bool    *_calibrated;       // Flag to know if the calibrate function has been called for the joint
+    double  *_stamps;
     double   _refSpeed;         // For the tripod device, only one velocity can be defined, it'll be used by all the joints
     yarp::sig::Vector  _userRef_positions;     // used for position control.
     yarp::sig::Vector  _robotRef_positions;    // used for position control.
@@ -168,7 +171,6 @@ private:
     yarp::sig::Vector  _lastRobot_encoders;    // used for position control.
     yarp::sig::Vector  _robotRef_speeds;       // used for positionMove.
     yarp::sig::Vector  _posDeltas;             // used to compute _robotRef_speeds on the fly.
-    double            *_stamps;
 
     // Kinematics stuff
     cer_kinematics::TripodSolver solver;

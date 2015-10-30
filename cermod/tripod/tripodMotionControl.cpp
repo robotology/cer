@@ -160,7 +160,7 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
         pos2->getAxes(&tmp);
 
     yarp::sig::Vector tmp_encs; tmp_encs.resize(tmp);
-
+    // TODO: if it takes too many cycles to get valid encoder values, warn the user
     while(!iJntEnc->getEncoders(tmp_encs.data()) )     yarp::os::Time::delay(0.1);
 
     configured = true;
@@ -174,11 +174,13 @@ bool HW_deviceHelper::isConfigured()
 
 bool tripodMotionControl::tripod_user2HW(yarp::sig::Vector &user, yarp::sig::Vector &robot)
 {
+    // The caller must use mutex or private data
     return solver.ikin(user, robot);
 }
 
 bool tripodMotionControl::tripod_HW2user(yarp::sig::Vector &robot, yarp::sig::Vector &user)
 {
+    // The caller must use mutex or private data
     return solver.fkin(robot, user);
 }
 
@@ -287,6 +289,8 @@ bool tripodMotionControl::alloc(int nj)
     _limitsMax=allocAndCheck<double>(nj);
     _limitsMin=allocAndCheck<double>(nj);
     _kinematic_mj=allocAndCheck<double>(16);
+    _calibrated = allocAndCheck<bool>(nj);
+    _stamps = allocAndCheck<double>(nj);
 
     // Reserve space for data stored locally. values are initialize to 0
     _userRef_positions.resize(nj);
@@ -301,8 +305,6 @@ bool tripodMotionControl::alloc(int nj)
     _robotRef_speeds.zero();
     _posDeltas.resize(nj);
     _posDeltas.zero();
-    _calibrated = allocAndCheck<bool>(nj);
-    _stamps = allocAndCheck<double>(nj);
 
 #if 0
     checking_motiondone=allocAndCheck<bool>(nj);
@@ -381,9 +383,8 @@ tripodMotionControl::tripodMotionControl() :
     _kinematic_mj       = NULL;
     _refSpeed           = 0.01;    // meters per sec, by default it is 1 cm/s  TODO: read it from config file
     _calibrated         = NULL;    // Check status of joints
-
     useRawEncoderData   = false;
-    _stamps              = NULL;
+    _stamps             = NULL;
 }
 
 tripodMotionControl::~tripodMotionControl()
