@@ -709,6 +709,21 @@ bool tripodMotionControl::init()
 void tripodMotionControl::cleanup(void)
 {
     yTrace();
+    checkAndDestroy(_axisMap);
+    checkAndDestroy(_angleToEncoder);
+    checkAndDestroy(_encodersStamp);
+    checkAndDestroy(_limitsMax);
+    checkAndDestroy(_limitsMin);
+    checkAndDestroy(_kinematic_mj);
+    checkAndDestroy(_currentLimits);
+    checkAndDestroy(_calibrated);
+    checkAndDestroy(_stamps);
+
+    // probably useless
+    _userRef_positions.clear();
+    _robotRef_positions.clear();
+    _lastUser_encoders.clear();
+    _lastRobot_encoders.clear();
     _robotRef_speeds.clear();
     _posDeltas.clear();
 }
