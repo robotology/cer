@@ -172,6 +172,8 @@ private:
     yarp::sig::Vector  _robotRef_speeds;       // used for positionMove.
     yarp::sig::Vector  _posDeltas;             // used to compute _robotRef_speeds on the fly.
 
+    yarp::sig::Matrix  _baseTransformation;
+
     // Kinematics stuff
     cer_kinematics::TripodSolver solver;
 

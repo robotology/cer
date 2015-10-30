@@ -389,6 +389,8 @@ tripodMotionControl::tripodMotionControl() :
     _calibrated         = NULL;    // Check status of joints
     useRawEncoderData   = false;
     _stamps             = NULL;
+    _baseTransformation.resize(4,4);   // rototraslation matrix, size is fixed
+    _baseTransformation.zero();
 }
 
 tripodMotionControl::~tripodMotionControl()
@@ -699,6 +701,17 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
         _limitsMin[i] = lMin;
     }
 
+    // Read the base transformation Matrix
+    if(!extractGroup(tripod_description, xtmp, "BASE_TRANSFORMATION", "the rototraslation matrix 4x4 which tranforms system references from root frame to the tripod base", 16))
+        return false;
+    else
+    {
+        for(int r=0; r<4; r++)
+            for(int c=0; c<4; c++)
+                _baseTransformation[r][c] = xtmp.get(i).asDouble();
+    }
+
+    yDebug() << "Transformation Matrix is \n" << _baseTransformation.toString().c_str();
     cer_kinematics::TripodParameters tParam(radius, lMin, lMax, alpha);
     solver.setParameters(tParam);
     return true;
