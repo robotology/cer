@@ -126,6 +126,10 @@ public:
             ud[1]=target->get(7).asDouble();
             ud[2]=target->get(8).asDouble();
 
+            bool warm_start=false;
+            if (target->size()>=10)
+                warm_start=(target->get(9).asString()=="warm_start");
+
             double n=norm(ud);
             Vector ud_=(1.0/n)*ud;
             ud_.push_back(n);
@@ -138,6 +142,7 @@ public:
             p.setMode(mode);
             p.torso_heave=zd1;
             p.lower_arm_heave=zd2;
+            p.warm_start=warm_start;
 
             solver.setSolverParameters(p);
             solver.setInitialGuess(q);

@@ -17,11 +17,11 @@
 
 
 /****************************************************************/
-class ArmXyzHeaveNLP_ForwardDiff : public ArmXyzNLP_ForwardDiff
+class ArmXyzHeaveNLP_ForwardDiff : public ArmXyzNoHeaveNLP_ForwardDiff
 {
 public:
     /****************************************************************/
-    ArmXyzHeaveNLP_ForwardDiff(ArmSolver &slv_) : ArmXyzNLP_ForwardDiff(slv_)
+    ArmXyzHeaveNLP_ForwardDiff(ArmSolver &slv_) : ArmXyzNoHeaveNLP_ForwardDiff(slv_)
     {
     }
 
@@ -155,11 +155,11 @@ public:
 
 
 /****************************************************************/
-class ArmXyzHeaveNLP_CentralDiff : public ArmXyzNLP_CentralDiff
+class ArmXyzHeaveNLP_CentralDiff : public ArmXyzNoHeaveNLP_CentralDiff
 {
 public:
     /****************************************************************/
-    ArmXyzHeaveNLP_CentralDiff(ArmSolver &slv_) : ArmXyzNLP_CentralDiff(slv_)
+    ArmXyzHeaveNLP_CentralDiff(ArmSolver &slv_) : ArmXyzNoHeaveNLP_CentralDiff(slv_)
     {
     }
 

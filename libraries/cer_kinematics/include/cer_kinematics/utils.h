@@ -111,6 +111,14 @@ struct ArmParameters
     ArmParameters(const std::string &type="left");
 };
 
+namespace configuration {
+    enum {
+        no_heave,
+        heave,
+        no_torso
+    };
+};
+
 
 /**
  * Structure used to initialize a solver.
@@ -126,9 +134,10 @@ struct SolverParameters
     bool full_pose;
 
     /**
-     * if true the robot is allowed to heave.
+     * select the solver configuration: configuration::no_heave, 
+     * configuration::heave, configuration::no_torso. 
      */
-    bool can_heave;
+    int configuration;
 
     /**
      * desired heave assumed by the torso.
@@ -175,15 +184,20 @@ struct SolverParameters
      * difference approximation instead of forward difference 
      * formula. 
      */
-    bool enable_central_difference;
+    bool use_central_difference;
+
+    /**
+     * if true enable warm start.
+     */
+    bool warm_start;
 
     /**
      * Constructor. 
      *  
      * @param full_pose_                    enable/disable full pose
      *                                      reaching.
-     * @param can_heave_                    enable/disable robot 
-     *                                      heave.
+     * @param configuration_                select solving 
+     *                                      configuration.
      * @param torso_heave_                  the desired heave 
      *                                      assumed by the torso.
      * @param lower_arm_heave_              the desired heave 
@@ -200,41 +214,44 @@ struct SolverParameters
      *                                      of the lower_arm.
      * @param tol_                          cost function tolerance.
      * @param constr_tol_                   constraints tolerance. 
-     * @param enable_central_difference_    compute gradients 
+     * @param use_central_difference_       compute gradients 
      *                                      resorting to central
      *                                      finite difference
      *                                      approximation instead of
      *                                      forward difference
      *                                      formula.
+     * @param warm_start_                   enable warm start.
      */
-    SolverParameters(const bool full_pose_=true, const bool can_heave_=false,
+    SolverParameters(const bool full_pose_=true, const bool configuration_=configuration::no_heave,
                      const double torso_heave_=0.0, const double lower_arm_heave_=0.0,
-                     const double weight_postural_torso_=0.0,
+                     const double weight_postural_torso_=0.001,
                      const double weight_postural_torso_yaw_=0.001,
                      const double weight_postural_upper_arm_=0.0,
                      const double weight_postural_lower_arm_=0.0,
-                     const double tol_=1e-2, const double constr_tol_=2e-6,
-                     const bool enable_central_difference_=false) :
-                     full_pose(full_pose_), can_heave(can_heave_),
+                     const double tol_=0.1, const double constr_tol_=1e-4,
+                     const bool use_central_difference_=false,
+                     const bool warm_start_=false) :
+                     full_pose(full_pose_), configuration(configuration_),
                      torso_heave(torso_heave_), lower_arm_heave(lower_arm_heave_),
                      weight_postural_torso(weight_postural_torso_),
                      weight_postural_torso_yaw(weight_postural_torso_yaw_),
                      weight_postural_upper_arm(weight_postural_upper_arm_),
                      weight_postural_lower_arm(weight_postural_lower_arm_),
                      tol(tol_), constr_tol(constr_tol_),
-                     enable_central_difference(enable_central_difference_) { }
+                     use_central_difference(use_central_difference_),
+                     warm_start(warm_start_) { }
 
     /**
-     * Helper that sets internal state according to a mode string. 
-     * This helper does also set suitable tolerance values. 
+     * Helper to internal state according to a string mode.\n 
+     * The helper does also set suitable tolerance values.
      *  
      * @param mode  a string that can be a combination of  
-     *              ["full_pose"|"xyz_pose"]+["heave"|+"no_heave"]+["forward_diff"|"central_diff"].
+     *              ["full_pose"|"xyz_pose"]+["heave"|"no_heave"|"no_torso"]+["forward_diff"|"central_diff"].
      *              Examples: "full_pose+central_diff",
      *              "xyz_pose+no_heave",
      *              "full_pose+heave+forward_diff".
      * @note the order might affect the setting of internal state, 
-     *       therefore the preferred order is: pose + heave + diff.
+     *       therefore the preferred order is: pose + mode + diff.
      * @return true/false on success/failure. 
      */
     bool setMode(const std::string &mode);

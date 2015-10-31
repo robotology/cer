@@ -183,9 +183,7 @@ public:
         }
 
         g_l[0]=g_u[0]=0.0;
-
-        g_l[1]=params.cos_alpha_max;
-        g_u[1]=1.0;
+        g_l[1]=params.cos_alpha_max; g_u[1]=1.0;
 
         return true;
     }
@@ -491,12 +489,12 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         TripodState d=nlp->fkin(lll);
 
         yInfo(" *** Tripod Solver ******************************");
-        yInfo(" *** Tripod Solver:    lll0 [m] = (%s)",lll0.toString(15,15).c_str());
+        yInfo(" *** Tripod Solver:    lll0 [m] = (%s)",lll0.toString(4,4).c_str());
         yInfo(" *** Tripod Solver:      zd [m] = %g",zd);
-        yInfo(" *** Tripod Solver:    ud [rad] = (%s)",ud.toString(15,15).c_str());
-        yInfo(" *** Tripod Solver:     lll [m] = (%s)",lll.toString(15,15).c_str());
-        yInfo(" *** Tripod Solver:     u [rad] = (%s)",d.u.toString(15,15).c_str());
-        yInfo(" *** Tripod Solver:       p [m] = (%s)",d.p.toString(15,15).c_str());
+        yInfo(" *** Tripod Solver:    ud [rad] = (%s)",ud.toString(4,4).c_str());
+        yInfo(" *** Tripod Solver:     lll [m] = (%s)",lll.toString(4,4).c_str());
+        yInfo(" *** Tripod Solver:     u [rad] = (%s)",d.u.toString(4,4).c_str());
+        yInfo(" *** Tripod Solver:       p [m] = (%s)",d.p.toString(4,4).c_str());
         yInfo(" *** Tripod Solver:   e_u [rad] = %g",norm(ud-d.u));
         yInfo(" *** Tripod Solver:     e_z [m] = %g",fabs(zd-d.p[2]));
         yInfo(" *** Tripod Solver: alpha [deg] = %g",CTRL_RAD2DEG*acos(d.n[2]));

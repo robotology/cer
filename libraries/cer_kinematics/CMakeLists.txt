@@ -6,10 +6,12 @@ project(cer_kinematics)
 
 set(headers_private include/${PROJECT_NAME}/private/helpers.h
                     include/${PROJECT_NAME}/private/arm_common.h
-                    include/${PROJECT_NAME}/private/arm_full.h
-                    include/${PROJECT_NAME}/private/arm_xyz.h
+                    include/${PROJECT_NAME}/private/arm_full_noheave.h
                     include/${PROJECT_NAME}/private/arm_full_heave.h
-                    include/${PROJECT_NAME}/private/arm_xyz_heave.h)
+                    include/${PROJECT_NAME}/private/arm_full_notorso.h
+                    include/${PROJECT_NAME}/private/arm_xyz_noheave.h
+                    include/${PROJECT_NAME}/private/arm_xyz_heave.h
+                    include/${PROJECT_NAME}/private/arm_xyz_notorso.h)
 set(headers         include/${PROJECT_NAME}/utils.h
                     include/${PROJECT_NAME}/tripod.h
                     include/${PROJECT_NAME}/arm.h)

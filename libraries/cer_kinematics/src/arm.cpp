@@ -49,10 +49,12 @@ using namespace cer_kinematics;
 
 namespace cer_kinematics {
     #include <cer_kinematics/private/arm_common.h>
-    #include <cer_kinematics/private/arm_full.h>
-    #include <cer_kinematics/private/arm_xyz.h>
+    #include <cer_kinematics/private/arm_full_noheave.h>
     #include <cer_kinematics/private/arm_full_heave.h>
+    #include <cer_kinematics/private/arm_full_notorso.h>
+    #include <cer_kinematics/private/arm_xyz_noheave.h>
     #include <cer_kinematics/private/arm_xyz_heave.h>
+    #include <cer_kinematics/private/arm_xyz_notorso.h>
 }
 
 
@@ -92,7 +94,7 @@ bool ArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
         return false;
     }
 
-    Ipopt::SmartPtr<ArmFullNLP_ForwardDiff> nlp=new ArmFullNLP_ForwardDiff(*this);
+    Ipopt::SmartPtr<ArmFullNoHeaveNLP_ForwardDiff> nlp=new ArmFullNoHeaveNLP_ForwardDiff(*this);
     H=nlp->fkin(q,frame);
 
     return true;
@@ -109,6 +111,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     }
 
     int print_level=std::max(verbosity-5,0);
+    string warm_start_str="no";
 
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
     app->Options()->SetNumericValue("tol",slvParameters.tol);
@@ -119,40 +122,71 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetNumericValue("nlp_scaling_max_gradient",1.0);
     app->Options()->SetNumericValue("nlp_scaling_min_value",1e-6);
-    app->Options()->SetStringValue("hessian_approximation","limited-memory");
-    app->Options()->SetStringValue("warm_start_init_point","no");
+    app->Options()->SetStringValue("hessian_approximation","limited-memory");    
+    app->Options()->SetStringValue("fixed_variable_treatment","make_parameter");
     app->Options()->SetStringValue("derivative_test",print_level>=4?"first-order":"none");
-    app->Options()->SetIntegerValue("print_level",print_level);
+    app->Options()->SetIntegerValue("print_level",print_level);    
+    if (slvParameters.warm_start)
+    {
+        if ((zL.length()>0) && (zU.length()>0))
+        {
+            warm_start_str="yes";
+            app->Options()->SetNumericValue("warm_start_bound_push",1e-6);
+            app->Options()->SetNumericValue("warm_start_mult_bound_push",1e-6);
+            app->Options()->SetNumericValue("mu_init",1e-6);
+        }
+        else
+            yWarning(" *** Arm Solver: requested warm start with unavailable bound multipliers => warm start is disabled!");
+    }
+    app->Options()->SetStringValue("warm_start_init_point",warm_start_str.c_str());
     app->Initialize();
 
     Ipopt::SmartPtr<ArmCommonNLP> nlp;
     if (slvParameters.full_pose)
     {
-        if (slvParameters.can_heave)
+        switch (slvParameters.configuration)
         {
-            if (slvParameters.enable_central_difference)
+        case configuration::no_torso:
+            if (slvParameters.use_central_difference)
+                nlp=new ArmFullNoTorsoNLP_CentralDiff(*this); 
+            else
+                nlp=new ArmFullNoTorsoNLP_ForwardDiff(*this); 
+            break;
+        case configuration::heave:
+            if (slvParameters.use_central_difference)
                 nlp=new ArmFullHeaveNLP_CentralDiff(*this); 
             else
                 nlp=new ArmFullHeaveNLP_ForwardDiff(*this); 
+            break;
+        default:
+            if (slvParameters.use_central_difference)
+                nlp=new ArmFullNoHeaveNLP_CentralDiff(*this); 
+            else
+                nlp=new ArmFullNoHeaveNLP_ForwardDiff(*this); 
         }
-        else if (slvParameters.enable_central_difference)
-            nlp=new ArmFullNLP_CentralDiff(*this);
-        else
-            nlp=new ArmFullNLP_ForwardDiff(*this);
     }
     else
     {
-        if (slvParameters.can_heave)
+        switch (slvParameters.configuration)
         {
-            if (slvParameters.enable_central_difference)
+        case configuration::no_torso:
+            if (slvParameters.use_central_difference)
+                nlp=new ArmXyzNoTorsoNLP_CentralDiff(*this); 
+            else
+                nlp=new ArmXyzNoTorsoNLP_ForwardDiff(*this); 
+            break;
+        case configuration::heave:
+            if (slvParameters.use_central_difference)
                 nlp=new ArmXyzHeaveNLP_CentralDiff(*this); 
             else
-                nlp=new ArmXyzHeaveNLP_ForwardDiff(*this); 
+                nlp=new ArmXyzHeaveNLP_ForwardDiff(*this);
+            break;
+        default:
+            if (slvParameters.use_central_difference)
+                nlp=new ArmXyzNoHeaveNLP_CentralDiff(*this); 
+            else
+                nlp=new ArmXyzNoHeaveNLP_ForwardDiff(*this); 
         }
-        else if (slvParameters.enable_central_difference)
-            nlp=new ArmXyzNLP_CentralDiff(*this);
-        else
-            nlp=new ArmXyzNLP_ForwardDiff(*this);
     }
 
     nlp->set_q0(q0);
@@ -186,14 +220,15 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         yInfo(" *** Arm Solver ******************************");
         yInfo(" *** Arm Solver:          arm = %s",armParameters.upper_arm.getType().c_str());
         yInfo(" *** Arm Solver:         mode = %s",nlp->get_mode().c_str());
+        yInfo(" *** Arm Solver:   warm_start = %s",warm_start_str.c_str());
         yInfo(" *** Arm Solver:          tol = %g",slvParameters.tol);
         yInfo(" *** Arm Solver:   constr_tol = %g",slvParameters.constr_tol);
-        yInfo(" *** Arm Solver:       q0 [*] = (%s)",q0.toString(3,3).c_str());
+        yInfo(" *** Arm Solver:       q0 [*] = (%s)",q0.toString(4,4).c_str());
         yInfo(" *** Arm Solver:      zd1 [m] = %g",slvParameters.torso_heave);
         yInfo(" *** Arm Solver:      zd2 [m] = %g",slvParameters.lower_arm_heave);
-        yInfo(" *** Arm Solver:       xd [m] = (%s)",xd.toString(3,3).c_str());
-        yInfo(" *** Arm Solver:     ud [rad] = (%s)",ud.toString(3,3).c_str());
-        yInfo(" *** Arm Solver:        q [*] = (%s)",q.toString(15,15).c_str());
+        yInfo(" *** Arm Solver:       xd [m] = (%s)",xd.toString(4,4).c_str());
+        yInfo(" *** Arm Solver:     ud [rad] = (%s)",ud.toString(4,4).c_str());
+        yInfo(" *** Arm Solver:        q [*] = (%s)",q.toString(4,4).c_str());
         yInfo(" *** Arm Solver:      e_x [m] = %g",norm(xd-x));
         yInfo(" *** Arm Solver:    e_u [rad] = %g",norm(ud-u));
         yInfo(" *** Arm Solver:     e_z1 [m] = %g",fabs(slvParameters.torso_heave-d1.p[2]));

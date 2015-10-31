@@ -43,45 +43,6 @@ protected:
     Matrix H,H_,J_,T;
     Vector q;
 
-public:
-    /****************************************************************/
-    ArmCommonNLP(ArmSolver &slv_) :
-                 slv(slv_), torso(slv_.armParameters.torso),
-                 upper_arm(slv_.armParameters.upper_arm),
-                 lower_arm(slv_.armParameters.lower_arm),
-                 TN(slv_.armParameters.TN),
-                 zd1(slv_.slvParameters.torso_heave),
-                 zd2(slv_.slvParameters.lower_arm_heave),
-                 wpostural_torso(slv_.slvParameters.weight_postural_torso),
-                 wpostural_torso_yaw(slv_.slvParameters.weight_postural_torso_yaw),
-                 wpostural_upper_arm(slv_.slvParameters.weight_postural_upper_arm),
-                 wpostural_lower_arm(slv_.slvParameters.weight_postural_lower_arm)
-    {
-        drho=DELTA_RHO;
-
-        H0=upper_arm.getH0();
-        HN=upper_arm.getHN();
-
-        x0.resize(12,0.0);
-
-        iKinChain *chain=upper_arm.asChain();
-        for (size_t i=0; i<upper_arm.getDOF(); i++)
-            x0[3+i]=0.5*((*chain)[i].getMin()+(*chain)[i].getMax());
-        
-        x=x0;
-        set_target(eye(4,4));
-        q=x0.subVector(3,3+upper_arm.getDOF()-1);
-    }
-
-    /****************************************************************/
-    virtual string get_mode() const=0;
-
-    /****************************************************************/
-    TripodState tripod_fkin(const int which, const Vector &x) const
-    {
-        return tripod_fkin(which,(Ipopt::Number*)x.data());
-    }
-
     /****************************************************************/
     TripodState tripod_fkin(const int which, const Ipopt::Number *x) const
     {
@@ -138,8 +99,47 @@ public:
         return d;
     }
 
+public:
     /****************************************************************/
-    Matrix fkin(const Vector &x)
+    ArmCommonNLP(ArmSolver &slv_) :
+                 slv(slv_), torso(slv_.armParameters.torso),
+                 upper_arm(slv_.armParameters.upper_arm),
+                 lower_arm(slv_.armParameters.lower_arm),
+                 TN(slv_.armParameters.TN),
+                 zd1(slv_.slvParameters.torso_heave),
+                 zd2(slv_.slvParameters.lower_arm_heave),
+                 wpostural_torso(slv_.slvParameters.weight_postural_torso),
+                 wpostural_torso_yaw(slv_.slvParameters.weight_postural_torso_yaw),
+                 wpostural_upper_arm(slv_.slvParameters.weight_postural_upper_arm),
+                 wpostural_lower_arm(slv_.slvParameters.weight_postural_lower_arm)
+    {
+        drho=DELTA_RHO;
+
+        H0=upper_arm.getH0();
+        HN=upper_arm.getHN();
+
+        x0.resize(12,0.0);
+
+        iKinChain *chain=upper_arm.asChain();
+        for (size_t i=0; i<upper_arm.getDOF(); i++)
+            x0[3+i]=0.5*((*chain)[i].getMin()+(*chain)[i].getMax());
+        
+        x=x0;
+        set_target(eye(4,4));
+        q=x0.subVector(3,3+upper_arm.getDOF()-1);
+    }
+
+    /****************************************************************/
+    virtual string get_mode() const=0;
+
+    /****************************************************************/
+    TripodState tripod_fkin(const int which, const Vector &x) const
+    {
+        return tripod_fkin(which,(Ipopt::Number*)x.data());
+    }
+
+    /****************************************************************/
+    virtual Matrix fkin(const Vector &x)
     {
         TripodState d1=tripod_fkin(1,x);
         TripodState d2=tripod_fkin(2,x);
@@ -148,7 +148,7 @@ public:
     }
 
     /****************************************************************/
-    Matrix fkin(const Vector &x, const int frame)
+    virtual Matrix fkin(const Vector &x, const int frame)
     {
         if ((frame<0) || (frame>11))
             return fkin(x);
@@ -172,7 +172,7 @@ public:
     }
 
     /****************************************************************/
-    void set_q0(const Vector &x0)
+    virtual void set_q0(const Vector &x0)
     {
         this->x0[0]=std::max(torso.l_min,std::min(torso.l_max,x0[0]));
         this->x0[1]=std::max(torso.l_min,std::min(torso.l_max,x0[1]));
@@ -188,7 +188,7 @@ public:
     }
 
     /****************************************************************/
-    void set_target(const Matrix &Hd)
+    virtual void set_target(const Matrix &Hd)
     {
         this->Hd=Hd;
         xd=Hd.getCol(3).subVector(0,2);
@@ -202,7 +202,7 @@ public:
     }
 
     /****************************************************************/
-    Vector get_result() const
+    virtual Vector get_result() const
     {
         Vector x_=x;
         for (size_t i=0; i<upper_arm.getDOF(); i++)
@@ -212,14 +212,14 @@ public:
     }
 
     /****************************************************************/
-    void set_multipliers(const Vector &zL, const Vector &zU)
+    virtual void set_multipliers(const Vector &zL, const Vector &zU)
     {        
         this->zL=zL;
         this->zU=zU;
     }
 
     /****************************************************************/
-    void get_multipliers(Vector &zL, Vector &zU) const
+    virtual void get_multipliers(Vector &zL, Vector &zU) const
     {
         zL=this->zL;
         zU=this->zU;

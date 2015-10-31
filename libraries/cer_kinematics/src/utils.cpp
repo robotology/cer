@@ -144,17 +144,18 @@ bool SolverParameters::setMode(const string &mode)
             else if (submode=="xyz_pose")
             {
                 full_pose=false;
-                tol=1e-4;
-                constr_tol=1e-4;
+                tol=constr_tol=1e-4;
             }
             if (submode=="heave")
-                can_heave=true;
+                configuration=configuration::heave;
             else if (submode=="no_heave")
-                can_heave=false;
+                configuration=configuration::no_heave;
+            else if (submode=="no_torso")
+                configuration=configuration::no_torso;
             else if (submode=="forward_diff")
-                enable_central_difference=false;                
+                use_central_difference=false;                
             else if (submode=="central_diff")
-                enable_central_difference=true;
+                use_central_difference=true;
             else
                 ret=false;
         }
