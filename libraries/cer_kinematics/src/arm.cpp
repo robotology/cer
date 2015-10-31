@@ -136,7 +136,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
             app->Options()->SetNumericValue("mu_init",1e-6);
         }
         else
-            yWarning(" *** Arm Solver: requested warm start with unavailable bound multipliers => warm start is disabled!");
+            yWarning(" *** Arm Solver: requested \"warm start\" but values are not available => \"warm start\" is disabled!");
     }
     app->Options()->SetStringValue("warm_start_init_point",warm_start_str.c_str());
     app->Initialize();
