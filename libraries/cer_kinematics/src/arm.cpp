@@ -114,12 +114,13 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetNumericValue("tol",slvParameters.tol);
     app->Options()->SetNumericValue("constr_viol_tol",slvParameters.constr_tol);
     app->Options()->SetIntegerValue("acceptable_iter",0);
-    app->Options()->SetStringValue("mu_strategy","adaptive");
-    app->Options()->SetIntegerValue("max_iter",2000);
+    app->Options()->SetStringValue("mu_strategy","monotone");
+    app->Options()->SetIntegerValue("max_iter",500);
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetNumericValue("nlp_scaling_max_gradient",1.0);
-    app->Options()->SetNumericValue("nlp_scaling_min_value",1e-4);
+    app->Options()->SetNumericValue("nlp_scaling_min_value",1e-6);
     app->Options()->SetStringValue("hessian_approximation","limited-memory");
+    app->Options()->SetStringValue("warm_start_init_point","no");
     app->Options()->SetStringValue("derivative_test",print_level>=4?"first-order":"none");
     app->Options()->SetIntegerValue("print_level",print_level);
     app->Initialize();
@@ -155,13 +156,15 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     }
 
     nlp->set_q0(q0);
+    nlp->set_multipliers(zL,zU);
     nlp->set_target(Hd);
 
     double t0=Time::now();
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
-    double t1=Time::now();    
+    double t1=Time::now();
 
     q=nlp->get_result();
+    nlp->get_multipliers(zL,zU);
     if (exit_code!=NULL)
         *exit_code=status;
 

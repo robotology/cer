@@ -37,6 +37,7 @@ protected:
     Matrix H0,HN,Hd,Rd;
     Vector x0,x;
     Vector xd,ud;
+    Vector zL,zU;
 
     TripodState d1,d2;
     Matrix H,H_,J_,T;
@@ -210,6 +211,20 @@ public:
         return x_;
     }
 
+    /****************************************************************/
+    void set_multipliers(const Vector &zL, const Vector &zU)
+    {        
+        this->zL=zL;
+        this->zU=zU;
+    }
+
+    /****************************************************************/
+    void get_multipliers(Vector &zL, Vector &zU) const
+    {
+        zL=this->zL;
+        zU=this->zU;
+    }
+
     /************************************************************************/
     virtual void computeQuantities(const Ipopt::Number *x, const bool new_x)
     {        
@@ -238,8 +253,21 @@ public:
                             bool init_z, Ipopt::Number *z_L, Ipopt::Number *z_U,
                             Ipopt::Index m, bool init_lambda, Ipopt::Number *lambda)
     {
-        for (Ipopt::Index i=0; i<n; i++)
-            x[i]=x0[i];
+        if (init_x)
+        {
+            for (Ipopt::Index i=0; i<n; i++)
+                x[i]=x0[i];
+        }
+
+        if (init_z)
+        {
+            yAssert((zL.length()==n) && (zU.length()==n));
+            for (Ipopt::Index i=0; i<n; i++)
+            {
+                z_L[i]=zL[i];
+                z_U[i]=zU[i];
+            }
+        }
 
         return true;
     }
@@ -276,8 +304,15 @@ public:
                            Ipopt::Number obj_value, const Ipopt::IpoptData *ip_data,
                            Ipopt::IpoptCalculatedQuantities *ip_cq)
     {
+        zL.resize(n);
+        zU.resize(n);
+
         for (Ipopt::Index i=0; i<n; i++)
+        {
             this->x[i]=x[i];
+            zL[i]=z_L[i];
+            zU[i]=z_U[i];
+        }
     }
 };
 
