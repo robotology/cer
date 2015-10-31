@@ -184,7 +184,12 @@ struct SolverParameters
      * difference approximation instead of forward difference 
      * formula. 
      */
-    bool enable_central_difference;
+    bool use_central_difference;
+
+    /**
+     * if true enable warm start.
+     */
+    bool warm_start;
 
     /**
      * Constructor. 
@@ -209,21 +214,23 @@ struct SolverParameters
      *                                      of the lower_arm.
      * @param tol_                          cost function tolerance.
      * @param constr_tol_                   constraints tolerance. 
-     * @param enable_central_difference_    compute gradients 
+     * @param use_central_difference_       compute gradients 
      *                                      resorting to central
      *                                      finite difference
      *                                      approximation instead of
      *                                      forward difference
      *                                      formula.
+     * @param warm_start_                   enable warm start.
      */
     SolverParameters(const bool full_pose_=true, const bool configuration_=configuration::no_heave,
                      const double torso_heave_=0.0, const double lower_arm_heave_=0.0,
-                     const double weight_postural_torso_=0.0,
+                     const double weight_postural_torso_=0.001,
                      const double weight_postural_torso_yaw_=0.001,
                      const double weight_postural_upper_arm_=0.0,
                      const double weight_postural_lower_arm_=0.0,
-                     const double tol_=1e-2, const double constr_tol_=2e-6,
-                     const bool enable_central_difference_=false) :
+                     const double tol_=0.1, const double constr_tol_=1e-4,
+                     const bool use_central_difference_=false,
+                     const bool warm_start_=false) :
                      full_pose(full_pose_), configuration(configuration_),
                      torso_heave(torso_heave_), lower_arm_heave(lower_arm_heave_),
                      weight_postural_torso(weight_postural_torso_),
@@ -231,11 +238,12 @@ struct SolverParameters
                      weight_postural_upper_arm(weight_postural_upper_arm_),
                      weight_postural_lower_arm(weight_postural_lower_arm_),
                      tol(tol_), constr_tol(constr_tol_),
-                     enable_central_difference(enable_central_difference_) { }
+                     use_central_difference(use_central_difference_),
+                     warm_start(warm_start_) { }
 
     /**
-     * Helper that sets internal state according to a mode string. 
-     * This helper does also set suitable tolerance values. 
+     * Helper to internal state according to a string mode.\n 
+     * The helper does also set suitable tolerance values.
      *  
      * @param mode  a string that can be a combination of  
      *              ["full_pose"|"xyz_pose"]+["heave"|"no_heave"|"no_torso"]+["forward_diff"|"central_diff"].
