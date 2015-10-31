@@ -128,7 +128,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetIntegerValue("print_level",print_level);    
     if (slvParameters.warm_start)
     {
-        if ((zL.length()>0) && (zU.length()>0))
+        if ((zL.length()>0) && (zU.length()>0) && (lambda.length()>0))
         {
             warm_start_str="yes";
             app->Options()->SetNumericValue("warm_start_bound_push",1e-6);
@@ -190,7 +190,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     }
 
     nlp->set_q0(q0);
-    nlp->set_multipliers(zL,zU);
+    nlp->set_warm_start(zL,zU,lambda);
     nlp->set_target(Hd);
 
     double t0=Time::now();
@@ -198,7 +198,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     double t1=Time::now();
 
     q=nlp->get_result();
-    nlp->get_multipliers(zL,zU);
+    nlp->get_warm_start(zL,zU,lambda);
     if (exit_code!=NULL)
         *exit_code=status;
 

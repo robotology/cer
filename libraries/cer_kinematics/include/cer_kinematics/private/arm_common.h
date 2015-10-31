@@ -37,7 +37,9 @@ protected:
     Matrix H0,HN,Hd,Rd;
     Vector x0,x;
     Vector xd,ud;
+
     Vector zL,zU;
+    Vector lambda;
 
     TripodState d1,d2;
     Matrix H,H_,J_,T;
@@ -212,17 +214,20 @@ public:
     }
 
     /****************************************************************/
-    virtual void set_multipliers(const Vector &zL, const Vector &zU)
+    virtual void set_warm_start(const Vector &zL, const Vector &zU,
+                                const Vector &lambda)
     {        
         this->zL=zL;
         this->zU=zU;
+        this->lambda=lambda;
     }
 
     /****************************************************************/
-    virtual void get_multipliers(Vector &zL, Vector &zU) const
+    virtual void get_warm_start(Vector &zL, Vector &zU, Vector &lambda) const
     {
         zL=this->zL;
         zU=this->zU;
+        lambda=this->lambda;
     }
 
     /************************************************************************/
@@ -269,6 +274,13 @@ public:
             }
         }
 
+        if (init_lambda)
+        {
+            yAssert(this->lambda.length()==m);
+            for (Ipopt::Index i=0; i<m; i++)
+                lambda[i]=this->lambda[i];
+        }
+
         return true;
     }
 
@@ -306,6 +318,7 @@ public:
     {
         zL.resize(n);
         zU.resize(n);
+        this->lambda.resize(m);
 
         for (Ipopt::Index i=0; i<n; i++)
         {
@@ -313,6 +326,9 @@ public:
             zL[i]=z_L[i];
             zU[i]=z_U[i];
         }
+
+        for (Ipopt::Index i=0; i<m; i++)
+            this->lambda[i]=lambda[i];
     }
 };
 

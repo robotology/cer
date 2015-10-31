@@ -42,6 +42,7 @@ protected:
     yarp::sig::Vector q0;
     yarp::sig::Vector zL;
     yarp::sig::Vector zU;
+    yarp::sig::Vector lambda;
 
     friend class ArmCommonNLP;
 
