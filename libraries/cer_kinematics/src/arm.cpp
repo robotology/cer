@@ -133,17 +133,17 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     {
         switch (slvParameters.configuration)
         {
-        case configuration::heave:
-            if (slvParameters.enable_central_difference)
-                nlp=new ArmFullHeaveNLP_CentralDiff(*this); 
-            else
-                nlp=new ArmFullHeaveNLP_ForwardDiff(*this); 
-            break;
         case configuration::no_torso:
             if (slvParameters.enable_central_difference)
                 nlp=new ArmFullNoTorsoNLP_CentralDiff(*this); 
             else
                 nlp=new ArmFullNoTorsoNLP_ForwardDiff(*this); 
+            break;
+        case configuration::heave:
+            if (slvParameters.enable_central_difference)
+                nlp=new ArmFullHeaveNLP_CentralDiff(*this); 
+            else
+                nlp=new ArmFullHeaveNLP_ForwardDiff(*this); 
             break;
         default:
             if (slvParameters.enable_central_difference)
@@ -156,17 +156,17 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     {
         switch (slvParameters.configuration)
         {
-        case configuration::heave:
-            if (slvParameters.enable_central_difference)
-                nlp=new ArmXyzHeaveNLP_CentralDiff(*this); 
-            else
-                nlp=new ArmXyzHeaveNLP_ForwardDiff(*this);
-            break;
         case configuration::no_torso:
             if (slvParameters.enable_central_difference)
                 nlp=new ArmXyzNoTorsoNLP_CentralDiff(*this); 
             else
                 nlp=new ArmXyzNoTorsoNLP_ForwardDiff(*this); 
+            break;
+        case configuration::heave:
+            if (slvParameters.enable_central_difference)
+                nlp=new ArmXyzHeaveNLP_CentralDiff(*this); 
+            else
+                nlp=new ArmXyzHeaveNLP_ForwardDiff(*this);
             break;
         default:
             if (slvParameters.enable_central_difference)

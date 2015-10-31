@@ -37,7 +37,7 @@ public:
     {
         n=x0.length();
         m=2+1;
-        nnz_jac_g=6+n;
+        nnz_jac_g=6+(n-4);
         nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
 
