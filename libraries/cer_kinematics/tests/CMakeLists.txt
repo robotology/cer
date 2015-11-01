@@ -12,14 +12,17 @@ include_directories(${YARP_INCLUDE_DIRS}
 add_executable(test-cer_kinematics-tripod    test-cer_kinematics-tripod.cpp)
 add_executable(test-cer_kinematics-arm       test-cer_kinematics-arm.cpp)
 add_executable(test-cer_kinematics-stability test-cer_kinematics-stability.cpp)
+add_executable(test-cer_kinematics-tracking  test-cer_kinematics-tracking.cpp)
 
 target_link_libraries(test-cer_kinematics-tripod    ${YARP_LIBRARIES} ctrlLib cer_kinematics)
 target_link_libraries(test-cer_kinematics-arm       ${YARP_LIBRARIES} cer_kinematics)
 target_link_libraries(test-cer_kinematics-stability ${YARP_LIBRARIES} cer_kinematics)
+target_link_libraries(test-cer_kinematics-tracking  ${YARP_LIBRARIES} cer_kinematics)
 
 install(TARGETS     test-cer_kinematics-tripod   
                     test-cer_kinematics-arm      
                     test-cer_kinematics-stability
+                    test-cer_kinematics-tracking
         DESTINATION bin)
 
 
