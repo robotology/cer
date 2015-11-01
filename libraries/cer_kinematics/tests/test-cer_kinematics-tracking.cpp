@@ -15,6 +15,7 @@
  * Public License for more details
 */
 
+#include <cstdio>
 #include <string>
 
 #include <yarp/os/all.h>
