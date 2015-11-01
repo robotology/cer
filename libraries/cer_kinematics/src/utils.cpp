@@ -24,9 +24,10 @@ using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace iCub::iKin;
-using namespace cer_kinematics;
+using namespace cer::kinematics;
 
-namespace cer_kinematics {
+namespace cer {
+namespace kinematics {
 
 /****************************************************************/
 bool stepModeParser(string &mode, string &submode)
@@ -89,6 +90,8 @@ protected:
         }
     }
 };
+
+}
 
 }
 

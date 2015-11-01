@@ -712,7 +712,7 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
     }
 
     yDebug() << "Transformation Matrix is \n" << _baseTransformation.toString().c_str();
-    cer_kinematics::TripodParameters tParam(radius, lMin, lMax, alpha);
+    cer::kinematics::TripodParameters tParam(radius, lMin, lMax, alpha);
     solver.setParameters(tParam);
     return true;
 }

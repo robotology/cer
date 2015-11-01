@@ -28,7 +28,7 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::math;
-using namespace cer_kinematics;
+using namespace cer::kinematics;
 
 
 /****************************************************************/

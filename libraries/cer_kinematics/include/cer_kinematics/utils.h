@@ -23,8 +23,8 @@
 #include <yarp/math/Math.h>
 #include <iCub/iKin/iKinFwd.h>
 
-namespace cer_kinematics
-{
+namespace cer {
+namespace kinematics {
 
 /**
  * Structure used to initialize a tripod mechanism.
@@ -371,6 +371,8 @@ public:
      */
     virtual ~Solver() { }
 };
+
+}
 
 }
 

@@ -25,8 +25,8 @@
 
 #include <cer_kinematics/utils.h>
 
-namespace cer_kinematics
-{
+namespace cer {
+namespace kinematics {
 
 /**
  * Class to handle direct and inverse kinematics of the robot 
@@ -202,6 +202,8 @@ public:
      */
     bool getSupportMargin(const yarp::sig::Vector &com, double &margin) const;
 };
+
+}
 
 }
 

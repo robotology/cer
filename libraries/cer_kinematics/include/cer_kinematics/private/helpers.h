@@ -29,7 +29,8 @@
 
 #include <cer_kinematics/utils.h>
 
-namespace cer_kinematics {
+namespace cer {
+namespace kinematics {
 
 /****************************************************************/
 struct TripodParametersExtended : public TripodParameters
@@ -76,6 +77,8 @@ struct TripodState
     /****************************************************************/
     TripodState():n(3,0.0),u(3,0.0),p(3,0.0),T(yarp::math::eye(4,4)) { }
 };
+
+}
 
 }
 

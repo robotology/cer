@@ -175,7 +175,7 @@ private:
     yarp::sig::Matrix  _baseTransformation;
 
     // Kinematics stuff
-    cer_kinematics::TripodSolver solver;
+    cer::kinematics::TripodSolver solver;
 
 private:
 

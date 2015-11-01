@@ -44,17 +44,19 @@ using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace iCub::iKin;
-using namespace cer_kinematics;
+using namespace cer::kinematics;
 // COMMON PART -- end
 
-namespace cer_kinematics {
-    #include <cer_kinematics/private/arm_common.h>
-    #include <cer_kinematics/private/arm_full_noheave.h>
-    #include <cer_kinematics/private/arm_full_heave.h>
-    #include <cer_kinematics/private/arm_full_notorso.h>
-    #include <cer_kinematics/private/arm_xyz_noheave.h>
-    #include <cer_kinematics/private/arm_xyz_heave.h>
-    #include <cer_kinematics/private/arm_xyz_notorso.h>
+namespace cer {
+    namespace kinematics {
+        #include <cer_kinematics/private/arm_common.h>
+        #include <cer_kinematics/private/arm_full_noheave.h>
+        #include <cer_kinematics/private/arm_full_heave.h>
+        #include <cer_kinematics/private/arm_full_notorso.h>
+        #include <cer_kinematics/private/arm_xyz_noheave.h>
+        #include <cer_kinematics/private/arm_xyz_heave.h>
+        #include <cer_kinematics/private/arm_xyz_notorso.h>
+    }
 }
 
 

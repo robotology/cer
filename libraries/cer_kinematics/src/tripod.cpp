@@ -40,9 +40,10 @@ using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::ctrl;
-using namespace cer_kinematics;
+using namespace cer::kinematics;
 
-namespace cer_kinematics {
+namespace cer {
+namespace kinematics {
 
 /****************************************************************/
 class TripodNLP : public Ipopt::TNLP
@@ -378,6 +379,8 @@ public:
             rho[i]=x[i];
     }
 };
+
+}
 
 }
 
