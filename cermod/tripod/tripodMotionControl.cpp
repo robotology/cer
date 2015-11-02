@@ -706,13 +706,17 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
         return false;
     else
     {
+        int idx=1;
         for(int r=0; r<4; r++)
             for(int c=0; c<4; c++)
-                _baseTransformation[r][c] = xtmp.get(i).asDouble();
+            {
+                _baseTransformation[r][c] = xtmp.get(idx).asDouble();
+                idx++;
+            }
     }
 
     yDebug() << "Transformation Matrix is \n" << _baseTransformation.toString().c_str();
-    cer::kinematics::TripodParameters tParam(radius, lMin, lMax, alpha);
+    cer::kinematics::TripodParameters tParam(radius, lMin, lMax, alpha, _baseTransformation);
     solver.setParameters(tParam);
     return true;
 }
