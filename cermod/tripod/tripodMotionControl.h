@@ -190,7 +190,6 @@ private:
     bool dealloc();
 
     bool fromConfig(yarp::os::Searchable &config);
-    void cleanup(void);
     bool init(void);
 
     void copyPid_iCub2eo(const Pid *in, Pid *out);
