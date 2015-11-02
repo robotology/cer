@@ -1,9 +1,9 @@
 set(appname CER01)
 
-set(scripts icub_all.xml robotInterface.ini general.xml)
+set(scripts CER_torso_only.xml robotInterface.ini general.xml)
 
-yarp_install(FILES ${scripts} DESTINATION ${ICUB_ROBOTS_INSTALL_DIR}/${appname})
-yarp_install(DIRECTORY calibrators DESTINATION ${ICUB_ROBOTS_INSTALL_DIR}/${appname})  
-yarp_install(DIRECTORY wrappers DESTINATION ${ICUB_ROBOTS_INSTALL_DIR}/${appname})
-yarp_install(DIRECTORY hardware DESTINATION ${ICUB_ROBOTS_INSTALL_DIR}/${appname}) 
+yarp_install(FILES ${scripts} DESTINATION ${CER_ROBOTS_INSTALL_DIR}/${appname})
+yarp_install(DIRECTORY calibrators DESTINATION ${CER_ROBOTS_INSTALL_DIR}/${appname})
+yarp_install(DIRECTORY wrappers DESTINATION ${CER_ROBOTS_INSTALL_DIR}/${appname})
+yarp_install(DIRECTORY hardware DESTINATION ${CER_ROBOTS_INSTALL_DIR}/${appname})
 

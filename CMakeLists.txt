@@ -16,7 +16,6 @@ list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 
 find_package(IPOPT REQUIRED)
 
-
 if(NOT WIN32)
     option(CER_SHARED_LIBRARY "Compile shared libraries rather than static libraries" ON)
     if(CER_SHARED_LIBRARY)
@@ -36,5 +35,6 @@ add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"               
                           USE_LINK_PATH)
 
 # Everything is configured now, we can start adding source code
+add_subdirectory(app)
 add_subdirectory(libraries/cer_kinematics)
 add_subdirectory(cermod)
