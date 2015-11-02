@@ -753,6 +753,11 @@ bool tripodMotionControl::refreshEncoders(double *times)
 {
     bool ret = false;
     _mutex.wait();
+    if(!_device.iJntEnc)
+    {
+        _mutex.post();
+        return true;
+    }
     if(times !=  NULL)
         ret = _device.iJntEnc->getEncodersTimed(_lastRobot_encoders.data(), times);
     else
