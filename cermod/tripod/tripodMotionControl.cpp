@@ -759,15 +759,16 @@ bool tripodMotionControl::refreshEncoders(double *times)
         return true;
     }
     if(times !=  NULL)
-        ret = _device.iJntEnc->getEncodersTimed(_lastRobot_encoders.data(), times);
+        for(int j=0; j<_njoints; j++)
+            ret = _device.iJntEnc->getEncoderTimed(j, &_lastRobot_encoders[j], &times[j]);
     else
-        ret = _device.iJntEnc->getEncoders(_lastRobot_encoders.data());
+        for(int j=0; j<_njoints; j++)
+            ret = _device.iJntEnc->getEncoder(j, &_lastRobot_encoders[j]);
 
     if(ret)
     {
         ret = tripod_HW2user( _lastRobot_encoders, _lastUser_encoders);
     }
-
 
     if(!ret)
     {
