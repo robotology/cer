@@ -438,6 +438,10 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(lll);
     
+    // note that d.T x-axis and y-axis are
+    // still oriented according to the tripod convention;
+    // that's why we rather rely on d.u for computing
+    // pitch and roll
     Matrix T=eye(4,4);
     Vector u=d.u; double nrm=norm(u);
     if (nrm>0.0)
@@ -540,7 +544,7 @@ bool TripodSolver::ikin(const Vector &hpr, Vector &lll,
 {
     if (hpr.length()<3)
     {
-        yError("mis-sized orientation vector!");
+        yError("mis-sized input vector!");
         return false;
     }
 
