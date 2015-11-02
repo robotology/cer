@@ -1,4 +1,4 @@
-function plotResults(filename)
+function plotResults(filename,varargin)
 %
 % Copyright (C) 2015 iCub Facility - Istituto Italiano di Tecnologia
 % Author: Ugo Pattacini <ugo.pattacini@iit.it>
@@ -6,6 +6,12 @@ function plotResults(filename)
 global ha hxd hx
 global data
 global cnt line A
+global orien
+
+orien=true;
+if nargin>1
+    orien=varargin{1};
+end
 
 hfig=figure('Name','Tracking Performance','Color','w');
 set(hfig,'Toolbar','figure');
@@ -42,6 +48,7 @@ function myCallback(obj,~,~)
 global ha hxd hx
 global data
 global cnt line A
+global orien
 
 cnt=cnt+1;
 period=get(obj,'Period');
@@ -74,13 +81,15 @@ if ~isempty(j)
     
     hxd=hggroup;
     h1=plot3(ha,x(1),x(2),x(3),'ro','LineWidth',3,'MarkerSize',3);
-    h2=quiver3(ha,x(1),x(2),x(3),H(1,1),H(2,1),H(3,1),A,'r');
-    h3=quiver3(ha,x(1),x(2),x(3),H(1,2),H(2,2),H(3,2),A,'g');
-    h4=quiver3(ha,x(1),x(2),x(3),H(1,3),H(2,3),H(3,3),A,'b');
     set(h1,'Parent',hxd);
-    set(h2,'Parent',hxd);
-    set(h3,'Parent',hxd);
-    set(h4,'Parent',hxd);
+    if orien        
+        h2=quiver3(ha,x(1),x(2),x(3),H(1,1),H(2,1),H(3,1),A,'r');
+        h3=quiver3(ha,x(1),x(2),x(3),H(1,2),H(2,2),H(3,2),A,'g');
+        h4=quiver3(ha,x(1),x(2),x(3),H(1,3),H(2,3),H(3,3),A,'b');    
+        set(h2,'Parent',hxd);
+        set(h3,'Parent',hxd);
+        set(h4,'Parent',hxd);
+    end
     drawnow;
 end
 
@@ -91,17 +100,19 @@ if ~isempty(k)
     
     x=data.data(k,2:4);
     u=data.data(k,5:7); n=norm(u);
-    H=axis2dcm([u/n n]);   
+    H=axis2dcm([u/n n]);
 
     hx=hggroup;
     h1=plot3(ha,x(1),x(2),x(3),'bo','LineWidth',3,'MarkerSize',3);
-    h2=quiver3(ha,x(1),x(2),x(3),H(1,1),H(2,1),H(3,1),A,'r');
-    h3=quiver3(ha,x(1),x(2),x(3),H(1,2),H(2,2),H(3,2),A,'g');
-    h4=quiver3(ha,x(1),x(2),x(3),H(1,3),H(2,3),H(3,3),A,'b');
     set(h1,'Parent',hx);
-    set(h2,'Parent',hx);
-    set(h3,'Parent',hx);
-    set(h4,'Parent',hx);   
+    if orien        
+        h2=quiver3(ha,x(1),x(2),x(3),H(1,1),H(2,1),H(3,1),A,'r');
+        h3=quiver3(ha,x(1),x(2),x(3),H(1,2),H(2,2),H(3,2),A,'g');
+        h4=quiver3(ha,x(1),x(2),x(3),H(1,3),H(2,3),H(3,3),A,'b');    
+        set(h2,'Parent',hx);
+        set(h3,'Parent',hx);
+        set(h4,'Parent',hx);
+    end
     drawnow;
 end
 
