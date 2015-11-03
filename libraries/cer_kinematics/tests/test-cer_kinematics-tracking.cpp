@@ -35,7 +35,7 @@ using namespace cer::kinematics;
 /****************************************************************/
 class Target : public RateThread
 {
-    Mutex mutex;
+    mutable Mutex mutex;
     Vector c,xd;
     double f,R;
     int cnt;
@@ -43,7 +43,7 @@ class Target : public RateThread
 
     /****************************************************************/
     void helperPrint(const double t, const string &tag, const int cnt,
-                     const Vector &x)
+                     const Vector &x) const
     {
         printf("%.3f %s %d %.3f %.3f %.3f %.3f %.3f %.3f\n",
                t,tag.c_str(),cnt,x[0],x[1],x[2],x[3],x[4],x[5]);
@@ -66,19 +66,28 @@ class Target : public RateThread
 
 public:
     /****************************************************************/
-    Target(const double Ts) : RateThread((int)(Ts*1000.0)),
-                              c(6,0.0), xd(6,0.0)
+    Target() : RateThread(10), c(6,0.0), xd(6,0.0), f(0.1), R(0.1), cnt(0)
     {
         c[0]=0.35;
         c[4]=M_PI/2.0;
-        f=1.0/10.0;
-        R=0.1;
-        cnt=0;
         t0=Time::now();
     }
 
     /****************************************************************/
-    Vector get_xd(int &cnt)
+    void setOptions(const Property &options)
+    {
+        if (options.check("Ts"))
+            setRate((int)(1000.0*options.find("Ts").asDouble()));
+
+        if (options.check("f"))
+            f=options.find("f").asDouble();
+
+        if (options.check("R"))
+            R=options.find("R").asDouble();
+    }
+
+    /****************************************************************/
+    Vector get_xd(int &cnt) const
     {
         LockGuard lg(mutex);
         cnt=this->cnt;
@@ -86,7 +95,7 @@ public:
     }
 
     /****************************************************************/
-    void print(const int cnt, const Vector &x)
+    void print(const int cnt, const Vector &x) const
     {
         LockGuard lg(mutex);
         helperPrint(Time::now()-t0,"x",cnt,x);
@@ -99,17 +108,28 @@ class IKSolver : public RFModule
 {
     Target target;
     ArmSolver solver;
+    double solverTs;
     Vector q;
 
 public:
     /****************************************************************/
-    IKSolver() : target(0.05), q(12,0.0) { }
+    IKSolver() : q(12,0.0) { }
 
     /****************************************************************/
     bool configure(ResourceFinder &rf)
-    {
+    {        
         string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
         string mode=rf.check("mode",Value("full_pose+no_torso+forward_diff")).asString().c_str();
+        solverTs=rf.check("solverTs",Value(0.01)).asDouble();
+        double targetTs=rf.check("targetTs",Value(0.05)).asDouble();
+        double f=rf.check("f",Value(0.1)).asDouble();
+        double R=rf.check("R",Value(0.1)).asDouble();
+        
+        Property options;
+        options.put("Ts",targetTs);
+        options.put("f",f);
+        options.put("R",R);        
+        target.setOptions(options);
         
         SolverParameters p=solver.getSolverParameters();
         p.setMode(mode);
@@ -134,7 +154,7 @@ public:
     /****************************************************************/
     double getPeriod()
     {
-        return 0.01;
+        return solverTs;
     }
 
     /****************************************************************/
