@@ -85,7 +85,7 @@ while str2double(data.textdata{line,1})<T
             close(writer);
         end
         delete(obj);
-        break;
+        return;
     end
 end
 
