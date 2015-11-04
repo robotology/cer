@@ -165,6 +165,7 @@ private:
     bool    *_calibrated;       // Flag to know if the calibrate function has been called for the joint
     double  *_stamps;
     double   _refSpeed;         // For the tripod device, only one velocity can be defined, it'll be used by all the joints
+    double   _velLimitsMax;
     yarp::sig::Vector  _userRef_positions;     // used for position control.
     yarp::sig::Vector  _robotRef_positions;    // used for position control.
     yarp::sig::Vector  _lastUser_encoders;     // used for position control.

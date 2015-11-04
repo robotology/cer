@@ -25,6 +25,11 @@
       </param>
     </group>
 
+    <group name="LIMITS">
+        <param name="JntVelocityMax">   0.05  </param>
+    </group>
+
+
     <!--
     <group name="CONNECTION">
       <param name="local">         /icubGazeboSim/torso_out  </param>

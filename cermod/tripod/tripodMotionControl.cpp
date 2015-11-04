@@ -386,6 +386,7 @@ tripodMotionControl::tripodMotionControl() :
     _currentLimits      = NULL;
     _kinematic_mj       = NULL;
     _refSpeed           = 0.01;    // meters per sec, by default it is 1 cm/s  TODO: read it from config file
+    _velLimitsMax       = 0.0;
     _calibrated         = NULL;    // Check status of joints
     useRawEncoderData   = false;
     _stamps             = NULL;
@@ -718,6 +719,19 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
     yDebug() << "Transformation Matrix is \n" << _baseTransformation.toString().c_str();
     cer::kinematics::TripodParameters tParam(radius, lMin, lMax, alpha, _baseTransformation);
     solver.setParameters(tParam);
+
+
+    Bottle &limits_group=config.findGroup("LIMITS");
+    if (limits_group.isNull())
+    {
+        yError() << " ***TripodMotionControl detects that Group 'LIMITS' is not found in configuration file***";
+        return false;
+    }
+    if (!extractGroup(limits_group, xtmp, "JntVelocityMax","The maximum velocity for the joint ([deg/s or m/s])", 1))
+        return false;
+    else
+        _velLimitsMax = xtmp.get(1).asDouble();
+
     return true;
 }
 
@@ -1098,14 +1112,20 @@ bool tripodMotionControl::checkMotionDoneRaw(bool *flag)
 
 bool tripodMotionControl::setRefSpeedRaw(int j, double sp)
 {
-    _refSpeed = sp;
+    if(sp > _velLimitsMax)
+    {
+        yWarning() << "Reference speed is higher then maximum, saturating value to " << _velLimitsMax;
+        sp = _velLimitsMax;
+    }
+    else
+        _refSpeed = sp;
     return true;
 }
 
 bool tripodMotionControl::setRefSpeedsRaw(const double *spds)
 {
     yWarning() << "Only one vel can be set for the whole tripod device!! \n\tUsing spds[0]: " << spds[0] << " for all of them";
-    _refSpeed = spds[0];
+    setRefSpeedRaw(0, spds[0]);
     return true;
 }
 
@@ -1222,7 +1242,7 @@ bool tripodMotionControl::checkMotionDoneRaw(const int n_joint, const int *joint
 bool tripodMotionControl::setRefSpeedsRaw(const int n_joint, const int *joints, const double *spds)
 {
     yWarning() << "Only one vel can be set for the whole tripod device!! \n\tUsing spds[0]: " << spds[0] << " for all of them";
-    _refSpeed = spds[0];
+    setRefSpeedRaw(0, spds[0]);
     return true;
 }
 
@@ -1531,7 +1551,9 @@ bool tripodMotionControl::setVelLimitsRaw(int axis, double min, double max)
 
 bool tripodMotionControl::getVelLimitsRaw(int axis, double *min, double *max)
 {
-    return NOT_YET_IMPLEMENTED("getVelLimitsRaw");
+    *min = 0.0;
+    *max = _velLimitsMax;
+    return true;
 }
 
 #if 0
