@@ -1,16 +1,25 @@
 function plotResults(filename,varargin)
+% plotResults(filename,orien,do_movie)
+% filename the name of the file containing the log
+% orien    if false orientation won't be drawn
+% do_movie if true a video is recorded
 %
 % Copyright (C) 2015 iCub Facility - Istituto Italiano di Tecnologia
 % Author: Ugo Pattacini <ugo.pattacini@iit.it>
 
-global ha hxd hx
+global hfig ha hxd hx
 global data
 global cnt line A
-global orien
+global orien do_movie writer
 
 orien=true;
 if nargin>1
     orien=varargin{1};
+end
+
+do_movie=false;
+if nargin>2
+    do_movie=varargin{2};
 end
 
 hfig=figure('Name','Tracking Performance','Color','w');
@@ -39,16 +48,23 @@ t=timer;
 t.Period=0.1;
 t.ExecutionMode='fixedRate';
 t.TimerFcn=@myCallback;
+
+if do_movie
+    writer=VideoWriter('movie','MPEG-4');
+    writer.FrameRate=1/t.Period;
+    open(writer);
+end
+
 start(t);
 
 
 
 function myCallback(obj,~,~)
 
-global ha hxd hx
+global hfig ha hxd hx
 global data
 global cnt line A
-global orien
+global orien do_movie writer
 
 cnt=cnt+1;
 period=get(obj,'Period');
@@ -65,6 +81,9 @@ while str2double(data.textdata{line,1})<T
     line=line+1;
     if line>length(data.data(:,1))
         stop(obj);
+        if do_movie
+            close(writer);
+        end
         delete(obj);
         break;
     end
@@ -114,5 +133,13 @@ if ~isempty(k)
         set(h4,'Parent',hx);
     end
     drawnow;
+    
+    if do_movie
+        try
+            frame=getframe(hfig);
+            writeVideo(writer,frame);
+        catch
+        end
+    end    
 end
 

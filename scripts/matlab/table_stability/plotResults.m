@@ -1,4 +1,6 @@
 function plotResults(filename)
+% plotResults(filename)
+% filename the name of the file containing the log
 %
 % Copyright (C) 2015 iCub Facility - Istituto Italiano di Tecnologia
 % Author: Ugo Pattacini <ugo.pattacini@iit.it>
