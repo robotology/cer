@@ -696,11 +696,28 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
     else
         alpha = xtmp.get(1).asDouble();
 
-    for(i=0; i < _njoints; i++)
+    // This particular device has weird limits for joints. This is not scalable unless we duplicate some parameter in config file.
+    if(_njoints >= 3)
     {
-        _limitsMax[i] = lMax;
-        _limitsMin[i] = lMin;
+        _limitsMax[0] = lMax;
+        _limitsMin[0] = lMin;
+        _limitsMax[1] =  alpha;
+        _limitsMin[1] = -alpha;
+        _limitsMax[2] =  alpha;
+        _limitsMin[2] = -alpha;
     }
+
+    if(_njoints < 3)
+    {
+        yError() << "Tripod device should have at least 3 joints";
+        return false;
+    }
+
+    if(_njoints > 3)
+    {
+        yWarning() << "joint limits are configured only for the first 3 joints. Joints from 4 to " << _njoints << " will have unitialized limits values (set to 0.0)!";
+    }
+
 
     // Read the base transformation Matrix
     if(!extractGroup(tripod_description, xtmp, "BASE_TRANSFORMATION", "the rototraslation matrix 4x4 which tranforms system references from root frame to the tripod base", 16))
