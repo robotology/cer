@@ -133,13 +133,12 @@ if ~isempty(k)
         set(h4,'Parent',hx);
     end
     drawnow;
-    
-    if do_movie
-        try
-            frame=getframe(hfig);
-            writeVideo(writer,frame);
-        catch
-        end
-    end    
 end
 
+if do_movie
+    try
+        frame=getframe(hfig);
+        writeVideo(writer,frame);
+    catch
+    end
+end    
