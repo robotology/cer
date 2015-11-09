@@ -1,6 +1,6 @@
 set(appname CER01)
 
-set(scripts CER_torso_only.xml robotInterface.ini general.xml)
+set(scripts CER_torso_only.xml robotInterface.ini general.xml yarpmotorgui.ini)
 
 yarp_install(FILES ${scripts} DESTINATION ${CER_ROBOTS_INSTALL_DIR}/${appname})
 yarp_install(DIRECTORY calibrators DESTINATION ${CER_ROBOTS_INSTALL_DIR}/${appname})
