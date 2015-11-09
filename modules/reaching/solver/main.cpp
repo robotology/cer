@@ -81,7 +81,7 @@ public:
     }
 
     /****************************************************************/
-    bool respond(const Bottle &command, Bottle &reply);
+    bool respond(const Bottle &command, Bottle &reply)
     {
         SolverParameters p=solver.getSolverParameters();
         Bottle cmd=command;
