@@ -38,3 +38,4 @@ add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"               
 add_subdirectory(app)
 add_subdirectory(libraries/cer_kinematics)
 add_subdirectory(cermod)
+add_subdirectory(gazeboYarpPlugin)
