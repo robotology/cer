@@ -43,8 +43,11 @@ protected:
     yarp::sig::Vector zL;
     yarp::sig::Vector zU;
     yarp::sig::Vector lambda;
+    int curMode;
 
     friend class ArmCommonNLP;
+
+    int computeMode() const;
 
 public:
     /**

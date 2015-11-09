@@ -68,6 +68,16 @@ ArmSolver::ArmSolver(const ArmParameters &armParams,
                      armParameters(armParams),
                      slvParameters(slvParams)
 {
+    q0.resize(3+armParameters.upper_arm.getDOF()+3,0.0);
+    curMode=computeMode();
+}
+
+
+/****************************************************************/
+int ArmSolver::computeMode() const
+{
+    return ((slvParameters.full_pose?0x01:0x00) | 
+            ((slvParameters.configuration?0x01:0x00)<<1));
 }
 
 
@@ -112,8 +122,9 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         return false;
     }
 
+    int mode=computeMode();
     int print_level=std::max(verbosity-5,0);
-    string warm_start_str="no";
+    string warm_start_str="no";    
 
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
     app->Options()->SetNumericValue("tol",slvParameters.tol);
@@ -130,7 +141,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetIntegerValue("print_level",print_level);    
     if (slvParameters.warm_start)
     {
-        if ((zL.length()>0) && (zU.length()>0) && (lambda.length()>0))
+        if ((zL.length()>0) && (zU.length()>0) && (lambda.length()>0) && (curMode==mode))
         {
             warm_start_str="yes";
             app->Options()->SetNumericValue("warm_start_bound_push",1e-6);
@@ -199,8 +210,9 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     Ipopt::ApplicationReturnStatus status=app->OptimizeTNLP(GetRawPtr(nlp));
     double t1=Time::now();
 
+    curMode=mode;
     q=nlp->get_result();
-    nlp->get_warm_start(zL,zU,lambda);
+    nlp->get_warm_start(zL,zU,lambda);    
     if (exit_code!=NULL)
         *exit_code=status;
 
