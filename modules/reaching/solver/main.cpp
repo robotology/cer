@@ -54,7 +54,7 @@ public:
         solver.setSolverParameters(p);
         solver.setVerbosity(verbosity);        
 
-        rpcPort.open(("/cer_solver/"+arm_type).c_str());
+        rpcPort.open(("/cer_solver/"+arm_type+"/rpc").c_str());
         attach(rpcPort);
         q.resize(12,0.0);
 
