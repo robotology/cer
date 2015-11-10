@@ -167,9 +167,9 @@ public:
         solver.setSolverParameters(p);
         solver.setVerbosity(verbosity);        
 
+        q.resize(3+solver.getArmParameters().upper_arm.getDOF()+3,0.0);
         rpcPort.open(("/cer_solver/"+arm_type+"/rpc").c_str());
-        attach(rpcPort);
-        q.resize(12,0.0);
+        attach(rpcPort);        
 
         return true;
     }
