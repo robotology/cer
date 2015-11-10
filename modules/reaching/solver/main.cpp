@@ -15,34 +15,126 @@
  * Public License for more details
 */
 
+#include <cmath>
 #include <string>
 
 #include <yarp/os/all.h>
+#include <yarp/dev/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 
+#include <iCub/iKin/iKinFwd.h>
 #include <cer_kinematics/arm.h>
 
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
+using namespace iCub::iKin;
 using namespace cer::kinematics;
 
 
 /****************************************************************/
 class IKSolver : public RFModule
-{
+{    
     ArmSolver solver;
     RpcServer rpcPort;
     Vector q;
+
+    /****************************************************************/
+    bool getLimits(const string &remote, const string &local,
+                   Matrix &lim) const
+    {        
+        Property option;
+        option.put("device","remote_controlboard");
+        option.put("remote",remote.c_str());
+        option.put("local",local.c_str());
+
+        PolyDriver driver;
+        if (driver.open(option))
+        {
+            IEncoders      *ienc;
+            IControlLimits *ilim;
+
+            driver.view(ienc);
+            driver.view(ilim);
+
+            int nAxes;
+            ienc->getAxes(&nAxes);
+
+            lim.resize(nAxes,2);
+            for (int i=0; i<nAxes; i++)
+                ilim->getLimits(i,&lim(i,0),&lim(i,1));
+
+            driver.close();
+            return true;
+        }
+        else
+        {
+            yError("Unable to connect to %s!",remote.c_str());
+            return false;
+        }
+    }
+
+    /****************************************************************/
+    bool alignJointsBounds(const string &robot, const string &arm_type)
+    {
+        ArmParameters p=solver.getArmParameters();
+        Matrix lim;
+
+        if (getLimits("/"+robot+"/torso","/cer_solver/torso",lim))
+        {
+            p.torso.l_min=lim(0,0);
+            p.torso.l_max=lim(0,1);
+            p.torso.alpha_max=fabs(lim(1,1));
+        }
+        else
+            return false;
+
+        if (getLimits("/"+robot+"/torso_yaw","/cer_solver/torso_yaw",lim))
+        {
+            iKinChain *chain=p.upper_arm.asChain();
+            (*chain)[0].setMin((M_PI/180.0)*lim(0,0));
+            (*chain)[0].setMax((M_PI/180.0)*lim(0,1));
+        }
+        else
+            return false;
+
+        if (getLimits("/"+robot+"/upper_"+arm_type+"_arm","/cer_solver/upper_"+arm_type+"_arm",lim))
+        {
+            iKinChain *chain=p.upper_arm.asChain();
+            for (int i=0; i<lim.rows(); i++)
+            {
+                (*chain)[1+i].setMin((M_PI/180.0)*lim(i,0)); 
+                (*chain)[1+i].setMax((M_PI/180.0)*lim(i,1));
+            }
+        }
+        else
+            return false;
+
+        if (getLimits("/"+robot+"/"+arm_type+"_wrist","/cer_solver/"+arm_type+"_wrist",lim))
+        {
+            p.lower_arm.l_min=lim(0,0);
+            p.lower_arm.l_max=lim(0,1);
+            p.lower_arm.alpha_max=fabs(lim(1,1));
+        }
+        else
+            return false;
+
+        return true;
+    }
 
 public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
+        string robot=rf.check("robot",Value("cer")).asString().c_str();
         string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
         int verbosity=rf.check("verbosity",Value(0)).asInt();
+
+        if (!alignJointsBounds(robot,arm_type))
+            return false;
 
         SolverParameters p=solver.getSolverParameters();
         p.setMode("full_pose");
