@@ -88,6 +88,10 @@ class IKSolver : public RFModule
             p.torso.l_min=lim(0,0);
             p.torso.l_max=lim(0,1);
             p.torso.alpha_max=fabs(lim(1,1));
+
+            yInfo("limits of %s part: heave=[%g,%g] [m], alpha_max=%g [deg]",
+                  ("/"+robot+"/torso").c_str(),p.torso.l_min,
+                  p.torso.l_max,p.torso.alpha_max);
         }
         else
             return false;
@@ -97,6 +101,11 @@ class IKSolver : public RFModule
             iKinChain *chain=p.upper_arm.asChain();
             (*chain)[0].setMin((M_PI/180.0)*lim(0,0));
             (*chain)[0].setMax((M_PI/180.0)*lim(0,1));
+
+            yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
+                  ("/"+robot+"/torso_yaw").c_str(),0,
+                  (180.0/M_PI)*(*chain)[0].getMin(),
+                  (180.0/M_PI)*(*chain)[0].getMax());
         }
         else
             return false;
@@ -108,6 +117,11 @@ class IKSolver : public RFModule
             {
                 (*chain)[1+i].setMin((M_PI/180.0)*lim(i,0)); 
                 (*chain)[1+i].setMax((M_PI/180.0)*lim(i,1));
+
+                yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
+                      ("/"+robot+"/upper_"+arm_type+"_arm").c_str(),i,
+                      (180.0/M_PI)*(*chain)[1+i].getMin(),
+                      (180.0/M_PI)*(*chain)[1+i].getMax());
             }
         }
         else
@@ -118,6 +132,10 @@ class IKSolver : public RFModule
             p.lower_arm.l_min=lim(0,0);
             p.lower_arm.l_max=lim(0,1);
             p.lower_arm.alpha_max=fabs(lim(1,1));
+
+            yInfo("limits of %s part: heave=[%g,%g] [m], alpha_max=%g [deg]",
+                  ("/"+robot+"/"+arm_type+"_wrist").c_str(),p.lower_arm.l_min,
+                  p.lower_arm.l_max,p.lower_arm.alpha_max);
         }
         else
             return false;
