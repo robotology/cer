@@ -17,6 +17,7 @@
 
 #define _USE_MATH_DEFINES
 #include <cmath>
+#include <algorithm>
 #include <string>
 
 #include <yarp/os/all.h>
@@ -195,49 +196,68 @@ public:
     }
 
     /****************************************************************/
-    bool respond(const Bottle &command, Bottle &reply)
+    bool respond(const Bottle &cmd, Bottle &reply)
     {
         SolverParameters p=solver.getSolverParameters();
-        Bottle cmd=command;
 
-        if (cmd.get(0).isString())
+        if (cmd.check("mode"))
         {
-            p.setMode(cmd.get(0).asString().c_str());
-            cmd=cmd.tail();
+            string mode=cmd.find("mode").asString().c_str();
+            p.setMode(mode);
+            solver.setSolverParameters(p);
+
+            reply.addVocab(Vocab::encode("ack"));
         }
 
-        if (cmd.size()<8)
+        if (Bottle *payLoad=cmd.find("q").asList())
         {
-            yError("wrong target size!");
-            reply.addVocab(Vocab::encode("nack"));
-            return true;
+            int len=std::min(payLoad->size(),(int)q.length());
+            for (int i=0; i<len; i++)
+                q[i]=payLoad->get(i).asDouble();
+
+            solver.setInitialGuess(q);
+
+            if (reply.size()==0)
+                reply.addVocab(Vocab::encode("ack"));
         }
-        
-        p.torso_heave=cmd.get(0).asDouble();
-        p.lower_arm_heave=cmd.get(1).asDouble();
 
-        Vector xd(3),ud(3);
-        xd[0]=cmd.get(2).asDouble();
-        xd[1]=cmd.get(3).asDouble();
-        xd[2]=cmd.get(4).asDouble();
-        ud[0]=cmd.get(5).asDouble();
-        ud[1]=cmd.get(6).asDouble();
-        ud[2]=cmd.get(7).asDouble();
+        if (Bottle *payLoad=cmd.find("target").asList())
+        {
+            if (payLoad->size()<8)
+            {
+                yError("wrong target size!");
+                reply.clear();
+                reply.addVocab(Vocab::encode("nack"));
+                return true;
+            }
+            
+            p.torso_heave=payLoad->get(0).asDouble();
+            p.lower_arm_heave=payLoad->get(1).asDouble();
 
-        double n=norm(ud);
-        Vector ud_=(1.0/n)*ud;
-        ud_.push_back(n);
-        Matrix Hd=axis2dcm(ud_);
-        Hd(0,3)=xd[0];
-        Hd(1,3)=xd[1];
-        Hd(2,3)=xd[2];
+            Vector xd(3),ud(3);
+            xd[0]=payLoad->get(2).asDouble();
+            xd[1]=payLoad->get(3).asDouble();
+            xd[2]=payLoad->get(4).asDouble();
+            ud[0]=payLoad->get(5).asDouble();
+            ud[1]=payLoad->get(6).asDouble();
+            ud[2]=payLoad->get(7).asDouble();
 
-        solver.setSolverParameters(p);
-        solver.setInitialGuess(q);
-        solver.ikin(Hd,q);
+            double n=norm(ud);
+            Vector ud_=(1.0/n)*ud;
+            ud_.push_back(n);
+            Matrix Hd=axis2dcm(ud_);
+            Hd(0,3)=xd[0];
+            Hd(1,3)=xd[1];
+            Hd(2,3)=xd[2];
 
-        reply.addVocab(Vocab::encode("ack"));
-        reply.addList().read(q);
+            solver.setSolverParameters(p);
+            solver.setInitialGuess(q);
+            solver.ikin(Hd,q);
+
+            if (reply.size()==0)
+                reply.addVocab(Vocab::encode("ack"));
+            reply.addList().read(q);
+        }
 
         return true;
     }
