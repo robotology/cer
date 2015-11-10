@@ -141,6 +141,7 @@ class IKSolver : public RFModule
         else
             return false;
 
+        solver.setArmParameters(p);
         return true;
     }
 
