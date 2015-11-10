@@ -199,6 +199,7 @@ public:
     bool respond(const Bottle &cmd, Bottle &reply)
     {
         SolverParameters p=solver.getSolverParameters();
+        reply.addVocab(Vocab::encode("nack"));
 
         if (cmd.check("mode"))
         {
@@ -206,6 +207,7 @@ public:
             p.setMode(mode);
             solver.setSolverParameters(p);
 
+            reply.clear();
             reply.addVocab(Vocab::encode("ack"));
         }
 
@@ -217,8 +219,8 @@ public:
 
             solver.setInitialGuess(q);
 
-            if (reply.size()==0)
-                reply.addVocab(Vocab::encode("ack"));
+            reply.clear();
+            reply.addVocab(Vocab::encode("ack"));
         }
 
         if (Bottle *payLoad=cmd.find("target").asList())
@@ -254,8 +256,8 @@ public:
             solver.setInitialGuess(q);
             solver.ikin(Hd,q);
 
-            if (reply.size()==0)
-                reply.addVocab(Vocab::encode("ack"));
+            reply.clear();
+            reply.addVocab(Vocab::encode("ack"));
             reply.addList().read(q);
         }
 
