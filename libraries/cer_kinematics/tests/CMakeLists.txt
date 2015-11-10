@@ -5,6 +5,10 @@
 cmake_minimum_required(VERSION 2.8.9)
 project(cer_kinematics-tests)
 
+get_property(cer_kinematics_INCLUDE_DIRS
+             TARGET cer_kinematics
+             PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
+
 include_directories(${YARP_INCLUDE_DIRS}
                     ${ICUB_INCLUDE_DIRS}
                     ${cer_kinematics_INCLUDE_DIRS})
