@@ -64,19 +64,22 @@ class Controller : public RFModule, public PortReader
         target.read(connection);
 
         Bottle reply;
-        solverPort.write(target,reply);
-
-        if (reply.get(0).asVocab()==Vocab::encode("ack"))
+        if (solverPort.write(target,reply))
         {
-            if (Bottle *payLoad=reply.get(1).asList())
+            if (reply.get(0).asVocab()==Vocab::encode("ack"))
             {
-                LockGuard lg(mutex);
-                for (size_t i=0; i<qd.length(); i++)
-                    qd[i]=payLoad->get(i).asDouble();
+                if (Bottle *payLoad=reply.get(1).asList())
+                {
+                    LockGuard lg(mutex);
+                    for (size_t i=0; i<qd.length(); i++)
+                        qd[i]=payLoad->get(i).asDouble();
+                }
             }
+            else
+                yError("Malformed target type!");
         }
         else
-            yError("Malformed target type!");
+            yError("Unable to communicate with the solver");
 
         return true;
     }
