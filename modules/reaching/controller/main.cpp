@@ -207,7 +207,7 @@ public:
         LockGuard lg(mutex);
         gen->computeNextValues(qd);
 
-        Vector ref=gen->getPos();
+        const Vector &ref=gen->getPos();
         ipos[0]->setPositions(&ref[0]);
         ipos[1]->setPositions(&ref[3]);
         ipos[2]->setPositions(&ref[4]);
