@@ -85,7 +85,7 @@ class IKSolver : public RFModule
         ArmParameters p=solver.getArmParameters();
         Matrix lim;
 
-        if (getBounds("/"+robot+"/torso","/cer_solver/torso",lim))
+        if (getBounds("/"+robot+"/torso","/cer_solver/"+arm_type+"/torso",lim))
         {
             p.torso.l_min=lim(0,0);
             p.torso.l_max=lim(0,1);
@@ -98,7 +98,7 @@ class IKSolver : public RFModule
         else
             return false;
 
-        if (getBounds("/"+robot+"/torso_yaw","/cer_solver/torso_yaw",lim))
+        if (getBounds("/"+robot+"/torso_yaw","/cer_solver/"+arm_type+"/torso_yaw",lim))
         {
             iKinChain *chain=p.upper_arm.asChain();
             (*chain)[0].setMin((M_PI/180.0)*lim(0,0));
@@ -112,7 +112,7 @@ class IKSolver : public RFModule
         else
             return false;
 
-        if (getBounds("/"+robot+"/upper_"+arm_type+"_arm","/cer_solver/upper_"+arm_type+"_arm",lim))
+        if (getBounds("/"+robot+"/upper_"+arm_type+"_arm","/cer_solver/"+arm_type+"/upper_"+arm_type+"_arm",lim))
         {
             iKinChain *chain=p.upper_arm.asChain();
             for (int i=0; i<lim.rows(); i++)
@@ -129,7 +129,7 @@ class IKSolver : public RFModule
         else
             return false;
 
-        if (getBounds("/"+robot+"/"+arm_type+"_wrist","/cer_solver/"+arm_type+"_wrist",lim))
+        if (getBounds("/"+robot+"/"+arm_type+"_wrist","/cer_solver/"+arm_type+"/"+arm_type+"_wrist",lim))
         {
             p.lower_arm.l_min=lim(0,0);
             p.lower_arm.l_max=lim(0,1);
