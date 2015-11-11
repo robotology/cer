@@ -217,23 +217,22 @@ public:
     }
 
     /****************************************************************/
-    bool respond(const Bottle &command, Bottle &reply)
+    bool respond(const Bottle &cmd, Bottle &reply)
     {
-        LockGuard lg(mutex);
-        
-        if (command.size()>=3)
+        LockGuard lg(mutex);        
+        if (cmd.size()>=3)
         {
-            if (command.get(0).asVocab()==Vocab::encode("set"))
+            if (cmd.get(0).asVocab()==Vocab::encode("set"))
             {
-                int subcmd=command.get(1).asVocab();
+                int subcmd=cmd.get(1).asVocab();
                 if (subcmd==Vocab::encode("T"))
                 {
-                    gen->setT(command.get(2).asDouble());
+                    gen->setT(cmd.get(2).asDouble());
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (subcmd==Vocab::encode("Ts"))
                 {
-                    Ts=command.get(2).asDouble();
+                    Ts=cmd.get(2).asDouble();
                     Ts=std::max(Ts,MIN_TS);
                     gen->setTs(Ts);
                     reply.addVocab(Vocab::encode("ack"));
