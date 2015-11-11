@@ -26,8 +26,9 @@
 #include <yarp/math/Math.h>
 
 #include <iCub/ctrl/minJerkCtrl.h>
-
 #include <cer_kinematics/arm.h>
+
+#define MIN_TS  0.01    // [s]
 
 using namespace std;
 using namespace yarp::os;
@@ -42,6 +43,10 @@ using namespace cer::kinematics;
 class Controller : public RFModule, public PortReader
 {
     PolyDriver drivers[4];
+    IControlMode2   *imod[4];
+    IEncodersTimed  *ienc[4];
+    IPositionDirect *ipos[4];
+
     minJerkTrajGen *gen;
 
     BufferedPort<Bottle> targetPort;
@@ -78,13 +83,70 @@ class Controller : public RFModule, public PortReader
 
 public:
     /****************************************************************/
+    Controller() : gen(NULL)
+    {
+    }
+
+    /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
         string robot=rf.check("robot",Value("cer")).asString().c_str();
         string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
         double T=rf.check("T",Value(2.0)).asDouble();
-        Ts=rf.check("Ts",Value(0.01)).asDouble();
-        Ts=std::max(Ts,0.01);
+        Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
+        Ts=std::max(Ts,MIN_TS);
+
+        Property option;
+
+        option.put("device","remote_controlboard");
+        option.put("remote",("/"+robot+"/torso_tripod").c_str());
+        option.put("local","/cer_controller/torso_tripod");
+        if (!drivers[0].open(option))
+        {
+            yError("Unable to connect to %s",("/"+robot+"/torso_tripod").c_str());
+            close();
+            return false;
+        }
+
+        option.clear();
+        option.put("device","remote_controlboard");
+        option.put("remote",("/"+robot+"/torso_yaw").c_str());
+        option.put("local","/cer_controller/torso_yaw");
+        if (!drivers[1].open(option))
+        {
+            yError("Unable to connect to %s",("/"+robot+"/torso_yaw").c_str());
+            close();
+            return false;
+        }
+
+        option.clear();
+        option.put("device","remote_controlboard");
+        option.put("remote",("/"+robot+"/upper_"+arm_type+"_arm").c_str());
+        option.put("local",("/cer_controller/upper_"+arm_type+"_arm").c_str());
+        if (!drivers[2].open(option))
+        {
+            yError("Unable to connect to %s",("/"+robot+"/upper_"+arm_type+"_arm").c_str());
+            close();
+            return false;
+        }
+
+        option.clear();
+        option.put("device","remote_controlboard");
+        option.put("remote",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
+        option.put("local",("/cer_controller/"+arm_type+"_wrist_tripod").c_str());
+        if (!drivers[3].open(option))
+        {
+            yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
+            close();
+            return false;
+        }
+
+        for (int i=0; i<4; i++)
+        {
+            drivers[i].view(imod[i]);
+            drivers[i].view(ienc[i]);
+            drivers[i].view(ipos[i]);
+        }
 
         targetPort.open(("/cer_controller/"+arm_type+"/target:i").c_str());
         targetPort.setReader(*this);
@@ -95,22 +157,41 @@ public:
         attach(rpcPort);
 
         qd.resize(12,0.0);
-        gen=new minJerkTrajGen(qd,Ts,T);
+        VectorOf<int> posDirectMode;
+        for (size_t i=0; i<qd.length(); i++)
+            posDirectMode.push_back(VOCAB_CM_POSITION_DIRECT);
 
+        imod[0]->setControlModes(posDirectMode.getFirst()); 
+        imod[1]->setControlModes(posDirectMode.getFirst());
+        imod[2]->setControlModes(posDirectMode.getFirst());
+        imod[3]->setControlModes(posDirectMode.getFirst());
+        
+        ienc[0]->getEncoders(&qd[0]);
+        ienc[1]->getEncoders(&qd[3]);
+        ienc[2]->getEncoders(&qd[4]);
+        ienc[3]->getEncoders(&qd[10]);
+
+        gen=new minJerkTrajGen(qd,Ts,T);
         return true;
     }
 
     /****************************************************************/
     bool close()
     {
-        targetPort.close();
-        solverPort.close();
-        rpcPort.close();
+        if (!targetPort.isClosed())
+            targetPort.close(); 
+
+        if (!solverPort.asPort().isOpen())
+            solverPort.close();
+
+        if (!rpcPort.asPort().isOpen())
+            rpcPort.close(); 
+        
+        for (int i=0; i<4; i++)
+            if (drivers[i].isValid())
+                drivers[i].close(); 
 
         delete gen;
-        for (int i=0; i<4; i++)
-            drivers[i].close();
-
         return true;
     }
 
@@ -125,7 +206,13 @@ public:
     {
         LockGuard lg(mutex);
         gen->computeNextValues(qd);
+
         Vector ref=gen->getPos();
+        ipos[0]->setPositions(&ref[0]);
+        ipos[1]->setPositions(&ref[3]);
+        ipos[2]->setPositions(&ref[4]);
+        ipos[3]->setPositions(&ref[10]);
+
         return true;
     }
 
@@ -147,7 +234,7 @@ public:
                 else if (subcmd==Vocab::encode("Ts"))
                 {
                     Ts=command.get(2).asDouble();
-                    Ts=std::max(Ts,0.01);
+                    Ts=std::max(Ts,MIN_TS);
                     gen->setTs(Ts);
                     reply.addVocab(Vocab::encode("ack"));
                 }

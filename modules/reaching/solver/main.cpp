@@ -167,11 +167,11 @@ public:
 
         solver.setArmParameters(ArmParameters(arm_type));
         solver.setSolverParameters(p);
-        solver.setVerbosity(verbosity);        
+        solver.setVerbosity(verbosity);
 
         q.resize(3+solver.getArmParameters().upper_arm.getDOF()+3,0.0);
         rpcPort.open(("/cer_solver/"+arm_type+"/rpc").c_str());
-        attach(rpcPort);        
+        attach(rpcPort);
 
         return true;
     }
