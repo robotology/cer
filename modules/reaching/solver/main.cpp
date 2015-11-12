@@ -153,7 +153,7 @@ public:
         string robot=rf.check("robot",Value("cer")).asString().c_str();
         string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
         bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
-        int verbosity=rf.check("verbosity",Value(0)).asInt();        
+        int verbosity=rf.check("verbosity",Value(0)).asInt();
 
         if (get_bounds)
             if (!alignJointsBounds(robot,arm_type))

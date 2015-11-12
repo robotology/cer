@@ -54,6 +54,7 @@ class Controller : public RFModule, public PortReader
     RpcClient solverPort;
 
     Mutex mutex;
+    int verbosity;
     double Ts;
     Vector qd;
 
@@ -63,9 +64,15 @@ class Controller : public RFModule, public PortReader
         Bottle target;
         target.read(connection);
 
+        if (verbosity>0)
+            yInfo("Sending request to solver: %s",target.toString().c_str());
+
         Bottle reply;
         if (solverPort.write(target,reply))
         {
+            if (verbosity>0)
+                yInfo("Received reply from solver: %s",reply.toString().c_str());
+
             if (reply.get(0).asVocab()==Vocab::encode("ack"))
             {
                 if (Bottle *payLoad=reply.get(1).asList())
@@ -95,6 +102,7 @@ public:
     {
         string robot=rf.check("robot",Value("cer")).asString().c_str();
         string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
+        verbosity=rf.check("verbosity",Value(0)).asInt();
         double T=rf.check("T",Value(2.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
@@ -215,6 +223,9 @@ public:
         ipos[1]->setPositions(&ref[3]);
         ipos[2]->setPositions(&ref[4]);
         ipos[3]->setPositions(&ref[10]);
+
+        if (verbosity>1)
+            yInfo("Commanding new set-points: %s",qd.toString(3,3).c_str());
 
         return true;
     }
