@@ -57,7 +57,7 @@ class Controller : public RFModule, public PortReader
     minJerkTrajGen *gen;
 
     BufferedPort<Bottle> targetPort;
-    BufferedPort<Bottle> statePort;
+    BufferedPort<Matrix> statePort;
     RpcServer rpcPort;
     RpcClient solverPort;
 
@@ -296,9 +296,7 @@ public:
         LockGuard lg(mutex);
         getCurrentMode();
 
-        Matrix H;
-        solver.fkin(getEncoders(),H);
-        statePort.prepare().read(H);
+        solver.fkin(getEncoders(),statePort.prepare());
         statePort.write();
 
         if (controlling)
