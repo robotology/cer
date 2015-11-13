@@ -345,7 +345,8 @@ public:
         {
             controlling=false;
             for (int i=0; i<4; i++)
-                ipos[i]->stop();            
+                ipos[i]->stop();
+            reply.addVocab(Vocab::encode("ack"));
         }
 
         if (reply.size()==0)
