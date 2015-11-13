@@ -43,9 +43,13 @@ using namespace cer::kinematics;
 class Controller : public RFModule, public PortReader
 {
     PolyDriver drivers[4];
-    IControlMode2   *imod[4];
-    IEncodersTimed  *ienc[4];
-    IPositionDirect *ipos[4];
+    IControlMode2    *imod[4];
+    IEncodersTimed   *ienc[4];
+    IPositionControl *ipos[4];
+    IPositionDirect  *iposd[4];
+
+    VectorOf<int> posDirectMode;
+    VectorOf<int> curMode;
 
     minJerkTrajGen *gen;
 
@@ -55,19 +59,20 @@ class Controller : public RFModule, public PortReader
 
     Mutex mutex;
     int verbosity;
+    bool controlling;
     double Ts;
-    Vector qd;
+    Vector qd;    
 
     /****************************************************************/
     bool read(ConnectionReader &connection)
     {
-        Bottle target;
+        Bottle target,reply;
         target.read(connection);
 
         if (verbosity>0)
             yInfo("Sending request to solver: %s",target.toString().c_str());
 
-        Bottle reply;
+        bool latch_controlling=controlling;
         if (solverPort.write(target,reply))
         {
             if (verbosity>0)
@@ -77,9 +82,19 @@ class Controller : public RFModule, public PortReader
             {
                 if (Bottle *payLoad=reply.get(1).asList())
                 {
-                    LockGuard lg(mutex);
-                    for (size_t i=0; i<qd.length(); i++)
-                        qd[i]=payLoad->get(i).asDouble();
+                    // process only if we didn't receive
+                    // a stop request in the meanwhile
+                    if (controlling==latch_controlling)
+                    {
+                        LockGuard lg(mutex); 
+                        for (size_t i=0; i<qd.length(); i++)
+                            qd[i]=payLoad->get(i).asDouble();
+
+                        if (!controlling)
+                            gen->init(getEncoders());
+
+                        controlling=true;
+                    }
                 }
             }
             else
@@ -89,6 +104,60 @@ class Controller : public RFModule, public PortReader
             yError("Unable to communicate with the solver");
 
         return true;
+    }
+
+    /****************************************************************/
+    Vector getEncoders() const
+    {
+        Vector encs(12,0.0);
+        ienc[0]->getEncoders(&encs[0]);
+        ienc[1]->getEncoders(&encs[3]);
+        ienc[2]->getEncoders(&encs[4]);
+        ienc[3]->getEncoders(&encs[9]);
+        return encs;
+    }
+
+    /****************************************************************/
+    void getCurrentMode()
+    {
+        imod[0]->getControlModes(&curMode[0]);
+        imod[1]->getControlModes(&curMode[3]);
+        imod[2]->getControlModes(&curMode[4]);
+        imod[3]->getControlModes(&curMode[9]);
+    }
+
+    /****************************************************************/
+    void setPositionDirectMode()
+    {
+        for (size_t i=0; i<3; i++)
+        {
+            if (curMode[i]!=posDirectMode[0])
+            {
+                imod[0]->setControlModes(posDirectMode.getFirst()); 
+                break;
+            }
+        }
+
+        if (curMode[3]!=posDirectMode[0])
+            imod[1]->setControlModes(posDirectMode.getFirst()); 
+
+        for (size_t i=4; i<9; i++)
+        {
+            if (curMode[i]!=posDirectMode[0])
+            {
+                imod[2]->setControlModes(posDirectMode.getFirst()); 
+                break;
+            }
+        }
+
+        for (size_t i=9; i<curMode.size(); i++)
+        {
+            if (curMode[i]!=posDirectMode[0])
+            {
+                imod[3]->setControlModes(posDirectMode.getFirst()); 
+                break;
+            }
+        }
     }
 
 public:
@@ -157,6 +226,7 @@ public:
             drivers[i].view(imod[i]);
             drivers[i].view(ienc[i]);
             drivers[i].view(ipos[i]);
+            drivers[i].view(iposd[i]);
         }
 
         targetPort.open(("/cer_controller/"+arm_type+"/target:i").c_str());
@@ -166,23 +236,18 @@ public:
 
         rpcPort.open(("/cer_controller/"+arm_type+"/rpc").c_str());
         attach(rpcPort);
-
-        qd.resize(12,0.0);
-        VectorOf<int> posDirectMode;
+        
+        Vector qd=getEncoders();
         for (size_t i=0; i<qd.length(); i++)
             posDirectMode.push_back(VOCAB_CM_POSITION_DIRECT);
+        curMode=posDirectMode;
 
-        imod[0]->setControlModes(posDirectMode.getFirst()); 
-        imod[1]->setControlModes(posDirectMode.getFirst());
-        imod[2]->setControlModes(posDirectMode.getFirst());
-        imod[3]->setControlModes(posDirectMode.getFirst());
-        
-        ienc[0]->getEncoders(&qd[0]);
-        ienc[1]->getEncoders(&qd[3]);
-        ienc[2]->getEncoders(&qd[4]);
-        ienc[3]->getEncoders(&qd[10]);
+        getCurrentMode();
+        setPositionDirectMode();
 
         gen=new minJerkTrajGen(qd,Ts,T);
+        controlling=false;
+
         return true;
     }
 
@@ -216,16 +281,21 @@ public:
     bool updateModule()
     {
         LockGuard lg(mutex);
-        gen->computeNextValues(qd);
+        getCurrentMode();
 
-        const Vector &ref=gen->getPos();
-        ipos[0]->setPositions(&ref[0]);
-        ipos[1]->setPositions(&ref[3]);
-        ipos[2]->setPositions(&ref[4]);
-        ipos[3]->setPositions(&ref[10]);
+        if (controlling)
+        {
+            gen->computeNextValues(qd); 
+            const Vector &ref=gen->getPos();
 
-        if (verbosity>1)
-            yInfo("Commanding new set-points: %s",qd.toString(3,3).c_str());
+            iposd[0]->setPositions(&ref[0]);
+            iposd[1]->setPositions(&ref[3]);
+            iposd[2]->setPositions(&ref[4]);
+            iposd[3]->setPositions(&ref[9]);
+
+            if (verbosity>1)
+                yInfo("Commanding new set-points: %s",qd.toString(3,3).c_str());
+        }
 
         return true;
     }
@@ -233,18 +303,20 @@ public:
     /****************************************************************/
     bool respond(const Bottle &cmd, Bottle &reply)
     {
-        LockGuard lg(mutex);        
+        LockGuard lg(mutex);
+        int cmd_0=cmd.get(0).asVocab();
+
         if (cmd.size()>=3)
         {
-            if (cmd.get(0).asVocab()==Vocab::encode("set"))
+            if (cmd_0==Vocab::encode("set"))
             {
-                int subcmd=cmd.get(1).asVocab();
-                if (subcmd==Vocab::encode("T"))
+                int cmd_1=cmd.get(1).asVocab();
+                if (cmd_1==Vocab::encode("T"))
                 {
                     gen->setT(cmd.get(2).asDouble());
                     reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (subcmd==Vocab::encode("Ts"))
+                else if (cmd_1==Vocab::encode("Ts"))
                 {
                     Ts=cmd.get(2).asDouble();
                     Ts=std::max(Ts,MIN_TS);
@@ -252,6 +324,12 @@ public:
                     reply.addVocab(Vocab::encode("ack"));
                 }
             }
+        }
+        else if (cmd_0==Vocab::encode("stop"))
+        {
+            controlling=false;
+            for (int i=0; i<4; i++)
+                ipos[i]->stop();            
         }
 
         if (reply.size()==0)
