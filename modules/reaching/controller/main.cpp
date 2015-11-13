@@ -26,6 +26,7 @@
 #include <yarp/math/Math.h>
 
 #include <iCub/ctrl/minJerkCtrl.h>
+#include <iCub/iKin/iKinFwd.h>
 #include <cer_kinematics/arm.h>
 
 #define MIN_TS  0.01    // [s]
@@ -36,6 +37,7 @@ using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::ctrl;
+using namespace iCub::iKin;
 using namespace cer::kinematics;
 
 
@@ -248,6 +250,10 @@ public:
 
         getCurrentMode();
         setPositionDirectMode();
+        
+        ArmParameters arm(arm_type);
+        arm.upper_arm.setAllConstraints(false);
+        solver.setArmParameters(arm);
 
         gen=new minJerkTrajGen(qd,Ts,T);
         controlling=false;
