@@ -51,9 +51,11 @@ class Controller : public RFModule, public PortReader
     VectorOf<int> posDirectMode;
     VectorOf<int> curMode;
 
+    ArmSolver solver;
     minJerkTrajGen *gen;
 
     BufferedPort<Bottle> targetPort;
+    BufferedPort<Bottle> statePort;
     RpcServer rpcPort;
     RpcClient solverPort;
 
@@ -93,6 +95,7 @@ class Controller : public RFModule, public PortReader
                         if (!controlling)
                             gen->init(getEncoders());
 
+                        setPositionDirectMode();
                         controlling=true;
                     }
                 }
@@ -232,6 +235,7 @@ public:
         targetPort.open(("/cer_controller/"+arm_type+"/target:i").c_str());
         targetPort.setReader(*this);
 
+        statePort.open(("/cer_controller/"+arm_type+"/state:o").c_str());
         solverPort.open(("/cer_controller/"+arm_type+"/solver:rpc").c_str());
 
         rpcPort.open(("/cer_controller/"+arm_type+"/rpc").c_str());
@@ -256,6 +260,9 @@ public:
     {
         if (!targetPort.isClosed())
             targetPort.close(); 
+
+        if (!statePort.isClosed())
+            statePort.close(); 
 
         if (!solverPort.asPort().isOpen())
             solverPort.close();
@@ -282,6 +289,11 @@ public:
     {
         LockGuard lg(mutex);
         getCurrentMode();
+
+        Matrix H;
+        solver.fkin(getEncoders(),H);
+        statePort.prepare().read(H);
+        statePort.write();
 
         if (controlling)
         {
