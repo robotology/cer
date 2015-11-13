@@ -86,11 +86,11 @@ class Controller : public RFModule, public PortReader
             {
                 if (Bottle *payLoad=reply.get(1).asList())
                 {
+                    LockGuard lg(mutex);
                     // process only if we didn't receive
                     // a stop request in the meanwhile
                     if (controlling==latch_controlling)
-                    {
-                        LockGuard lg(mutex); 
+                    {                        
                         for (size_t i=0; i<qd.length(); i++)
                             qd[i]=payLoad->get(i).asDouble();
 
