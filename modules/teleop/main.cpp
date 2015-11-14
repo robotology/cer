@@ -38,8 +38,10 @@ protected:
     PolyDriver     drvGeomagic;
     IHapticDevice *igeo;
     
-    BufferedPort<Bottle> robotPort;
-    BufferedPort<Bottle> simPort;
+    BufferedPort<Bottle>   simPort;
+    BufferedPort<Property> robotTargetPort;
+    BufferedPort<Vector>   robotStatePort;
+    RpcClient              robotCmdPort;
 
     string part;
 
@@ -54,6 +56,7 @@ protected:
     map<int,string> stateStr;
 
     Matrix Tsim;
+    Vector cur_x,cur_o;
     Vector pos0,rpy0;
     Vector x0,o0;
 
@@ -81,10 +84,10 @@ public:
         stateStr[running]="running";
 
         Matrix T=zeros(4,4);
-        T(0,1)=1.0;
-        T(1,2)=1.0;
-        T(2,0)=1.0;
-        T(3,3)=1.0;
+        T(0,1)=-1.0;
+        T(1,2)=+1.0;
+        T(2,0)=-1.0;
+        T(3,3)=+1.0;
         igeo->setTransformation(SE3inv(T));
         
         pos0.resize(3,0.0);
@@ -93,8 +96,10 @@ public:
         x0.resize(3,0.0);
         o0.resize(4,0.0);
 
-        robotPort.open(("/"+name+"/target:o").c_str());
         simPort.open(("/"+name+"/sim:o").c_str());
+        robotTargetPort.open(("/"+name+"/target:o").c_str());
+        robotStatePort.open(("/"+name+"/state:i").c_str());
+        robotCmdPort.open(("/"+name+"/cmd:rpc").c_str());
 
         return true;
     }
@@ -105,39 +110,58 @@ public:
         igeo->setTransformation(eye(4,4));
         drvGeomagic.close();
 
-        robotPort.close();
         simPort.close();
+        robotTargetPort.close();
+        robotStatePort.close();
+        robotCmdPort.close();
 
         return true;
     }
 
     /**********************************************************/
-    void updateSim(const Vector &c_)
+    void stopControl()
     {
-        if ((c_.length()!=3) && (c_.length()!=4))
-            return;
-
-        Vector c=c_;        
-        if (c.length()==3)
-            c.push_back(1.0);
-        c[3]=1.0;
-
-        c=Tsim*c;
-
         Bottle cmd,reply;
-        cmd.addString("world");
-        cmd.addString("set");
-        cmd.addString("ssph");
+        cmd.addVocab("stop");
+        if (robotCmdPort.write(cmd,reply))
+        {
+            if (reply.get(0).asVocab()!=Vocab::encode("ack"))
+                yError("Something went wrong while stopping");
+        }
+        else
+            yError("Unable to communicate to controller");
+    }
 
-        // obj #
-        cmd.addInt(1);
+    /**********************************************************/
+    void goToPose(const Vector &xd, const Vector &od)
+    {
+        Vector od_=od;
+        od_*=od_[3]; od_.pop_back();
+        
+        Vector payLoad;
+        payLoad.push_back(0.1);
+        payLoad.push_back(0.05);
+        payLoad=cat(payLoad,xd);
+        payLoad=cat(payLoad,od_);
 
-        // position
-        cmd.addDouble(c[0]);
-        cmd.addDouble(c[1]);
-        cmd.addDouble(c[2]);
+        Bottle target;
+        target.addList().read(payLoad);
 
-        simPort.write(cmd,reply);
+        Property &prop=robotTargetPort.prepare(); prop.clear();
+        prop.put("mode",torso?"full_pose+no_heave":"full_pose+no_torso");
+        prop.put("target",target.get(0));
+        robotTargetPort.writeStrict();
+
+        yInfo("going to (%s) (%s)",
+              xd.toString(3,3).c_str(),od_.toString(3,3).c_str());
+    }
+
+    /**********************************************************/
+    void updateSim(const Vector &xd, const Vector &od)
+    {
+        Vector rpy=dcm2rpy(axis2dcm(od));
+        simPort.prepare().read(cat(xd,rpy));
+        simPort.writeStrict();
     }
 
     /**********************************************************/
@@ -160,7 +184,8 @@ public:
                     rpy0[1]=rpy[1];
                     rpy0[2]=rpy[2];
 
-                    iarm->getPose(x0,o0);
+                    x0=cur_x;
+                    o0=cur_o;
                     s=running;
                 }
             }
@@ -198,12 +223,8 @@ public:
                 }
 
                 Vector od=dcm2axis(Rd);
-                iarm->goToPose(xd,od);
-
-                yInfo("going to (%s) (%s)",
-                      xd.toString(3,3).c_str(),od.toString(3,3).c_str());
-
-                updateSim(xd);
+                goToPose(xd,od);
+                updateSim(xd,od);
             }
         }
         else
@@ -213,13 +234,8 @@ public:
 
             if (c!=0)
             {
-                iarm->stopControl();
-                if (simulator)
-                {
-                    Vector x,o;
-                    iarm->getPose(x,o);
-                    updateSim(x);
-                }
+                stopControl();
+                updateSim(cur_x,cur_o);
             }
 
             s=idle;
@@ -236,6 +252,14 @@ public:
     /**********************************************************/
     bool updateModule()
     {
+        if (Vector *pose=robotStatePort.read(false))
+        {
+            cur_x=pose.subVector(0,2);
+            cur_o=pose.subVector(3,5);
+            double n=norm(cur_o);
+            cur_o/=n; cur_o.push_back(n);
+        }
+
         Vector buttons,pos,rpy;
         igeo->getButtons(buttons);
         igeo->getPosition(pos);
