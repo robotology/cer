@@ -2,7 +2,7 @@
 # Authors: Ugo Pattacini
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
-find_package(hapticdevice)
+find_package(hapticdevice QUIET)
 if(hapticdevice_FOUND)
     project(cer_teleop)
     message(STATUS "hapticdevice library found => ${PROJECT_NAME} will be built")

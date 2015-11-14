@@ -3,3 +3,4 @@
 # email:  ugo.pattacini@iit.it
 
 add_subdirectory(reaching)
+add_subdirectory(teleop)
