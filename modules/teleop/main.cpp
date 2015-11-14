@@ -122,7 +122,7 @@ public:
     void stopControl()
     {
         Bottle cmd,reply;
-        cmd.addVocab("stop");
+        cmd.addVocab(Vocab::encode("stop"));
         if (robotCmdPort.write(cmd,reply))
         {
             if (reply.get(0).asVocab()!=Vocab::encode("ack"))
@@ -148,7 +148,7 @@ public:
         target.addList().read(payLoad);
 
         Property &prop=robotTargetPort.prepare(); prop.clear();
-        prop.put("mode",torso?"full_pose+no_heave":"full_pose+no_torso");
+        prop.put("mode",no_torso?"full_pose+no_torso":"full_pose+no_heave");
         prop.put("target",target.get(0));
         robotTargetPort.writeStrict();
 
@@ -204,23 +204,17 @@ public:
 
                 xd=H0*xd;
 
-                Matrix Rd;
-                if (onlyXYZ)
-                    Rd=axis2dcm(o0);
-                else
-                {
-                    Vector drpy(3);
-                    drpy[0]=rpy[0]-rpy0[0];
-                    drpy[1]=rpy[1]-rpy0[1];
-                    drpy[2]=rpy[2]-rpy0[2];
+                Vector drpy(3);
+                drpy[0]=rpy[0]-rpy0[0];
+                drpy[1]=rpy[1]-rpy0[1];
+                drpy[2]=rpy[2]-rpy0[2];
 
-                    Vector ax(4,0.0),ay(4,0.0),az(4,0.0);
-                    ax[0]=1.0; ax[3]=drpy[2];
-                    ay[1]=1.0; ay[3]=drpy[1]*((part=="left_arm")?1.0:-1.0);
-                    az[2]=1.0; az[3]=drpy[0]*((part=="left_arm")?1.0:-1.0);
+                Vector ax(4,0.0),ay(4,0.0),az(4,0.0);
+                ax[0]=1.0; ax[3]=drpy[2];
+                ay[1]=1.0; ay[3]=drpy[1]*((part=="left_arm")?1.0:-1.0);
+                az[2]=1.0; az[3]=drpy[0]*((part=="left_arm")?1.0:-1.0);
 
-                    Rd=axis2dcm(o0)*axis2dcm(ax)*axis2dcm(ay)*axis2dcm(az);
-                }
+                Matrix Rd=axis2dcm(o0)*axis2dcm(ax)*axis2dcm(ay)*axis2dcm(az);
 
                 Vector od=dcm2axis(Rd);
                 goToPose(xd,od);
@@ -254,8 +248,8 @@ public:
     {
         if (Vector *pose=robotStatePort.read(false))
         {
-            cur_x=pose.subVector(0,2);
-            cur_o=pose.subVector(3,5);
+            cur_x=pose->subVector(0,2);
+            cur_o=pose->subVector(3,5);
             double n=norm(cur_o);
             cur_o/=n; cur_o.push_back(n);
         }
