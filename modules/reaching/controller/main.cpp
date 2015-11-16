@@ -60,6 +60,7 @@ class Controller : public RFModule, public PortReader
     BufferedPort<Vector> statePort;
     RpcServer rpcPort;
     RpcClient solverPort;
+    Stamp txInfo;
 
     Mutex mutex;
     int verbosity;
@@ -112,13 +113,19 @@ class Controller : public RFModule, public PortReader
     }
 
     /****************************************************************/
-    Vector getEncoders() const
+    Vector getEncoders(double *timeStamp=NULL)
     {
         Vector encs(12,0.0);
-        ienc[0]->getEncoders(&encs[0]);
-        ienc[1]->getEncoders(&encs[3]);
-        ienc[2]->getEncoders(&encs[4]);
-        ienc[3]->getEncoders(&encs[9]);
+        Vector stamps(encs.length());
+
+        ienc[0]->getEncodersTimed(&encs[0],&stamps[0]);
+        ienc[1]->getEncodersTimed(&encs[3],&stamps[3]);
+        ienc[2]->getEncodersTimed(&encs[4],&stamps[4]);
+        ienc[3]->getEncodersTimed(&encs[9],&stamps[9]);
+
+        if (timeStamp!=NULL)
+            *timeStamp=findMax(stamps);
+
         return encs;
     }
 
@@ -297,12 +304,21 @@ public:
         getCurrentMode();
 
         Matrix Hee;
-        solver.fkin(getEncoders(),Hee);
+        double timeStamp;
+        solver.fkin(getEncoders(&timeStamp),Hee);
+
         Vector &pose=statePort.prepare();
         pose=Hee.getCol(3).subVector(0,2);
         Vector oee=dcm2axis(Hee);
         oee*=oee[3]; oee.pop_back();
         pose=cat(pose,oee);
+
+        if (timeStamp>=0.0)
+            txInfo.update(timeStamp);
+        else
+            txInfo.update();
+
+        statePort.setEnvelope(txInfo);
         statePort.write();
 
         if (controlling)
