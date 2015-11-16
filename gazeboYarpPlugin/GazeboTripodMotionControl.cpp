@@ -22,7 +22,8 @@ using namespace yarp::dev;
 using namespace cer::dev;
 
 
-const double RobotPositionTolerance = 0.9;
+const double RobotPositionTolerance_revolute = 0.9;      // Degrees
+const double RobotPositionTolerance_linear   = 0.004;    // Meters
 
 GazeboTripodMotionControl::GazeboTripodMotionControl() : deviceName(""), verbose(true)
 {
@@ -90,14 +91,17 @@ bool GazeboTripodMotionControl::open(yarp::os::Searchable& config)
     }
 
     // read param from config file, if any
-
-    bool ret;
-    if(! (ret = gazebo_init()) )
+    if(!gazebo_init())
     {
-
+        yError() << "Problem initting Gazebo parameters";
+        return false;
     }
-    ret &= init_kinematics();
-    return ret;
+    if(!init_kinematics())
+    {
+        yError() << "Problem initting Tripod kinematics";
+        return false;
+    }
+    return true;
 }
 
 bool GazeboTripodMotionControl::init_kinematics()
@@ -167,6 +171,7 @@ bool GazeboTripodMotionControl::init_kinematics()
     }
     cer::kinematics::TripodParameters tParam(radius, lMin, lMax, alpha, _baseTransformation);
     solver.setParameters(tParam);
+    std::cout << "Matrix is \n" << _baseTransformation.toString() << std::endl;
 //     solver.setInitialGuess(m_);     // TODO: ask Ugo if it make sense
     return true;
 }
@@ -214,6 +219,7 @@ bool GazeboTripodMotionControl::gazebo_init()
     m_torques.resize(m_numberOfJoints); m_torques.zero();
     m_trajectoryGenerationReferenceSpeed.resize(m_numberOfJoints);
     m_referencePositions.resize(m_numberOfJoints);
+    m_oldReferencePositions.resize(m_numberOfJoints);
     m_referenceElongations.resize(m_numberOfJoints);
     m_trajectoryGenerationReferencePosition.resize(m_numberOfJoints);
     m_trajectoryGenerationReferenceAcceleraton.resize(m_numberOfJoints);
@@ -227,10 +233,11 @@ bool GazeboTripodMotionControl::gazebo_init()
     m_maxStiffness.resize(m_numberOfJoints, 1000.0);
     m_minDamping.resize(m_numberOfJoints, 0.0);
     m_maxDamping.resize(m_numberOfJoints, 100.0);
+    m_positionThreshold.resize(m_numberOfJoints);
+    m_jointTypes.resize(m_numberOfJoints);
+    m_speedLimits.resize(m_numberOfJoints);
 
-    setMinMaxPos();
-    setMinMaxImpedance();
-    setPIDs();
+    // Initial zeroing of all vectors
     m_positions.zero();
     m_zeroPosition.zero();
     m_referenceVelocities.zero();
@@ -243,6 +250,7 @@ bool GazeboTripodMotionControl::gazebo_init()
     m_trajectoryGenerationReferencePosition.zero();
     m_trajectoryGenerationReferenceAcceleraton.zero();
     m_referenceTorques.zero();
+    m_speedLimits.zero();
     amp = 1; // initially on - ok for simulator
     started = false;
     m_controlMode = new int[m_numberOfJoints];
@@ -250,10 +258,31 @@ bool GazeboTripodMotionControl::gazebo_init()
     m_isMotionDone = new bool[m_numberOfJoints];
     m_clock = 0;
     m_torqueOffsett = 0;
+
     for (unsigned int j = 0; j < m_numberOfJoints; ++j)
+    {
         m_controlMode[j] = VOCAB_CM_POSITION_DIRECT;
-    for (unsigned int j = 0; j < m_numberOfJoints; ++j)
         m_interactionMode[j] = VOCAB_IM_STIFF;
+        m_jointTypes[j] = JointType_Prismatic;
+        m_isMotionDone[j] = true;
+        // Set an old reference value surely out of range. This will force the setting of initial reference at startup
+        m_oldReferencePositions[j] = m_jointLimits[j].max *2;
+    }
+    // End zeroing of vectors
+
+    // This must be after zeroing of vectors
+    configureJointType();
+
+    setMinMaxPos();
+    for (unsigned int j = 0; j < m_numberOfJoints; ++j)
+    {
+        // Set an old reference value surely out of range. This will force the setting of initial reference at startup
+        // NOTE: This has to be after setMinMaxPos function
+        m_oldReferencePositions[j] = m_jointLimits[j].max *2;
+    }
+
+    setMinMaxImpedance();
+    setPIDs();
 
     std::cout << "gazebo_init set pid done!" << std::endl;
 
@@ -267,8 +296,9 @@ bool GazeboTripodMotionControl::gazebo_init()
 
     _T_controller = 1;
 
-    std::stringstream ss(m_pluginParameters.find("initialConfiguration").toString());
-    if (!(m_pluginParameters.find("initialConfiguration") == "")) {
+    if(m_pluginParameters.check("initialConfiguration") )
+    {
+        std::stringstream ss(m_pluginParameters.find("initialConfiguration").toString());
         double tmp = 0.0;
         yarp::sig::Vector initial_config(m_numberOfJoints);
         unsigned int counter = 1;
@@ -278,41 +308,116 @@ bool GazeboTripodMotionControl::gazebo_init()
                 break;
             }
             initial_config[counter-1] = tmp;
-            m_trajectoryGenerationReferencePosition[counter - 1] = tmp; // here values are elongations in meter
-            m_referenceElongations[counter - 1] = tmp; // here values are elongations in meter
-            tripod_client2Sim(m_referenceElongations, m_referencePositions);
-            m_positions[counter - 1] = tmp; // here values are elongations in meter
+            m_trajectoryGenerationReferencePosition[counter - 1] = convertGazeboToUser(counter-1, tmp);
+            m_referencePositions[counter - 1] = convertGazeboToUser(counter-1, tmp);
+            m_positions[counter - 1] = convertGazeboToUser(counter-1, tmp);
             counter++;
         }
         std::cout<<"INITIAL CONFIGURATION IS: "<<initial_config.toString()<<std::endl;
 
-        for (unsigned int i = 0; i < m_numberOfJoints; ++i) {
-#if GAZEBO_MAJOR_VERSION >= 4
-            m_jointPointers[i]->SetPosition(0,initial_config[i]);
-#else
-            gazebo::math::Angle a;
-            a.SetFromRadian(initial_config[i]);
-            m_jointPointers[i]->SetAngle(0,a);
-#endif
+
+        // Set initial reference
+        for (unsigned int j = 0; j < m_numberOfJoints; ++j)
+            sendPositionToGazebo (j, m_positions[j]);
+    }
+
+    Bottle &limitsGroup = m_pluginParameters.findGroup("LIMITS");
+    if(limitsGroup.isNull())
+    {
+        yError() << "Cannot find 'LIMITS' group in config file";
+        return false;
+    }
+
+    double speed = 0;
+    if(! (speed = limitsGroup.check("JntVelocityMax")))
+    {
+        yError() << "Cannot find 'JntVelocityMax' parameter in config file";
+        return false;
+    }
+    for (unsigned int j = 0; j < m_numberOfJoints; ++j)
+        m_speedLimits[j] = speed;
+
+    return true;
+}
+
+bool GazeboTripodMotionControl::configureJointType()
+{
+    bool ret = true;
+    //////// determine the type of joint (rotational or prismatic)
+    for(int i=0; i< m_numberOfJoints; i++)
+    {
+        switch( m_jointPointers[i]->GetType())
+        {
+            case ( gazebo::physics::Entity::HINGE_JOINT  |  gazebo::physics::Entity::JOINT):
+            {
+                std::cout << "Joint type is HINGE_JOINT  (should correspond to revolute in the SDF)" << std::endl;
+                m_jointTypes[i] = JointType_Revolute;
+                m_positionThreshold[i] = RobotPositionTolerance_revolute;
+                break;
+            }
+
+            case ( gazebo::physics::Entity::SLIDER_JOINT |  gazebo::physics::Entity::JOINT):
+            {
+                std::cout << "Joint type is SLIDER_JOINT (should correspond to prismatic in the SDF)" << std::endl;
+                m_jointTypes[i] = JointType_Prismatic;
+                m_positionThreshold[i] = RobotPositionTolerance_linear;
+                break;
+            }
+
+            default:
+            {
+                std::cout << "Error, joint type is not supported by Gazebo YARP plugin now. Supported joint types are 'revolute' and 'prismatic' \n\t(GEARBOX_JOINT and SLIDER_JOINT using Gazebo enums defined into gazebo/physic/base.hh include file, GetType() returns " << m_jointPointers[i]->GetType() << std::endl;
+                m_jointTypes[i] = JointType_Unknown;
+                ret = false;
+                break;
+            }
         }
     }
-    return true;
+    return ret;
 }
 
 void GazeboTripodMotionControl::computeTrajectory(const int j)
 {
-    // TODO: how to do this? Does it make sense?
-    if ((m_referencePositions[j] - m_trajectoryGenerationReferencePosition[j]) < -RobotPositionTolerance) {
-        if (m_trajectoryGenerationReferenceSpeed[j] !=0)
-            m_referencePositions[j] += (m_trajectoryGenerationReferenceSpeed[j] / 1000.0) * m_robotRefreshPeriod * _T_controller;
-        m_isMotionDone[j] = false;
-    } else if ((m_referencePositions[j] - m_trajectoryGenerationReferencePosition[j]) > RobotPositionTolerance) {
-        if (m_trajectoryGenerationReferenceSpeed[j] != 0)
-            m_referencePositions[j]-= (m_trajectoryGenerationReferenceSpeed[j] / 1000.0) * m_robotRefreshPeriod * _T_controller;
-        m_isMotionDone[j] = false;
-    } else {
-        m_referencePositions[j] = m_trajectoryGenerationReferencePosition[j];
-        m_isMotionDone[j] = true;
+    double step = (m_trajectoryGenerationReferenceSpeed[j] / 1000.0) * m_robotRefreshPeriod * _T_controller;
+    double error_abs = fabs(m_referencePositions[j] - m_trajectoryGenerationReferencePosition[j]);
+
+//     std::cout << "m_trajectoryGenerationReferenceSpeed is " << m_trajectoryGenerationReferenceSpeed[j] << std::endl;
+//     std::cout << "m_robotRefreshPeriod is " << m_robotRefreshPeriod << std::endl;
+//     std::cout << "_T_controller is " << _T_controller << std::endl;
+
+    // if delta is bigger then threshold, in some cases this will never converge to an end.
+    // Check to prevent those cases
+    if(error_abs)
+    {
+        // Watch out for problem
+        if((error_abs < m_positionThreshold[j]) || ( error_abs < step) )    // This id both 'normal ending condition' and safe procedure when step > threshold causing infinite oscillation around final position
+        {
+            // Just go to final position
+            m_referencePositions[j] = m_trajectoryGenerationReferencePosition[j];
+            m_isMotionDone[j] = true;
+            return;
+        }
+
+        if (m_trajectoryGenerationReferencePosition[j] > m_referencePositions[j])
+        {
+            m_referencePositions[j] += step;
+            m_isMotionDone[j] = false;
+        }
+        else
+        {
+            m_referencePositions[j] -= step;
+            m_isMotionDone[j] = false;
+        }
+#if 0
+        std::cout << "\ncomputing next reference for joint " << j << std::endl;
+        std::cout << "error: " << error_abs << std::endl;
+        std::cout << "step : " << step << std::endl;
+        std::cout << "thres: " << m_positionThreshold[j] << std::endl;
+        std::cout << "new r: " << m_referencePositions[j] << std::endl;
+        std::cout << "All gen  " << m_trajectoryGenerationReferencePosition.toString().c_str() << std::endl;
+        std::cout << "All refs " << m_referencePositions.toString().c_str() << std::endl;
+        std::cout << "All encs " << m_positions.toString().c_str() << std::endl;
+#endif
     }
 }
 
@@ -320,17 +425,11 @@ void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info
 {
     m_clock++;
 
-    if (!started) {//This is a simple way to start with the robot in standing position
-        started = true;
-        for (unsigned int j = 0; j < m_numberOfJoints; ++j)
-            sendPositionToGazebo (j, m_positions[j]);
-    }
-
     // Sensing position & torque
     for (unsigned int jnt_cnt = 0; jnt_cnt < m_jointPointers.size(); jnt_cnt++) {
-//TODO: consider multi-dof joint ?
-        m_positions[jnt_cnt] = m_jointPointers[jnt_cnt]->GetAngle (0).Degree(); // here values are degrees (gazebo user joint)
-        m_velocities[jnt_cnt] = GazeboYarpPlugins::convertRadiansToDegrees(m_jointPointers[jnt_cnt]->GetVelocity(0));
+    //TODO: consider multi-dof joint ?
+        m_positions[jnt_cnt] = convertGazeboToUser(jnt_cnt, m_jointPointers[jnt_cnt]->GetAngle(0));
+        m_velocities[jnt_cnt] = convertGazeboToUser(jnt_cnt, m_jointPointers[jnt_cnt]->GetVelocity(0));
         m_torques[jnt_cnt] = m_jointPointers[jnt_cnt]->GetForce(0u);
     }
 
@@ -381,12 +480,11 @@ void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info
 
 void GazeboTripodMotionControl::setMinMaxPos()
 {
-    for(unsigned int i = 0; i < m_numberOfJoints; ++i) {
-//         m_jointLimits[i].max = m_jointPointers[i]->GetUpperLimit(0).Degree();
-//         m_jointLimits[i].min = m_jointPointers[i]->GetLowerLimit(0).Degree();
-        std::cout << " gazebo max: " << m_jointPointers[i]->GetUpperLimit(0).Degree() <<std::endl;
-        std::cout << " gazebo min: " << m_jointPointers[i]->GetLowerLimit(0).Degree() <<std::endl;
-    }
+    for(unsigned int i = 0; i < m_numberOfJoints; ++i)
+    {
+        m_jointLimits[i].max = convertGazeboToUser(i, m_jointPointers[i]->GetUpperLimit(0));
+        m_jointLimits[i].min = convertGazeboToUser(i, m_jointPointers[i]->GetLowerLimit(0));
+   }
 }
 
 bool GazeboTripodMotionControl::setJointNames()  //WORKS
@@ -548,24 +646,23 @@ bool GazeboTripodMotionControl::sendPositionsToGazebo(Vector &refs)
 bool GazeboTripodMotionControl::sendPositionToGazebo(int j,double ref)
 {
     gazebo::msgs::JointCmd j_cmd;
-    prepareJointMsg(j_cmd,j,ref);
-    m_jointCommandPublisher->WaitForConnection();
-    m_jointCommandPublisher->Publish(j_cmd);
+
+    if(ref != m_oldReferencePositions[j])
+    {
+        // std::cout << "Sending new command: new ref is " << ref << "; old ref was " << m_oldReferencePositions[j] << std::endl;
+        prepareJointMsg(j_cmd,j,ref);
+        m_jointCommandPublisher->WaitForConnection();
+        m_jointCommandPublisher->Publish(j_cmd);
+        m_oldReferencePositions[j] = ref;
+    }
     return true;
 }
 
 void GazeboTripodMotionControl::prepareJointMsg(gazebo::msgs::JointCmd& j_cmd, const int joint_index, const double ref)
 {
-    GazeboTripodMotionControl::PID positionPID = m_positionPIDs[joint_index];
-
     j_cmd.set_name(m_jointPointers[joint_index]->GetScopedName());
-    j_cmd.mutable_position()->set_target(GazeboYarpPlugins::convertDegreesToRadians(ref));
-    j_cmd.mutable_position()->set_p_gain(positionPID.p);
-    j_cmd.mutable_position()->set_i_gain(positionPID.i);
-    j_cmd.mutable_position()->set_d_gain(positionPID.d);
-    j_cmd.mutable_position()->set_i_max(positionPID.maxInt);
-    j_cmd.mutable_position()->set_i_min(-positionPID.maxInt);
-    j_cmd.mutable_position()->set_limit(positionPID.maxOut);
+    j_cmd.mutable_position()->set_target(convertUserToGazebo(joint_index, ref));
+    // No need to set PIDS here, they are set in the corresponding simulated joint.
 }
 
 bool GazeboTripodMotionControl::sendVelocitiesToGazebo(yarp::sig::Vector& refs) //NOT TESTED
@@ -598,7 +695,7 @@ void GazeboTripodMotionControl::prepareJointVelocityMsg(gazebo::msgs::JointCmd& 
     j_cmd.mutable_velocity()->set_i_min(-velocityPID.maxInt);
     j_cmd.mutable_velocity()->set_limit(velocityPID.maxOut);
 
-    j_cmd.mutable_velocity()->set_target(GazeboYarpPlugins::convertDegreesToRadians(ref));
+    j_cmd.mutable_velocity()->set_target(convertUserToGazebo(j, ref));
 }
 
 bool GazeboTripodMotionControl::sendTorquesToGazebo(yarp::sig::Vector& refs) //NOT TESTED
@@ -648,4 +745,154 @@ void GazeboTripodMotionControl::sendImpPositionsToGazebo ( Vector &dess )
 {
     for(unsigned int i = 0; i < m_numberOfJoints; ++i)
         sendImpPositionToGazebo(i, dess[i]);
+}
+
+double GazeboTripodMotionControl::convertGazeboToUser(int joint, gazebo::math::Angle value)
+{
+    double newValue = 0;
+    switch(m_jointTypes[joint])
+    {
+        case JointType_Revolute:
+        {
+            newValue = value.Degree();
+            break;
+        }
+
+        case JointType_Prismatic:
+        {
+            // For prismatic joints there is no getMeter() or something like that. The only way is to use .radiant() to get internal
+            // value without changes
+            newValue = value.Radian();
+            break;
+        }
+
+        default:
+        {
+            yError() << "Cannot convert measure from Gazebo to User units, type of joint not supported for axes " <<
+                                m_jointNames[joint] << " type is " << m_jointTypes[joint];
+            break;
+        }
+    }
+    return newValue;
+}
+
+double GazeboTripodMotionControl::convertGazeboToUser(int joint, double value)
+{
+    double newValue = 0;
+    switch(m_jointTypes[joint])
+    {
+        case JointType_Revolute:
+        {
+            newValue = GazeboYarpPlugins::convertRadiansToDegrees(value);
+            break;
+        }
+
+        case JointType_Prismatic:
+        {
+            // For prismatic joints internal representation is already meter, nothing to do here.
+            newValue = value;
+            break;
+        }
+
+        default:
+        {
+            yError() << "Cannot convert measure from Gazebo to User units, type of joint not supported for axes " <<
+                                m_jointNames[joint] << " type is " << m_jointTypes[joint];
+            break;
+        }
+    }
+    return newValue;
+}
+
+double * GazeboTripodMotionControl::convertGazeboToUser(double *values)
+{
+    for(int i=0; i<m_numberOfJoints; i++)
+        values[i] = convertGazeboToUser(i, values[i]);
+    return values;
+}
+
+double GazeboTripodMotionControl::convertUserToGazebo(int joint, double value)
+{
+    double newValue = 0;
+    switch(m_jointTypes[joint])
+    {
+        case JointType_Revolute:
+        {
+            newValue = GazeboYarpPlugins::convertDegreesToRadians(value);
+            break;
+        }
+
+        case JointType_Prismatic:
+        {
+            newValue = value;
+            break;
+        }
+
+        default:
+        {
+            yError() << "Cannot convert measure from User to Gazebo units, type of joint not supported";
+            break;
+        }
+    }
+    return newValue;
+}
+
+double * GazeboTripodMotionControl::convertUserToGazebo(double *values)
+{
+    for(int i=0; i<m_numberOfJoints; i++)
+        values[i] = convertGazeboToUser(i, values[i]);
+    return values;
+}
+
+double GazeboTripodMotionControl::convertUserGainToGazeboGain(int joint, double value)
+{
+    double newValue = 0;
+    switch(m_jointTypes[joint])
+    {
+        case JointType_Revolute:
+        {
+            newValue = GazeboYarpPlugins::convertRadiansToDegrees(value);
+            break;
+        }
+
+        case JointType_Prismatic:
+        {
+            newValue = value;
+            break;
+        }
+
+        default:
+        {
+            yError() << "Cannot convert measure from User to Gazebo units, type of joint not supported";
+            break;
+        }
+    }
+    return newValue;
+}
+
+double GazeboTripodMotionControl::convertGazeboGainToUserGain(int joint, double value)
+{
+    double newValue = 0;
+    switch(m_jointTypes[joint])
+    {
+        case JointType_Revolute:
+        {
+            newValue = GazeboYarpPlugins::convertDegreesToRadians(value);
+            break;
+        }
+
+        case JointType_Prismatic:
+        {
+            newValue = value;
+            break;
+        }
+
+        default:
+        {
+            yError() << "Cannot convert measure from Gazebo gains to User gain units, type of joint not supported for axes " <<
+                                m_jointNames[joint] << " type is " << m_jointTypes[joint];
+            break;
+        }
+    }
+    return newValue;
 }
