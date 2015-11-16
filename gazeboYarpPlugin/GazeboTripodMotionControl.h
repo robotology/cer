@@ -15,8 +15,8 @@
  */
 
 
-#ifndef GAZEBOYARP_CONTROLBOARDDRIVER_HH
-#define GAZEBOYARP_CONTROLBOARDDRIVER_HH
+#ifndef GAZEBOYARP_TRIPOD_CONTROLBOARD_DRIVER_HH
+#define GAZEBOYARP_TRIPOD_CONTROLBOARD_DRIVER_HH
 
 #include <yarp/os/Property.h>
 #include <yarp/dev/Drivers.h>
@@ -360,8 +360,8 @@ private:
      */
     yarp::sig::Vector m_zeroPosition;
 
-    yarp::sig::Vector m_positions; /**< joint positions [meter] */
-    yarp::sig::Vector m_velocities; /**< joint velocities [meter/Seconds] */
+    yarp::sig::Vector m_positions; /**< joint positions [Degrees] */
+    yarp::sig::Vector m_velocities; /**< joint velocities [Degrees/Seconds] */
     yarp::sig::Vector m_torques; /**< joint torques [Netwon Meters] */
     yarp::sig::Vector m_last_measJointPos;  /** encoder reading zeroed */
     yarp::sig::Vector m_last_motorElongat;  /** encoder reading zeroed */
@@ -371,15 +371,12 @@ private:
     yarp::sig::Vector amp;
 
     //Desired Control variables
-    yarp::sig::Vector m_referenceElongations; /**< desired reference positions as elongations.*/
-    yarp::sig::Vector m_referencePositions;   /**< desired reference positions.
-                                                 Depending on the position mode,
-                                                 they can be set directly or indirectly
-                                                 through the trajectory generator.
-                                                 [meter] */
+    yarp::sig::Vector m_referenceElongations;   /**< desired reference positions as elongations. [Meters]*/
 
     yarp::sig::Vector m_referenceTorques; /**< desired reference torques for torque control mode [NetwonMeters] */
     yarp::sig::Vector m_referenceVelocities; /**< desired reference velocities for velocity control mode [Degrees/Seconds] */
+    yarp::sig::Vector m_referencePositions;     /**< desired reference positions. Depending on the position mode, they can be
+                                                     set directly or indirectly through the trajectory generator. [Degrees] */
 
     //trajectory generator
     yarp::sig::Vector m_trajectoryGenerationReferencePosition; /**< reference position for trajectory generation in position mode [Degrees] */
@@ -445,4 +442,4 @@ private:
 
 };
 
-#endif //GAZEBOYARP_CONTROLBOARDDRIVER_HH
+#endif //GAZEBOYARP_TRIPOD_CONTROLBOARD_DRIVER_HH
