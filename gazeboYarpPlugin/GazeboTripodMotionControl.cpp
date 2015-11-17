@@ -171,8 +171,6 @@ bool GazeboTripodMotionControl::init_kinematics()
     }
     cer::kinematics::TripodParameters tParam(radius, lMin, lMax, alpha, _baseTransformation);
     solver.setParameters(tParam);
-    std::cout << "Matrix is \n" << _baseTransformation.toString() << std::endl;
-//     solver.setInitialGuess(m_);     // TODO: ask Ugo if it make sense
     return true;
 }
 
@@ -199,10 +197,6 @@ bool GazeboTripodMotionControl::gazebo_init()
     //assert is a NOP in release mode. We should change the error handling either with an exception or something else
     assert(m_robot);
     if (!m_robot) return false;
-
-    std::cout<<"Robot Name: "<<m_robot->GetName() <<std::endl;
-    std::cout<<"# Joints: "<<m_robot->GetJoints().size() <<std::endl;
-    std::cout<<"# Links: "<<m_robot->GetLinks().size() <<std::endl;
 
     this->m_robotRefreshPeriod = (unsigned)(this->m_robot->GetWorld()->GetPhysicsEngine()->GetUpdatePeriod() * 1000.0);
     if (!setJointNames()) return false;
@@ -284,11 +278,8 @@ bool GazeboTripodMotionControl::gazebo_init()
     setMinMaxImpedance();
     setPIDs();
 
-    std::cout << "gazebo_init set pid done!" << std::endl;
-
     this->m_updateConnection =
-    gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboTripodMotionControl::onUpdate,
-                                                                     this, _1));
+    gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboTripodMotionControl::onUpdate, this, _1));
 
     m_gazeboNode = gazebo::transport::NodePtr(new gazebo::transport::Node);
     m_gazeboNode->Init(this->m_robot->GetWorld()->GetName());
@@ -350,7 +341,6 @@ bool GazeboTripodMotionControl::configureJointType()
         {
             case ( gazebo::physics::Entity::HINGE_JOINT  |  gazebo::physics::Entity::JOINT):
             {
-                std::cout << "Joint type is HINGE_JOINT  (should correspond to revolute in the SDF)" << std::endl;
                 m_jointTypes[i] = JointType_Revolute;
                 m_positionThreshold[i] = RobotPositionTolerance_revolute;
                 break;
@@ -358,7 +348,6 @@ bool GazeboTripodMotionControl::configureJointType()
 
             case ( gazebo::physics::Entity::SLIDER_JOINT |  gazebo::physics::Entity::JOINT):
             {
-                std::cout << "Joint type is SLIDER_JOINT (should correspond to prismatic in the SDF)" << std::endl;
                 m_jointTypes[i] = JointType_Prismatic;
                 m_positionThreshold[i] = RobotPositionTolerance_linear;
                 break;
@@ -380,10 +369,6 @@ void GazeboTripodMotionControl::computeTrajectory(const int j)
 {
     double step = (m_trajectoryGenerationReferenceSpeed[j] / 1000.0) * m_robotRefreshPeriod * _T_controller;
     double error_abs = fabs(m_referencePositions[j] - m_trajectoryGenerationReferencePosition[j]);
-
-//     std::cout << "m_trajectoryGenerationReferenceSpeed is " << m_trajectoryGenerationReferenceSpeed[j] << std::endl;
-//     std::cout << "m_robotRefreshPeriod is " << m_robotRefreshPeriod << std::endl;
-//     std::cout << "_T_controller is " << _T_controller << std::endl;
 
     // if delta is bigger then threshold, in some cases this will never converge to an end.
     // Check to prevent those cases
@@ -408,16 +393,6 @@ void GazeboTripodMotionControl::computeTrajectory(const int j)
             m_referencePositions[j] -= step;
             m_isMotionDone[j] = false;
         }
-#if 0
-        std::cout << "\ncomputing next reference for joint " << j << std::endl;
-        std::cout << "error: " << error_abs << std::endl;
-        std::cout << "step : " << step << std::endl;
-        std::cout << "thres: " << m_positionThreshold[j] << std::endl;
-        std::cout << "new r: " << m_referencePositions[j] << std::endl;
-        std::cout << "All gen  " << m_trajectoryGenerationReferencePosition.toString().c_str() << std::endl;
-        std::cout << "All refs " << m_referencePositions.toString().c_str() << std::endl;
-        std::cout << "All encs " << m_positions.toString().c_str() << std::endl;
-#endif
     }
 }
 
@@ -513,7 +488,6 @@ bool GazeboTripodMotionControl::setJointNames()  //WORKS
             if (GazeboYarpPlugins::hasEnding(gazebo_joint_name,controlboard_joint_names[i])) {
                 joint_found = true;
                 m_jointNames[i] = gazebo_joint_name;
-                yInfo() << "m_jointName [" << i << "] is " << m_jointNames[i];
                 m_jointPointers[i] = this->m_robot->GetJoint(gazebo_joint_name);
             }
         }
@@ -521,7 +495,7 @@ bool GazeboTripodMotionControl::setJointNames()  //WORKS
         if (!joint_found) {
             yError() << "GazeboTripodMotionControl::setJointNames(): cannot find joint " << m_jointNames[i]
                      << " ( " << i << " of " << nr_of_joints << " ) " << "\n";
-            yError() << "jointNames is " << joint_names_bottle.toString() << "\n";
+            yError() << "jointNames are " << joint_names_bottle.toString() << "\n";
             m_jointNames.resize(0);
             m_jointPointers.resize(0);
             return false;
