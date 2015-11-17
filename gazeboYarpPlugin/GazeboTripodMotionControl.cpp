@@ -308,8 +308,15 @@ bool GazeboTripodMotionControl::gazebo_init()
 
 
         // Set initial reference
-        for (unsigned int j = 0; j < m_numberOfJoints; ++j)
-            sendPositionToGazebo (j, m_positions[j]);
+        for (unsigned int i = 0; i < m_numberOfJoints; ++i) {
+#if GAZEBO_MAJOR_VERSION >= 4
+            m_jointPointers[i]->SetPosition(0,initial_config[i]);
+#else
+            gazebo::math::Angle a;
+            a.SetFromRadian(initial_config[i]);
+            m_jointPointers[i]->SetAngle(0,a);
+#endif
+        }
     }
 
     Bottle &limitsGroup = m_pluginParameters.findGroup("LIMITS");
