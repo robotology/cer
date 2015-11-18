@@ -112,7 +112,7 @@ class IKSolver : public RFModule
         else
             return false;
 
-        if (getBounds("/"+robot+"/upper_"+arm_type+"_arm","/cer_solver/"+arm_type+"/upper_"+arm_type+"_arm",lim))
+        if (getBounds("/"+robot+"/"+arm_type+"_upper_arm","/cer_solver/"+arm_type+"/"+arm_type+"_upper_arm",lim))
         {
             iKinChain *chain=p.upper_arm.asChain();
             for (int i=0; i<lim.rows(); i++)
@@ -121,7 +121,7 @@ class IKSolver : public RFModule
                 (*chain)[1+i].setMax((M_PI/180.0)*lim(i,1));
 
                 yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                      ("/"+robot+"/upper_"+arm_type+"_arm").c_str(),i,
+                      ("/"+robot+"/"+arm_type+"_upper_arm").c_str(),i,
                       (180.0/M_PI)*(*chain)[1+i].getMin(),
                       (180.0/M_PI)*(*chain)[1+i].getMax());
             }

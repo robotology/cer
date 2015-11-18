@@ -213,11 +213,11 @@ public:
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/upper_"+arm_type+"_arm").c_str());
-        option.put("local",("/cer_controller/"+arm_type+"/upper_"+arm_type+"_arm").c_str());
+        option.put("remote",("/"+robot+"/"+arm_type+"_upper_arm").c_str());
+        option.put("local",("/cer_controller/"+arm_type+"/"+arm_type+"_upper_arm").c_str());
         if (!drivers[2].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/upper_"+arm_type+"_arm").c_str());
+            yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_upper_arm").c_str());
             close();
             return false;
         }
