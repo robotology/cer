@@ -189,16 +189,12 @@ bool GazeboTripodMotionControl::getAxes(int* ax)
  // WORKS
 bool GazeboTripodMotionControl::positionMove(const double* refs)
 {
-    setPositions(refs);
+    for (unsigned int i = 0; i < m_numberOfJoints; ++i)
+    {
+        m_referenceElongations[i] = refs[i];
+        tripod_client2Sim(m_referenceElongations, m_trajectoryGenerationReferencePosition);
+    }
     return true;
-
-    NOT_YET_IMPLEMENTED("positionMove");
-    return false;
-
-//     for (unsigned int i = 0; i < m_numberOfJoints; ++i) {
-//         m_trajectoryGenerationReferencePosition[i] = refs[i];
-//     }
-//     return true;
 }
 
     /// @arg sp [deg/sec]
