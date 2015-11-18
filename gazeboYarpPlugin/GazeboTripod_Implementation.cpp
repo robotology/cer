@@ -163,20 +163,9 @@ bool GazeboTripodMotionControl::positionMove(int j, double ref)
     {
         m_referenceElongations[j] = ref;
         tripod_client2Sim(m_referenceElongations, m_trajectoryGenerationReferencePosition);
-        yInfo() << "positionMove: elongations are " << m_referenceElongations.toString();
-//         yInfo() << "positionMove: elongations are " << m_referenceElongations.toString();
-        yInfo() << "positionMove: traj Refers are " << m_trajectoryGenerationReferencePosition.toString() << "\n";
         return true;
     }
     return false;
-
-//     if (j >= 0 && j < (int)m_numberOfJoints)
-//     {
-//         m_trajectoryGenerationReferencePosition[j] = ref; //we will use this m_trajectoryGenerationReferencePosition in the next simulation onUpdate call to ask gazebo to set PIDs m_trajectoryGenerationReferencePosition to this value
-//         // TODO: call iKi
-//         return true;
-//     }
-//     return false;
 }
 
 bool GazeboTripodMotionControl::getAxes(int* ax)
