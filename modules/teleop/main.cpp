@@ -159,7 +159,7 @@ public:
     /**********************************************************/
     void updateSim(const Vector &xd, const Vector &od)
     {
-        Vector rpy=dcm2rpy(axis2dcm(od));
+        Vector rpy=RAD2DEG*dcm2rpy(axis2dcm(od));
         simPort.prepare().read(cat(xd,rpy));
         simPort.writeStrict();
     }
