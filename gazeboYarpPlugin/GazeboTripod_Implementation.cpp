@@ -159,16 +159,13 @@ bool GazeboTripodMotionControl::stop()
 
 bool GazeboTripodMotionControl::positionMove(int j, double ref)
 {
-    NOT_YET_IMPLEMENTED("positionMove");
+    if (j >= 0 && j < (int)m_numberOfJoints)
+    {
+        m_referenceElongations[j] = ref;
+        tripod_client2Sim(m_referenceElongations, m_trajectoryGenerationReferencePosition);
+        return true;
+    }
     return false;
-
-//     if (j >= 0 && j < (int)m_numberOfJoints)
-//     {
-//         m_trajectoryGenerationReferencePosition[j] = ref; //we will use this m_trajectoryGenerationReferencePosition in the next simulation onUpdate call to ask gazebo to set PIDs m_trajectoryGenerationReferencePosition to this value
-//         // TODO: call iKi
-//         return true;
-//     }
-//     return false;
 }
 
 bool GazeboTripodMotionControl::getAxes(int* ax)
@@ -181,13 +178,12 @@ bool GazeboTripodMotionControl::getAxes(int* ax)
  // WORKS
 bool GazeboTripodMotionControl::positionMove(const double* refs)
 {
-    NOT_YET_IMPLEMENTED("positionMove");
-    return false;
-
-//     for (unsigned int i = 0; i < m_numberOfJoints; ++i) {
-//         m_trajectoryGenerationReferencePosition[i] = refs[i];
-//     }
-//     return true;
+    for (unsigned int i = 0; i < m_numberOfJoints; ++i)
+    {
+        m_referenceElongations[i] = refs[i];
+        tripod_client2Sim(m_referenceElongations, m_trajectoryGenerationReferencePosition);
+    }
+    return true;
 }
 
     /// @arg sp [deg/sec]
@@ -196,7 +192,9 @@ bool GazeboTripodMotionControl::setRefSpeed(int j, double sp)
     // TODO: Verify: this device is suppose to get elongations and convert to angles,
     // to it'll be basically controlled in positionDirect. No need for speed here.
     // (btw: not the game, that's cool anyway)
-    return NOT_YET_IMPLEMENTED("setRefSpeed");
+    for(int i=0; i<m_numberOfJoints; i++)
+        m_trajectoryGenerationReferenceSpeed[i] = sp;
+    return true;
 }
 
 bool GazeboTripodMotionControl::getRefSpeed(int j, double* ref)
@@ -204,7 +202,8 @@ bool GazeboTripodMotionControl::getRefSpeed(int j, double* ref)
     // TODO: Verify: this device is suppose to get elongations and convert to angles,
     // to it'll be basically controlled in positionDirect. No need for speed here.
     // (btw: not the game, that's cool anyway)
-    return NOT_YET_IMPLEMENTED("setRefSpeed");
+    *ref = m_trajectoryGenerationReferenceSpeed[0];
+    return true;
 }
 
 bool GazeboTripodMotionControl::getRefSpeeds(double* spds)
@@ -212,7 +211,9 @@ bool GazeboTripodMotionControl::getRefSpeeds(double* spds)
     // TODO: Verify: this device is suppose to get elongations and convert to angles,
     // to it'll be basically controlled in positionDirect. No need for speed here.
     // (btw: not the game, that's cool anyway)
-    return NOT_YET_IMPLEMENTED("setRefSpeed");
+    for(int i=0; i<m_numberOfJoints; i++)
+        spds[i] = m_trajectoryGenerationReferenceSpeed[0];
+    return true;
 }
 
 
@@ -280,7 +281,9 @@ bool GazeboTripodMotionControl::checkMotionDone(const int n_joint, const int* jo
 
 bool GazeboTripodMotionControl::setRefSpeeds(const int n_joint, const int* joints, const double* spds)
 {
-    return NOT_YET_IMPLEMENTED("setRefSpeeds");
+    for(int i=0; i<m_numberOfJoints; i++)
+        m_trajectoryGenerationReferenceSpeed[i] = spds[0];
+    return true;
 }
 
 bool GazeboTripodMotionControl::setRefAccelerations(const int n_joint, const int* joints, const double* accs)
@@ -291,14 +294,14 @@ bool GazeboTripodMotionControl::setRefAccelerations(const int n_joint, const int
 
 bool GazeboTripodMotionControl::getRefSpeeds(const int n_joint, const int *joints, double *spds)
 {
-    return NOT_YET_IMPLEMENTED("getRefSpeeds");
-
+    for(int i=0; i<n_joint; i++)
+        spds[i] = m_trajectoryGenerationReferenceSpeed[0];
+    return true;
 }
 
 bool GazeboTripodMotionControl::getRefAccelerations(const int n_joint, const int *joints, double *accs)
 {
     return NOT_YET_IMPLEMENTED("getRefAccelerations");
-
 }
 
 bool GazeboTripodMotionControl::stop(const int n_joint, const int *joints)
@@ -310,7 +313,9 @@ bool GazeboTripodMotionControl::stop(const int n_joint, const int *joints)
     /// @arg spds [deg/sec]
 bool GazeboTripodMotionControl::setRefSpeeds(const double *spds)
 {
-    return NOT_YET_IMPLEMENTED("setRefSpeeds");
+    for(int i=0; i<m_numberOfJoints; i++)
+        m_trajectoryGenerationReferenceSpeed[i] = spds[0];
+    return true;
 }
 
 
@@ -441,12 +446,13 @@ bool GazeboTripodMotionControl::setControlMode(const int j, const int mode)
     // mode specific switching actions
     switch (mode)
     {
+        case VOCAB_CM_POSITION :
         case VOCAB_CM_POSITION_DIRECT :
             m_referencePositions[j] = m_positions[j];
-            m_trajectoryGenerationReferencePosition[j] = m_positions[j];
+//             m_trajectoryGenerationReferencePosition[j] = m_positions[j];
             ret = true;
+            m_controlMode[j] = mode;
         break;
-        case VOCAB_CM_POSITION :
         case VOCAB_CM_VELOCITY :
         case VOCAB_CM_TORQUE :
         case VOCAB_CM_OPENLOOP :
@@ -495,7 +501,9 @@ bool GazeboTripodMotionControl::setLimits(int axis, double min, double max)
 
 bool GazeboTripodMotionControl::getVelLimits(int axis, double *min, double *max)
 {
-    return NOT_YET_IMPLEMENTED("getVelLimits");
+    *min = 0.0;
+    *max = m_speedLimits[axis];
+    return true;
 }
 
 bool GazeboTripodMotionControl::setVelLimits(int axis, double min, double max)
@@ -523,10 +531,12 @@ bool GazeboTripodMotionControl::setPosition(int j, double ref)
         {
             m_referenceElongations[j] = ref;
             tripod_client2Sim(m_referenceElongations, m_referencePositions);
-            yInfo() << "setpositions: elongations are " << m_referenceElongations.toString() << "\n\t positions are " << m_referencePositions.toString();
+            yInfo() << "setpositions: elongations are " << m_referenceElongations.toString();
+            yInfo() << "setpositions: positions are   " << m_referencePositions.toString();
             return true;
         }
-    } else
+    }
+    else
     {
         std::cerr << "[WARN] GazeboTripodMotionControl: you tried to call setPosition" << std::endl;
         std::cerr << "[WARN] for a joint that is not in POSITION_DIRECT control mode." << std::endl;
@@ -555,3 +565,120 @@ bool GazeboTripodMotionControl::setPositions(const double *refs)
     yInfo() << "setpositions: elongations are " << m_referenceElongations.toString() << "\n\t positions are " << m_referencePositions.toString();
     return true;
 }
+
+// PID interface
+bool GazeboTripodMotionControl::setPid (int j, const Pid &pid)
+{
+    // Converting all gains for degrees-based unit to radians-based
+    m_positionPIDs[j].p = convertUserGainToGazeboGain(j, pid.kp);
+    m_positionPIDs[j].i = convertUserGainToGazeboGain(j, pid.ki);
+    m_positionPIDs[j].d = convertUserGainToGazeboGain(j, pid.kd);
+    // The output limits are only related to the output, so they don't need to be converted
+    m_positionPIDs[j].maxInt = pid.max_int;
+    m_positionPIDs[j].maxOut = pid.max_output;
+}
+
+bool GazeboTripodMotionControl::setPids (const Pid *pids)
+{
+    for(int j=0; j< m_numberOfJoints; j++)
+        setPid(j, (pids[j]));
+    return true;
+}
+
+bool GazeboTripodMotionControl::setReference (int /*j*/, double /*ref*/) { return false; }
+bool GazeboTripodMotionControl::setReferences (const double */*refs*/) { return false; }
+bool GazeboTripodMotionControl::setErrorLimit (int /*j*/, double /*limit*/) { return false; }
+bool GazeboTripodMotionControl::setErrorLimits (const double */*limits*/) { return false; }
+bool GazeboTripodMotionControl::getError (int /*j*/, double */*err*/) { return false; }
+bool GazeboTripodMotionControl::getErrors (double */*errs*/) { return false; }
+
+bool GazeboTripodMotionControl::getPid (int j, Pid *pid)
+{
+    // Converting all gains for degrees-based unit to radians-based
+    pid->kp = convertGazeboGainToUserGain(j, m_positionPIDs[j].p);
+    pid->ki = convertGazeboGainToUserGain(j, m_positionPIDs[j].i);
+    pid->kd = convertGazeboGainToUserGain(j, m_positionPIDs[j].d);
+
+    // The output limits are only related to the output, so they don't need to be converted
+    pid->max_int = m_positionPIDs[j].maxInt;
+    pid->max_output = m_positionPIDs[j].maxOut;
+    return true;
+}
+
+bool GazeboTripodMotionControl::getPids (Pid * pids)
+{
+    for(int j=0; j< m_numberOfJoints; j++)
+        getPid(j, &(pids[j]));
+    return true;
+}
+
+bool GazeboTripodMotionControl::getReference (int j, double *ref)
+{
+    *ref = m_referencePositions[j];
+    return true;
+}
+
+bool GazeboTripodMotionControl::getReferences (double *refs)
+{
+    for(int j=0; j< m_numberOfJoints; j++)
+        getReference(j, &refs[j]);
+    return true;
+}
+
+bool GazeboTripodMotionControl::getInteractionMode(int j, yarp::dev::InteractionModeEnum* mode)
+{
+    *mode = (yarp::dev::InteractionModeEnum) m_interactionMode[j];
+    return true;
+}
+
+bool GazeboTripodMotionControl::getInteractionModes(int n_joints, int *joints, yarp::dev::InteractionModeEnum* modes)
+{
+    if (!modes) return false;
+    bool ret = true;
+    for(int i=0; i<n_joints; i++)
+        ret = ret && getInteractionMode(joints[i], &modes[i]);
+    return ret;
+}
+
+bool GazeboTripodMotionControl::getInteractionModes(yarp::dev::InteractionModeEnum* modes)
+{
+    if (!modes) return false;
+    for(unsigned int j = 0; j < m_numberOfJoints; ++j) {
+        modes[j] = (yarp::dev::InteractionModeEnum) m_controlMode[j];
+    }
+    return true;
+}
+
+bool GazeboTripodMotionControl::setInteractionMode(int j, yarp::dev::InteractionModeEnum mode)
+{
+    if (j < 0 || j >= (int)m_numberOfJoints) return false;
+    prepareResetJointMsg(j);
+    m_interactionMode[j] = (int) mode;
+    return true;
+}
+
+bool GazeboTripodMotionControl::setInteractionModes(int n_joints, int *joints, yarp::dev::InteractionModeEnum* modes)
+{
+    bool ret = true;
+    for(int i=0; i<n_joints; i++)
+        ret = ret && setInteractionMode(joints[i], modes[i]);
+    return ret;
+}
+
+bool GazeboTripodMotionControl::setInteractionModes(yarp::dev::InteractionModeEnum* modes)
+{
+    bool ret = true;
+    for(int i=0; i<(int)m_numberOfJoints; i++)
+        ret = ret && setControlMode(i, modes[i]);
+    return ret;
+}
+
+bool GazeboTripodMotionControl::getErrorLimit (int /*j*/, double */*limit*/) { return false; }
+bool GazeboTripodMotionControl::getErrorLimits (double */*limits*/) { return false; }
+bool GazeboTripodMotionControl::resetPid (int /*j*/) { return false; }
+bool GazeboTripodMotionControl::disablePid (int /*j*/) { return false; }
+bool GazeboTripodMotionControl::enablePid (int /*j*/) { return false; }
+bool GazeboTripodMotionControl::setOffset (int /*j*/, double /*v*/) { return false; }
+
+bool GazeboTripodMotionControl::getOutput(int j, double *v) { return false; }
+bool GazeboTripodMotionControl::getOutputs(double *v) { return false; }

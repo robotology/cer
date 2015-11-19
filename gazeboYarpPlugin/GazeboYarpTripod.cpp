@@ -62,7 +62,6 @@ GZ_REGISTER_MODEL_PLUGIN(GazeboYarpTripod)
         m_robotName = _parent->GetScopedName();
         GazeboYarpPlugins::Handler::getHandler()->setRobot(get_pointer(_parent));
 
-        std::cout << "\n\n\n\n GazeboYarpTripod calling factory for gazebo_tripod\n\n" << std::endl;
         // Add the gazebo_controlboard device driver to the factory.
         yarp::dev::Drivers::factory().add(new yarp::dev::DriverCreatorOf<cer::dev::GazeboTripodMotionControl>("gazebo_tripod", "controlboardwrapper2", "GazeboTripodMotionControl"));
 
@@ -153,10 +152,8 @@ GZ_REGISTER_MODEL_PLUGIN(GazeboYarpTripod)
                  //std::cout << "before open: params are " << m_parameters.toString() << std::endl;
 
                 if (_sdf->HasElement("initialConfiguration")) {
-                    //std::cout<<"Found initial Configuration: "<<std::endl;
                     std::string configuration_s = _sdf->Get<std::string>("initialConfiguration");
                     m_parameters.put("initialConfiguration", configuration_s.c_str());
-                    //std::cout<<configuration_s<<std::endl;
                 }
 
                  newPoly.poly = new yarp::dev::PolyDriver;
