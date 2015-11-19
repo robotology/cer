@@ -49,8 +49,8 @@ bool GazeboTripodMotionControl::tripod_client2Sim(yarp::sig::Vector &client, yar
 bool GazeboTripodMotionControl::tripod_Sim2client(yarp::sig::Vector &sim, yarp::sig::Vector &client)
 {
     // The caller must use mutex or private data
-//     client = m_referenceElongations;
-    return solver.ikin(sim, client);
+    client = m_referenceElongations;
+    return true;
 }
 
 bool GazeboTripodMotionControl::extractGroup(Bottle &input, Bottle &out, const std::string &key1, const std::string &txt, int size)
