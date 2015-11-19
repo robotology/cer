@@ -55,10 +55,10 @@ class Controller : public RFModule, public PortReader
 
     ArmSolver solver;
     minJerkTrajGen *gen;
-
-    BufferedPort<Bottle> targetPort;
+    
     BufferedPort<Vector> statePort;
-    RpcServer rpcPort;
+    Port targetPort;
+    RpcServer rpcPort;    
     RpcClient solverPort;
     Stamp txInfo;
 
@@ -241,11 +241,11 @@ public:
             drivers[i].view(iposd[i]);
         }
 
-        targetPort.open(("/cer_controller/"+arm_type+"/target:i").c_str());
-        targetPort.setReader(*this);
-
         statePort.open(("/cer_controller/"+arm_type+"/state:o").c_str());
         solverPort.open(("/cer_controller/"+arm_type+"/solver:rpc").c_str());
+
+        targetPort.open(("/cer_controller/"+arm_type+"/target:i").c_str());
+        targetPort.setReader(*this);
 
         rpcPort.open(("/cer_controller/"+arm_type+"/rpc").c_str());
         attach(rpcPort);
@@ -271,11 +271,11 @@ public:
     /****************************************************************/
     bool close()
     {
-        if (!targetPort.isClosed())
+        if (targetPort.isOpen())
             targetPort.close(); 
 
         if (!statePort.isClosed())
-            statePort.close(); 
+            statePort.close();
 
         if (!solverPort.asPort().isOpen())
             solverPort.close();
