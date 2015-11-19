@@ -250,7 +250,7 @@ public:
         rpcPort.open(("/cer_controller/"+arm_type+"/rpc").c_str());
         attach(rpcPort);
         
-        Vector qd=getEncoders();
+        qd=getEncoders();
         for (size_t i=0; i<qd.length(); i++)
             posDirectMode.push_back(VOCAB_CM_POSITION_DIRECT);
         curMode=posDirectMode;
