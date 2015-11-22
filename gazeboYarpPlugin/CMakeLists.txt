@@ -23,7 +23,6 @@ if(GAZEBO_TRIPOD_PLUGIN)
 
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                         ${YARP_INCLUDE_DIRS}
-                        ${cer_kinematics_INCLUDE_DIRS}
                         ${Boost_INCLUDE_DIRS}
                         ${GAZEBO_INCLUDE_DIRS}
                         ${cer_kinematics_INCLUDE_DIRS}
