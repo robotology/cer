@@ -32,7 +32,7 @@ if(GAZEBO_TRIPOD_PLUGIN)
     include_directories($ENV{GAZEBO_PLUGIN_ROOT}/libraries/common/include/
                         $ENV{GAZEBO_PLUGIN_ROOT}/libraries/singleton/include/)
 
-    link_directories(/usr/local/src/robot/gazebo/install/lib)
+    link_directories($ENV{GAZEBO_PLUGIN_PATH})
     link_directories(${GAZEBO_LIBRARY_DIRS})
 
     add_library(gazeboTripod ${gazeboTripod_source} ${gazeboTripod_headers})
