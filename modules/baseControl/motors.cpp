@@ -26,10 +26,8 @@ bool MotorControl::set_control_openloop()
     yInfo ("Setting openloop mode");
     icmd->setOpenLoopMode(0);
     icmd->setOpenLoopMode(1);
-    icmd->setOpenLoopMode(2);
     iopl->setRefOutput(0,0);
     iopl->setRefOutput(1,0);
-    iopl->setRefOutput(2,0);
     return true;
 }
 
@@ -38,19 +36,18 @@ bool MotorControl::set_control_velocity()
     yInfo ("Setting velocity mode");
     icmd->setVelocityMode(0);
     icmd->setVelocityMode(1);
-    icmd->setVelocityMode(2);
     ivel->velocityMove(0,0);
     ivel->velocityMove(1,0);
-    ivel->velocityMove(2,0);
     return true;
 }
 
 bool MotorControl::set_control_idle()
 {
     yInfo ("Setting ilde mode");
-    icmd->setControlMode(0,VOCAB_CM_IDLE);
-    icmd->setControlMode(1,VOCAB_CM_IDLE);
-    icmd->setControlMode(2,VOCAB_CM_IDLE);
+    icmd->setControlMode(0, VOCAB_CM_IDLE);
+    icmd->setControlMode(1, VOCAB_CM_IDLE);
+    icmd->setControlMode(2, VOCAB_CM_IDLE);
+    icmd->setControlMode(3, VOCAB_CM_IDLE);
     yInfo("Motors now off");
     return true;
 }
@@ -61,8 +58,7 @@ bool MotorControl::check_motors_on()
     yarp::os::Time::delay(0.05);
     icmd->getControlMode(0,&c0);
     icmd->getControlMode(0,&c1);
-    icmd->getControlMode(0,&c2);
-    if (c0!=VOCAB_CM_IDLE && c1!=VOCAB_CM_IDLE && c2!=VOCAB_CM_IDLE)
+    if (c0 != VOCAB_CM_IDLE && c1 != VOCAB_CM_IDLE)
     {
         yInfo("Motors now on\n");
         return true;
@@ -394,8 +390,8 @@ void MotorControl::read_inputs(double *linear_speed,double *angular_speed,double
 void MotorControl::decouple(double appl_linear_speed, double appl_angular_speed)
 {
     //wheel contribution calculation
-    F_L = appl_linear_speed * cos ((150.0-0)/ 180.0 * 3.14159265) + appl_angular_speed;
-    F_R = appl_linear_speed * cos ((030.0-0)/ 180.0 * 3.14159265) + appl_angular_speed;
+    F_L = appl_linear_speed + appl_angular_speed;
+    F_R = appl_linear_speed - appl_angular_speed;
 }
 
 void MotorControl::execute_speed(double appl_linear_speed, double appl_angular_speed)

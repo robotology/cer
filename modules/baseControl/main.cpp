@@ -66,7 +66,7 @@ public:
         ctrlName=rf.check("ctrlName",Value("cer")).asString();
         robotName=rf.check("robot",Value("cer")).asString();
 
-        remoteName=slash+robotName+"/wheels";
+        remoteName=slash+robotName+"/base";
         localName=slash+ctrlName;
         
         //reads the configuration file

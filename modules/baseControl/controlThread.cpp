@@ -219,13 +219,15 @@ void ControlThread::run()
     double MAX_VALUE = 0;
     if (base_control_type == BASE_CONTROL_OPENLOOP_NO_PID)
     {
-        MAX_VALUE = 1250; // Maximum joint PWM
+        MAX_VALUE = 10000; // Maximum joint PWM
         exec_linear_speed  = input_linear_speed  / 100.0 * MAX_VALUE * exec_pwm_gain;
         exec_angular_speed = input_angular_speed / 100.0 * MAX_VALUE * exec_pwm_gain;
         
         pidout_linear_speed  = exec_linear_speed;
         pidout_angular_speed = exec_angular_speed;
         pidout_direction     = exec_desired_direction;
+        if (pidout_direction > -90 && pidout_direction < 90) pidout_linear_speed = -fabs(pidout_linear_speed);
+        else pidout_linear_speed = + fabs(pidout_linear_speed);
         this->motor_handler->execute_openloop(pidout_linear_speed,pidout_angular_speed);
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_NO_PID)

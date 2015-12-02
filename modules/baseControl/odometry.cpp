@@ -37,8 +37,8 @@ void Odometry::printStats()
     mutex.wait();
     //yInfo (stdout,"Odometry Thread: Curr motor velocities: %+3.3f %+3.3f %+3.3f\n", velA, velB, velC);
     yInfo("* Odometry Thread:");
-    yInfo("enc1:%+9.1f enc2:%+9.1f enc3:%+9.1f ******** env1:%+9.3f env2:%+9.3f env3:%+9.3f",
-    enc[0]*57, enc[1]*57, enc[2]*57, encv[0]*57, encv[1]*57, encv[2]*57);
+    yInfo("enc1:%+9.1f enc2:%+9.1f  ******** env1:%+9.3f env2:%+9.3f ",
+    enc[0]*57, enc[1]*57, encv[0]*57, encv[1]*57);
     
     yInfo("ivlx:%+9.3f ivlx:%+9.3f             ******** ovlx:%+9.3f ovly:%+9.3f ovlt:%+9.3f ******** x: %+5.3f y: %+5.3f t: %+5.3f",
     base_vel_lin, base_vel_theta, odom_vel_x, odom_vel_y, odom_vel_theta, odom_x, odom_y, odom_theta);
@@ -140,7 +140,7 @@ void Odometry::compute()
 
     //build the kinematics matrix
     yarp::sig::Matrix kin;
-    kin.resize(2,3);
+    kin.resize(3,2);
     kin.zero();
     kin(0, 0) = cos(odom_theta) / 2;
     kin(0, 1) = cos(odom_theta) / 2;
