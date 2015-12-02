@@ -8,9 +8,9 @@
       <params file="hardware/mechanicals/cer_base-ems21-mec.xml" />
 
     <group name="LIMITS">
-        <param name="Max">              -1000           -1000        0          0     </param>
-        <param name="Min">              +1000           +1000        0          0     </param>
-        <param name="Currents">         5000            5000         5000       8000  </param>
+        <param name="Max">              +1000000        +1000000     0          0     </param>
+        <param name="Min">              -1000000        -1000000     0          0     </param>
+        <param name="Currents">         15000           15000        10000      10000 </param>
         <param name="RotorMin">         0               0            0          0     </param>
         <param name="RotorMax">         0               0            0          0     </param>
         <param name="JntVelocityMax">   1000            1000         0          0     </param>
