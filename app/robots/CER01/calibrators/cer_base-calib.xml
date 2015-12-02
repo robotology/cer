@@ -26,6 +26,7 @@
 <param name="startupVelocity">                    1.0             1.0         1.0       1.0           </param>
 <param name="startupMaxPwm">                      5000            5000        5000      5000          </param>
 <param name="startupPosThreshold">                2               2           2         2             </param>
+<param name="calibrationTimeout">                 1.0             1.0         1.0       1.0           </param>
 </group>
 
 		<param name="CALIB_ORDER">(0 1 2 3) </param>
