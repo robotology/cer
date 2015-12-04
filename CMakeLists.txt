@@ -37,6 +37,7 @@ add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"               
 # Everything is configured now, we can start adding source code
 add_subdirectory(app)
 add_subdirectory(libraries/cer_kinematics)
+add_subdirectory(libraries/cer_kinematics_alt)
 add_subdirectory(cermod)
 add_subdirectory(gazeboYarpPlugin)
 add_subdirectory(modules)
