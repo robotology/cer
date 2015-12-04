@@ -255,7 +255,7 @@ public:
 		return neg;
 	}
 
-	const Matrix& operator -=(Matrix& M)
+	const Matrix& operator -=(const Matrix& M)
 	{
 		#ifdef SAFE_MODE
         if (R!=M.R || C!=M.C)

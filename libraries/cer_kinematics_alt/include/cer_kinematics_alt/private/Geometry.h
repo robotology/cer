@@ -216,7 +216,7 @@ public:
         norm();
     }
 
-    Quaternion(double qs,Vec3& qV):s(qs),V(qV)
+    Quaternion(double qs,const Vec3& qV):s(qs),V(qV)
     {
         norm();
     }
@@ -225,7 +225,7 @@ public:
 
     Quaternion conj() const { return Quaternion(s,-V); }
 
-    Quaternion operator *(Quaternion& Q) const
+    Quaternion operator *(const Quaternion& Q) const
     {
         return Quaternion(s*Q.s-V*Q.V,s*Q.V+V*Q.s+V%Q.V).norm();
     }

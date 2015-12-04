@@ -10,5 +10,13 @@
 
     <!--  CALIBRATORS -->
     <devices file="calibrators/worm-calib.xml" />
+
+    <!-- ANALOG SENSOR FT -->
+    <devices file="wrappers/FT/worm-FT_wrapper.xml" /> 
+    <devices file="hardware/FT/worm-ems9-strain.xml" />
+
+    <!-- VIRTUAL ANALOG SENSORS (WRAPPER ONLY--> 
+    <devices file="wrappers/VFT/worm-VFT_wrapper.xml" /> 
 </robot> 
+
 

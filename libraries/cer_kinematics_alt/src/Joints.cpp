@@ -22,7 +22,7 @@ using namespace cer::kinematics2;
 double Component::mBodyMass=0.0;
 double Component::mInvBodyMass=0.0;
 
-void Trifid::calcPosture(Matrix& q,Transform& Tprec,Component *from,Vec3* Poj_1,Vec3* Zoj_1,Vec3* Voj_1)
+void Trifid::calcPosture(Matrix& q,const Transform& Tprec,Component *from,Vec3* Poj_1,Vec3* Zoj_1,Vec3* Voj_1)
 {
 	Tparent=Tprec;
 
@@ -175,7 +175,8 @@ void Trifid::calcPosture(Matrix& q,Transform& Tprec,Component *from,Vec3* Poj_1,
 			double dm0dq2=LcosT*(-0.5*dRdq2(0,0)+1.5*dRdq2(1,1))-k7*dRdq2(2,2);
 			double dm0dq3=LcosT*(-0.5*dRdq3(0,0)+1.5*dRdq3(1,1))-k7*dRdq3(2,2);
 
-			Vec3& Ex=R.Ex();
+			Vec3 Ex=R.Ex();
+
 			static const Vec3 Ez(0.0,0.0,1.0);
 
 			V[0]=Ez-dm0dq1*Ex-m0*Vec3(dRdq1(0,0),dRdq1(1,0),dRdq1(2,0));

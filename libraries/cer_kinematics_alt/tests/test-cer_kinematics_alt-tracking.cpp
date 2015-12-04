@@ -45,7 +45,7 @@ public:
 
     void sendConfig(yarp::sig::Vector &q);
 	void sendCOM(std::string& name,int R,int G,int B,Vec3& P,double size,double alpha);
-	void sendTarget(std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha);
+	void sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha);
 
 protected:
     LeftSideSolver mRobot;
@@ -276,7 +276,7 @@ void RobotThread::sendCOM(std::string& name,int R,int G,int B,Vec3& P,double siz
 	portObjects.writeStrict();
 }
 
-void RobotThread::sendTarget(std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha)
+void RobotThread::sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha)
 {
 	yarp::os::Bottle& botR=portObjects.prepare();
 	botR.clear();

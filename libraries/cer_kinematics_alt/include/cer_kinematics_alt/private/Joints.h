@@ -35,7 +35,7 @@ class Component
 {
 public:
 
-	Component(Transform &T0,Component* parent) 
+	Component(const Transform &T0,Component* parent) 
 		: Tdir(T0),Tinv(T0.inv())//,JGoj(3,NJ)
     {
 		mN=0;
@@ -61,7 +61,7 @@ public:
         for (int i=0; i<mN; ++i) delete mChilds[i];
     }
 
-	virtual void calcPosture(Matrix& q,Transform& Tprec,Component *from=NULL,Vec3* Poj_1=NULL,Vec3* Zoj_1=NULL,Vec3* Voj_1=NULL)
+	virtual void calcPosture(Matrix& q,const Transform& Tprec,Component *from=NULL,Vec3* Poj_1=NULL,Vec3* Zoj_1=NULL,Vec3* Voj_1=NULL)
     {
 		Tparent=Tprec;
 
@@ -206,7 +206,7 @@ public:
 		qmax=q2;
 	}
 
-	virtual void calcPosture(Matrix& q,Transform& Tprec,Component *from,Vec3* Poj_1=NULL,Vec3* Zoj_1=NULL,Vec3* Voj_1=NULL)
+	virtual void calcPosture(Matrix& q,const Transform& Tprec,Component *from,Vec3* Poj_1=NULL,Vec3* Zoj_1=NULL,Vec3* Voj_1=NULL)
     {
 		Tparent=Tprec;
 
@@ -283,7 +283,7 @@ public:
 
 	~Trifid(){}
 
-	virtual void calcPosture(Matrix& q,Transform& Tprec,Component *from,Vec3* Poj_1=NULL,Vec3* Zoj_1=NULL,Vec3* Voj_1=NULL);
+	virtual void calcPosture(Matrix& q,const Transform& Tprec,Component *from,Vec3* Poj_1=NULL,Vec3* Zoj_1=NULL,Vec3* Voj_1=NULL);
 	//virtual void calcPostureUns(Matrix& q,Transform& Tprec,Component *from,Vec3* Poj_1=NULL,Vec3* Zoj_1=NULL,Vec3* Voj_1=NULL);
 
 	void setExtension(Matrix&q,double qe)
