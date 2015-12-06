@@ -43,7 +43,8 @@ LeftSideSolver::LeftSideSolver() :
 	OJwt(12,3),
 	Lwa(3,3),
 	A(12,12),
-	qz(12)
+	qz(12),
+	W(12,12),W2(12,12)
 {
 	nj=0;
 
@@ -174,7 +175,7 @@ LeftSideSolver::LeftSideSolver() :
 	for (int j=0; j<NJOINTS; ++j) 
 	{ 
 		Q[j]=DEG2RAD*30.0;
-		Ks[j]=0.5*RAD2DEG;
+		Ks[j]=0.25*RAD2DEG;
 		Kz[j]=0.01*DEG2RAD;
 	}
 
@@ -185,13 +186,15 @@ LeftSideSolver::LeftSideSolver() :
 
 		Q[j]=0.020;
 		Q[h]=Q[k]=0.014;
-		Ks[j]=Ks[k]=Ks[h]=0.5;
+		Ks[j]=Ks[k]=Ks[h]=0.25;
 		Kz[j]=Kz[h]=Kz[k]=0.01;
 	}
 
 	for (int j=0; j<12; ++j)
 	{
 		S(j,j)=Q[j]*Q[j];
+		W(j,j)=Q[j];
+		W2(j,j)=Q[j]*Q[j];
 	}
 
 	q.clear();
@@ -229,6 +232,80 @@ LeftSideSolver::LeftSideSolver() :
 
 	calcPostureFromRoot(T_ROOT);
 }
+
+
+
+
+#if 0
+int LeftSideSolver::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
+{
+	calcPostureFromRoot(T_ROOT);
+
+	//////////////////////////////////////////
+
+	Vec3 Vstar=Xstar-mHand[L]->Toj.Pj();
+
+	if (Vstar.mod()<mPosThreshold) return ON_TARGET;
+
+	Vec3 Wstar=(Qstar*mHand[L]->Toj.Rj().quaternion().conj()).V;
+	
+	Matrix Vref=     Vstar;
+	Matrix Wref=M_PI*Wstar;
+
+	/////////////////////////////////////////
+
+	mHand[L]->getJ(Jhand);
+
+	J=Jhand.sub(0,6,0,12);
+
+	Jv=J.sub(0,3,0,12);
+	Jw=J.sub(3,3,0,12);
+
+	//////////////////////
+
+	for (int j=0; j<12; ++j)
+	{
+		double s=(q(j)-qzero(j))/((q(j)>qzero(j))?(qmax[j]-qzero(j)):(qmin[j]-qzero(j)));
+
+		if (s>1.0) s=1.0;
+
+		A(j,j)=sqrt(1.0-s*s)*S(j,j);
+
+		qz(j)=Kz[j]*(qzero(j)-q(j));
+	}
+
+	SJt=fast_mul_diag_full(S,J.t());
+	qz-=SJt*((J*SJt).inv()*(J*qz));
+
+	///////////////////////////////////////////////
+
+	Matrix lv(3),Rv(3,3),Lv(3,3);
+	(Jv*A*Jv.t()).base(lv,Rv);
+
+	Lv(0,0)=1.0/lv(0);
+	Lv(1,1)=1.0/lv(1);
+	Lv(2,2)=1.0/lv(2);
+
+	Matrix Vrot=Lv*Rv.t()*Vref;
+
+	if (fabs(Vrot(0))>5.0) Vrot(0)=(Vrot(0)>0.0?5.0:-5.0);
+	if (fabs(Vrot(1))>5.0) Vrot(1)=(Vrot(1)>0.0?5.0:-5.0);
+	if (fabs(Vrot(2))>5.0) Vrot(2)=(Vrot(2)>0.0?5.0:-5.0);
+	
+	qv=A*Jv.t()*Rv*Vrot;
+
+	////////////////////////////////////////
+
+	for (int j=0; j<12; ++j) q(j)+=Ks[j]*(qv(j)+qz(j));
+
+	limitJointAngles(q);
+
+	q_valid=q;
+
+	return IN_PROGRESS;
+}
+#endif
+
 
 int LeftSideSolver::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 {
@@ -279,14 +356,23 @@ int LeftSideSolver::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 
 	(Jv*AJvt).base(lva,Rva);
 
-	Lva(0,0)=lva(0)/(lva(0)*lva(0)+0.000004); 
-	Lva(1,1)=lva(1)/(lva(1)*lva(1)+0.000004);
-	Lva(2,2)=lva(2)/(lva(2)*lva(2)+0.000004);
+	//Lva(0,0)=lva(0)/(lva(0)*lva(0)+0.000004); 
+	//Lva(1,1)=lva(1)/(lva(1)*lva(1)+0.000004);
+	//Lva(2,2)=lva(2)/(lva(2)*lva(2)+0.000004);
 
-	//T=AJvt*(Rva*Lva*Rva.t());
-	//qv=T*Vref;
+	Lva(0,0)=1.0/lva(0); 
+	Lva(1,1)=1.0/lva(1);
+	Lva(2,2)=1.0/lva(2);
 
-	qv=AJvt*(Rva*(Lva*(Rva.t()*Vref)));
+	Matrix Vrot=Lva*Rva.t()*Vref;
+
+	static const double VLIM=5.0;
+
+	if (fabs(Vrot(0))>VLIM) Vrot(0)=(Vrot(0)>0.0?VLIM:-VLIM);
+	if (fabs(Vrot(1))>VLIM) Vrot(1)=(Vrot(1)>0.0?VLIM:-VLIM);
+	if (fabs(Vrot(2))>VLIM) Vrot(2)=(Vrot(2)>0.0?VLIM:-VLIM);
+
+	qv=AJvt*(Rva*Vrot);
 
 	///////////////////////////////////////////////
 
@@ -294,27 +380,25 @@ int LeftSideSolver::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 
 	Z=I-Jv.inv(S)*Jv;
 
-	//O=Z*A*Z.t();
-	//O=Z*fast_mul_diag_full(A,Z.t());
-	//OJwt=O*Jw.t();
-	//OJwt=Z*(A*(Z.t()*Jw.t()));
 	OJwt=Z*fast_mul_diag_full(A,(Jw*Z).t());
 
-	//static Matrix Kw(3,12); Kw=Jw*Z;
-	//static Matrix AKwt(12,3); AKwt=A*Kw.t();
-
 	static Matrix lwa(3),Rwa(3,3);
 
-	//(Kw*AKwt).base(lwa,Rwa);
 	(Jw*OJwt).base(lwa,Rwa);
 
-	Lwa(0,0)=lwa(0)/(lwa(0)*lwa(0)+0.1); 
-	Lwa(1,1)=lwa(1)/(lwa(1)*lwa(1)+0.1);
-	Lwa(2,2)=lwa(2)/(lwa(2)*lwa(2)+0.1);
+	Lwa(0,0)=1.0/lwa(0); 
+	Lwa(1,1)=1.0/lwa(1);
+	Lwa(2,2)=1.0/lwa(2);
 
-	//qv+=Z*(AKwt*(Rwa*(Lwa*(Rwa.t()*(Wref-Jw*qv)))));
+	Matrix Wrot=Lwa*Rwa.t()*(Wref-Jw*qv);
 
-	qv+=OJwt*(Rwa*(Lwa*(Rwa.t()*(Wref-Jw*qv))));
+	static const double WLIM=1.0;
+
+	if (fabs(Wrot(0))>WLIM) Wrot(0)=(Wrot(0)>0.0?WLIM:-WLIM);
+	if (fabs(Wrot(1))>WLIM) Wrot(1)=(Wrot(1)>0.0?WLIM:-WLIM);
+	if (fabs(Wrot(2))>WLIM) Wrot(2)=(Wrot(2)>0.0?WLIM:-WLIM);
+
+	qv+=OJwt*(Rwa*Wrot);
 
 	////////////////////////////////////////
 
@@ -326,472 +410,3 @@ int LeftSideSolver::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 
 	return IN_PROGRESS;
 }
-
-#if 0
-int Robot::leftHand2Target(Vec3& Xstar,Quaternion& Qstar,bool bExtendTorso,bool bExtendHand,bool verbose)
-{
-	calcPostureFromRoot(T_ROOT);
-
-	//////////////////////////////////////////
-
-	Vec3 Vstar=Xstar-mHand[L]->Toj.Pj();
-
-	if (Vstar.mod()<0.005) return ON_TARGET;
-
-	Vec3 Wstar=(Qstar*mHand[L]->Toj.Rj().quaternion().conj()).V;
-	
-	static Matrix Vref(3); Vref=25.0*Vstar;
-	static Matrix Wref(3); Wref=50.0*Wstar;
-
-	/////////////////////////////////////////
-
-	static Matrix Jhand(6,NJOINTS);
-
-	mHand[L]->getJ(Jhand);
-
-	static Matrix J(6,12);
-
-	J=Jhand.sub(0,6,0,12);
-
-	static Matrix Jv(3,12); Jv=J.sub(0,3,0,12);
-	static Matrix Jw(3,12); Jw=J.sub(3,3,0,12);
-
-	//////////////////////
-
-	static Matrix A(12,12);
-
-	static Matrix qz(12);
-
-	for (int j=0; j<12; ++j)
-	{
-		double s=(q(j)-qzero(j))/((q(j)>qzero(j))?(qmax[j]-qzero(j)):(qmin[j]-qzero(j)));
-
-		if (s>1.0) s=1.0;
-
-		A(j,j)=sqrt(1.0-s*s)*S(j,j);
-
-		qz(j)=Kz[j]*(qzero(j)-q(j));
-	}
-
-	qz-=J.inv(S)*(J*qz);
-	//qz-=S*(J.t()*((J*S*J.t()).inv()*(J*qz)));
-
-	///////////////////////////////////////////////
-
-	static Matrix AJvt(12,3); AJvt=A*Jv.t(); 
-
-	static Matrix lva(3),Rva(3,3);
-
-	(Jv*AJvt).base(lva,Rva);
-
-	static Matrix Lva(3,3); 
-
-	Lva(0,0)=lva(0)/(lva(0)*lva(0)+0.000004); 
-	Lva(1,1)=lva(1)/(lva(1)*lva(1)+0.000004);
-	Lva(2,2)=lva(2)/(lva(2)*lva(2)+0.000004);
-
-	static Matrix Avi(12,3); Avi=AJvt*(Rva*Lva*Rva.t());
-
-	///////////////////////////////////////////////
-
-	static Matrix I=Matrix::id(12);
-
-	static Matrix Ns(12,12); Ns=I-Jv.inv(S)*Jv;
-
-	static Matrix Kw(3,12); Kw=Jw*Ns;
-
-	static Matrix Yref(3); Yref=Wref-Jw*(Avi*Vref);
-
-	////////////////////////////////////////
-	
-	static Matrix AKwt(12,3); AKwt=A*Kw.t();
-
-	static Matrix lwa(3),Rwa(3,3);
-
-	(Kw*AKwt).base(lwa,Rwa);
-
-	static Matrix Lwa(3,3);
-	Lwa(0,0)=lwa(0)/(lwa(0)*lwa(0)+0.01); 
-	Lwa(1,1)=lwa(1)/(lwa(1)*lwa(1)+0.01);
-	Lwa(2,2)=lwa(2)/(lwa(2)*lwa(2)+0.01);
-
-	//static Matrix Awi(12,3); Awi=AKwt*(Rwa*Lwa*Rwa.t());
-
-	////////////////////////////////////////
-
-	//static Matrix qv(12); qv=Avi*Vref+Ns*(Awi*Yref);
-
-	static Matrix qv(12); qv=Avi*Vref+Ns*(AKwt*(Rwa*(Lwa*(Rwa.t()*Yref))));
-
-	for (int j=0; j<12; ++j) q(j)+=Ks[j]*(qv(j)+qz(j));
-
-	limitJointAngles(q);
-
-	q_valid=q;
-
-	return IN_PROGRESS;
-}
-
-#endif
-
-#if 0
-
-int Robot::leftHand2Target(Vec3& Xstar,Quaternion& Qstar,bool bExtendTorso,bool bExtendHand,bool verbose)
-{
-	calcPostureFromRoot(T_ROOT);
-
-	//////////////////////////////////////////
-
-	Vec3 Vstar=Xstar-mHand[L]->Toj.Pj();
-
-	//if (Vstar.mod()<0.005) return ON_TARGET;
-
-	Vec3 Wstar=(Qstar*mHand[L]->Toj.Rj().quaternion().conj()).V;
-	
-	/////////////////////////////////////////
-
-	static Matrix Jhand(6,NJOINTS);
-
-	mHand[L]->getJ(Jhand);
-
-	static Matrix J(6,12);
-
-	J=Jhand.sub(0,6,0,12);
-
-	static Matrix Jv(3,12); Jv=J.sub(0,3,0,12);
-	static Matrix Jw(3,12); Jw=J.sub(3,3,0,12);
-
-	//////////////////////
-
-	static Matrix A(12,12);
-
-	static Matrix qz(12);
-
-	for (int j=0; j<12; ++j)
-	{
-		double s=(q(j)-qzero(j))/((q(j)>qzero(j))?(qmax[j]-qzero(j)):(qmin[j]-qzero(j)));
-
-		if (s>1.0) s=1.0;
-
-		A(j,j)=(1.0-s*s)*S(j,j);
-
-		qz(j)=Uq[j]*(qzero(j)-q(j));
-	}
-
-	Vec3 V[3];
-
-	//////////////////////
-
-	static Matrix qv(12);
-
-	static Matrix AJvt(12,3); AJvt=A*Jv.t(); 
-	static Matrix JvAJvt(3,3); JvAJvt=Jv*AJvt;
-
-	Matrix lv=JvAJvt.eigen();
-
-	Matrix Lv(3,3); 
-	Lv(0,0)=lv(0)/(lv(0)*lv(0)+0.000004); 
-	Lv(1,1)=lv(1)/(lv(1)*lv(1)+0.000004);
-	Lv(2,2)=lv(2)/(lv(2)*lv(2)+0.000004);
-
-	for (int d=0; d<2; ++d)
-	{
-		double Kx=JvAJvt(1,2)*(lv(d)-JvAJvt(0,0))+JvAJvt(2,0)*JvAJvt(0,1);
-		double Ky=JvAJvt(2,0)*(lv(d)-JvAJvt(1,1))+JvAJvt(0,1)*JvAJvt(1,2);
-		double Kz=JvAJvt(0,1)*(lv(d)-JvAJvt(2,2))+JvAJvt(1,2)*JvAJvt(2,0);
-
-		if (fabs(Kx)<=fabs(Ky) && fabs(Kx)<=fabs(Kz))
-		{
-			V[d].x=1.0; V[d].y=Kx/Ky; V[d].z=Kx/Kz; V[d].normalize();
-		}
-		else if (fabs(Ky)<=fabs(Kz) && fabs(Ky)<=fabs(Kx))
-		{
-			V[d].y=1.0; V[d].x=Ky/Kx; V[d].z=Ky/Kz; V[d].normalize();
-		}
-		else
-		{
-			V[d].z=1.0; V[d].y=Kz/Ky; V[d].x=Kz/Kx; V[d].normalize();
-		}
-	}
-
-	V[2]=V[0]%V[1];
-
-	Matrix Rv(3,3);
-
-	Rv(0,0)=V[0].x; Rv(0,1)=V[1].x; Rv(0,2)=V[2].x;
-	Rv(1,0)=V[0].y; Rv(1,1)=V[1].y; Rv(1,2)=V[2].y;
-	Rv(2,0)=V[0].z; Rv(2,1)=V[1].z; Rv(2,2)=V[2].z;
-
-	///////////////////////////////////////////////
-	
-	static Matrix qw(12);
-
-	static Matrix AJwt(12,3); AJwt=A*Jw.t(); 
-	static Matrix JwAJwt(3,3); JwAJwt=Jw*AJwt;
-
-	Matrix lw=JwAJwt.eigen();
-
-	Matrix Lw(3,3); 
-	Lw(0,0)=lw(0)/(lw(0)*lw(0)+0.000004); 
-	Lw(1,1)=lw(1)/(lw(1)*lw(1)+0.000004);
-	Lw(2,2)=lw(2)/(lw(2)*lw(2)+0.000004);
-
-	for (int d=0; d<2; ++d)
-	{
-		double Kx=JwAJwt(1,2)*(lw(d)-JwAJwt(0,0))+JwAJwt(2,0)*JwAJwt(0,1);
-		double Ky=JwAJwt(2,0)*(lw(d)-JwAJwt(1,1))+JwAJwt(0,1)*JwAJwt(1,2);
-		double Kz=JwAJwt(0,1)*(lw(d)-JwAJwt(2,2))+JwAJwt(1,2)*JwAJwt(2,0);
-
-		if (fabs(Kx)<=fabs(Ky) && fabs(Kx)<=fabs(Kz))
-		{
-			V[d].x=1.0; V[d].y=Kx/Ky; V[d].z=Kx/Kz; V[d].normalize();
-		}
-		else if (fabs(Ky)<=fabs(Kz) && fabs(Ky)<=fabs(Kx))
-		{
-			V[d].y=1.0; V[d].x=Ky/Kx; V[d].z=Ky/Kz; V[d].normalize();
-		}
-		else
-		{
-			V[d].z=1.0; V[d].y=Kz/Ky; V[d].x=Kz/Kx; V[d].normalize();
-		}
-	}
-
-	V[2]=V[0]%V[1];
-
-	Matrix Rw(3,3);
-
-	Rw(0,0)=V[0].x; Rw(0,1)=V[1].x; Rw(0,2)=V[2].x;
-	Rw(1,0)=V[0].y; Rw(1,1)=V[1].y; Rw(1,2)=V[2].y;
-	Rw(2,0)=V[0].z; Rw(2,1)=V[1].z; Rw(2,2)=V[2].z;
-
-	///////////////////////////////////////////////
-
-	//JWJt.dump();
-	//(R*L*R.t()).dump();
-
-	static Matrix I=Matrix::id(12);
-
-	Matrix Jvi=AJvt*(Rv*Lv*Rv.t());
-	Matrix Jwi=AJwt*(Rw*Lw*Rw.t());
-
-	Matrix Kw=Jw*(I-Jvi*Jv);
-
-	qz -= S*J.t()*(J*S*J.t()).inv()*J*qz;
-	qv = qz + Jvi*(Matrix)(25.0*Vstar) + Kw.inv()*((Matrix)(75.0*Wstar) - Jw*Jvi*(Matrix)(25.0*Vstar));// + (I-Jvi*Jv)*(I-Kw.inv()*Kw)*qz;
-
-	for (int j=0; j<12; ++j) q(j)+=Kq[j]*qv(j);
-
-	limitJointAngles(q);
-
-	q_valid=q;
-
-	return IN_PROGRESS;
-}
-
-#endif
-
-#if 0
-int Robot::leftHand2Target(Vec3& Xstar,Quaternion& Qstar,bool bExtendTorso,bool bExtendHand)
-{
-	calcPostureFromRoot(T_ROOT);
-
-	//////////////////////////////////////////
-
-	Vec3 Xerr=Xstar-mHand[L]->Toj.Pj();
-
-	double Xd=Xerr.mod();
-
-	Vec3 Werr=(Qstar*mHand[L]->Toj.Rj().quaternion().conj()).V;
-
-	double Wd=Werr.mod();
-
-	if (Xd<0.005) return ON_TARGET;
-	
-	/////////////////////////////////////////
-
-	static Matrix J(6,NJOINTS);
-
-	mHand[L]->getJ(J);
-
-	static double S[NJOINTS];
-
-	JOINTS(j)
-	{
-		qp(j)=(qzero(j)-q(j));
-
-		double s=qp(j)/((qp(j)>0.0)?(qzero(j)-qmin[j]):(qmax[j]-qzero(j)));
-
-		S[j]=1.0-s*s;
-
-		qp(j)*=Uq[j];
-	}
-
-	// forearm
-	{
-		double s=-mTrifidHand[L]->angle()/35.0;
-		s=1.0-s*s;
-
-		for (int j=startLForeArm+1; j<=startLForeArm+3; ++j) if (s<S[j]) S[j]=s;
-	}
-
-	//waist
-	{
-		double s=-mTrifidTorso->angle()/30.0;
-		s=1.0-s*s;
-
-		for (int j=0; j<=2; ++j) if (s<S[j]) S[j]=s;
-	}
-
-	JOINTS(j) if (S[j]<0.0) S[j]=0.0;
-
-	//JOINTS(j) S[j]=1.0;
-	
-	static Matrix SW(NJOINTS,NJOINTS);
-	JOINTS(j) SW(j,j)=S[j]*W[j];
-
-	/////////////////////////////
-	//static Matrix Gerr(2); 
-	//Gerr(0)=Gforce.x; 
-	//Gerr(1)=Gforce.y;
-	//qp+=Jg.inv()*Gerr;
-	//qp+=Jg.t()*((Jg*Jg.t()).inv()*Gerr);
-	//qp-=Jhand.inv()*(Jhand*qp);
-	/////////////////////////////
-
-	static Matrix SWJt(NJOINTS,6); SWJt=SW*J.t();
-	static Matrix JSWJt(6,6);      JSWJt=J*SWJt;
-
-	double detJ=JSWJt.det();
-
-	/*
-	if (detJ>0.000001)
-	{
-		static Matrix Err(6);
-		Err(0)=Xerr.x; Err(1)=Xerr.y; Err(2)=Xerr.z;
-		Err(3)=Werr.x; Err(4)=Werr.y; Err(5)=Werr.z;
-
-		qp+=SWJt*(JSWJt.inv()*(Err-J*qp));
-	}
-	else
-	*/
-	{
-		static Matrix Jv(3,NJOINTS); Jv=J.sub(0,3,0,NJOINTS);
-		static Matrix Jw(3,NJOINTS); Jw=J.sub(3,3,0,NJOINTS);
-		/*
-		static Matrix SWJvt(NJOINTS,3); SWJvt=SW*Jv.t();
-		static Matrix SWJwt(NJOINTS,3); SWJwt=SW*Jw.t();
-
-		static Matrix JvSWJvt(3,3); JvSWJvt=Jv*SWJvt;
-		static Matrix JwSWJwt(3,3); JwSWJwt=Jw*SWJwt;
-
-		double detJv=JvSWJvt.det();
-		double detJw=JwSWJwt.det();
-
-		if (detJv<0.000001) return OUT_OF_REACH;
-		*/
-
-		static Matrix w(NJOINTS,NJOINTS);
-		JOINTS(j) w(j,j)=W[j];
-
-		static Matrix WJvt(NJOINTS,3); WJvt=w*Jv.t();
-
-		static Matrix JvWJvt(3,3); JvWJvt=Jv*WJvt;
-
-		double detJv=JvWJvt.det();
-
-		if (detJv<0.000001) return OUT_OF_REACH;
-
-		//qp.clear();
-
-		//qp+=SWJwt*(JwSWJwt.inv()*((Matrix)Werr-Jw*qp));
-		//qp+=SWJvt*(JvSWJvt.inv()*((Matrix)Xerr-Jv*qp));
-
-		//qp-=w*J.t()*((J*w*J.t()).inv()*(J*qp));
-		qp.clear();
-		qp+=w*Jv.t()*((Jv*w*Jv.t()).inv()*((Matrix)Xerr-Jv*qp));
-		//printf("%f    %f\n",detJv,detJw);
-	}
-
-	/*
-	static Matrix Jv(3,NJOINTS);
-	static Matrix Jw(3,NJOINTS);
-
-	Jv=J.sub(0,3,0,NJOINTS);
-	Jw=J.sub(3,3,0,NJOINTS);
-
-	if (false)
-	{
-		static Matrix M(3,3);
-		M(0,0)=M(1,1)=M(2,2)=0.02;
-		static Matrix I=Matrix::id(NJOINTS);
-		Matrix Jvi=SW*Jv.t()*(Jv*SW*Jv.t()+M).inv();
-		Matrix Tw=Jw*(I-Jvi*Jv);
-		Matrix Twi=SW*Tw.t()*(Tw*SW*Tw.t()+M).inv();
-		qp = Jvi*(Matrix)Xerr + Twi*((Matrix)Werr-Jw*Jvi*(Matrix)Xerr) + (I-Jvi*Jv)*(I-Twi*Tw)*qp;
-	}
-	else
-	{
-		static Matrix SWJvt(NJOINTS,3);
-		static Matrix SWJwt(NJOINTS,3);
-	
-		SWJvt=SW*Jv.t();
-		SWJwt=SW*Jw.t();
-
-		static Matrix JSWvi(NJOINTS,3);
-		static Matrix JSWwi(NJOINTS,3);
-
-		static Matrix JvSWJvt(3,3);
-		static Matrix JwSWJwt(3,3);
-
-		JvSWJvt=Jv*SWJvt;
-		JwSWJwt=Jw*SWJwt;
-
-		double dv=JvSWJvt.det();
-		double dw=JwSWJwt.det();
-
-		printf("%f    %f\n",dv,dw);
-
-		JSWvi=SWJvt*(Jv*SWJvt).inv();
-		JSWwi=SWJwt*(Jw*SWJwt).inv();
-
-		qp+=JSWwi*((Matrix)(10.0*Werr)-Jw*qp);
-		qp+=JSWvi*((Matrix)Xerr-Jv*qp);
-	}
-	*/
-
-	// HEAD attitude
-	{
-		Vec3 DirH=mHead->Toj.Rj().Ex();
-		Vec3 DirT=(Xstar-mHead->Toj.Pj()).norm();
-
-		Vec3 Werr=0.666*(DirH%DirT);
-
-		qp(startNeck  )+=Werr*mJoint[nj-2]->Toj.Rj().Ez();
-		qp(startNeck+1)+=Werr*mJoint[nj-1]->Toj.Rj().Ez();
-	}
-
-	mTrifidTorso->checkAngle(30.0,q,qp);
-	mTrifidHand[L]->checkAngle(35.0,q,qp);
-	
-	limitJointSpeeds(q,qp);
-
-	JOINTS(j) q(j)+=Kq[j]*qp(j);
-
-	mTrifidTorso->setExtension(q,qzero(0));
-	mTrifidHand[L]->setExtension(q,qzero(startLForeArm+1));
-	
-	limitJointAngles(q);
-
-	//if (((Vec3)(Jw*qp)).mod()<0.1*Xerr.mod()) return OUT_OF_REACH;
-
-	//if (detJ<0.000001) return OUT_OF_REACH;
-
-	q_valid=q;
-
-	if (Xd<0.005) return ON_TARGET;
-
-	//if (Xd<0.005 && (Wd<0.05 || ((Vec3)(Jw*qp)).mod()<0.1*Werr.mod())) return ON_TARGET;
-
-	return IN_PROGRESS;
-}
-#endif

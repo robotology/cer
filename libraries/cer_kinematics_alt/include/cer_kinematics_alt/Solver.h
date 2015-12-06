@@ -163,7 +163,7 @@ public:
 		
 		if (N>NJOINTS) N=NJOINTS; 
 
-		//leftHand2Target(XtargetL,QtargetL,false,false,verbose);
+		//leftHand2Target(XtargetL,QtargetL);
 		//for (int j=0; j<N; ++j) qout(j)=q(j);
 
 		while (ret_code==IN_PROGRESS)
@@ -254,6 +254,8 @@ protected:
 	Matrix Jg;
 	Vec3 Gforce;
 	Matrix S;
+
+	Matrix W,W2;
 
 	Matrix Jhand;
 	Matrix J;
