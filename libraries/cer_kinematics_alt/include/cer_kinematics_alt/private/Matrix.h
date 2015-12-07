@@ -20,7 +20,6 @@
 
 #define SAFE_MODE
 
-#define _USE_MATH_DEFINES
 #include <math.h>
 #include <stdlib.h>
 

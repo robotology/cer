@@ -27,6 +27,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include
                     ${ICUB_INCLUDE_DIRS}
                     ${YARP_INCLUDE_DIRS})
 
+add_definitions(-D_USE_MATH_DEFINES)
 add_library(${PROJECT_NAME} ${headers_private} ${headers} ${sources})
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
