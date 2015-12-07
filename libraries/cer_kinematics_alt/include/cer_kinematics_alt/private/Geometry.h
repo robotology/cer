@@ -39,31 +39,31 @@ public:
     Vec3(const Vec3& V) { x=V.x; y=V.y; z=V.z; }
     Vec3(double Vx,double Vy,double Vz){ x=Vx; y=Vy; z=Vz; }
 
-	Vec3(Matrix &M)
-	{
-		if (M.R!=3 || M.C!=1)
-		{
-			printf("Vec3(Matrix &M) invalid dimension ERROR\n");
-			exit(-1); 
-		}
+    Vec3(Matrix &M)
+    {
+        if (M.R!=3 || M.C!=1)
+        {
+            printf("Vec3(Matrix &M) invalid dimension ERROR\n");
+            exit(-1); 
+        }
 
-		x=M(0); y=M(1); z=M(2);
-	}
+        x=M(0); y=M(1); z=M(2);
+    }
 
-	operator Matrix()
-	{
-		Matrix M(3);
-		M(0)=x;
-		M(1)=y;
-		M(2)=z;
-		return M;
-	}
+    operator Matrix()
+    {
+        Matrix M(3);
+        M(0)=x;
+        M(1)=y;
+        M(2)=z;
+        return M;
+    }
 
     const Vec3& operator=(const Vec3& V)
     {
         x=V.x;
-		y=V.y;
-		z=V.z;
+        y=V.y;
+        z=V.z;
         return *this;
     }
 
@@ -74,22 +74,22 @@ public:
 
     Vec3 operator-(const Vec3& V) const
     {
-		return Vec3(x-V.x,y-V.y,z-V.z);
+        return Vec3(x-V.x,y-V.y,z-V.z);
     }
 
     const Vec3& operator+=(const Vec3& V)
     {
         x+=V.x;
-		y+=V.y;
-		z+=V.z;
+        y+=V.y;
+        z+=V.z;
         return *this;
     }
 
     const Vec3& operator-=(const Vec3& V)
     {
         x-=V.x;
-		y-=V.y;
-		z-=V.z;
+        y-=V.y;
+        z-=V.z;
         return *this;
     }
 
@@ -114,7 +114,7 @@ public:
 
         a=1.0/a;
 
-		return Vec3(x*a,y*a,z*a);
+        return Vec3(x*a,y*a,z*a);
     }
 
     const Vec3& operator/=(double a)
@@ -129,7 +129,7 @@ public:
 
         x*=a; y*=a; z*=a;
         
-		return *this;
+        return *this;
     }
 
     Vec3 operator-() const { return Vec3(-x,-y,-z); }
@@ -182,11 +182,11 @@ public:
         printf("%s x=%f y=%f z=%f %s\n",head,x,y,z,tail);
     }
 
-	double x,y,z;
+    double x,y,z;
 
 protected:
-	friend inline Vec3 operator%(const Vec3& U,const Vec3& V);
-	friend inline double operator*(const Vec3& U,const Vec3& V);
+    friend inline Vec3 operator%(const Vec3& U,const Vec3& V);
+    friend inline double operator*(const Vec3& U,const Vec3& V);
 };
 
 inline Vec3 operator*(double x,const Vec3& V)
@@ -196,12 +196,12 @@ inline Vec3 operator*(double x,const Vec3& V)
 
 inline Vec3 operator%(const Vec3& U,const Vec3& V)
 { 
-	return Vec3(U.y*V.z-U.z*V.y,U.z*V.x-U.x*V.z,U.x*V.y-U.y*V.x); 
+    return Vec3(U.y*V.z-U.z*V.y,U.z*V.x-U.x*V.z,U.x*V.y-U.y*V.x); 
 }
 
 inline double operator*(const Vec3& U,const Vec3& V)
 { 
-	return U.x*V.x+U.y*V.y+U.z*V.z; 
+    return U.x*V.x+U.y*V.y+U.z*V.z; 
 }
 
 class Quaternion
@@ -238,7 +238,7 @@ public:
             V=-V;
         }
 
-		return *this;
+        return *this;
     }
 
     double s;
@@ -303,45 +303,45 @@ public:
         m[2][0]=  -sy; m[2][1]=   cy*sx;       m[2][2]=   cy*cx;
     }
 
-	Rotation(double theta,Vec3& u)
-	{
-		double ct=cos(theta);
-		double st=sin(theta);
-		double lct=1.0-ct;
+    Rotation(double theta,Vec3& u)
+    {
+        double ct=cos(theta);
+        double st=sin(theta);
+        double lct=1.0-ct;
 
-		m[0][0]=ct+u.x*u.x*lct;     m[0][1]=u.x*u.y*lct-u.z*st; m[0][2]=u.x*u.z*lct+u.y*st;
-		m[1][0]=u.x*u.y*lct+u.z*st; m[1][1]=ct+u.y*u.y*lct;     m[1][2]=u.y*u.z*lct-u.x*st;
-		m[2][0]=u.x*u.z*lct-u.y*st; m[2][1]=u.y*u.z*lct+u.x*st; m[2][2]=ct+u.z*u.z*lct;
-	}
+        m[0][0]=ct+u.x*u.x*lct;     m[0][1]=u.x*u.y*lct-u.z*st; m[0][2]=u.x*u.z*lct+u.y*st;
+        m[1][0]=u.x*u.y*lct+u.z*st; m[1][1]=ct+u.y*u.y*lct;     m[1][2]=u.y*u.z*lct-u.x*st;
+        m[2][0]=u.x*u.z*lct-u.y*st; m[2][1]=u.y*u.z*lct+u.x*st; m[2][2]=ct+u.z*u.z*lct;
+    }
 
-	Rotation(Vec3& A,Vec3& B)
-	{
-		//A.normalize();
-		//B.normalize();
+    Rotation(Vec3& A,Vec3& B)
+    {
+        //A.normalize();
+        //B.normalize();
 
-		Vec3 u=A%B;
-		
-		double st=u.mod();
-		double ct=A*B;
-		double lct=1.0-ct;
+        Vec3 u=A%B;
+        
+        double st=u.mod();
+        double ct=A*B;
+        double lct=1.0-ct;
 
-		u.normalize();
+        u.normalize();
 
-		m[0][0]=ct+u.x*u.x*lct;     m[0][1]=u.x*u.y*lct-u.z*st; m[0][2]=u.x*u.z*lct+u.y*st;
-		m[1][0]=u.x*u.y*lct+u.z*st; m[1][1]=ct+u.y*u.y*lct;     m[1][2]=u.y*u.z*lct-u.x*st;
-		m[2][0]=u.x*u.z*lct-u.y*st; m[2][1]=u.y*u.z*lct+u.x*st; m[2][2]=ct+u.z*u.z*lct;
-	}
+        m[0][0]=ct+u.x*u.x*lct;     m[0][1]=u.x*u.y*lct-u.z*st; m[0][2]=u.x*u.z*lct+u.y*st;
+        m[1][0]=u.x*u.y*lct+u.z*st; m[1][1]=ct+u.y*u.y*lct;     m[1][2]=u.y*u.z*lct-u.x*st;
+        m[2][0]=u.x*u.z*lct-u.y*st; m[2][1]=u.y*u.z*lct+u.x*st; m[2][2]=ct+u.z*u.z*lct;
+    }
 
-	Rotation(Vec3 Ex,Vec3 Ey,Vec3 Ez)
-	{
-		Ex.normalize();
-		Ey.normalize();
-		Ez.normalize();
+    Rotation(Vec3 Ex,Vec3 Ey,Vec3 Ez)
+    {
+        Ex.normalize();
+        Ey.normalize();
+        Ez.normalize();
 
-		m[0][0]=Ex.x; m[0][1]=Ey.x; m[0][2]=Ez.x;
-		m[1][0]=Ex.y; m[1][1]=Ey.y; m[1][2]=Ez.y;
-		m[2][0]=Ex.z; m[2][1]=Ey.z; m[2][2]=Ez.z;
-	}
+        m[0][0]=Ex.x; m[0][1]=Ey.x; m[0][2]=Ez.x;
+        m[1][0]=Ex.y; m[1][1]=Ey.y; m[1][2]=Ez.y;
+        m[2][0]=Ex.z; m[2][1]=Ey.z; m[2][2]=Ez.z;
+    }
 
     Vec3 rpy() const
     {
@@ -391,10 +391,10 @@ public:
         return Rtot;
     }
 
-	Rotation operator/(const Rotation& R) const
+    Rotation operator/(const Rotation& R) const
     {
-		return *this*R.inv();
-	}
+        return *this*R.inv();
+    }
 
     Vec3 Ex() const { return Vec3(m[0][0],m[1][0],m[2][0]); }
     Vec3 Ey() const { return Vec3(m[0][1],m[1][1],m[2][1]); }
@@ -405,8 +405,8 @@ public:
         Vec3 W;
 
         W.x+=m[0][0]*V.x+m[0][1]*V.y+m[0][2]*V.z;
-		W.y+=m[1][0]*V.x+m[1][1]*V.y+m[1][2]*V.z;
-		W.z+=m[2][0]*V.x+m[2][1]*V.y+m[2][2]*V.z;
+        W.y+=m[1][0]*V.x+m[1][1]*V.y+m[1][2]*V.z;
+        W.z+=m[2][0]*V.x+m[2][1]*V.y+m[2][2]*V.z;
 
         return W;
     }
@@ -485,26 +485,26 @@ public:
 
         Vec3 U(m[2][1]-m[1][2],m[0][2]-m[2][0],m[1][0]-m[0][1]);
         
-		return U.norm(acos(cosTh));
+        return U.norm(acos(cosTh));
     }
 
-	operator Matrix() const
-	{
-		Matrix M(3,3);
+    operator Matrix() const
+    {
+        Matrix M(3,3);
 
-		FOR(r) FOR(c) M(r,c)=m[r][c];
+        FOR(r) FOR(c) M(r,c)=m[r][c];
 
-		return M;
-	}
+        return M;
+    }
 
     double& operator()(int i,int j){ return m[i][j]; }
 
-	void print(FILE* file) const
-	{
-		fprintf(file,"%+.9f %+.9f %+.9f\n",m[0][0],m[0][1],m[0][2]);
-		fprintf(file,"%+.9f %+.9f %+.9f\n",m[1][0],m[1][1],m[1][2]);
-		fprintf(file,"%+.9f %+.9f %+.9f\n",m[2][0],m[2][1],m[2][2]);
-	}
+    void print(FILE* file) const
+    {
+        fprintf(file,"%+.9f %+.9f %+.9f\n",m[0][0],m[0][1],m[0][2]);
+        fprintf(file,"%+.9f %+.9f %+.9f\n",m[1][0],m[1][1],m[1][2]);
+        fprintf(file,"%+.9f %+.9f %+.9f\n",m[2][0],m[2][1],m[2][2]);
+    }
 
 protected:
     double m[3][3];
@@ -557,14 +557,14 @@ public:
     const Vec3& Pj() const { return P; }
     const Rotation& Rj() const { return R; }
 
-	Vec3& Pj() { return P; }
+    Vec3& Pj() { return P; }
     Rotation& Rj() { return R; }
 
     void dump(FILE* pfile=stdout)
     {
         fprintf(pfile,"%+.9f   %+.9f   %+.9f   %+.9f\n  ",R(0,0),R(0,1),R(0,2),P.x);
-		fprintf(pfile,"%+.9f   %+.9f   %+.9f   %+.9f\n  ",R(1,0),R(1,1),R(1,2),P.y);
-		fprintf(pfile,"%+.9f   %+.9f   %+.9f   %+.9f\n\n",R(2,0),R(2,1),R(2,2),P.z);
+        fprintf(pfile,"%+.9f   %+.9f   %+.9f   %+.9f\n  ",R(1,0),R(1,1),R(1,2),P.y);
+        fprintf(pfile,"%+.9f   %+.9f   %+.9f   %+.9f\n\n",R(2,0),R(2,1),R(2,2),P.z);
     }
 
 protected:

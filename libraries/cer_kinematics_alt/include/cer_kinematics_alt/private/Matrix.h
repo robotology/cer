@@ -35,11 +35,11 @@ class Matrix
 { 
 public:
     Matrix(int r,int c=1,bool zero=true) : R(r),C(c)
-	{
+    {
         allocate();
 
         if (zero) clear();
-	}
+    }
 
     Matrix(const Matrix& M) : R(M.R),C(M.C)
     {
@@ -47,7 +47,7 @@ public:
         SCAN(r,c) m[r][c]=M.m[r][c];
     }
 
-	virtual ~Matrix()
+    virtual ~Matrix()
     {
         if (m)
         {
@@ -61,231 +61,231 @@ public:
         SCAN(r,c) m[r][c]=0.0;
     }
 
-	double& operator()(int r,int c)
+    double& operator()(int r,int c)
     {
-		//if (r<0) r+=R;
-		//if (c<0) c+=C;
+        //if (r<0) r+=R;
+        //if (c<0) c+=C;
 
-		#ifdef SAFE_MODE
-		if (r<0 || r>=R || c<0 || c>=C)
-		{
-			printf("Matrix:: index out of range ERROR\n");
-			exit(-1);
-		}
-		#endif
+        #ifdef SAFE_MODE
+        if (r<0 || r>=R || c<0 || c>=C)
+        {
+            printf("Matrix:: index out of range ERROR\n");
+            exit(-1);
+        }
+        #endif
 
-		return m[r][c];
-	}
+        return m[r][c];
+    }
 
-	const double& operator()(int r,int c) const
+    const double& operator()(int r,int c) const
     {
-		//if (r<0) r+=R;
-		//if (c<0) c+=C;
+        //if (r<0) r+=R;
+        //if (c<0) c+=C;
 
-		#ifdef SAFE_MODE
-		if (r<0 || r>=R || c<0 || c>=C)
-		{
-			printf("Matrix:: index out of range ERROR\n");
-			exit(-1);
-		}
-		#endif
+        #ifdef SAFE_MODE
+        if (r<0 || r>=R || c<0 || c>=C)
+        {
+            printf("Matrix:: index out of range ERROR\n");
+            exit(-1);
+        }
+        #endif
 
-		return m[r][c];
-	}
+        return m[r][c];
+    }
 
-	double& operator()(int r)
+    double& operator()(int r)
     {
-		#ifdef SAFE_MODE
-		if (C!=1)
+        #ifdef SAFE_MODE
+        if (C!=1)
         {
             printf("Matrix:: single index dimension > 1 ERROR\n");
-			exit(-1);
+            exit(-1);
         }
-		#endif
-		//if (r<0) r+=R;
-		return m[r][0];
-	}
+        #endif
+        //if (r<0) r+=R;
+        return m[r][0];
+    }
 
-	Matrix t() const
-	{
-		Matrix trs(C,R,false);
+    Matrix t() const
+    {
+        Matrix trs(C,R,false);
 
-		SCAN(r,c) trs.m[c][r]=m[r][c];
+        SCAN(r,c) trs.m[c][r]=m[r][c];
 
-		return trs;
-	}
+        return trs;
+    }
 
-	Matrix operator *(double x) const
-	{
-		Matrix mul(R,C,false);
+    Matrix operator *(double x) const
+    {
+        Matrix mul(R,C,false);
 
-		SCAN(r,c) mul.m[r][c]=x*m[r][c];
+        SCAN(r,c) mul.m[r][c]=x*m[r][c];
 
-		return mul;
-	}
+        return mul;
+    }
 
-	const Matrix& operator *=(double x)
-	{
-	    SCAN(r,c) m[r][c]*=x;
+    const Matrix& operator *=(double x)
+    {
+        SCAN(r,c) m[r][c]*=x;
 
-		return *this;
-	}
+        return *this;
+    }
 
-	Matrix operator/(double x) const
-	{
+    Matrix operator/(double x) const
+    {
         Matrix div(R,C,false);
 
         if (x==0.0)
         {
             printf("Matrix::/0.0 ERROR\n");
-			exit(-1);
+            exit(-1);
         }
 
         x=1.0/x;
 
         SCAN(r,c) div.m[r][c]=x*m[r][c];
 
-		return div;
-	}
+        return div;
+    }
 
-	const Matrix& operator/=(double x)
-	{
+    const Matrix& operator/=(double x)
+    {
         if (x==0.0)
         {
             printf("Matrix::/=0.0 ERROR\n");
-			exit(-1);
+            exit(-1);
         }
 
         x=1.0/x;
 
-		FOR_R(r) FOR_C(c) m[r][c]*=x;
+        FOR_R(r) FOR_C(c) m[r][c]*=x;
 
-		return *this;
-	}
+        return *this;
+    }
 
-	Matrix operator *(const Matrix& M) const
-	{
-		#ifdef SAFE_MODE
+    Matrix operator *(const Matrix& M) const
+    {
+        #ifdef SAFE_MODE
         if (C!=M.R)
         {
             printf("Matrix::* incompatible dimension ERROR\n");
-			exit(-1);
+            exit(-1);
         }
-		#endif
+        #endif
 
-		Matrix mul(R,M.C);
+        Matrix mul(R,M.C);
 
         SCAN(r,t) for (int c=0; c<M.C; ++c) mul.m[r][c]+=m[r][t]*M.m[t][c];
 
-		return mul;
-	}
+        return mul;
+    }
 
-	const Matrix& operator=(const Matrix& M)
-	{
-		#ifdef SAFE_MODE
+    const Matrix& operator=(const Matrix& M)
+    {
+        #ifdef SAFE_MODE
         if (R!=M.R || C!=M.C)
         {
             printf("Matrix::= incompatible dimension ERROR\n");
-			printf("R1=%d  R2=%d\n",R,M.R);
-			printf("C1=%d  C2=%d\n",C,M.C);
-			exit(-1);
+            printf("R1=%d  R2=%d\n",R,M.R);
+            printf("C1=%d  C2=%d\n",C,M.C);
+            exit(-1);
         }
-		#endif
+        #endif
 
         SCAN(r,c) m[r][c]=M.m[r][c];
 
-		return *this;
-	}
+        return *this;
+    }
 
-	Matrix operator +(const Matrix& M) const
-	{
-		#ifdef SAFE_MODE
+    Matrix operator +(const Matrix& M) const
+    {
+        #ifdef SAFE_MODE
         if (R!=M.R || C!=M.C)
         {
             printf("Matrix::+ incompatible dimension ERROR\n");
-			exit(-1);
+            exit(-1);
         }
-		#endif
+        #endif
 
-		Matrix add(R,C,false);
+        Matrix add(R,C,false);
 
         SCAN(r,c) add.m[r][c]=m[r][c]+M.m[r][c];
 
-		return add;
-	}
+        return add;
+    }
 
-	const Matrix& operator +=(const Matrix& M)
-	{
-		#ifdef SAFE_MODE
+    const Matrix& operator +=(const Matrix& M)
+    {
+        #ifdef SAFE_MODE
         if (R!=M.R || C!=M.C)
         {
             printf("Matrix::+= incompatible dimension ERROR\n");
-			exit(-1);
+            exit(-1);
         }
-		#endif
+        #endif
 
         SCAN(r,c) m[r][c]+=M.m[r][c];
 
-		return *this;
-	}
+        return *this;
+    }
 
-	Matrix operator -(const Matrix& M) const
-	{
-		#ifdef SAFE_MODE
+    Matrix operator -(const Matrix& M) const
+    {
+        #ifdef SAFE_MODE
         if (R!=M.R || C!=M.C)
         {
             printf("Matrix::- incompatible dimension ERROR\n");
-			exit(-1);
+            exit(-1);
         }
-		#endif
+        #endif
 
-		Matrix sub(R,C,false);
+        Matrix sub(R,C,false);
 
         SCAN(r,c) sub.m[r][c]=m[r][c]-M.m[r][c];
 
-		return sub;
-	}
+        return sub;
+    }
 
     Matrix operator -() const
-	{
-		Matrix neg(R,C,false);
+    {
+        Matrix neg(R,C,false);
 
         SCAN(r,c) neg.m[r][c]=-m[r][c];
 
-		return neg;
-	}
+        return neg;
+    }
 
-	const Matrix& operator -=(const Matrix& M)
-	{
-		#ifdef SAFE_MODE
+    const Matrix& operator -=(const Matrix& M)
+    {
+        #ifdef SAFE_MODE
         if (R!=M.R || C!=M.C)
         {
             printf("Matrix::-= incompatible dimension ERROR\n");
-			exit(-1);
+            exit(-1);
         }
-		#endif
+        #endif
 
         SCAN(r,c) m[r][c]-=M.m[r][c];
 
-		return *this;
-	}
+        return *this;
+    }
 
     Matrix operator[](Matrix& B) const
     {
         return *this*B-B**this;
     }
 
-	double det() const
-	{
-		double result=1.0;
+    double det() const
+    {
+        double result=1.0;
 
-		#ifdef SAFE_MODE
-		if (R!=C)
-		{
+        #ifdef SAFE_MODE
+        if (R!=C)
+        {
             printf("Matrix::inv() not squared ERROR\n");
-			exit(-1);
-		}
-		#endif
+            exit(-1);
+        }
+        #endif
 
         Matrix B=*this;
 
@@ -306,12 +306,12 @@ public:
 
             if (pivot==-1)
             {
-				return 0.0;
+                return 0.0;
             }
 
             if (pivot!=r) // swap r and pivot rows
             {
-				result=-result;
+                result=-result;
 
                 FOR_C(c)
                 {
@@ -334,34 +334,34 @@ public:
 
         FOR_R(r) result*=B(r,r);
 
-		return result;
-	}
+        return result;
+    }
 
-	Matrix inv(Matrix& W) const
-	{
-		Matrix WT=t();
+    Matrix inv(Matrix& W) const
+    {
+        Matrix WT=t();
 
-		for (int i=0; i<W.R; ++i) for (int j=0; j<WT.C; ++j) WT(i,j)*=W(i,i);
-		
-		//Matrix WT=fast_mul_diag_full(W,t());
-		//Matrix WT=W*t();
-		
-		return WT*(*this*WT).inv();
-	}
+        for (int i=0; i<W.R; ++i) for (int j=0; j<WT.C; ++j) WT(i,j)*=W(i,i);
+        
+        //Matrix WT=fast_mul_diag_full(W,t());
+        //Matrix WT=W*t();
+        
+        return WT*(*this*WT).inv();
+    }
 
     Matrix inv() const
-	{
-		if (R!=C)
-		{
+    {
+        if (R!=C)
+        {
             Matrix T=t();
-			return T*(*this*T).inv();
-			//printf("Matrix::inv() non squared matrix inversion ERROR\n");
-			//exit(-1);
-		}
+            return T*(*this*T).inv();
+            //printf("Matrix::inv() non squared matrix inversion ERROR\n");
+            //exit(-1);
+        }
 
         Matrix B=*this;
         Matrix I(C,C);
-		FOR_C(i) I(i,i)=1.0;
+        FOR_C(i) I(i,i)=1.0;
 
         for (int r=0; r<R-1; ++r)
         {
@@ -381,10 +381,10 @@ public:
             if (pivot==-1)
             {
                 printf("Matrix::inv() singular inversion ERROR at row %d\n",r);
-				I.clear();
-				return I;
+                I.clear();
+                return I;
             }
-			else if (pivot!=r)
+            else if (pivot!=r)
             {
                 FOR_C(c)
                 {
@@ -429,28 +429,28 @@ public:
             FOR_C(c) I(r,c)*=D;
         }
 
-		return I;
-	}
+        return I;
+    }
 
     static Matrix id(int n)
     {
-	    Matrix I(n,n);
+        Matrix I(n,n);
 
-	    for (int i=0; i<n; ++i) I.m[i][i]=1.0;
+        for (int i=0; i<n; ++i) I.m[i][i]=1.0;
 
-	    return I;
+        return I;
     }
 
-	/*
+    /*
     Matrix e(int n=12) const
-	{
-		#ifdef SAFE_MODE
+    {
+        #ifdef SAFE_MODE
         if (R!=C)
         {
             printf("Non squared matrix exponential\n");
             exit(-1);
         }
-		#endif
+        #endif
 
         Matrix E=id(R);
         Matrix An=E;
@@ -463,7 +463,7 @@ public:
 
         return E;
     }
-	*/
+    */
 
     void dump(FILE* pfile=stdout) const
     {
@@ -480,166 +480,166 @@ public:
         fprintf(pfile,"\n");
     }
 
-	Matrix sub(int r0,int sizeR,int c0,int sizeC) const
-	{
-		Matrix s(sizeR,sizeC,false);
+    Matrix sub(int r0,int sizeR,int c0,int sizeC) const
+    {
+        Matrix s(sizeR,sizeC,false);
 
-		for (int r=0; r<sizeR; ++r)
-		{
-			for (int c=0; c<sizeC; ++c)
-			{
-				s.m[r][c]=m[r+r0][c+c0];
-			}
-		}
+        for (int r=0; r<sizeR; ++r)
+        {
+            for (int c=0; c<sizeC; ++c)
+            {
+                s.m[r][c]=m[r+r0][c+c0];
+            }
+        }
 
-		return s;
-	}
+        return s;
+    }
 
-	Matrix eigen() const
-	{
-		#ifdef SAFE_MODE
-		if (R!=3 || C!=3)
-		{
-			printf("Matrix::eigen() not 3x3 matrix ERROR\n");
-			exit(-1);
-		}
-		#endif
+    Matrix eigen() const
+    {
+        #ifdef SAFE_MODE
+        if (R!=3 || C!=3)
+        {
+            printf("Matrix::eigen() not 3x3 matrix ERROR\n");
+            exit(-1);
+        }
+        #endif
 
-		Matrix eig(3);
+        Matrix eig(3);
 
-		double p1 = m[0][1]*m[0][1]+m[1][2]*m[1][2]+m[2][0]*m[2][0];
+        double p1 = m[0][1]*m[0][1]+m[1][2]*m[1][2]+m[2][0]*m[2][0];
 
-		if (p1==0.0) // M is diagonal
-		{
-			
-			if (m[0][0]>=m[1][1] && m[0][0]>=m[2][2])
-			{
-				eig(0)=m[0][0];
+        if (p1==0.0) // M is diagonal
+        {
+            
+            if (m[0][0]>=m[1][1] && m[0][0]>=m[2][2])
+            {
+                eig(0)=m[0][0];
 
-				if (m[1][1]>=m[2][2])
-				{	
-					eig(1)=m[1][1];
-					eig(2)=m[2][2];
-				}
-				else
-				{
-					eig(1)=m[2][2];
-					eig(2)=m[1][1];
-				}
-			}
-			else if (m[1][1]>=m[2][2] && m[1][1]>=m[0][0])
-			{
-				eig(0)=m[1][1];
+                if (m[1][1]>=m[2][2])
+                {   
+                    eig(1)=m[1][1];
+                    eig(2)=m[2][2];
+                }
+                else
+                {
+                    eig(1)=m[2][2];
+                    eig(2)=m[1][1];
+                }
+            }
+            else if (m[1][1]>=m[2][2] && m[1][1]>=m[0][0])
+            {
+                eig(0)=m[1][1];
 
-				if (m[2][2]>=m[0][0])
-				{	
-					eig(1)=m[2][2];
-					eig(2)=m[0][0];
-				}
-				else
-				{
-					eig(1)=m[0][0];
-					eig(2)=m[2][2];
-				}
-			}
-			else
-			{
-				eig(0)=m[2][2];
+                if (m[2][2]>=m[0][0])
+                {   
+                    eig(1)=m[2][2];
+                    eig(2)=m[0][0];
+                }
+                else
+                {
+                    eig(1)=m[0][0];
+                    eig(2)=m[2][2];
+                }
+            }
+            else
+            {
+                eig(0)=m[2][2];
 
-				if (m[0][0]>=m[1][1])
-				{	
-					eig(1)=m[0][0];
-					eig(2)=m[1][1];
-				}
-				else
-				{
-					eig(1)=m[1][1];
-					eig(2)=m[0][0];
-				}
-			}
-		}
-		else
-		{
-			double t=m[0][0]+m[1][1]+m[2][2];
-			double q=t/3.0;
-			double q0=m[0][0]-q,q1=m[1][1]-q,q2=m[2][2]-q;
-			double p2=q0*q0+q1*q1+q2*q2+2.0*p1;
+                if (m[0][0]>=m[1][1])
+                {   
+                    eig(1)=m[0][0];
+                    eig(2)=m[1][1];
+                }
+                else
+                {
+                    eig(1)=m[1][1];
+                    eig(2)=m[0][0];
+                }
+            }
+        }
+        else
+        {
+            double t=m[0][0]+m[1][1]+m[2][2];
+            double q=t/3.0;
+            double q0=m[0][0]-q,q1=m[1][1]-q,q2=m[2][2]-q;
+            double p2=q0*q0+q1*q1+q2*q2+2.0*p1;
 
-			double p=sqrt(p2/6.0);
+            double p=sqrt(p2/6.0);
 
-			Matrix B=(*this-id(3)*q)*(1/p);
-			double r=B.det()/2.0;
+            Matrix B=(*this-id(3)*q)*(1/p);
+            double r=B.det()/2.0;
 
-			// In exact arithmetic for a symmetric matrix  -1 <= r <= 1
-			// but computation error can leave it slightly outside this range.
-			
-			double phi;
+            // In exact arithmetic for a symmetric matrix  -1 <= r <= 1
+            // but computation error can leave it slightly outside this range.
+            
+            double phi;
 
-			if (r<=-1.0)
-			{
-				phi=M_PI/3.0;
-			}
-			else if (r>=1.0)
-			{
-				phi=0.0;
-			}
-			else
-			{
-				phi=acos(r)/3.0;
-			}
+            if (r<=-1.0)
+            {
+                phi=M_PI/3.0;
+            }
+            else if (r>=1.0)
+            {
+                phi=0.0;
+            }
+            else
+            {
+                phi=acos(r)/3.0;
+            }
 
-			// the eigenvalues satisfy eig3 <= eig2 <= eig1
-			eig(0)=q+2.0*p*cos(phi);
-			eig(2)=q+2.0*p*cos(phi+2.0*M_PI/3.0);
-			eig(1)=t-eig(0)-eig(2); // since trace(M) = eig0 + eig1 + eig2
-		}
+            // the eigenvalues satisfy eig3 <= eig2 <= eig1
+            eig(0)=q+2.0*p*cos(phi);
+            eig(2)=q+2.0*p*cos(phi+2.0*M_PI/3.0);
+            eig(1)=t-eig(0)-eig(2); // since trace(M) = eig0 + eig1 + eig2
+        }
 
-		return eig;
-	}
+        return eig;
+    }
 
-	void base(Matrix& l,Matrix &R)
-	{
-		l=eigen();
+    void base(Matrix& l,Matrix &R)
+    {
+        l=eigen();
 
-		double Ex[3],Ey[3],Ez[3];
+        double Ex[3],Ey[3],Ez[3];
 
-		for (int d=0; d<2; ++d)
-		{
-			double Ux=m[1][2]*(l(d)-m[0][0])+m[2][0]*m[0][1];
-			double Uy=m[2][0]*(l(d)-m[1][1])+m[0][1]*m[1][2];
-			double Uz=m[0][1]*(l(d)-m[2][2])+m[1][2]*m[2][0];
+        for (int d=0; d<2; ++d)
+        {
+            double Ux=m[1][2]*(l(d)-m[0][0])+m[2][0]*m[0][1];
+            double Uy=m[2][0]*(l(d)-m[1][1])+m[0][1]*m[1][2];
+            double Uz=m[0][1]*(l(d)-m[2][2])+m[1][2]*m[2][0];
 
-			if (fabs(Ux)<=fabs(Uy) && fabs(Ux)<=fabs(Uz))
-			{
-				Ex[d]=1.0; Ey[d]=Ux/Uy; Ez[d]=Ux/Uz;
-			}
-			else if (fabs(Uy)<=fabs(Uz) && fabs(Uy)<=fabs(Ux))
-			{
-				Ey[d]=1.0; Ex[d]=Uy/Ux; Ez[d]=Uy/Uz;
-			}
-			else
-			{
-				Ez[d]=1.0; Ey[d]=Uz/Uy; Ex[d]=Uz/Ux;
-			}
+            if (fabs(Ux)<=fabs(Uy) && fabs(Ux)<=fabs(Uz))
+            {
+                Ex[d]=1.0; Ey[d]=Ux/Uy; Ez[d]=Ux/Uz;
+            }
+            else if (fabs(Uy)<=fabs(Uz) && fabs(Uy)<=fabs(Ux))
+            {
+                Ey[d]=1.0; Ex[d]=Uy/Ux; Ez[d]=Uy/Uz;
+            }
+            else
+            {
+                Ez[d]=1.0; Ey[d]=Uz/Uy; Ex[d]=Uz/Ux;
+            }
 
-			double m=sqrt(Ex[d]*Ex[d]+Ey[d]*Ey[d]+Ez[d]*Ez[d]);
+            double m=sqrt(Ex[d]*Ex[d]+Ey[d]*Ey[d]+Ez[d]*Ez[d]);
 
-			if (m>0.0){ m=1.0/m; Ex[d]*=m; Ey[d]*=m; Ez[d]*=m; }
-		}
+            if (m>0.0){ m=1.0/m; Ex[d]*=m; Ey[d]*=m; Ez[d]*=m; }
+        }
 
-		Ex[2]=Ey[0]*Ez[1]-Ey[1]*Ez[0];
-		Ey[2]=Ez[0]*Ex[1]-Ez[1]*Ex[0];
-		Ez[2]=Ex[0]*Ey[1]-Ex[1]*Ey[0];
+        Ex[2]=Ey[0]*Ez[1]-Ey[1]*Ez[0];
+        Ey[2]=Ez[0]*Ex[1]-Ez[1]*Ex[0];
+        Ez[2]=Ex[0]*Ey[1]-Ex[1]*Ey[0];
 
-		R(0,0)=Ex[0]; R(0,1)=Ex[1]; R(0,2)=Ex[2];
-		R(1,0)=Ey[0]; R(1,1)=Ey[1]; R(1,2)=Ey[2];
-		R(2,0)=Ez[0]; R(2,1)=Ez[1]; R(2,2)=Ez[2];
-	}
+        R(0,0)=Ex[0]; R(0,1)=Ex[1]; R(0,2)=Ex[2];
+        R(1,0)=Ey[0]; R(1,1)=Ey[1]; R(1,2)=Ey[2];
+        R(2,0)=Ez[0]; R(2,1)=Ez[1]; R(2,2)=Ez[2];
+    }
 
     const int R,C;
 
 protected:
-	//Matrix(int dim):R(dim),C(dim){ m=NULL; }
+    //Matrix(int dim):R(dim),C(dim){ m=NULL; }
 
     void allocate()
     {
@@ -648,125 +648,125 @@ protected:
         FOR_R(r) m[r]=new double[C];
     }
 
-	double abs(double x) const { return x>0.0?x:-x; }
+    double abs(double x) const { return x>0.0?x:-x; }
     double sgn(double x) const { return x>=0.0?1.0:-1.0; } 
 
-	double** m;
+    double** m;
 };
 
 inline Matrix operator *(double x,Matrix& M)
 {
-	return M*x;
+    return M*x;
 }
 
 inline Matrix fast_mul_diag_full(const Matrix& D,const Matrix& M)
 {
-	#ifdef SAFE_MODE
+    #ifdef SAFE_MODE
     if (D.R!=D.C || D.C!=M.R)
     {
         printf("Matrix::mul_diag_full incompatible dimension ERROR\n");
-		exit(-1);
+        exit(-1);
     }
-	#endif
+    #endif
 
-	Matrix mul(M.R,M.C,false);
+    Matrix mul(M.R,M.C,false);
 
-	for (int i=0; i<M.R; ++i)
-	{
-		for (int j=0; j<M.C; ++j)
-		{
-			mul(i,j)=D(i,i)*M(i,j);
-		}
-	}
+    for (int i=0; i<M.R; ++i)
+    {
+        for (int j=0; j<M.C; ++j)
+        {
+            mul(i,j)=D(i,i)*M(i,j);
+        }
+    }
 
-	return mul;
+    return mul;
 }
 
 inline Matrix fast_mul_full_diag(const Matrix& M,const Matrix& D)
 {
-	#ifdef SAFE_MODE
+    #ifdef SAFE_MODE
     if (M.C!=D.R || D.C!=D.R)
     {
         printf("Matrix::mul_full_diag incompatible dimension ERROR\n");
-		exit(-1);
+        exit(-1);
     }
-	#endif
+    #endif
 
-	Matrix mul(M.R,M.C,false);
+    Matrix mul(M.R,M.C,false);
 
-	for (int i=0; i<M.R; ++i)
-	{
-		for (int j=0; j<M.C; ++j)
-		{
-			mul(i,j)=M(i,j)*D(j,j);
-		}
-	}
+    for (int i=0; i<M.R; ++i)
+    {
+        for (int j=0; j<M.C; ++j)
+        {
+            mul(i,j)=M(i,j)*D(j,j);
+        }
+    }
 
-	return mul;
+    return mul;
 }
 
 inline Matrix fast_mul_diag_diag(const Matrix& D1,const Matrix& D2)
 {
-	#ifdef SAFE_MODE
+    #ifdef SAFE_MODE
     if (D1.R!=D1.C || D2.R!=D2.C || D1.R!=D2.R)
     {
         printf("Matrix::mul_diag_diag incompatible dimension ERROR\n");
-		exit(-1);
+        exit(-1);
     }
-	#endif
+    #endif
 
-	Matrix mul(D1.R,D1.R);
+    Matrix mul(D1.R,D1.R);
 
-	for (int i=0; i<D1.R; ++i) mul(i,i)=D1(i,i)*D2(i,i);
+    for (int i=0; i<D1.R; ++i) mul(i,i)=D1(i,i)*D2(i,i);
 
-	return mul;
+    return mul;
 }
 
 inline Matrix fast_mul_diag_scalar(const Matrix& D,double x)
 {
-	#ifdef SAFE_MODE
+    #ifdef SAFE_MODE
     if (D.R!=D.C)
     {
         printf("Matrix::mul_diag_scalar incompatible dimension ERROR\n");
-		exit(-1);
+        exit(-1);
     }
-	#endif
+    #endif
 
-	Matrix mul(D.R,D.R);
+    Matrix mul(D.R,D.R);
 
-	for (int i=0; i<D.R; ++i) mul(i,i)=D(i,i)*x;
+    for (int i=0; i<D.R; ++i) mul(i,i)=D(i,i)*x;
 
-	return mul;
+    return mul;
 }
 
 inline Matrix fast_mul_scalar_diag(double x,const Matrix& D)
 {
-	return fast_mul_diag_scalar(D,x);
+    return fast_mul_diag_scalar(D,x);
 }
 
 /*
 class DiagMatrix : public Matrix
 {
 public:
-	DiagMatrix(int dim) : Matrix(dim)
-	{
-		d=new double[dim];
+    DiagMatrix(int dim) : Matrix(dim)
+    {
+        d=new double[dim];
 
-		for (int i=0; i<dim; ++i) d[i]=0;
-	}
+        for (int i=0; i<dim; ++i) d[i]=0;
+    }
 
-	virtual ~DiagMatrix() 
-	{
-		if (d) delete [] d;
-	}
+    virtual ~DiagMatrix() 
+    {
+        if (d) delete [] d;
+    }
 
-	virtual void operator()()
-	{
-		printf("DiagMatrix\n");
-	}
+    virtual void operator()()
+    {
+        printf("DiagMatrix\n");
+    }
 
 protected:
-	double *d;
+    double *d;
 };
 */
 
