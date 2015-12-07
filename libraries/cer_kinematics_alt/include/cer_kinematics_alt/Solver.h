@@ -115,6 +115,7 @@ public:
         Rotation& R=mPart[frame]->Toj.Rj();
         Vec3& P=mPart[frame]->Toj.Pj();
 
+        H.resize(4,4);
         H(0,0)=R(0,0); H(0,1)=R(0,1); H(0,2)=R(0,2); H(0,3)=P.x;
         H(1,0)=R(1,0); H(1,1)=R(1,1); H(1,2)=R(1,2); H(1,3)=P.y;
         H(2,0)=R(2,0); H(2,1)=R(2,1); H(2,2)=R(2,2); H(2,3)=P.z;
