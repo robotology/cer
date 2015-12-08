@@ -28,10 +28,10 @@
 #define SCAN(r,c) FOR_R(r) FOR_C(c)
 
 namespace cer {
-namespace kinematics2 {
+namespace kinematics_alt {
 
 class Matrix
-{ 
+{
 public:
     Matrix(int r,int c=1,bool zero=true) : R(r),C(c)
     {
@@ -341,10 +341,10 @@ public:
         Matrix WT=t();
 
         for (int i=0; i<W.R; ++i) for (int j=0; j<WT.C; ++j) WT(i,j)*=W(i,i);
-        
+
         //Matrix WT=fast_mul_diag_full(W,t());
         //Matrix WT=W*t();
-        
+
         return WT*(*this*WT).inv();
     }
 
@@ -396,7 +396,7 @@ public:
 
             for (int rr=r+1; rr<R; ++rr)
             {
-                double D=P*B(rr,r); 
+                double D=P*B(rr,r);
 
                 FOR_C(c)
                 {
@@ -472,7 +472,7 @@ public:
             {
                 fprintf(pfile,"%.12lf   ",m[r][c]);
             }
-    
+
             fprintf(pfile,"\n");
         }
 
@@ -510,13 +510,13 @@ public:
 
         if (p1==0.0) // M is diagonal
         {
-            
+
             if (m[0][0]>=m[1][1] && m[0][0]>=m[2][2])
             {
                 eig(0)=m[0][0];
 
                 if (m[1][1]>=m[2][2])
-                {   
+                {
                     eig(1)=m[1][1];
                     eig(2)=m[2][2];
                 }
@@ -531,7 +531,7 @@ public:
                 eig(0)=m[1][1];
 
                 if (m[2][2]>=m[0][0])
-                {   
+                {
                     eig(1)=m[2][2];
                     eig(2)=m[0][0];
                 }
@@ -546,7 +546,7 @@ public:
                 eig(0)=m[2][2];
 
                 if (m[0][0]>=m[1][1])
-                {   
+                {
                     eig(1)=m[0][0];
                     eig(2)=m[1][1];
                 }
@@ -571,7 +571,7 @@ public:
 
             // In exact arithmetic for a symmetric matrix  -1 <= r <= 1
             // but computation error can leave it slightly outside this range.
-            
+
             double phi;
 
             if (r<=-1.0)
@@ -643,12 +643,12 @@ protected:
     void allocate()
     {
         m=new double*[R];
-        
+
         FOR_R(r) m[r]=new double[C];
     }
 
     double abs(double x) const { return x>0.0?x:-x; }
-    double sgn(double x) const { return x>=0.0?1.0:-1.0; } 
+    double sgn(double x) const { return x>=0.0?1.0:-1.0; }
 
     double** m;
 };
@@ -754,7 +754,7 @@ public:
         for (int i=0; i<dim; ++i) d[i]=0;
     }
 
-    virtual ~DiagMatrix() 
+    virtual ~DiagMatrix()
     {
         if (d) delete [] d;
     }

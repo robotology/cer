@@ -17,11 +17,11 @@
 
 #include <cer_kinematics_alt/Solver.h>
 
-using namespace cer::kinematics2;
+using namespace cer::kinematics_alt;
 
 //Vec3 Werr=(mHand[L]->Toj.Rj().Ex()%Uxstar)+(mHand[L]->Toj.Rj().Ey()%Uystar)+(mHand[L]->Toj.Rj().Ez()%Uzstar);
 
-LeftSideSolver::LeftSideSolver() : 
+LeftSideSolver::LeftSideSolver() :
     q(NJOINTS),
     qzero(NJOINTS),
     q_valid(NJOINTS),
@@ -31,14 +31,14 @@ LeftSideSolver::LeftSideSolver() :
     S(12,12),
     Jhand(6,NJOINTS),
     J(6,12),
-    Jv(3,12), 
-    Jw(3,12), 
+    Jv(3,12),
+    Jw(3,12),
     AJvt(12,3),
     SJt(12,6),
     lva(3),
-    Rva(3,3), 
+    Rva(3,3),
     Lva(3,3),
-    qv(12), 
+    qv(12),
     Z(12,12),
     OJwt(12,3),
     Lwa(3,3),
@@ -124,7 +124,7 @@ LeftSideSolver::LeftSideSolver() :
         mPart[13] = mRshoulder1;
 
         Component* Rshoulder2 = new Joint(id,-90,90,qmin,qmax,mRshoulder1); mJoint[nj++] = (Joint*)Rshoulder2;
-        Rshoulder2 = new Component(Transform(0,251,-90,90),Rshoulder2); 
+        Rshoulder2 = new Component(Transform(0,251,-90,90),Rshoulder2);
         mUArm[R] = Rshoulder2;
 
         mPart[14] = Rshoulder2;
@@ -172,14 +172,14 @@ LeftSideSolver::LeftSideSolver() :
 
     ///////////////////////////////////////////////////////////////////////////////////
 
-    for (int j=0; j<NJOINTS; ++j) 
-    { 
+    for (int j=0; j<NJOINTS; ++j)
+    {
         Q[j]=DEG2RAD*30.0;
         Ks[j]=0.25*RAD2DEG;
         Kz[j]=0.01*DEG2RAD;
     }
 
-    for (int j=0; j<=2; ++j) 
+    for (int j=0; j<=2; ++j)
     {
         int k=startLForeArm+1+j;
         int h=startRForeArm+1+j;
@@ -248,7 +248,7 @@ int LeftSideSolver::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
     if (Vstar.mod()<mPosThreshold) return ON_TARGET;
 
     Vec3 Wstar=(Qstar*mHand[L]->Toj.Rj().quaternion().conj()).V;
-    
+
     Matrix Vref=     Vstar;
     Matrix Wref=M_PI*Wstar;
 
@@ -291,7 +291,7 @@ int LeftSideSolver::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
     if (fabs(Vrot(0))>5.0) Vrot(0)=(Vrot(0)>0.0?5.0:-5.0);
     if (fabs(Vrot(1))>5.0) Vrot(1)=(Vrot(1)>0.0?5.0:-5.0);
     if (fabs(Vrot(2))>5.0) Vrot(2)=(Vrot(2)>0.0?5.0:-5.0);
-    
+
     qv=A*Jv.t()*Rv*Vrot;
 
     ////////////////////////////////////////
@@ -318,7 +318,7 @@ int LeftSideSolver::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
     if (Vstar.mod()<mPosThreshold) return ON_TARGET;
 
     Vec3 Wstar=(Qstar*mHand[L]->Toj.Rj().quaternion().conj()).V;
-    
+
     Matrix Vref=     Vstar;
     Matrix Wref=M_PI*Wstar;
 
@@ -356,11 +356,11 @@ int LeftSideSolver::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 
     (Jv*AJvt).base(lva,Rva);
 
-    //Lva(0,0)=lva(0)/(lva(0)*lva(0)+0.000004); 
+    //Lva(0,0)=lva(0)/(lva(0)*lva(0)+0.000004);
     //Lva(1,1)=lva(1)/(lva(1)*lva(1)+0.000004);
     //Lva(2,2)=lva(2)/(lva(2)*lva(2)+0.000004);
 
-    Lva(0,0)=1.0/lva(0); 
+    Lva(0,0)=1.0/lva(0);
     Lva(1,1)=1.0/lva(1);
     Lva(2,2)=1.0/lva(2);
 
@@ -386,7 +386,7 @@ int LeftSideSolver::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 
     (Jw*OJwt).base(lwa,Rwa);
 
-    Lwa(0,0)=1.0/lwa(0); 
+    Lwa(0,0)=1.0/lwa(0);
     Lwa(1,1)=1.0/lwa(1);
     Lwa(2,2)=1.0/lwa(2);
 

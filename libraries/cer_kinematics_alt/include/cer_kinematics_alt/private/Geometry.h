@@ -27,7 +27,7 @@ const double DEG2RAD=M_PI/180.0;
 const double RAD2DEG=180.0/M_PI;
 
 namespace cer {
-namespace kinematics2 {
+namespace kinematics_alt {
 
 class Vec3
 {
@@ -43,7 +43,7 @@ public:
         if (M.R!=3 || M.C!=1)
         {
             printf("Vec3(Matrix &M) invalid dimension ERROR\n");
-            exit(-1); 
+            exit(-1);
         }
 
         x=M(0); y=M(1); z=M(2);
@@ -127,7 +127,7 @@ public:
         a=1.0/a;
 
         x*=a; y*=a; z*=a;
-        
+
         return *this;
     }
 
@@ -194,13 +194,13 @@ inline Vec3 operator*(double x,const Vec3& V)
 }
 
 inline Vec3 operator%(const Vec3& U,const Vec3& V)
-{ 
-    return Vec3(U.y*V.z-U.z*V.y,U.z*V.x-U.x*V.z,U.x*V.y-U.y*V.x); 
+{
+    return Vec3(U.y*V.z-U.z*V.y,U.z*V.x-U.x*V.z,U.x*V.y-U.y*V.x);
 }
 
 inline double operator*(const Vec3& U,const Vec3& V)
-{ 
-    return U.x*V.x+U.y*V.y+U.z*V.z; 
+{
+    return U.x*V.x+U.y*V.y+U.z*V.z;
 }
 
 class Quaternion
@@ -273,7 +273,7 @@ public:
     }
 
     Rotation(double Rx,double Ry,double Rz)
-    {   
+    {
         Rx*=DEG2RAD;
         Ry*=DEG2RAD;
         Rz*=DEG2RAD;
@@ -319,7 +319,7 @@ public:
         //B.normalize();
 
         Vec3 u=A%B;
-        
+
         double st=u.mod();
         double ct=A*B;
         double lct=1.0-ct;
@@ -439,7 +439,7 @@ public:
             double s = 0.5/r;
             Q.s   = (m[0][2]-m[2][0])*s;
             Q.V.x = (m[0][1]+m[1][0])*s;
-            Q.V.y = 0.5*r;           
+            Q.V.y = 0.5*r;
             Q.V.z = (m[2][1]+m[1][2])*s;
         }
         else if (m[2][2]>=m[0][0] && m[2][2]>=m[1][1])
@@ -471,11 +471,11 @@ public:
         if (cosTh<=-1.0)
         {
             Vec3 U;
-            
+
             if (m[0][0]>-1.0) U.x=sqrt(0.5*(1.0+m[0][0]));
             if (m[1][1]>-1.0) U.y=sqrt(0.5*(1.0+m[1][1]));
             if (m[2][2]>-1.0) U.z=sqrt(0.5*(1.0+m[2][2]));
-            
+
             if (m[0][1]<0.0) U.x=-U.x;
             if (m[1][2]<0.0) U.z=-U.z;
 
@@ -483,7 +483,7 @@ public:
         }
 
         Vec3 U(m[2][1]-m[1][2],m[0][2]-m[2][0],m[1][0]-m[0][1]);
-        
+
         return U.norm(acos(cosTh));
     }
 

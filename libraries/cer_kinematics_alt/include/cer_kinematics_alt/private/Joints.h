@@ -29,13 +29,13 @@
 #define SET(V,j,W) { V(0,j)=W(0); V(1,j)=W(1); V(2,j)=W(2); }
 
 namespace cer {
-namespace kinematics2 {
+namespace kinematics_alt {
 
 class Component
 {
 public:
 
-    Component(const Transform &T0,Component* parent) 
+    Component(const Transform &T0,Component* parent)
         : Tdir(T0),Tinv(T0.inv())//,JGoj(3,NJ)
     {
         mN=0;
@@ -130,7 +130,7 @@ public:
         {
             Vec3 ZjxP_G=Voj[j]+(Zoj[j]%(G-Poj[j]));
 
-            Jg(0,j)=ZjxP_G.x; 
+            Jg(0,j)=ZjxP_G.x;
             Jg(1,j)=ZjxP_G.y;
         }
 
@@ -199,7 +199,7 @@ public:
         vqmax[id]=qmax;
         ID=id++;
     }
-    
+
     void setLimits(double q1,double q2)
     {
         qmin=q1;
@@ -256,7 +256,7 @@ protected:
 class Trifid : public Component
 {
 public:
-    Trifid(int& id,double size,double qa,double qb,double* ret_qmin,double* ret_qmax,Component* parent) 
+    Trifid(int& id,double size,double qa,double qb,double* ret_qmin,double* ret_qmax,Component* parent)
         : Component(parent)
     {
         size*=0.001;
@@ -267,7 +267,7 @@ public:
 
         qmin=qa;
         qmax=qb;
-        
+
         j0=id++; j1=id++; j2=id++;
 
         ret_qmin[j0]=qmin; ret_qmax[j0]=qmax;
@@ -409,7 +409,7 @@ public:
         else
         {
             if (bound[j0]!=1 && bound[j1]!=1 && bound[j2]!=1)
-            {               
+            {
                 if (q(j0)<qmax && q(j1)<qmax && q(j2)<qmax)
                 {
                     qp(j0)+=v; qp(j1)+=v; qp(j2)+=v;

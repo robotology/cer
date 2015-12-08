@@ -31,7 +31,7 @@
 
 #include <cer_kinematics_alt/Solver.h>
 
-using namespace cer::kinematics2;
+using namespace cer::kinematics_alt;
 
 class RobotThread : public yarp::os::RateThread
 {
@@ -44,13 +44,13 @@ public:
     virtual void onStop();
 
     void sendConfig(yarp::sig::Vector &q);
-	void sendCOM(std::string& name,int R,int G,int B,Vec3& P,double size,double alpha);
-	void sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha);
+    void sendCOM(std::string& name,int R,int G,int B,Vec3& P,double size,double alpha);
+    void sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha);
 
 protected:
     LeftSideSolver mRobot;
 
-	double finger[9];
+    double finger[9];
 
     yarp::os::BufferedPort<yarp::sig::Vector> portEncBase;
     yarp::os::BufferedPort<yarp::sig::Vector> portEncTorso;
@@ -58,16 +58,16 @@ protected:
     yarp::os::BufferedPort<yarp::sig::Vector> portEncLeftArm;
     yarp::os::BufferedPort<yarp::sig::Vector> portEncRightArm;
 
-	yarp::os::BufferedPort<yarp::os::Bottle> portObjects;
+    yarp::os::BufferedPort<yarp::os::Bottle> portObjects;
 };
 
 
 RobotThread::RobotThread() : RateThread(int(PERIOD*1000.0)) //RateThread(int(PERIOD*1000.0))
 {
-	finger[0]=30.0;
-	finger[1]=60.0;
+    finger[0]=30.0;
+    finger[1]=60.0;
 
-	for (int i=2; i<9; ++i) finger[i]=10.0;
+    for (int i=2; i<9; ++i) finger[i]=10.0;
 }
 
 bool RobotThread::threadInit()
@@ -77,7 +77,7 @@ bool RobotThread::threadInit()
     portEncHead.open("/CERControl/head:o");
     portEncLeftArm.open("/CERControl/left_arm:o");
     portEncRightArm.open("/CERControl/right_arm:o");
-	portObjects.open("/CERControl/objects:o");
+    portObjects.open("/CERControl/objects:o");
 
     yarp::os::Network::connect("/CERControl/base:o","/CERGui/base:i");
     yarp::os::Network::connect("/CERControl/torso:o","/CERGui/torso:i");
@@ -86,10 +86,10 @@ bool RobotThread::threadInit()
     yarp::os::Network::connect("/CERControl/right_arm:o","/CERGui/right_arm:i");
     yarp::os::Network::connect("/CERControl/objects:o","/CERGui/objects:i");
 
-	yarp::os::Bottle& bot=portObjects.prepare();
-	bot.clear();
-	bot.addString("reset");
-	portObjects.write();
+    yarp::os::Bottle& bot=portObjects.prepare();
+    bot.clear();
+    bot.addString("reset");
+    portObjects.write();
 
     srand((unsigned)time(NULL));
 
@@ -102,89 +102,89 @@ void RobotThread::onStop()
 
 void RobotThread::threadRelease()
 {
-	portEncBase.interrupt();
+    portEncBase.interrupt();
     portEncTorso.interrupt();
     portEncHead.interrupt();
     portEncLeftArm.interrupt();
     portEncRightArm.interrupt();
-	portObjects.interrupt();
-        
+    portObjects.interrupt();
+
     portEncBase.close();
     portEncTorso.close();
     portEncHead.close();
     portEncLeftArm.close();
     portEncRightArm.close();
-	portObjects.close();
+    portObjects.close();
 }
 
 void RobotThread::run()
 {
-	yarp::sig::Matrix T(4,4);
+    yarp::sig::Matrix T(4,4);
 
-	static double ti=0.0;
+    static double ti=0.0;
 
-	T(0,0)= 0.0; T(0,1)= 0.0; T(0,2)= 1.0; T(0,3)=0.35;//radius*cos(DEG2RAD*alfa);
-	T(1,0)= 0.0; T(1,1)= 1.0; T(1,2)= 0.0; T(1,3)=0.1*cos(0.4*2.0*M_PI*ti);//radius*sin(DEG2RAD*alfa);
-	T(2,0)=-1.0; T(2,1)= 0.0; T(2,2)= 0.0; T(2,3)=0.1*sin(0.4*2.0*M_PI*ti);//0.7-0.63;
-	T(3,0)= 0.0; T(3,1)= 0.0; T(3,2)= 0.0; T(3,3)=1.0;
+    T(0,0)= 0.0; T(0,1)= 0.0; T(0,2)= 1.0; T(0,3)=0.35;//radius*cos(DEG2RAD*alfa);
+    T(1,0)= 0.0; T(1,1)= 1.0; T(1,2)= 0.0; T(1,3)=0.1*cos(0.4*2.0*M_PI*ti);//radius*sin(DEG2RAD*alfa);
+    T(2,0)=-1.0; T(2,1)= 0.0; T(2,2)= 0.0; T(2,3)=0.1*sin(0.4*2.0*M_PI*ti);//0.7-0.63;
+    T(3,0)= 0.0; T(3,1)= 0.0; T(3,2)= 0.0; T(3,3)=1.0;
 
-	ti+=PERIOD;
+    ti+=PERIOD;
 
-	sendTarget(std::string("target"),0,64,255,T(0,3),T(1,3),T(2,3),10.0,0.666);
+    sendTarget(std::string("target"),0,64,255,T(0,3),T(1,3),T(2,3),10.0,0.666);
 
-	yarp::sig::Vector qsol(22);
+    yarp::sig::Vector qsol(22);
 
-	double timeA,timeB;
+    double timeA,timeB;
 
-	timeA=yarp::os::Time::now();
+    timeA=yarp::os::Time::now();
 
-	bool success=mRobot.ikin(T,qsol);
+    bool success=mRobot.ikin(T,qsol);
 
-	timeB=yarp::os::Time::now();
+    timeB=yarp::os::Time::now();
 
-	sendConfig(qsol);
+    sendConfig(qsol);
 
-	printf("time = %d ms\n",int(1000.0*(timeB-timeA)));
-	//fflush(stdout);
+    printf("time = %d ms\n",int(1000.0*(timeB-timeA)));
+    //fflush(stdout);
 
-	//Vec3 COM=mRobot.getCOM();
-	//COM.z=-0.63;
-	//sendCOM(std::string("G"),192,192,0,COM,16.0,1.0);
+    //Vec3 COM=mRobot.getCOM();
+    //COM.z=-0.63;
+    //sendCOM(std::string("G"),192,192,0,COM,16.0,1.0);
 
-	//sendCOM(std::string("LUarm"),192,192,0,mRobot.G[3],30.0,0.5);
-	//sendCOM(std::string("LLarm"),192,192,0,mRobot.G[4],30.0,0.5);
-	//sendCOM(std::string("Lhand"),192,192,0,mRobot.G[5],30.0,0.5);
+    //sendCOM(std::string("LUarm"),192,192,0,mRobot.G[3],30.0,0.5);
+    //sendCOM(std::string("LLarm"),192,192,0,mRobot.G[4],30.0,0.5);
+    //sendCOM(std::string("Lhand"),192,192,0,mRobot.G[5],30.0,0.5);
 
-	//sendCOM(std::string("base"),192,192,0,mRobot.G[0],30.0,0.5);
-	//sendCOM(std::string("body"),192,192,0,mRobot.G[1],30.0,0.5);
-	//sendCOM(std::string("head"),192,192,0,mRobot.G[2],30.0,0.5);
+    //sendCOM(std::string("base"),192,192,0,mRobot.G[0],30.0,0.5);
+    //sendCOM(std::string("body"),192,192,0,mRobot.G[1],30.0,0.5);
+    //sendCOM(std::string("head"),192,192,0,mRobot.G[2],30.0,0.5);
 
-	//sendCOM(std::string("RUarm"),192,192,0,mRobot.G[6],30.0,0.5);
-	//sendCOM(std::string("RLarm"),192,192,0,mRobot.G[7],30.0,0.5);
-	//sendCOM(std::string("Rhand"),192,192,0,mRobot.G[8],30.0,0.5);
+    //sendCOM(std::string("RUarm"),192,192,0,mRobot.G[6],30.0,0.5);
+    //sendCOM(std::string("RLarm"),192,192,0,mRobot.G[7],30.0,0.5);
+    //sendCOM(std::string("Rhand"),192,192,0,mRobot.G[8],30.0,0.5);
 
-	/*
-	if (success)
-	{
-		printf("SUCCESS\n");
-		sendTarget(target_name,0,200,0,T(0,3),T(1,3),T(2,3),10.0,1.0);
-		if (dumper)
-		{
-			fprintf(dumper,"1 %.3f %.3f %.3f ",T(0,3),T(1,3),T(2,3));
-			//fprintf(dumper,"%.3f %.3f %.3f\n",COM.x,COM.y,COM.z);
-		}
-	}
-	else
-	{
-		printf("OUT_OF_REACH\n");
-		sendTarget(target_name,255,0,32,T(0,3),T(1,3),T(2,3),10.0,1.0);
-		if (dumper)
-		{
-			fprintf(dumper,"0 %.3f %.3f %.3f ",T(0,3),T(1,3),T(2,3));
-			//fprintf(dumper,"%.3f %.3f %.3f\n",COM.x,COM.y,COM.z);
-		}
-	}
-	*/
+    /*
+    if (success)
+    {
+        printf("SUCCESS\n");
+        sendTarget(target_name,0,200,0,T(0,3),T(1,3),T(2,3),10.0,1.0);
+        if (dumper)
+        {
+            fprintf(dumper,"1 %.3f %.3f %.3f ",T(0,3),T(1,3),T(2,3));
+            //fprintf(dumper,"%.3f %.3f %.3f\n",COM.x,COM.y,COM.z);
+        }
+    }
+    else
+    {
+        printf("OUT_OF_REACH\n");
+        sendTarget(target_name,255,0,32,T(0,3),T(1,3),T(2,3),10.0,1.0);
+        if (dumper)
+        {
+            fprintf(dumper,"0 %.3f %.3f %.3f ",T(0,3),T(1,3),T(2,3));
+            //fprintf(dumper,"%.3f %.3f %.3f\n",COM.x,COM.y,COM.z);
+        }
+    }
+    */
 }
 
 void RobotThread::sendConfig(yarp::sig::Vector &q)
@@ -193,7 +193,7 @@ void RobotThread::sendConfig(yarp::sig::Vector &q)
     {
         yarp::sig::Vector& enc=portEncBase.prepare();
         enc.clear();
-                
+
         //Vec3 P=1000.*mRobot.getT().Pj();
         //Vec3 R=mRobot.getT().Rj().rpy();
 
@@ -205,12 +205,12 @@ void RobotThread::sendConfig(yarp::sig::Vector &q)
         //enc.push_back(P.y);
         //enc.push_back(P.z);
 
-		enc.push_back(0.0);
-		enc.push_back(0.0);
-		enc.push_back(0.0);
-		enc.push_back(0.0);
-		enc.push_back(0.0);
-		enc.push_back(0.0);
+        enc.push_back(0.0);
+        enc.push_back(0.0);
+        enc.push_back(0.0);
+        enc.push_back(0.0);
+        enc.push_back(0.0);
+        enc.push_back(0.0);
 
         portEncBase.write();
     }
@@ -219,11 +219,11 @@ void RobotThread::sendConfig(yarp::sig::Vector &q)
     {
         yarp::sig::Vector& enc=portEncTorso.prepare();
         enc.clear();
-		enc.push_back(410.0+1000.0*q(0));
+        enc.push_back(410.0+1000.0*q(0));
         enc.push_back(410.0+1000.0*q(1));
         enc.push_back(410.0+1000.0*q(2));
         enc.push_back(q(3));
-		portEncTorso.write();
+        portEncTorso.write();
     }
 
     if (portEncLeftArm.getOutputCount()>0)
@@ -231,8 +231,8 @@ void RobotThread::sendConfig(yarp::sig::Vector &q)
         yarp::sig::Vector& enc=portEncLeftArm.prepare();
         enc.clear();
         for (int i=4; i<9; ++i) enc.push_back(q(i));
-		for (int i=9; i<12; ++i) enc.push_back(1000.0*q(i));
-		//for (int i=0; i<9; ++i) enc.push_back(finger[i]);
+        for (int i=9; i<12; ++i) enc.push_back(1000.0*q(i));
+        //for (int i=0; i<9; ++i) enc.push_back(finger[i]);
         portEncLeftArm.write();
     }
 
@@ -241,12 +241,12 @@ void RobotThread::sendConfig(yarp::sig::Vector &q)
         yarp::sig::Vector& enc=portEncRightArm.prepare();
         enc.clear();
         for (int i=12; i<17; ++i) enc.push_back(q(i));
-		for (int i=17; i<20; ++i) enc.push_back(1000.0*q(i));
+        for (int i=17; i<20; ++i) enc.push_back(1000.0*q(i));
         //for (int i=0; i<9; ++i) enc.push_back(finger[i]);
-		portEncRightArm.write();
+        portEncRightArm.write();
     }
 
-	if (portEncHead.getOutputCount()>0)
+    if (portEncHead.getOutputCount()>0)
     {
         yarp::sig::Vector& enc=portEncHead.prepare();
         enc.clear();
@@ -257,42 +257,42 @@ void RobotThread::sendConfig(yarp::sig::Vector &q)
 
 void RobotThread::sendCOM(std::string& name,int R,int G,int B,Vec3& P,double size,double alpha)
 {
-	yarp::os::Bottle& botR=portObjects.prepare();
-	botR.clear();
-	botR.addString("object_with_label"); 
-	botR.addString(name); botR.addString(name);
-	botR.addDouble(size);
-	botR.addDouble(0.0); 
-	botR.addDouble(0.0);
-	botR.addDouble(P.x*1000.0); 
-	botR.addDouble(P.y*1000.0);
-	botR.addDouble(P.z*1000.0);
-	//botR.addDouble(-630.0);
+    yarp::os::Bottle& botR=portObjects.prepare();
+    botR.clear();
+    botR.addString("object_with_label");
+    botR.addString(name); botR.addString(name);
+    botR.addDouble(size);
+    botR.addDouble(0.0);
+    botR.addDouble(0.0);
+    botR.addDouble(P.x*1000.0);
+    botR.addDouble(P.y*1000.0);
+    botR.addDouble(P.z*1000.0);
+    //botR.addDouble(-630.0);
 
-	botR.addDouble(0.0); botR.addDouble(0.0); botR.addDouble(0.0);
-	botR.addInt(R); botR.addInt(G); botR.addInt(B);
-	botR.addDouble(alpha);
-	//botR.addString("WORLD");
-	portObjects.writeStrict();
+    botR.addDouble(0.0); botR.addDouble(0.0); botR.addDouble(0.0);
+    botR.addInt(R); botR.addInt(G); botR.addInt(B);
+    botR.addDouble(alpha);
+    //botR.addString("WORLD");
+    portObjects.writeStrict();
 }
 
 void RobotThread::sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha)
 {
-	yarp::os::Bottle& botR=portObjects.prepare();
-	botR.clear();
-	botR.addString("object"); botR.addString(name);
-	botR.addDouble(size);
-	botR.addDouble(0.0); 
-	botR.addDouble(0.0);
-	botR.addDouble(x*1000.0); 
-	botR.addDouble(y*1000.0);
-	botR.addDouble(z*1000.0);
-		
-	botR.addDouble(0.0); botR.addDouble(0.0); botR.addDouble(0.0);
-	botR.addInt(R); botR.addInt(G); botR.addInt(B);
-	botR.addDouble(alpha);
-	//botR.addString("WORLD");
-	portObjects.writeStrict();
+    yarp::os::Bottle& botR=portObjects.prepare();
+    botR.clear();
+    botR.addString("object"); botR.addString(name);
+    botR.addDouble(size);
+    botR.addDouble(0.0);
+    botR.addDouble(0.0);
+    botR.addDouble(x*1000.0);
+    botR.addDouble(y*1000.0);
+    botR.addDouble(z*1000.0);
+
+    botR.addDouble(0.0); botR.addDouble(0.0); botR.addDouble(0.0);
+    botR.addInt(R); botR.addInt(G); botR.addInt(B);
+    botR.addDouble(alpha);
+    //botR.addString("WORLD");
+    portObjects.writeStrict();
 }
 
 
@@ -313,7 +313,7 @@ public:
     virtual bool configure(yarp::os::ResourceFinder &rf)
     {
         yarp::os::Time::turboBoost();
-        
+
         mRobotThread=new RobotThread();
 
         if (!mRobotThread->start())
@@ -349,24 +349,24 @@ public:
     }
 
     virtual double getPeriod()
-    { 
-        return 1.0; 
+    {
+        return 1.0;
     }
-    
+
     virtual bool updateModule()
     {
         if (isStopping())
         {
-            mRobotThread->stop();   
+            mRobotThread->stop();
             return false;
         }
-        
-        return true; 
+
+        return true;
     }
 
-    virtual bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply) 
+    virtual bool respond(const yarp::os::Bottle& command,yarp::os::Bottle& reply)
     {
-        if (command.get(0).asString()=="quit") return false;     
+        if (command.get(0).asString()=="quit") return false;
 
         return true;
     }

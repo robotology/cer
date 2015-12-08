@@ -31,7 +31,7 @@
 #include <cer_kinematics_alt/private/Joints.h>
 
 namespace cer {
-namespace kinematics2 {
+namespace kinematics_alt {
 
 #define NJOINTS 22
 #define PERIOD 0.01 // seconds
@@ -40,7 +40,7 @@ namespace kinematics2 {
 #define DEFAULT_TORSO_EXTENSION 0.0
 #define DEFAULT_POS_THRESHOLD   0.005
 
-#define SOLVER_TIMEOUT 40 
+#define SOLVER_TIMEOUT 40
 
 #define WRIST_MAX_TILT 35.0
 #define TORSO_MAX_TILT 30.0
@@ -58,15 +58,15 @@ enum { R = 0, L = 1 };
 
 
 /**
- * Class to handle direct and inverse kinematics of the robot arm. 
- * 
+ * Class to handle direct and inverse kinematics of the robot arm.
+ *
  * @author Alessandro Scalzo
  */
 class LeftSideSolver
 {
 public:
 
-    LeftSideSolver(); 
+    LeftSideSolver();
 
     virtual ~LeftSideSolver(void)
     {
@@ -87,11 +87,11 @@ public:
 
     /**
      * Forward Kinematics Law.
-     * 
+     *
      * @param qin      the DOFs values ([m]-[deg]-[m]).
-     * @param H        the 4-by-4 homogeneous matrix of the specified 
+     * @param H        the 4-by-4 homogeneous matrix of the specified
      *                 frame ([m]).
-     * @param frame    specify the DOF number whose frame is returned. 
+     * @param frame    specify the DOF number whose frame is returned.
      *                 Thus, frame is in [0...nDOF-1]; negative
      *                 numbers account for the end-effector frame.
      * @return true/false on success/failure.
@@ -99,17 +99,17 @@ public:
     bool fkin(const yarp::sig::Vector &qin, yarp::sig::Matrix &H,int frame=LEFT_HAND)
     {
         if (frame<0) frame=LEFT_HAND;
-            
+
         if (frame>NJOINTS) return false;
 
         Matrix qconf(NJOINTS);
 
-        int N=qin.length(); 
-        
+        int N=qin.length();
+
         if (N>NJOINTS) N=NJOINTS;
 
         for (int j=0; j<N; ++j) qconf(j)=qin(j);
-    
+
         mRoot->calcPosture(qconf,T_ROOT);
 
         Rotation& R=mPart[frame]->Toj.Rj();
@@ -126,11 +126,11 @@ public:
 
     /**
      * Inverse Kinematics Law.
-     * 
-     * @param Hd         the desired 4-by-4 homogeneous matrix 
+     *
+     * @param Hd         the desired 4-by-4 homogeneous matrix
      *                   representing the end-effector frame ([m]).
      * @param qout       the solved DOFs ([m]-[deg]-[m]).
-     * @param armElong   the desired elongation of the left forearm tripod ([m]). 
+     * @param armElong   the desired elongation of the left forearm tripod ([m]).
      * @param torsoElong the desired elongation of the torso tripod ([m]).
      * @return true/false on success/failure.
      */
@@ -151,8 +151,8 @@ public:
         }
 
         QtargetL=Rotation(Vec3(Hd(0,0),Hd(1,0),Hd(2,0)),Vec3(Hd(0,1),Hd(1,1),Hd(2,1)),Vec3(Hd(0,2),Hd(1,2),Hd(2,2))).quaternion();
-        
-        XtargetL=Vec3(Hd(0,3),Hd(1,3),Hd(2,3)); 
+
+        XtargetL=Vec3(Hd(0,3),Hd(1,3),Hd(2,3));
 
         q=q_valid=qzero;
 
@@ -161,8 +161,8 @@ public:
         int steps=0;
 
         int N=qout.length();
-        
-        if (N>NJOINTS) N=NJOINTS; 
+
+        if (N>NJOINTS) N=NJOINTS;
 
         //leftHand2Target(XtargetL,QtargetL);
         //for (int j=0; j<N; ++j) qout(j)=q(j);
@@ -190,7 +190,7 @@ public:
 
             return true;
         }
-        
+
         return false;
     }
 
@@ -210,7 +210,7 @@ protected:
     {
         for (int j=0; j<NJOINTS; ++j)
         {
-            if (ql(j)<=qmin[j]) 
+            if (ql(j)<=qmin[j])
             {
                 ql(j)=qmin[j];
             }
@@ -224,8 +224,8 @@ protected:
     void limitJointSpeeds(Matrix& ql,Matrix& qd)
     {
         for (int j=0; j<NJOINTS; ++j)
-        {   
-            if (ql(j)<=qmin[j]) 
+        {
+            if (ql(j)<=qmin[j])
             {
                 if (qd(j)<0.0)
                 {
@@ -233,7 +233,7 @@ protected:
                 }
             }
             else if (ql(j)>=qmax[j])
-            {   
+            {
                 if (qd(j)>0.0)
                 {
                     qd(j)=0.0;
@@ -260,12 +260,12 @@ protected:
 
     Matrix Jhand;
     Matrix J;
-    Matrix Jv; 
-    Matrix Jw; 
-    Matrix AJvt; 
-    Matrix lva,Rva; 
+    Matrix Jv;
+    Matrix Jw;
+    Matrix AJvt;
+    Matrix lva,Rva;
     Matrix Lva;
-    Matrix qv; 
+    Matrix qv;
     Matrix Z;
     Matrix OJwt;
     Matrix Lwa;

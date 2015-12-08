@@ -17,7 +17,7 @@
 
 #include <cer_kinematics_alt/private/Joints.h>
 
-using namespace cer::kinematics2;
+using namespace cer::kinematics_alt;
 
 double Component::mBodyMass=0.0;
 double Component::mInvBodyMass=0.0;
@@ -43,7 +43,7 @@ void Trifid::calcPosture(Matrix& q,const Transform& Tprec,Component *from,Vec3* 
 
     Transform T0;
 
-    {       
+    {
         Vec3 N(q2+q3-2.0*q1,SQRT3*(q3-q2),3.0*L);
 
         double N2=N*N;
@@ -186,7 +186,7 @@ void Trifid::calcPosture(Matrix& q,const Transform& Tprec,Component *from,Vec3* 
         else
         {
             static const Vec3 V3(0.0,0.0,1.0/3.0);
-            
+
             double k1=-0.5*L;
             double k2= 0.5*SQRT3*L;
 
@@ -278,7 +278,7 @@ void Trifid2::calcPostureUns(Matrix& q,Transform& Tprec,Component *from,Vec3* Po
 
     Transform T0;
 
-    {       
+    {
         Vec3 N(q2+q3-2.0*q1,SQRT3*(q3-q2),3.0*L);
 
         double n=N.mod();
