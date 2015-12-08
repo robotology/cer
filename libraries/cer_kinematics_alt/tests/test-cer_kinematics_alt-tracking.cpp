@@ -44,7 +44,7 @@ public:
     virtual void onStop();
 
     void sendConfig(yarp::sig::Vector &q);
-    void sendCOM(std::string& name,int R,int G,int B,Vec3& P,double size,double alpha);
+    void sendCOM(std::string& name,int R,int G,int B,yarp::sig::Vector P,double size,double alpha);
     void sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha);
 
 protected:
@@ -255,7 +255,7 @@ void RobotThread::sendConfig(yarp::sig::Vector &q)
     }
 }
 
-void RobotThread::sendCOM(std::string& name,int R,int G,int B,Vec3& P,double size,double alpha)
+void RobotThread::sendCOM(std::string& name,int R,int G,int B,yarp::sig::Vector P,double size,double alpha)
 {
     yarp::os::Bottle& botR=portObjects.prepare();
     botR.clear();
@@ -264,9 +264,9 @@ void RobotThread::sendCOM(std::string& name,int R,int G,int B,Vec3& P,double siz
     botR.addDouble(size);
     botR.addDouble(0.0);
     botR.addDouble(0.0);
-    botR.addDouble(P.x*1000.0);
-    botR.addDouble(P.y*1000.0);
-    botR.addDouble(P.z*1000.0);
+    botR.addDouble(P[0]*1000.0);
+    botR.addDouble(P[1]*1000.0);
+    botR.addDouble(P[2]*1000.0);
     //botR.addDouble(-630.0);
 
     botR.addDouble(0.0); botR.addDouble(0.0); botR.addDouble(0.0);
