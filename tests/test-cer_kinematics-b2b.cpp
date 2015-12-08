@@ -29,7 +29,7 @@ using namespace yarp::os;
 using namespace yarp::sig;
 using namespace yarp::math;
 using namespace cer::kinematics;
-using namespace cer::kinematics2;
+using namespace cer::kinematics_alt;
 
 
 /****************************************************************/
