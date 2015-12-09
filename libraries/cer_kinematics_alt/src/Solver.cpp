@@ -515,8 +515,9 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
         //mTrifidHand[L] = new Trifid(id, 18, 220, 360, qmin, qmax, LfarmRot);
         mTrifidHand[L] = new Trifid(id, 18, 1000.0*(mArmExt[L]-0.5*mArmExc[L]), 1000.0*(mArmExt[L]+0.5*mArmExc[L]), qmin, qmax, LfarmRot);
 
-        //mHand[L] = new Component(Transform(0,20,0,0,0,0),mTrifidHand[L]);
-        mHand[L] = new Component(Transform(0,0,0,0,0,70),mTrifidHand[L]);
+        Component* frameAdj=new Component(Transform(0,20,0,0,0,0),mTrifidHand[L]);
+
+        mHand[L] = new Component(Transform(0,-90,0,0,0,70),frameAdj);
 
         mPart[9] = mPart[10] = mPart[11] = mHand[L];
     }
@@ -559,8 +560,9 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
         //mTrifidHand[R] = new Trifid(id, 18, 220, 360, qmin, qmax, RfarmRot);
         mTrifidHand[R] = new Trifid(id, 18, 1000.0*(mArmExt[R]-0.5*mArmExc[R]), 1000.0*(mArmExt[R]+0.5*mArmExc[R]), qmin, qmax, RfarmRot);
 
-        //mHand[R] = new Component(Transform(0,20,0,0,0,0),mTrifidHand[R]);
-        mHand[R] = new Component(Transform(0,0,0,0,0,70),mTrifidHand[R]);
+        Component* frameAdj=new Component(Transform(0,20,0,0,0,0),mTrifidHand[R]);
+
+        mHand[R] = new Component(Transform(0,-90,180,0,0,70),frameAdj);
 
         mPart[17] = mPart[18] = mPart[19] = mHand[R];
     }
