@@ -124,8 +124,8 @@ void RobotThread::run()
     static double ti=0.0;
 
     T(0,0)= 1.0; T(0,1)= 0.0; T(0,2)= 0.0; T(0,3)=0.35;//radius*cos(DEG2RAD*alfa);
-    T(1,0)= 0.0; T(1,1)= 1.0; T(1,2)= 0.0; T(1,3)=0.1*cos(0.1*2.0*M_PI*ti);//radius*sin(DEG2RAD*alfa);
-    T(2,0)= 0.0; T(2,1)= 0.0; T(2,2)= 1.0; T(2,3)=0.1*sin(0.1*2.0*M_PI*ti);//0.7-0.63;
+    T(1,0)= 0.0; T(1,1)= 1.0; T(1,2)= 0.0; T(1,3)=0.35+0.15*cos(0.4*2.0*M_PI*ti);//radius*sin(DEG2RAD*alfa);
+    T(2,0)= 0.0; T(2,1)= 0.0; T(2,2)= 1.0; T(2,3)=0.35+0.15*sin(0.4*2.0*M_PI*ti);//0.7-0.63;
     T(3,0)= 0.0; T(3,1)= 0.0; T(3,2)= 0.0; T(3,3)=1.0;
 
     ti+=PERIOD;
@@ -145,7 +145,7 @@ void RobotThread::run()
     sendConfig(qsol);
 
     printf("time = %d ms\n",int(1000.0*(timeB-timeA)));
-    //fflush(stdout);
+    fflush(stdout);
 
     //Vec3 COM=mRobot.getCOM();
     //COM.z=-0.63;
@@ -230,8 +230,8 @@ void RobotThread::sendConfig(yarp::sig::Vector &q)
     {
         yarp::sig::Vector& enc=portEncLeftArm.prepare();
         enc.clear();
-        for (int i=4; i<9; ++i) enc.push_back(q(i));
-        for (int i=9; i<12; ++i) enc.push_back(1000.0*q(i));
+        for (int i=4; i<9; ++i)  enc.push_back(q(i));
+        for (int i=9; i<12; ++i) enc.push_back(220.0+1000.0*q(i));
         //for (int i=0; i<9; ++i) enc.push_back(finger[i]);
         portEncLeftArm.write();
     }
@@ -241,7 +241,7 @@ void RobotThread::sendConfig(yarp::sig::Vector &q)
         yarp::sig::Vector& enc=portEncRightArm.prepare();
         enc.clear();
         for (int i=12; i<17; ++i) enc.push_back(q(i));
-        for (int i=17; i<20; ++i) enc.push_back(1000.0*q(i));
+        for (int i=17; i<20; ++i) enc.push_back(220.0+1000.0*q(i));
         //for (int i=0; i<9; ++i) enc.push_back(finger[i]);
         portEncRightArm.write();
     }

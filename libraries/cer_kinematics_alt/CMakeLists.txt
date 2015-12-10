@@ -2,16 +2,7 @@
 # Author: Alessandro Scalzo
 # email:  alessandro.scalzo@iit.it
 
-cmake_minimum_required(VERSION 2.8)
-
 project(cer_kinematics_alt)
-
-#set(CMAKE_MODULE_PATH ${YARP_DIR} ${CMAKE_MODULE_PATH})
-
-find_package(YARP REQUIRED)
-# Pick up our scripts - they are all in the conf subdirectory
-list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
-include(YarpInstallationHelpers)
 
 set(headers_private include/${PROJECT_NAME}/private/Geometry.h
                     include/${PROJECT_NAME}/private/Matrix.h

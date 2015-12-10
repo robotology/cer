@@ -29,7 +29,7 @@ namespace kinematics_alt {
 #define SOLVER_TIMEOUT 40 // steps
 #define WRIST_MAX_TILT 35.0 // [deg]
 #define TORSO_MAX_TILT 30.0 // [deg]
-#define DEFAULT_ARM_EXTENSION   0.23  // [m]
+#define DEFAULT_ARM_EXTENSION   0.01  // [m]
 #define DEFAULT_TORSO_EXTENSION 0.0   // [m]
 #define DEFAULT_POS_THRESHOLD   0.005 // [m]
 
@@ -49,6 +49,7 @@ enum
     L_WRIST_TRIPOD_1 =  9,
     L_WRIST_TRIPOD_2 = 10,
     L_WRIST_TRIPOD_3 = 11,
+    LEFT_HAND        = L_WRIST_TRIPOD_3, //alias
 
     R_SHOULDER_PITCH = 12,    
     R_SHOULDER_ROLL  = 13,
@@ -58,9 +59,11 @@ enum
     R_WRIST_TRIPOD_1 = 17,
     R_WRIST_TRIPOD_2 = 18,
     R_WRIST_TRIPOD_3 = 19,
+    RIGHT_HAND       = R_WRIST_TRIPOD_3, // alias
 
     NECK_PITCH       = 20,
-    NECK_YAW         = 21
+    NECK_YAW         = 21,
+    HEAD             = NECK_YAW // alias
 };
 
 class LeftSideSolverImpl;

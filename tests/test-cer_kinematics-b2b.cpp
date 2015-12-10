@@ -51,13 +51,28 @@ int main(int argc, char *argv[])
     solver_0.setSolverParameters(p);
     solver_0.setVerbosity(verbosity);
 
-    yarp::sig::Matrix H_0;
-    solver_0.fkin(Vector(12,0.0),H_0);
+    Vector qin(12,0.0);
 
-    //int frame=(arm_type=="left"?LEFT_HAND:RIGHT_HAND);
-    int frame=(arm_type=="left"?11:19);
+    /*
+    qin(0)=-0.01;
+    qin(1)=-0.02;
+    qin(2)=-0.03;
+    
+    qin(3)=qin(4)=qin(5)=qin(6)=-5.0;
+    qin(7)=10.0;
+    qin(8)=-5.0;
+
+    qin(9) =0.010;
+    qin(10)=0.012;
+    qin(11)=0.014;
+    */
+
+    yarp::sig::Matrix H_0;
+    solver_0.fkin(qin,H_0);
+
+    int frame=(arm_type=="left"?cer::kinematics_alt::LEFT_HAND:cer::kinematics_alt::RIGHT_HAND);
     yarp::sig::Matrix H_1;
-    solver_1.fkin(Vector(22,0.0),H_1,frame);
+    solver_1.fkin(qin,H_1,frame);
 
     yInfo()<<"H_0="<<H_0.toString(5,5).c_str();
     yInfo()<<"H_1="<<H_1.toString(5,5).c_str();

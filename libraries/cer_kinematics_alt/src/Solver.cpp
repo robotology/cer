@@ -505,12 +505,12 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
 
         startLForeArm = id;
         Component* LfarmRot = new Joint(id,-90,90,qmin,qmax,Lelbow); mJoint[nj++] = (Joint*)LfarmRot;
-        LfarmRot = new Component(Transform(0,-71,180,-90),LfarmRot);
+        LfarmRot = new Component(Transform(0,-71-220,180,-90),LfarmRot);
         mPart[8] = LfarmRot;
 
         mFArm[L] = LfarmRot;
 
-        mArmExt[L]=0.230;
+        mArmExt[L]=0.010;
         mArmExc[L]=1.5*0.018*tan(DEG2RAD*WRIST_MAX_TILT);
         //mTrifidHand[L] = new Trifid(id, 18, 220, 360, qmin, qmax, LfarmRot);
         mTrifidHand[L] = new Trifid(id, 18, 1000.0*(mArmExt[L]-0.5*mArmExc[L]), 1000.0*(mArmExt[L]+0.5*mArmExc[L]), qmin, qmax, LfarmRot);
@@ -550,12 +550,12 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
 
         startRForeArm = id;
         Component* RfarmRot = new Joint(id,-90,90,qmin,qmax,Relbow); mJoint[nj++] = (Joint*)RfarmRot;
-        RfarmRot = new Component(Transform(0,71,0,-90),RfarmRot);
+        RfarmRot = new Component(Transform(0,71+220,0,-90),RfarmRot);
         mFArm[R] = RfarmRot;
 
         mPart[16] = RfarmRot;
 
-        mArmExt[R]=0.230;
+        mArmExt[R]=0.010;
         mArmExc[R]=1.5*0.018*tan(DEG2RAD*WRIST_MAX_TILT);
         //mTrifidHand[R] = new Trifid(id, 18, 220, 360, qmin, qmax, RfarmRot);
         mTrifidHand[R] = new Trifid(id, 18, 1000.0*(mArmExt[R]-0.5*mArmExc[R]), 1000.0*(mArmExt[R]+0.5*mArmExc[R]), qmin, qmax, RfarmRot);
@@ -616,9 +616,10 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
 
     // masses
 
-    q(0)=q(1)=q(2)=0.410;
-    q(startLForeArm+1)=q(startLForeArm+2)=q(startLForeArm+3)=0.22;
-    q(startRForeArm+1)=q(startRForeArm+2)=q(startRForeArm+3)=0.22;
+    q(0)=q(1)=q(2)=0.0;
+
+    q(startLForeArm+1)=q(startLForeArm+2)=q(startLForeArm+3)=0.01;
+    q(startRForeArm+1)=q(startRForeArm+2)=q(startRForeArm+3)=0.01;
 
     calcPostureFromRoot(T_ROOT);
 

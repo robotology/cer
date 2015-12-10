@@ -9,7 +9,7 @@ get_property(cer_kinematics_alt_INCLUDE_DIRS TARGET cer_kinematics_alt PROPERTY 
 
 include_directories(${YARP_INCLUDE_DIRS}
                     ${ICUB_INCLUDE_DIRS}
-                    ${cer_kinematics_INCLUDE_DIRS})
+                    ${cer_kinematics_alt_INCLUDE_DIRS})
 
 if(MSVC)
   add_definitions(-D_USE_MATH_DEFINES)
