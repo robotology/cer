@@ -31,6 +31,8 @@
 
 #include <cer_kinematics_alt/Solver.h>
 
+#include <cmath>
+
 using namespace cer::kinematics_alt;
 
 class RobotThread : public yarp::os::RateThread
