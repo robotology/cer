@@ -13,6 +13,10 @@ include_directories(${YARP_INCLUDE_DIRS}
                     ${ICUB_INCLUDE_DIRS}
                     ${cer_kinematics_INCLUDE_DIRS})
 
+if(MSVC)
+  add_definitions(-D_USE_MATH_DEFINES)
+endif()
+
 add_executable(test-cer_kinematics-tripod    test-cer_kinematics-tripod.cpp)
 add_executable(test-cer_kinematics-arm       test-cer_kinematics-arm.cpp)
 add_executable(test-cer_kinematics-stability test-cer_kinematics-stability.cpp)
