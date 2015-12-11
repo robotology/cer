@@ -26,7 +26,7 @@ namespace kinematics_alt {
 
 #define PERIOD 0.01 // seconds
 
-#define SOLVER_TIMEOUT 40 // steps
+#define SOLVER_TIMEOUT 100 // steps
 #define WRIST_MAX_TILT 35.0 // [deg]
 #define TORSO_MAX_TILT 30.0 // [deg]
 #define DEFAULT_ARM_EXTENSION   0.01  // [m]
