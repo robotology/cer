@@ -15,10 +15,11 @@
  * Public License for more details
 */
 
-#include <stdio.h>
-#include <time.h>
+//#include <stdio.h>
+//#include <time.h>
+//#include <iostream>
 
-#include <yarp/os/Time.h>
+//#include <yarp/os/Time.h>
 
 #include <cer_kinematics_alt/private/Matrix.h>
 #include <cer_kinematics_alt/private/Joints.h>
@@ -250,23 +251,23 @@ protected:
     Matrix Jg;
     Vec3 Gforce;
 
-    Matrix W,W2;
-
+    Matrix W2;
     Matrix Jhand;
     Matrix J;
     Matrix Jv;
     Matrix Jw;
-    Matrix AJvt;
-    Matrix qv;
-    Matrix Z;
-    Matrix OJwt;
-    //Matrix A;
     Matrix A2;
-    Matrix qz;
-    Matrix SJt;
 
-    Matrix lv,Rv,Lvi;
-    Matrix lw,Rw,Lwi;
+    Matrix Vref,Wref;
+    Matrix qz,qv;
+    Matrix W2Jt;
+    Matrix lv,Rv,Lvi,A2Jvt;
+    Matrix Vrot;
+    Matrix W2Jvt;
+    Matrix Nv;
+    Matrix Kw;
+    Matrix lw,Rw,Lwi,A2Kwt;
+    Matrix Wrot;
 
     Vec3 XtargetL,XtargetR;
     Quaternion QtargetL,QtargetR;
@@ -290,7 +291,6 @@ protected:
     double Ks[NJOINTS];
 
     double Q[NJOINTS];
-    double Q2[NJOINTS];
 
     double mPosThreshold;
 
@@ -446,17 +446,18 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
     J(6,12),
     Jv(3,12),
     Jw(3,12),
-    AJvt(12,3),
-    SJt(12,6),
-    qv(12),
-    Z(12,12),
-    OJwt(12,3),
-    //A(12,12),
+    W2(12,12),
     A2(12,12),
-    qz(12),
-    W(12,12),W2(12,12),
-    lv(3),Rv(3,3),Lvi(3,3),
-    lw(3),Rw(3,3),Lwi(3,3)
+    Vref(3),Wref(3),
+    qz(12),qv(12),
+    W2Jt(12,6),
+    lv(3),Rv(3,3),Lvi(3,3),A2Jvt(12,3),
+    Vrot(3),
+    W2Jvt(12,3),
+    Nv(12,12),
+    Kw(3,12),
+    lw(3),Rw(3,3),Lwi(3,3),A2Kwt(12,3),
+    Wrot(3)
 {
     nj=0;
 
@@ -598,7 +599,7 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
         int k=startLForeArm+1+j;
         int h=startRForeArm+1+j;
 
-        Q[j]=0.020;
+        Q[j]=0.010;
         Q[h]=Q[k]=0.014;
         Ks[j]=Ks[k]=Ks[h]=0.5;
         Kz[j]=Kz[h]=Kz[k]=0.01;
@@ -606,7 +607,6 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
 
     for (int j=0; j<12; ++j)
     {
-        W(j,j)=Q[j];
         W2(j,j)=Q[j]*Q[j];
     }
 
@@ -616,8 +616,9 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
 
     q(0)=q(1)=q(2)=0.0;
 
-    q(startLForeArm+1)=q(startLForeArm+2)=q(startLForeArm+3)=0.01;
-    q(startRForeArm+1)=q(startRForeArm+2)=q(startRForeArm+3)=0.01;
+    q(startLForeArm+1)=q(startRForeArm+1)=0.01+0.005;
+
+    q(startLForeArm+2)=q(startRForeArm+2)=q(startLForeArm+3)=q(startRForeArm+3)=0.01-0.005;
 
     calcPostureFromRoot(T_ROOT);
 
@@ -642,15 +643,15 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
 
     q_valid=qzero=q;
 
+    qzero(startLForeArm+1)=qzero(startRForeArm+1)=0.01+0.005;
+
+    qzero(startLForeArm+2)=qzero(startRForeArm+2)=qzero(startLForeArm+3)=qzero(startRForeArm+3)=0.01-0.005;
+
     mPosThreshold=DEFAULT_POS_THRESHOLD;
 
     calcPostureFromRoot(T_ROOT);
 }
 
-
-
-
-#if 0
 int LeftSideSolverImpl::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 {
     calcPostureFromRoot(T_ROOT);
@@ -663,8 +664,10 @@ int LeftSideSolverImpl::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 
     Vec3 Wstar=(Qstar*mHand[L]->Toj.Rj().quaternion().conj()).V;
 
-    Matrix Vref=    Vstar;
-    Matrix Wref=2.0*Wstar;
+    //static Matrix Vref(3),Wref(3);
+    
+    Vref=     Vstar;
+    Wref=0.25*Wstar;
 
     /////////////////////////////////////////
 
@@ -677,86 +680,83 @@ int LeftSideSolverImpl::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 
     //////////////////////
 
+    //static Matrix qz(12);
+
     for (int j=0; j<12; ++j)
     {
         double s=(q(j)-qzero(j))/((q(j)>qzero(j))?(qmax[j]-qzero(j)):(qmin[j]-qzero(j)));
 
         if (s>1.0) s=1.0;
 
-        //A(j,j)=sqrt(1.0-s*s)*S(j,j);
-
-        A(j,j)=sqrt(1.0-s*s)*W(j,j);
-        A2(j,j)=A(j,j)*A(j,j);
+        A2(j,j)=(1.0-s*s)*W2(j,j);
 
         qz(j)=Kz[j]*(qzero(j)-q(j));
     }
 
-    SJt=fast_mul_diag_full(S,J.t());
-    qz-=SJt*((J*SJt).inv()*(J*qz));
+    //static Matrix W2Jt(12,6);
+    W2Jt=fast_mul_diag_full(W2,J.t());
+    qz-=W2Jt*((J*W2Jt).inv()*(J*qz));
 
     //{
-        Matrix lv(3),Rv(3,3);
-        Matrix JvA(3,12); JvA=fast_mul_full_diag(Jv,A);
-        (JvA*JvA.t()).base(lv,Rv);
-        Matrix Lvi(3,3);
-        Lvi(0,0)=1.0/sqrt(lv(0));
-        Lvi(1,1)=1.0/sqrt(lv(1));
-        Lvi(2,2)=1.0/sqrt(lv(2));
+        //static Matrix lv(3),Rv(3,3),Lvi(3,3),A2Jvt(12,3); 
+        A2Jvt=fast_mul_diag_full(A2,Jv.t());
+        (Jv*A2Jvt).base(lv,Rv);
 
-        static Matrix Uv(3,12); Uv=(Lvi*Rv.t())*JvA;
+        Lvi(0,0)=1.0/lv(0);
+        Lvi(1,1)=1.0/lv(1);
+        Lvi(2,2)=1.0/lv(2);
 
-        Matrix lw(3),Rw(3,3);
-        Matrix JwA(3,12); JwA=fast_mul_full_diag(Jw,A);
-        (JwA*JwA.t()).base(lw,Rw);
-        Matrix Lwi(3,3);
-        Lwi(0,0)=1.0/sqrt(lw(0));
-        Lwi(1,1)=1.0/sqrt(lw(1));
-        Lwi(2,2)=1.0/sqrt(lw(2));
+        //static Matrix Vrot(3);
+        Vrot=Lvi*Rv.t()*Vref;
 
-        static Matrix Uw(3,12); Uw=(Lwi*Rw.t())*JwA;
+        static const double VLIM=2.0;
 
-        Matrix Vrot=Lvi*Rv.t()*Vref;
-        Matrix Wrot=Lwi*Rw.t()*Wref;
-
-        static const double VLIM=0.2;
+        //Matrix Vbuf=Vrot;
 
         if (fabs(Vrot(0))>VLIM) Vrot(0)=(Vrot(0)>0.0?VLIM:-VLIM);
         if (fabs(Vrot(1))>VLIM) Vrot(1)=(Vrot(1)>0.0?VLIM:-VLIM);
         if (fabs(Vrot(2))>VLIM) Vrot(2)=(Vrot(2)>0.0?VLIM:-VLIM);
 
-        static const double WLIM=0.1;
+        //static Matrix qv(12);
+    
+        qv=A2Jvt*(Rv*Vrot);
+        Wref-=Jw*qv;
+
+        /////////////////////////////////////////////////////////
+
+        static const Matrix I=Matrix::id(12);
+
+        //static Matrix W2Jvt(12,3);
+        W2Jvt=fast_mul_diag_full(A2,Jv.t());
+
+        //static Matrix Nv(12,12);
+
+        Nv=I-W2Jvt*(Jv*W2Jvt).inv()*Jv;
+
+        //static Matrix Kw(3,12);
+
+        Kw=Jw*Nv;
+
+        /////////////////////////////////////////////////////////
+
+        //static Matrix lw(3),Rw(3,3),Lwi(3,3),A2Kwt(12,3); 
+        A2Kwt=fast_mul_diag_full(A2,Kw.t());
+        (Jw*A2Kwt).base(lw,Rw);
+
+        Lwi(0,0)=1.0/lw(0);
+        Lwi(1,1)=1.0/lw(1);
+        Lwi(2,2)=1.0/lw(2);
+
+        //static Matrix Wrot(3);
+        Wrot=Lwi*Rw.t()*Wref;
+
+        static const double WLIM=2.0;
 
         if (fabs(Wrot(0))>WLIM) Wrot(0)=(Wrot(0)>0.0?WLIM:-WLIM);
         if (fabs(Wrot(1))>WLIM) Wrot(1)=(Wrot(1)>0.0?WLIM:-WLIM);
         if (fabs(Wrot(2))>WLIM) Wrot(2)=(Wrot(2)>0.0?WLIM:-WLIM);
 
-        static Matrix I=Matrix::id(12);
-
-        static Matrix NUwt(12,3); NUwt=(I-Uv.t()*Uv)*Uw.t();
-
-        static Matrix UvtV(12); UvtV=Uv.t()*Vrot;
-
-        qv=fast_mul_diag_full(A,(UvtV+NUwt*((Uw*NUwt).inv()*(Wrot-Uw*UvtV))));
-
-        /*
-        static Matrix U(6,12);
-
-        for (int i=0; i<3; ++i)
-        {
-            for (int j=0; j<12; ++j)
-            {
-                U(i,j)  =Uv(i,j);
-                U(i+3,j)=Uw(i,j);
-            }
-        }
-
-        static Matrix Y(6);
-
-        Y(0)=Vrot(0); Y(1)=Vrot(1); Y(2)=Vrot(2);
-        Y(3)=Wrot(0); Y(4)=Wrot(1); Y(5)=Wrot(2);
-
-        qv=fast_mul_diag_full(A,U.t()*((U*U.t()).inv()*Y));
-        */
+        qv+=Nv*(A2Kwt*(Rw*Wrot));
 	//}
 
     ////////////////////////////////////////
@@ -765,124 +765,12 @@ int LeftSideSolverImpl::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 
     limitJointAngles(q);
 
-    //printf("%f     %f\n",q(4),q(6));
-
     //q_valid=q;
 
     return IN_PROGRESS;
 }
 
-#endif
-
-
-//#if 0
-
-
-int LeftSideSolverImpl::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
-{
-    calcPostureFromRoot(T_ROOT);
-
-    //////////////////////////////////////////
-
-    Vec3 Vstar=Xstar-mHand[L]->Toj.Pj();
-
-    //if (Vstar.mod()<mPosThreshold) return ON_TARGET;
-
-    Vec3 Wstar=(Qstar*mHand[L]->Toj.Rj().quaternion().conj()).V;
-
-    Matrix Vref=     Vstar;
-    Matrix Wref=     Wstar;
-
-    /////////////////////////////////////////
-
-    mHand[L]->getJ(Jhand);
-
-    J=Jhand.sub(0,6,0,12);
-
-    Jv=J.sub(0,3,0,12);
-    Jw=J.sub(3,3,0,12);
-
-    //////////////////////
-
-    for (int j=0; j<12; ++j)
-    {
-        double s=(q(j)-qzero(j))/((q(j)>qzero(j))?(qmax[j]-qzero(j)):(qmin[j]-qzero(j)));
-
-        if (s>1.0) s=1.0;
-
-        A2(j,j)=sqrt(1.0-s*s)*W2(j,j);
-
-        qz(j)=Kz[j]*(qzero(j)-q(j));
-    }
-
-    SJt=fast_mul_diag_full(W2,J.t());
-    qz-=SJt*((J*SJt).inv()*(J*qz));
-
-    //qz-=J.inv(S)*(J*qz);
-
-    ///////////////////////////////////////////////
-
-    //AJvt=A*Jv.t();
-    AJvt=fast_mul_diag_full(A2,Jv.t());
-
-    //static Matrix lv(3),Rv(3,3),Lvi(3,3);
-
-    (Jv*AJvt).base(lv,Rv);
-
-    Lvi(0,0)=1.0/sqrt(lv(0));
-    Lvi(1,1)=1.0/sqrt(lv(1));
-    Lvi(2,2)=1.0/sqrt(lv(2));
-
-    Matrix Vrot=Lvi*Rv.t()*Vref;
-
-    static const double VLIM=0.2;
-
-    if (fabs(Vrot(0))>VLIM) Vrot(0)=(Vrot(0)>0.0?VLIM:-VLIM);
-    if (fabs(Vrot(1))>VLIM) Vrot(1)=(Vrot(1)>0.0?VLIM:-VLIM);
-    if (fabs(Vrot(2))>VLIM) Vrot(2)=(Vrot(2)>0.0?VLIM:-VLIM);
-
-    qv=AJvt*(Rv*Lvi*Vrot);
-
-    ///////////////////////////////////////////////
-
-    static Matrix I=Matrix::id(12);
-
-    Z=I-Jv.inv(W2)*Jv;
-    //Z=I-AJvt*(Jv*AJvt).inv()*Jv;
-
-    OJwt=Z*fast_mul_diag_full(A2,(Jw*Z).t());
-
-    static Matrix lw(3),Rw(3,3),Lwi(3,3);
-
-    (Jw*OJwt).base(lw,Rw);
-
-    Lwi(0,0)=1.0/sqrt(lw(0));
-    Lwi(1,1)=1.0/sqrt(lw(1));
-    Lwi(2,2)=1.0/sqrt(lw(2));
-
-    Matrix Wrot=Lwi*Rw.t()*(Wref-Jw*qv);
-
-    static const double WLIM=0.1;
-
-    if (fabs(Wrot(0))>WLIM) Wrot(0)=(Wrot(0)>0.0?WLIM:-WLIM);
-    if (fabs(Wrot(1))>WLIM) Wrot(1)=(Wrot(1)>0.0?WLIM:-WLIM);
-    if (fabs(Wrot(2))>WLIM) Wrot(2)=(Wrot(2)>0.0?WLIM:-WLIM);
-
-    qv+=OJwt*(Rw*Lwi*Wrot);
-
-    ////////////////////////////////////////
-
-    for (int j=0; j<12; ++j) q(j)+=Ks[j]*(qv(j)+qz(j));
-
-    limitJointAngles(q);
-
-    q_valid=q;
-
-    return IN_PROGRESS;
-}
-//#endif
 ///////////////////////////////////////////
-
 
 LeftSideSolver::LeftSideSolver()
 {

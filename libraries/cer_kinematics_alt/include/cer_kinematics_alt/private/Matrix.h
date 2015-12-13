@@ -21,6 +21,7 @@
 #define SAFE_MODE
 
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #define FOR_R(i) for (int i=0; i<R; ++i)
