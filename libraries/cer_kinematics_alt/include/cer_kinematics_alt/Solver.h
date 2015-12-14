@@ -26,9 +26,9 @@ namespace kinematics_alt {
 
 #define PERIOD 0.01 // seconds
 
-#define SOLVER_TIMEOUT 100 // steps
-#define WRIST_MAX_TILT 35.0 // [deg]
-#define TORSO_MAX_TILT 30.0 // [deg]
+#define SOLVER_TIMEOUT 0.007 // [sec]
+#define WRIST_MAX_TILT 35.0  // [deg]
+#define TORSO_MAX_TILT 30.0  // [deg]
 #define DEFAULT_ARM_EXTENSION   0.01  // [m]
 #define DEFAULT_TORSO_EXTENSION 0.0   // [m]
 #define DEFAULT_POS_THRESHOLD   0.005 // [m]
@@ -111,9 +111,14 @@ public:
      * @param qout       the solved DOFs ([m]-[deg]-[m]).
      * @param armElong   the desired elongation of the left forearm tripod ([m]).
      * @param torsoElong the desired elongation of the torso tripod ([m]).
+     * @param timeoutSec the desired trajectory calculation time ([sec]).
      * @return true/false on success/failure.
      */
-    bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &qout,double armElong=DEFAULT_ARM_EXTENSION,double torsoElong=DEFAULT_TORSO_EXTENSION);
+    bool ikin(const yarp::sig::Matrix &Hd, 
+              yarp::sig::Vector &qout,
+              double armElong=DEFAULT_ARM_EXTENSION,
+              double torsoElong=DEFAULT_TORSO_EXTENSION,
+              double timeoutSec=SOLVER_TIMEOUT);
 
 protected:
     LeftSideSolverImpl *solverImpl;

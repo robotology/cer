@@ -19,7 +19,7 @@
 //#include <time.h>
 //#include <iostream>
 
-//#include <yarp/os/Time.h>
+#include <yarp/os/Time.h>
 
 #include <cer_kinematics_alt/private/Matrix.h>
 #include <cer_kinematics_alt/private/Joints.h>
@@ -51,12 +51,6 @@ enum { R = 0, L = 1 };
 // v = J*qd = J*W.inv()*J.t()*L  ==>  L = (J*W.inv()*J.t()).inv()*v
 // qd = W.inv()*J.t()*L = W.inv()*J.t()*(J*W.inv()*J.t()).inv()*v
 
-
-/**
- * Class to handle direct and inverse kinematics of the robot arm.
- *
- * @author Alessandro Scalzo
- */
 class LeftSideSolverImpl
 {
 public:
@@ -70,27 +64,11 @@ public:
 
     Vec3 getCOM(){ return COM_valid; }
 
-    /**
-     * Set the required precision for position reaching.
-     *
-     * @param thr the threshold for the position reaching ([m]).
-     */
     void setPositionThreshold(double thr=DEFAULT_POS_THRESHOLD)
     {
         mPosThreshold=thr;
     }
 
-    /**
-     * Forward Kinematics Law.
-     *
-     * @param qin      the DOFs values ([m]-[deg]-[m]).
-     * @param H        the 4-by-4 homogeneous matrix of the specified
-     *                 frame ([m]).
-     * @param frame    specify the DOF number whose frame is returned.
-     *                 Thus, frame is in [0...nDOF-1]; negative
-     *                 numbers account for the end-effector frame.
-     * @return true/false on success/failure.
-     */
     bool fkin(const yarp::sig::Vector &qin, yarp::sig::Matrix &H,int frame=-1)
     {
         if (frame<0) frame=L_WRIST_TRIPOD_3;
@@ -119,17 +97,11 @@ public:
         return true;
     }
 
-    /**
-     * Inverse Kinematics Law.
-     *
-     * @param Hd         the desired 4-by-4 homogeneous matrix
-     *                   representing the end-effector frame ([m]).
-     * @param qout       the solved DOFs ([m]-[deg]-[m]).
-     * @param armElong   the desired elongation of the left forearm tripod ([m]).
-     * @param torsoElong the desired elongation of the torso tripod ([m]).
-     * @return true/false on success/failure.
-     */
-    bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &qout,double armElong=DEFAULT_ARM_EXTENSION,double torsoElong=DEFAULT_TORSO_EXTENSION)
+    bool ikin(const yarp::sig::Matrix &Hd,
+              yarp::sig::Vector &qout,
+              double armElong=DEFAULT_ARM_EXTENSION,
+              double torsoElong=DEFAULT_TORSO_EXTENSION,
+              double timeoutSec=SOLVER_TIMEOUT)
     {
         if (torsoElong!=mTorsoExt)
         {
@@ -161,30 +133,26 @@ public:
 
         //leftHand2Target(XtargetL,QtargetL);
         //for (int j=0; j<N; ++j) qout(j)=q(j);
-        
-        while (ret_code==IN_PROGRESS)
+
+        double time_end=yarp::os::Time::now()+timeoutSec;
+
+        while (yarp::os::Time::now()<=time_end)
         {
             ret_code=leftHand2Target(XtargetL,QtargetL);
-
-            if (++steps>=SOLVER_TIMEOUT)
-            {
-                ret_code=OUT_OF_REACH;
-            }
         }
         
-
-        if (ret_code==OUT_OF_REACH)
-        {
-            for (int j=0; j<N; ++j) qout(j)=q(j);
-
-            return false;
-        }
-
         if (ret_code==ON_TARGET)
         {
             for (int j=0; j<N; ++j) qout(j)=q(j);
 
             return true;
+        }
+
+        if (ret_code==IN_PROGRESS)
+        {
+            for (int j=0; j<N; ++j) qout(j)=q(j);
+
+            return false;
         }
 
         return false;
@@ -660,7 +628,12 @@ int LeftSideSolverImpl::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 
     Vec3 Vstar=Xstar-mHand[L]->Toj.Pj();
 
-    //if (Vstar.mod()<mPosThreshold) return ON_TARGET;
+    int ret_code=IN_PROGRESS;
+
+    if (Vstar.mod()<mPosThreshold)
+    {
+        ret_code=ON_TARGET;
+    }
 
     Vec3 Wstar=(Qstar*mHand[L]->Toj.Rj().quaternion().conj()).V;
 
@@ -767,7 +740,7 @@ int LeftSideSolverImpl::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
 
     //q_valid=q;
 
-    return IN_PROGRESS;
+    return ret_code;
 }
 
 ///////////////////////////////////////////
@@ -804,8 +777,8 @@ bool LeftSideSolver::fkin(const yarp::sig::Vector &qin, yarp::sig::Matrix &H,int
     return solverImpl->fkin(qin,H,frame);
 }
 
-bool LeftSideSolver::ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &qout,double armElong,double torsoElong)
+bool LeftSideSolver::ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &qout,double armElong,double torsoElong,double timeoutSec)
 {
-    return solverImpl->ikin(Hd,qout,armElong,torsoElong);
+    return solverImpl->ikin(Hd,qout,armElong,torsoElong,timeoutSec);
 }
 

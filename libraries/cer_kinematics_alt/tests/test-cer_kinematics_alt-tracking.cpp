@@ -129,18 +129,18 @@ void RobotThread::run()
 
     static double inc=0.02*PERIOD;
 
-    if (radius>0.65 || radius<0.0) inc=-inc;
+    if (radius>0.75 || radius<0.0) inc=-inc;
 
     radius+=inc;
 
     //std::cout << radius << "\n";
 
-    static const double O1sqrt2=0.2*sqrt(2.0);
-    static const double O1sqrt3=0.2*sqrt(3.0);
+    static const double O2sqrt2=0.2*sqrt(2.0);
+    static const double O2sqrt3=0.2*sqrt(3.0);
 
     T(0,0)= 1.0; T(0,1)= 0.0; T(0,2)= 0.0; T(0,3)=0.5;//radius*cos(DEG2RAD*alfa);
-    T(1,0)= 0.0; T(1,1)= 1.0; T(1,2)= 0.0; T(1,3)=0.2+radius*cos(O1sqrt2*2.0*M_PI*ti);//radius*sin(DEG2RAD*alfa);
-    T(2,0)= 0.0; T(2,1)= 0.0; T(2,2)= 1.0; T(2,3)=0.2+radius*cos(O1sqrt3*2.0*M_PI*ti);//0.7-0.63;
+    T(1,0)= 0.0; T(1,1)= 1.0; T(1,2)= 0.0; T(1,3)=0.2+radius*cos(O2sqrt2*2.0*M_PI*ti);//radius*sin(DEG2RAD*alfa);
+    T(2,0)= 0.0; T(2,1)= 0.0; T(2,2)= 1.0; T(2,3)=0.2+radius*sin(O2sqrt3*2.0*M_PI*ti);//0.7-0.63;
     T(3,0)= 0.0; T(3,1)= 0.0; T(3,2)= 0.0; T(3,3)=1.0;
 
     ti+=PERIOD;
@@ -159,13 +159,19 @@ void RobotThread::run()
 
     sendConfig(qsol);
 
+    static int N=0; ++N;
+
+    static unsigned long tot_time=0;
+
     int elaps=int(1000.0*(timeB-timeA));
 
-    if (elaps>9)
-    {
-        printf("time = %d ms\n",elaps);
-        //fflush(stdout);
-    }
+    static int peak=0;
+
+    if (elaps>peak) peak=elaps;
+
+    tot_time+=elaps;
+
+    printf("elaps=%d  avg=%d   peak=%d\n",elaps,tot_time/N,peak);
 
     //Vec3 COM=mRobot.getCOM();
     //COM.z=-0.63;
