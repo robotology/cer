@@ -47,7 +47,7 @@ public:
 
     void sendConfig(yarp::sig::Vector &q);
     void sendCOM(std::string& name,int R,int G,int B,yarp::sig::Vector P,double size,double alpha);
-    void sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha);
+    void sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha,double rx=0.0,double ry=0.0,double rz=0.0);
 
 protected:
     LeftSideSolver mRobot;
@@ -125,14 +125,27 @@ void RobotThread::run()
 
     static double ti=0.0;
 
-    T(0,0)= 0.0; T(0,1)= 0.0; T(0,2)= 1.0; T(0,3)=0.35;//radius*cos(DEG2RAD*alfa);
-    T(1,0)= 0.0; T(1,1)= 1.0; T(1,2)= 0.0; T(1,3)=0.1*cos(0.4*2.0*M_PI*ti);//radius*sin(DEG2RAD*alfa);
-    T(2,0)=-1.0; T(2,1)= 0.0; T(2,2)= 0.0; T(2,3)=0.1*sin(0.4*2.0*M_PI*ti);//0.7-0.63;
+    static double radius=0.0;
+
+    static double inc=0.02*PERIOD;
+
+    if (radius>0.65 || radius<0.0) inc=-inc;
+
+    radius+=inc;
+
+    //std::cout << radius << "\n";
+
+    static const double O1sqrt2=0.2*sqrt(2.0);
+    static const double O1sqrt3=0.2*sqrt(3.0);
+
+    T(0,0)= 1.0; T(0,1)= 0.0; T(0,2)= 0.0; T(0,3)=0.5;//radius*cos(DEG2RAD*alfa);
+    T(1,0)= 0.0; T(1,1)= 1.0; T(1,2)= 0.0; T(1,3)=0.2+radius*cos(O1sqrt2*2.0*M_PI*ti);//radius*sin(DEG2RAD*alfa);
+    T(2,0)= 0.0; T(2,1)= 0.0; T(2,2)= 1.0; T(2,3)=0.2+radius*cos(O1sqrt3*2.0*M_PI*ti);//0.7-0.63;
     T(3,0)= 0.0; T(3,1)= 0.0; T(3,2)= 0.0; T(3,3)=1.0;
 
     ti+=PERIOD;
 
-    sendTarget(std::string("target"),0,64,255,T(0,3),T(1,3),T(2,3),10.0,0.666);
+    sendTarget(std::string("target"),0,64,255,T(0,3),T(1,3),T(2,3),16.0,0.666);
 
     yarp::sig::Vector qsol(22);
 
@@ -274,16 +287,16 @@ void RobotThread::sendCOM(std::string& name,int R,int G,int B,yarp::sig::Vector 
     botR.addDouble(P[0]*1000.0);
     botR.addDouble(P[1]*1000.0);
     botR.addDouble(P[2]*1000.0);
-    //botR.addDouble(-630.0);
 
     botR.addDouble(0.0); botR.addDouble(0.0); botR.addDouble(0.0);
+    
     botR.addInt(R); botR.addInt(G); botR.addInt(B);
     botR.addDouble(alpha);
     //botR.addString("WORLD");
     portObjects.writeStrict();
 }
 
-void RobotThread::sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha)
+void RobotThread::sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha,double rx,double ry,double rz)
 {
     yarp::os::Bottle& botR=portObjects.prepare();
     botR.clear();
@@ -295,7 +308,10 @@ void RobotThread::sendTarget(const std::string& name,int R,int G,int B,double x,
     botR.addDouble(y*1000.0);
     botR.addDouble(z*1000.0);
 
-    botR.addDouble(0.0); botR.addDouble(0.0); botR.addDouble(0.0);
+    botR.addDouble(rx); 
+    botR.addDouble(ry); 
+    botR.addDouble(rz);
+
     botR.addInt(R); botR.addInt(G); botR.addInt(B);
     botR.addDouble(alpha);
     //botR.addString("WORLD");

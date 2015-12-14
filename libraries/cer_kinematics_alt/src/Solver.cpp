@@ -591,7 +591,7 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
     {
         Q[j]=DEG2RAD*30.0;
         Ks[j]=0.5*RAD2DEG;
-        Kz[j]=0.01*DEG2RAD;
+        Kz[j]=0.025*DEG2RAD;
     }
 
     for (int j=0; j<=2; ++j)
@@ -602,7 +602,7 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
         Q[j]=0.010;
         Q[h]=Q[k]=0.014;
         Ks[j]=Ks[k]=Ks[h]=0.5;
-        Kz[j]=Kz[h]=Kz[k]=0.01;
+        Kz[j]=Kz[h]=Kz[k]=0.025;
     }
 
     for (int j=0; j<12; ++j)
