@@ -39,7 +39,8 @@ int main(int argc, char *argv[])
     rf.configure(argc,argv);
 
     string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
-    int verbosity=rf.check("verbosity",Value(1)).asInt();    
+    int verbosity=rf.check("verbosity",Value(1)).asInt();
+    int arm_frame=(arm_type=="left"?LEFT_HAND:RIGHT_HAND);
 
     ArmSolver solver_0;
     LeftSideSolver solver_1;
@@ -55,10 +56,9 @@ int main(int argc, char *argv[])
 
     Matrix H_0;
     solver_0.fkin(qin,H_0);
-
-    int frame=(arm_type=="left"?cer::kinematics_alt::LEFT_HAND:cer::kinematics_alt::RIGHT_HAND);
+    
     Matrix H_1;
-    solver_1.fkin(qin,H_1,frame);
+    solver_1.fkin(qin,H_1,arm_frame);
 
     yInfo()<<"H_0="<<H_0.toString(5,5).c_str();
     yInfo()<<"H_1="<<H_1.toString(5,5).c_str();
