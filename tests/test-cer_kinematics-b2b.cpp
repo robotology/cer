@@ -81,17 +81,21 @@ int main(int argc, char *argv[])
     solver_0.ikin(Hd,q_0);
 
     Vector q_1(12,0.0);
+    double t0=Time::now();
     solver_1.ikin(Hd,q_1,lower_arm_heave,torso_heave);
+    double t1=Time::now();
 
-    yInfo()<<"q_0 [*] = "<<q_0.toString(5,5).c_str();
-    yInfo()<<"q_1 [*] = "<<q_1.toString(5,5).c_str();
+    Matrix H_1;
+    solver_1.fkin(q_1,H_1);
 
-    Matrix H;
-    solver_1.fkin(q_1,H);
+    Vector x_1=H_1.getCol(3).subVector(0,2);
+    Vector u_1=dcm2axis(H_1);
+    u_1*=u_1[3]; u_1.pop_back();
 
-    Vector u=dcm2axis(H);
-    u*=u[3]; u.pop_back();
-    yInfo()<<"  e_x_1 [m] = "<<norm(xd-H.getCol(3).subVector(0,2));
-    yInfo()<<"e_u_1 [rad] = "<<norm(ud-u);
+    yInfo()<<"------------------------------------------";
+    yInfo()<<"    q_1 [*] = "<<q_1.toString(5,5).c_str();
+    yInfo()<<"  e_x_1 [m] = "<<norm(xd-x_1);
+    yInfo()<<"e_u_1 [rad] = "<<norm(ud-u_1);
+    yInfo()<<"  dt_1 [ms] = "<<1000.0*(t1-t0);
 }
 
