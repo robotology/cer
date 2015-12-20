@@ -40,21 +40,20 @@ int main(int argc, char *argv[])
     rf.configure(argc,argv);
 
     string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
-    int verbosity=rf.check("verbosity",Value(1)).asInt();
     int arm_frame=(arm_type=="left"?LEFT_HAND:RIGHT_HAND);
 
     ArmSolver solver_0;
     LeftSideSolver solver_1;
 
     solver_0.setArmParameters(ArmParameters(arm_type));
-    solver_0.setVerbosity(verbosity);
+    solver_0.setVerbosity(1);
 
     // target definition: begin
     double torso_heave=0.1;
     double lower_arm_heave=0.01;
     Vector xd(3),ud(3);
     xd[0]=0.6;
-    xd[1]=-0.1;
+    xd[1]=(arm_type=="left"?-0.1:0.1);
     xd[2]=-0.1;
     ud[0]=0.0;
     ud[1]=M_PI/2.0;
