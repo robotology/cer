@@ -11,10 +11,7 @@ include_directories(${YARP_INCLUDE_DIRS}
                     ${ICUB_INCLUDE_DIRS}
                     ${cer_kinematics_alt_INCLUDE_DIRS})
 
-if(MSVC)
-  add_definitions(-D_USE_MATH_DEFINES)
-endif()
-
+add_definitions(-D_USE_MATH_DEFINES)
 add_executable(test-cer_kinematics_alt-tracking test-cer_kinematics_alt-tracking.cpp)
 target_link_libraries(test-cer_kinematics_alt-tracking ${YARP_LIBRARIES} cer_kinematics_alt)
 install(TARGETS test-cer_kinematics_alt-tracking DESTINATION bin)

@@ -18,12 +18,8 @@ include_directories(${PROJECT_SOURCE_DIR}/include
                     ${ICUB_INCLUDE_DIRS}
                     ${YARP_INCLUDE_DIRS})
 
+add_definitions(-D_USE_MATH_DEFINES)
 add_library(${PROJECT_NAME} ${headers_private} ${headers} ${sources})
-
-if(MSVC)
-  target_compile_definitions(${PROJECT_NAME} PUBLIC _USE_MATH_DEFINES)
-endif()
-
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
 # Add install target
