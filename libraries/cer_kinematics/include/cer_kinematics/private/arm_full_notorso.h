@@ -173,7 +173,7 @@ public:
     {
         computeQuantities(x,new_x);
 
-        double e2=zd2-d2.p[2];
+        double e2=hd2-d2.p[2];
         g[0]=e2*e2;
         g[1]=d2.n[2];
 
@@ -218,7 +218,7 @@ public:
             TripodState d_fw;
 
             // g[0,1] (lower_arm)
-            double e2=zd2-d2.p[2];
+            double e2=hd2-d2.p[2];
 
             x_dx[9]=x[9]+drho;
             d_fw=tripod_fkin(2,x_dx);
@@ -386,7 +386,7 @@ public:
             TripodState d_fw,d_bw;
 
             // g[0,1] (lower_arm)
-            double e2=zd2-d2.p[2];
+            double e2=hd2-d2.p[2];
 
             x_dx[9]=x[9]+drho;
             d_fw=tripod_fkin(2,x_dx);

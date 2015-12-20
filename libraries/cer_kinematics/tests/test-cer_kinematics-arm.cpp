@@ -115,12 +115,12 @@ public:
             }
 
             string mode;
-            double zd1,zd2;
+            double hd1,hd2;
             Vector xd(3),ud(3);
 
             mode=target->get(0).asString().c_str();
-            zd1=target->get(1).asDouble();
-            zd2=target->get(2).asDouble();
+            hd1=target->get(1).asDouble();
+            hd2=target->get(2).asDouble();
             xd[0]=target->get(3).asDouble();
             xd[1]=target->get(4).asDouble();
             xd[2]=target->get(5).asDouble();
@@ -142,8 +142,8 @@ public:
 
             SolverParameters p=solver.getSolverParameters();
             p.setMode(mode);
-            p.torso_heave=zd1;
-            p.lower_arm_heave=zd2;
+            p.torso_heave=hd1;
+            p.lower_arm_heave=hd2;
             p.warm_start=warm_start;
 
             solver.setSolverParameters(p);

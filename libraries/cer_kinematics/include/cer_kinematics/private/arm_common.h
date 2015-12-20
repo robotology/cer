@@ -28,7 +28,7 @@ protected:
     double drho;
 
     Matrix TN;
-    double zd1,zd2;
+    double hd1,hd2;
     double wpostural_torso;
     double wpostural_torso_yaw;
     double wpostural_upper_arm;
@@ -108,8 +108,8 @@ public:
                  upper_arm(slv_.armParameters.upper_arm),
                  lower_arm(slv_.armParameters.lower_arm),
                  TN(slv_.armParameters.TN),
-                 zd1(slv_.slvParameters.torso_heave),
-                 zd2(slv_.slvParameters.lower_arm_heave),
+                 hd1(slv_.slvParameters.torso_heave),
+                 hd2(slv_.slvParameters.lower_arm_heave),
                  wpostural_torso(slv_.slvParameters.weight_postural_torso),
                  wpostural_torso_yaw(slv_.slvParameters.weight_postural_torso_yaw),
                  wpostural_upper_arm(slv_.slvParameters.weight_postural_upper_arm),

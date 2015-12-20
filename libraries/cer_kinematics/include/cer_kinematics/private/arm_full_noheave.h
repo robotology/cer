@@ -211,11 +211,11 @@ public:
     {
         computeQuantities(x,new_x);
 
-        double e1=zd1-d1.p[2];
+        double e1=hd1-d1.p[2];
         g[0]=e1*e1;
         g[1]=d1.n[2];
 
-        double e2=zd2-d2.p[2];
+        double e2=hd2-d2.p[2];
         g[2]=e2*e2;
         g[3]=d2.n[2];
 
@@ -270,7 +270,7 @@ public:
             TripodState d_fw;
 
             // g[0,1] (torso)
-            double e1=zd1-d1.p[2];
+            double e1=hd1-d1.p[2];
 
             x_dx[0]=x[0]+drho;
             d_fw=tripod_fkin(1,x_dx);
@@ -291,7 +291,7 @@ public:
             x_dx[2]=x[2];
 
             // g[2,3] (lower_arm)
-            double e2=zd2-d2.p[2];
+            double e2=hd2-d2.p[2];
 
             x_dx[9]=x[9]+drho;
             d_fw=tripod_fkin(2,x_dx);
@@ -518,7 +518,7 @@ public:
             TripodState d_fw,d_bw;
 
             // g[0,1] (torso)
-            double e1=zd1-d1.p[2];
+            double e1=hd1-d1.p[2];
 
             x_dx[0]=x[0]+drho;
             d_fw=tripod_fkin(1,x_dx);
@@ -545,7 +545,7 @@ public:
             x_dx[2]=x[2];
 
             // g[2,3] (lower_arm)
-            double e2=zd2-d2.p[2];
+            double e2=hd2-d2.p[2];
 
             x_dx[9]=x[9]+drho;
             d_fw=tripod_fkin(2,x_dx);
