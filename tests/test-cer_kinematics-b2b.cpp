@@ -15,6 +15,7 @@
  * Public License for more details
 */
 
+#include <cmath>
 #include <string>
 
 #include <yarp/os/all.h>
@@ -45,22 +46,52 @@ int main(int argc, char *argv[])
     ArmSolver solver_0;
     LeftSideSolver solver_1;
 
-    SolverParameters p=solver_0.getSolverParameters();
-    p.setMode("full_pose");
-
     solver_0.setArmParameters(ArmParameters(arm_type));
-    solver_0.setSolverParameters(p);
     solver_0.setVerbosity(verbosity);
 
-    Vector qin(12,0.0);
+    // target definition: begin
+    double torso_heave=0.1;
+    double lower_arm_heave=0.01;
+    Vector xd(3),ud(3);
+    xd[0]=0.6;
+    xd[1]=-0.1;
+    xd[2]=-0.1;
+    ud[0]=0.0;
+    ud[1]=M_PI/2.0;
+    ud[2]=0.0;
 
-    Matrix H_0;
-    solver_0.fkin(qin,H_0);
-    
-    Matrix H_1;
-    solver_1.fkin(qin,H_1,arm_frame);
+    double n=norm(ud);
+    Vector ud_=(1.0/n)*ud;
+    ud_.push_back(n);
+    Matrix Hd=axis2dcm(ud_);
+    Hd(0,3)=xd[0];
+    Hd(1,3)=xd[1];
+    Hd(2,3)=xd[2];
+    // target definition: end
 
-    yInfo()<<"H_0="<<H_0.toString(5,5).c_str();
-    yInfo()<<"H_1="<<H_1.toString(5,5).c_str();
+    SolverParameters p=solver_0.getSolverParameters();
+    p.setMode("full_pose");
+    p.torso_heave=torso_heave;
+    p.lower_arm_heave=lower_arm_heave;
+
+    solver_0.setSolverParameters(p);
+    solver_0.setInitialGuess(Vector(12,0.0));
+
+    Vector q_0;
+    solver_0.ikin(Hd,q_0);
+
+    Vector q_1(12,0.0);
+    solver_1.ikin(Hd,q_1,lower_arm_heave,torso_heave);
+
+    yInfo()<<"q_0 [*] = "<<q_0.toString(5,5).c_str();
+    yInfo()<<"q_1 [*] = "<<q_1.toString(5,5).c_str();
+
+    Matrix H;
+    solver_1.fkin(q_1,H);
+
+    Vector u=dcm2axis(H);
+    u*=u[3]; u.pop_back();
+    yInfo()<<"  e_x_1 [m] = "<<norm(xd-H.getCol(3).subVector(0,2));
+    yInfo()<<"e_u_1 [rad] = "<<norm(ud-u);
 }
 
