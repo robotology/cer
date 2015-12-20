@@ -133,6 +133,8 @@ public:
         
         SolverParameters p=solver.getSolverParameters();
         p.setMode(mode);
+        p.weight_postural_torso=0.001;
+        p.weight_postural_torso_yaw=0.001;
         p.torso_heave=0.1;
         p.lower_arm_heave=0.05;
         p.warm_start=true;

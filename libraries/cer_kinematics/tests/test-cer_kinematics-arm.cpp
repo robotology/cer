@@ -73,6 +73,8 @@ public:
 
         SolverParameters p=solver.getSolverParameters();
         p.setMode("full_pose");
+        p.weight_postural_torso=0.001;
+        p.weight_postural_torso_yaw=0.001;
 
         solver.setArmParameters(ArmParameters(arm_type));
         solver.setSolverParameters(p);

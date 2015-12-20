@@ -224,8 +224,8 @@ struct SolverParameters
      */
     SolverParameters(const bool full_pose_=true, const bool configuration_=configuration::no_heave,
                      const double torso_heave_=0.0, const double lower_arm_heave_=0.0,
-                     const double weight_postural_torso_=0.001,
-                     const double weight_postural_torso_yaw_=0.001,
+                     const double weight_postural_torso_=0.0,
+                     const double weight_postural_torso_yaw_=0.0,
                      const double weight_postural_upper_arm_=0.0,
                      const double weight_postural_lower_arm_=0.0,
                      const double tol_=0.1, const double constr_tol_=1e-4,

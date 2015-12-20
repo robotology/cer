@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
         slvp.setMode("full_pose");
     slvp.torso_heave=0.1;
     slvp.lower_arm_heave=0.01;
-    slvp.weight_postural_torso_yaw=0.0;
+    slvp.weight_postural_torso=0.001;
     solver.setSolverParameters(slvp);
 
     // init CoMs, weights and support polygon
