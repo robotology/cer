@@ -46,7 +46,7 @@ struct TripodParametersExtended : public TripodParameters
     TripodParametersExtended(const TripodParameters &parameters) :
                              TripodParameters(parameters)
     {
-        cos_alpha_max=cos(CTRL_DEG2RAD*alpha_max);
+        cos_alpha_max=cos(iCub::ctrl::CTRL_DEG2RAD*alpha_max);
 
         z.resize(3,0.0);
         z[2]=1.0;
@@ -59,7 +59,7 @@ struct TripodParametersExtended : public TripodParameters
             v[1]=r*sin(theta);
             s.push_back(v);
 
-            theta+=CTRL_DEG2RAD*120.0;
+            theta+=iCub::ctrl::CTRL_DEG2RAD*120.0;
         }
 
         R0=T0.submatrix(0,2,0,2);
