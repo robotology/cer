@@ -20,7 +20,7 @@ include_directories(${YARP_INCLUDE_DIRS}
 
 add_definitions(-D_USE_MATH_DEFINES)
 add_executable(test-cer_kinematics-b2b test-cer_kinematics-b2b.cpp)
-target_link_libraries(test-cer_kinematics-b2b ${YARP_LIBRARIES} cer_kinematics cer_kinematics_alt)
+target_link_libraries(test-cer_kinematics-b2b ${YARP_LIBRARIES} iKin cer_kinematics cer_kinematics_alt)
 install(TARGETS test-cer_kinematics-b2b DESTINATION bin)
 
 
