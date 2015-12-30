@@ -43,17 +43,14 @@ using namespace cer::kinematics_alt;
 /****************************************************************/
 int main()
 {
-    struct Input {
+    struct Target {
         Vector xd;
         Vector ud;
         Matrix Hd;
         double torso_heave;
         double lower_arm_heave;
-        Input() : xd(3,0.0), ud(3,0.0), Hd(zeros(4,4)),
-                  torso_heave(0.0), lower_arm_heave(0.0)
-        {
-            Hd(3,3)=1.0;
-        }
+        Target() : xd(3,0.0), ud(3,0.0), Hd(eye(4,4)),
+                   torso_heave(0.0), lower_arm_heave(0.0) { }
         void calcHd()
         {
             double n=norm(ud);
@@ -67,8 +64,8 @@ int main()
     };
 
     // define inputs
-    deque<Input> input;
-    Input in;
+    deque<Target> input;
+    Target in;
     
     // input #0
     in.torso_heave=0.1;
