@@ -180,6 +180,16 @@ struct SolverParameters
     double constr_tol;
 
     /**
+     * maximum number of iterations.
+     */
+    unsigned int max_iter;
+
+    /**
+     * maximum number of cpu seconds.
+     */
+    double max_cpu_time;
+
+    /**
      * if true compute gradients resorting to central finite 
      * difference approximation instead of forward difference 
      * formula. 
@@ -214,6 +224,10 @@ struct SolverParameters
      *                                      of the lower_arm.
      * @param tol_                          cost function tolerance.
      * @param constr_tol_                   constraints tolerance. 
+     * @param max_iter_                     maximum number of 
+     *                                      iterations.
+     * @param max_cpu_time_                 maximum number of cpu 
+     *                                      seconds.
      * @param use_central_difference_       compute gradients 
      *                                      resorting to central
      *                                      finite difference
@@ -229,6 +243,7 @@ struct SolverParameters
                      const double weight_postural_upper_arm_=0.0,
                      const double weight_postural_lower_arm_=0.0,
                      const double tol_=0.1, const double constr_tol_=1e-4,
+                     const unsigned int max_iter_=500, const double max_cpu_time_=1.0,
                      const bool use_central_difference_=false,
                      const bool warm_start_=false) :
                      full_pose(full_pose_), configuration(configuration_),
@@ -238,6 +253,7 @@ struct SolverParameters
                      weight_postural_upper_arm(weight_postural_upper_arm_),
                      weight_postural_lower_arm(weight_postural_lower_arm_),
                      tol(tol_), constr_tol(constr_tol_),
+                     max_iter(max_iter_), max_cpu_time(max_cpu_time_),
                      use_central_difference(use_central_difference_),
                      warm_start(warm_start_) { }
 

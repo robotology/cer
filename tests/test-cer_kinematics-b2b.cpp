@@ -103,6 +103,7 @@ int main()
 
     SolverParameters p=solver_0.getSolverParameters();
     p.setMode("full_pose");
+    p.max_cpu_time=0.5;
     p.warm_start=true;
     solver_0.setSolverParameters(p);
 

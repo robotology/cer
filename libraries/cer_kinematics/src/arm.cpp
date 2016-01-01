@@ -131,7 +131,8 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetNumericValue("constr_viol_tol",slvParameters.constr_tol);
     app->Options()->SetIntegerValue("acceptable_iter",0);
     app->Options()->SetStringValue("mu_strategy","monotone");
-    app->Options()->SetIntegerValue("max_iter",500);
+    app->Options()->SetIntegerValue("max_iter",slvParameters.max_iter);
+    app->Options()->SetNumericValue("max_cpu_time",slvParameters.max_cpu_time);
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetNumericValue("nlp_scaling_max_gradient",1.0);
     app->Options()->SetNumericValue("nlp_scaling_min_value",1e-6);
@@ -232,24 +233,26 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         u.pop_back();
 
         yInfo(" *** Arm Solver ******************************");
-        yInfo(" *** Arm Solver:          arm = %s",armParameters.upper_arm.getType().c_str());
-        yInfo(" *** Arm Solver:         mode = %s",nlp->get_mode().c_str());
-        yInfo(" *** Arm Solver:   warm_start = %s",warm_start_str.c_str());
-        yInfo(" *** Arm Solver:          tol = %g",slvParameters.tol);
-        yInfo(" *** Arm Solver:   constr_tol = %g",slvParameters.constr_tol);
-        yInfo(" *** Arm Solver:       q0 [*] = (%s)",q0.toString(4,4).c_str());
-        yInfo(" *** Arm Solver:      hd1 [m] = %g",slvParameters.torso_heave);
-        yInfo(" *** Arm Solver:      hd2 [m] = %g",slvParameters.lower_arm_heave);
-        yInfo(" *** Arm Solver:       xd [m] = (%s)",xd.toString(4,4).c_str());
-        yInfo(" *** Arm Solver:     ud [rad] = (%s)",ud.toString(4,4).c_str());
-        yInfo(" *** Arm Solver:        q [*] = (%s)",q.toString(4,4).c_str());
-        yInfo(" *** Arm Solver:      e_x [m] = %g",norm(xd-x));
-        yInfo(" *** Arm Solver:    e_u [rad] = %g",norm(ud-u));
-        yInfo(" *** Arm Solver:     e_h1 [m] = %g",fabs(slvParameters.torso_heave-d1.p[2]));
-        yInfo(" *** Arm Solver: alpha1 [deg] = %g",CTRL_RAD2DEG*acos(d1.n[2]));
-        yInfo(" *** Arm Solver:     e_h2 [m] = %g",fabs(slvParameters.lower_arm_heave-d2.p[2]));
-        yInfo(" *** Arm Solver: alpha2 [deg] = %g",CTRL_RAD2DEG*acos(d2.n[2]));
-        yInfo(" *** Arm Solver:      dt [ms] = %g",1000.0*(t1-t0));
+        yInfo(" *** Arm Solver:              arm = %s",armParameters.upper_arm.getType().c_str());
+        yInfo(" *** Arm Solver:             mode = %s",nlp->get_mode().c_str());
+        yInfo(" *** Arm Solver:       warm_start = %s",warm_start_str.c_str());
+        yInfo(" *** Arm Solver:          tol [*] = %g",slvParameters.tol);
+        yInfo(" *** Arm Solver:   constr_tol [*] = %g",slvParameters.constr_tol);
+        yInfo(" *** Arm Solver:     max_iter [#] = %d",slvParameters.max_iter);
+        yInfo(" *** Arm Solver: max_cpu_time [s] = %g",slvParameters.max_cpu_time);
+        yInfo(" *** Arm Solver:           q0 [*] = (%s)",q0.toString(4,4).c_str());
+        yInfo(" *** Arm Solver:          hd1 [m] = %g",slvParameters.torso_heave);
+        yInfo(" *** Arm Solver:          hd2 [m] = %g",slvParameters.lower_arm_heave);
+        yInfo(" *** Arm Solver:           xd [m] = (%s)",xd.toString(4,4).c_str());
+        yInfo(" *** Arm Solver:         ud [rad] = (%s)",ud.toString(4,4).c_str());
+        yInfo(" *** Arm Solver:            q [*] = (%s)",q.toString(4,4).c_str());
+        yInfo(" *** Arm Solver:          e_x [m] = %g",norm(xd-x));
+        yInfo(" *** Arm Solver:        e_u [rad] = %g",norm(ud-u));
+        yInfo(" *** Arm Solver:         e_h1 [m] = %g",fabs(slvParameters.torso_heave-d1.p[2]));
+        yInfo(" *** Arm Solver:     alpha1 [deg] = %g",CTRL_RAD2DEG*acos(d1.n[2]));
+        yInfo(" *** Arm Solver:         e_h2 [m] = %g",fabs(slvParameters.lower_arm_heave-d2.p[2]));
+        yInfo(" *** Arm Solver:     alpha2 [deg] = %g",CTRL_RAD2DEG*acos(d2.n[2]));
+        yInfo(" *** Arm Solver:          dt [ms] = %g",1000.0*(t1-t0));
         yInfo(" *** Arm Solver ******************************");
     }
 
