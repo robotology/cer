@@ -165,6 +165,8 @@ int main()
         yInfo()<<"        e_h2_1 [m] = "<<fabs(input[i].lower_arm_heave-h2);
         yInfo()<<"    alpha1_2 [deg] = "<<alpha2<<" ("<<(alpha2<=armParams.lower_arm.alpha_max?"ok":"fail")<<")";
         yInfo()<<"         dt_1 [ms] = "<<1000.0*(t1-t0);
+        yInfo()<<"";
+        yInfo()<<"";
     }
 
     return 0;
