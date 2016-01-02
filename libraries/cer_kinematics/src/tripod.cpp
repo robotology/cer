@@ -137,7 +137,7 @@ public:
     {
         size_t len=std::min(this->rho0.length(),rho0.length());
         for (size_t i=0; i<len; i++)
-            this->rho0[i]=std::max(params.l_min,std::min(params.l_max,rho0[0]));
+            this->rho0[i]=std::max(params.l_min,std::min(params.l_max,rho0[i]));
     }
 
     /****************************************************************/
