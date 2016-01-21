@@ -143,6 +143,11 @@ void RobotThread::run()
     T(2,0)= 0.0; T(2,1)= 0.0; T(2,2)= 1.0; T(2,3)=0.2+radius*sin(O2sqrt3*2.0*M_PI*ti);//0.7-0.63;
     T(3,0)= 0.0; T(3,1)= 0.0; T(3,2)= 0.0; T(3,3)=1.0;
 
+    //T(0,0)= 0.0; T(0,1)= 0.0; T(0,2)= 1.0; T(0,3)= 0.2;
+    //T(1,0)= 0.0; T(1,1)= 1.0; T(1,2)= 0.0; T(1,3)=-0.6;
+    //T(2,0)=-1.0; T(2,1)= 0.0; T(2,2)= 0.0; T(2,3)=-0.1;
+    //T(3,0)= 0.0; T(3,1)= 0.0; T(3,2)= 0.0; T(3,3)= 1.0;
+
     ti+=PERIOD;
 
     sendTarget(std::string("target"),0,64,255,T(0,3),T(1,3),T(2,3),16.0,0.666);
@@ -153,9 +158,26 @@ void RobotThread::run()
 
     timeA=yarp::os::Time::now();
 
-    bool success=mRobot.ikin(T,qsol);
+    bool success=mRobot.ikin(T,qsol,0.01,0.1);
 
     timeB=yarp::os::Time::now();
+
+    /*
+    qsol(0)=0.1030;
+    qsol(1)=0.0375;
+    qsol(2)=0.1295;
+
+    qsol(3)=-89.9824;
+    qsol(4)= 78.1897;
+    qsol(5)=  4.0859;
+    qsol(6)= 84.8451;
+    qsol(7)=  8.2799;
+    qsol(8)=-89.4481;
+
+    qsol( 9)=0.0225;
+    qsol(10)=0.0040;
+    qsol(11)=0.0244;
+    */
 
     sendConfig(qsol);
 

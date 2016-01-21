@@ -24,14 +24,19 @@
 namespace cer {
 namespace kinematics_alt {
 
-#define PERIOD 0.01 // seconds
+#define PERIOD                  0.01 // [sec]
+#define SOLVER_TIMEOUT          0.0075 // [sec]
+#define DEFAULT_POS_THRESHOLD   0.01 // [m]
 
-#define SOLVER_TIMEOUT 0.007 // [sec]
-#define WRIST_MAX_TILT 35.0  // [deg]
-#define TORSO_MAX_TILT 30.0  // [deg]
-#define DEFAULT_ARM_EXTENSION   0.01  // [m]
 #define DEFAULT_TORSO_EXTENSION 0.0   // [m]
-#define DEFAULT_POS_THRESHOLD   0.005 // [m]
+#define TORSO_MAX_TILT          30.0  // [deg]
+#define MIN_TORSO_EXTENSION    -0.05  // [m]
+#define MAX_TORSO_EXTENSION     0.15  // [m]
+
+#define MIN_ARM_EXTENSION       0.0   // [m]
+#define MAX_ARM_EXTENSION       0.14  // [m]
+#define DEFAULT_ARM_EXTENSION   0.01  // [m]
+#define WRIST_MAX_TILT          35.0  // [deg]
 
 // joint identifiers
 enum 

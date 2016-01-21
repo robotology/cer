@@ -44,13 +44,6 @@ namespace kinematics_alt {
 
 enum { R = 0, L = 1 };
 
-// pseudoinverse as Lagrange multipliers problem
-// minimize 1/2*qd.t()*W*qd under the constraint v = J*qd
-// G(qd,L) = 1/2*qd.t()*W*qd+L.t()*(v-J*qd)
-// dG/dqd = qd.t()*W-L.t()*J = 0  ==> qd.t()*W = L.t()*J  ==>  W*qd = J.t()*L  ==>  qd = W.inv()*J.t()*L
-// v = J*qd = J*W.inv()*J.t()*L  ==>  L = (J*W.inv()*J.t()).inv()*v
-// qd = W.inv()*J.t()*L = W.inv()*J.t()*(J*W.inv()*J.t()).inv()*v
-
 class LeftSideSolverImpl
 {
 public:
@@ -105,16 +98,32 @@ public:
     {
         if (torsoElong!=mTorsoExt)
         {
-            qzero(0)=qzero(1)=qzero(2)=mTorsoExt=torsoElong;
-            qmin[0]=qmin[1]=qmin[2]=mTorsoExt-0.5*mTorsoExc;
-            qmax[0]=qmax[1]=qmax[2]=mTorsoExt+0.5*mTorsoExc;
+            double qa=torsoElong-0.5*mTorsoExc;
+            double qb=torsoElong+0.5*mTorsoExc;
+
+            if (qa<MIN_TORSO_EXTENSION){ qa=MIN_TORSO_EXTENSION; qb+=MIN_TORSO_EXTENSION-qa; }
+            if (qb>MAX_TORSO_EXTENSION){ qa+=MAX_TORSO_EXTENSION-qb; qb=MAX_TORSO_EXTENSION; }
+
+            mTorsoExt=0.5*(qa+qb);
+
+            qzero(0)=qzero(1)=qzero(2)=mTorsoExt;
+            qmin[0]=qmin[1]=qmin[2]=qa;
+            qmax[0]=qmax[1]=qmax[2]=qb;
         }
 
         if (armElong!=mArmExt[L])
         {
-            qzero(9)=qzero(10)=qzero(11)=mArmExt[L]=armElong;
-            qmin[9]=qmin[10]=qmin[11]=mArmExt[L]-0.5*mArmExc[L];
-            qmax[9]=qmax[10]=qmax[11]=mArmExt[L]+0.5*mArmExc[L];
+            double qa=armElong-0.5*mArmExc[L];
+            double qb=armElong+0.5*mArmExc[L];
+
+            if (qa<MIN_ARM_EXTENSION){ qa=MIN_ARM_EXTENSION; qb+=MIN_ARM_EXTENSION-qa; }
+            if (qb>MAX_ARM_EXTENSION){ qa+=MAX_ARM_EXTENSION-qb; qb=MAX_ARM_EXTENSION; }
+
+            mArmExt[L]=0.5*(qa+qb);
+
+            qzero(9)=qzero(10)=qzero(11)=mArmExt[L];
+            qmin[9]=qmin[10]=qmin[11]=qa;
+            qmax[9]=qmax[10]=qmax[11]=qb;
         }
 
         QtargetL=Rotation(Vec3(Hd(0,0),Hd(1,0),Hd(2,0)),Vec3(Hd(0,1),Hd(1,1),Hd(2,1)),Vec3(Hd(0,2),Hd(1,2),Hd(2,2))).quaternion();
@@ -567,8 +576,8 @@ LeftSideSolverImpl::LeftSideSolverImpl() :
         int k=startLForeArm+1+j;
         int h=startRForeArm+1+j;
 
-        Q[j]=0.010;
-        Q[h]=Q[k]=0.014;
+        Q[j]=0.100;
+        Q[h]=Q[k]=0.07;
         Ks[j]=Ks[k]=Ks[h]=0.5;
         Kz[j]=Kz[h]=Kz[k]=0.025;
     }
@@ -682,7 +691,7 @@ int LeftSideSolverImpl::leftHand2Target(Vec3& Xstar,Quaternion& Qstar)
         //static Matrix Vrot(3);
         Vrot=Lvi*Rv.t()*Vref;
 
-        static const double VLIM=2.0;
+        static const double VLIM=10.0;
 
         //Matrix Vbuf=Vrot;
 
