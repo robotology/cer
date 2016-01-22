@@ -165,9 +165,9 @@ public:
     {
         computeQuantities(x,new_x);
 
-        double e2=hd2-d2.p[2];
+        double e2=hd2-din2.p[2];
         g[0]=e2*e2;
-        g[1]=d2.n[2];
+        g[1]=din2.n[2];
 
         return true;
     }
@@ -200,22 +200,22 @@ public:
             TripodState d_fw;
 
             // g[0,1] (lower_arm)
-            double e2=hd2-d2.p[2];
+            double e2=hd2-din2.p[2];
 
             x_dx[9]=x[9]+drho;
-            d_fw=tripod_fkin(2,x_dx);
+            tripod_fkin(2,x_dx,&d_fw);
             values[0]=-2.0*e2*(d_fw.p[2]-d2.p[2])/drho;
             values[3]=(d_fw.n[2]-d2.n[2])/drho;
             x_dx[9]=x[9];
 
             x_dx[10]=x[10]+drho;
-            d_fw=tripod_fkin(2,x_dx);
+            tripod_fkin(2,x_dx,&d_fw);
             values[1]=-2.0*e2*(d_fw.p[2]-d2.p[2])/drho;
             values[4]=(d_fw.n[2]-d2.n[2])/drho;
             x_dx[10]=x[10];
 
             x_dx[11]=x[11]+drho;
-            d_fw=tripod_fkin(2,x_dx);
+            tripod_fkin(2,x_dx,&d_fw);
             values[2]=-2.0*e2*(d_fw.p[2]-d2.p[2])/drho;
             values[5]=(d_fw.n[2]-d2.n[2])/drho;
             x_dx[11]=x[11];
@@ -327,28 +327,28 @@ public:
             TripodState d_fw,d_bw;
 
             // g[2,3] (lower_arm)
-            double e2=hd2-d2.p[2];
+            double e2=hd2-din2.p[2];
 
             x_dx[9]=x[9]+drho;
-            d_fw=tripod_fkin(2,x_dx);
+            tripod_fkin(2,x_dx,&d_fw);
             x_dx[9]=x[9]-drho;
-            d_bw=tripod_fkin(2,x_dx);
+            tripod_fkin(2,x_dx,&d_bw);
             values[0]=-e2*(d_fw.p[2]-d_bw.p[2])/drho;
             values[3]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
             x_dx[9]=x[9];
 
             x_dx[10]=x[10]+drho;
-            d_fw=tripod_fkin(2,x_dx);
+            tripod_fkin(2,x_dx,&d_fw);
             x_dx[10]=x[10]-drho;
-            d_bw=tripod_fkin(2,x_dx);
+            tripod_fkin(2,x_dx,&d_bw);
             values[1]=-e2*(d_fw.p[2]-d_bw.p[2])/drho;
             values[4]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
             x_dx[10]=x[10];
 
             x_dx[11]=x[11]+drho;
-            d_fw=tripod_fkin(2,x_dx);
+            tripod_fkin(2,x_dx,&d_fw);
             x_dx[11]=x[11]-drho;
-            d_bw=tripod_fkin(2,x_dx);
+            tripod_fkin(2,x_dx,&d_bw);
             values[2]=-e2*(d_fw.p[2]-d_bw.p[2])/drho;
             values[5]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
             x_dx[11]=x[11];

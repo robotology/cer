@@ -42,11 +42,13 @@ protected:
     Vector lambda;
 
     TripodState d1,d2;
+    TripodState din1,din2;
     Matrix H,H_,J_,T;
     Vector q;
 
     /****************************************************************/
-    TripodState tripod_fkin(const int which, const Ipopt::Number *x) const
+    TripodState tripod_fkin(const int which, const Ipopt::Number *x,
+                            TripodState *internal=NULL) const
     {
         const TripodParametersExtended &params=((which==1)?torso:lower_arm);
         int offs=(which==1)?0:9;
@@ -93,6 +95,9 @@ protected:
             d.T(2,0)=q31; d.T(2,1)=q32; d.T(2,2)=q33;  d.T(2,3)=d.p[2];
         }
 
+        if (internal!=NULL)
+            *internal=d;
+
         d.n=params.R0*d.n;
         d.u=params.R0*d.u;
         d.p=params.R0*d.p+params.p0;
@@ -135,9 +140,10 @@ public:
     virtual string get_mode() const=0;
 
     /****************************************************************/
-    TripodState tripod_fkin(const int which, const Vector &x) const
+    TripodState tripod_fkin(const int which, const Vector &x,
+                            TripodState *internal=NULL) const
     {
-        return tripod_fkin(which,(Ipopt::Number*)x.data());
+        return tripod_fkin(which,(Ipopt::Number*)x.data(),internal);
     }
 
     /****************************************************************/
@@ -241,8 +247,8 @@ public:
             for (size_t i=0; i<q.length(); i++)
                 q[i]=x[3+i];
 
-            d1=tripod_fkin(1,x);
-            d2=tripod_fkin(2,x);
+            d1=tripod_fkin(1,x,&din1);
+            d2=tripod_fkin(2,x,&din2);
             H=upper_arm.getH(q);
             T=d1.T*H*d2.T*TN;
 
