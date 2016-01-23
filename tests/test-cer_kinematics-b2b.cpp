@@ -16,7 +16,6 @@
 */
 
 #include <cmath>
-#include <limits>
 #include <string>
 #include <sstream>
 #include <deque>
@@ -104,8 +103,6 @@ int main()
 
     SolverParameters p=solver_0.getSolverParameters();
     p.setMode("full_pose");
-    p.max_iter=std::numeric_limits<int>::max();
-    p.max_cpu_time=0.5;
     p.warm_start=true;
     solver_0.setSolverParameters(p);
 
@@ -149,13 +146,14 @@ int main()
 
         Matrix H_tmp0;
         solver_0.fkin(q_1,H_tmp0,0);
+        H_tmp0=SE3inv(armParams.torso.T0)*H_tmp0; 
         double h1=H_tmp0(2,3);
         double alpha1=R2D*acos(H_tmp0(2,2));
 
         Matrix H_tmp1;
         solver_0.fkin(q_1,H_tmp1,8);
         solver_0.fkin(q_1,H_tmp0,9);
-        H_tmp0=SE3inv(H_tmp1)*H_tmp0;
+        H_tmp0=SE3inv(H_tmp1*armParams.lower_arm.T0)*H_tmp0; 
         double h2=H_tmp0(2,3);
         double alpha2=R2D*acos(H_tmp0(2,2));
 

@@ -38,15 +38,21 @@ protected:
     Vector x0,x;
     Vector xd,ud;
 
+    Vector latch_x;
+    VectorOf<int> latch_idx;
+    Vector latch_gl,latch_gu;
+
     Vector zL,zU;
     Vector lambda;
 
     TripodState d1,d2;
+    TripodState din1,din2;
     Matrix H,H_,J_,T;
     Vector q;
 
     /****************************************************************/
-    TripodState tripod_fkin(const int which, const Ipopt::Number *x) const
+    TripodState tripod_fkin(const int which, const Ipopt::Number *x,
+                            TripodState *internal=NULL) const
     {
         const TripodParametersExtended &params=((which==1)?torso:lower_arm);
         int offs=(which==1)?0:9;
@@ -93,12 +99,66 @@ protected:
             d.T(2,0)=q31; d.T(2,1)=q32; d.T(2,2)=q33;  d.T(2,3)=d.p[2];
         }
 
+        if (internal!=NULL)
+            *internal=d;
+
         d.n=params.R0*d.n;
         d.u=params.R0*d.u;
         d.p=params.R0*d.p+params.p0;
         d.T=params.T0*d.T;
 
         return d;
+    }
+
+    /****************************************************************/
+    bool verify_alpha(const Ipopt::Number *x, const Ipopt::Number *g)
+    {
+        if (latch_idx.size()==0)
+            return false;
+
+        for (size_t i=0; i<latch_idx.size(); i++)
+        {
+            int idx=latch_idx[i];
+            if ((g[idx]<latch_gl[i]) || (g[idx]>latch_gu[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    /****************************************************************/
+    void latch_x_verifying_alpha(Ipopt::Index n, const Ipopt::Number *x,
+                                 const Ipopt::Number *g)
+    {
+        if (verify_alpha(x,g))
+        {
+            if (latch_x.length()==0)
+                latch_x.resize(n);
+
+            for (Ipopt::Index i=0; i<n; i++)
+                latch_x[i]=x[i];
+        }        
+    }
+
+    /****************************************************************/
+    Vector verify_solution_against_alpha(Ipopt::Index n, const Ipopt::Number *x,
+                                         Ipopt::Index m)
+    {
+        Vector solution(n);
+        for (Ipopt::Index i=0; i<n; i++)
+            solution[i]=x[i];
+
+        if (latch_idx.size()>0)
+        {
+            Vector g_data(m);
+            Ipopt::Number *g=(Ipopt::Number*)g_data.data();
+
+            eval_g(n,x,true,m,g);
+            if (!verify_alpha(x,g) && (latch_x.length()>0))
+                solution=latch_x;
+        }
+
+        return solution;
     }
 
 public:
@@ -135,9 +195,10 @@ public:
     virtual string get_mode() const=0;
 
     /****************************************************************/
-    TripodState tripod_fkin(const int which, const Vector &x) const
+    TripodState tripod_fkin(const int which, const Vector &x,
+                            TripodState *internal=NULL) const
     {
-        return tripod_fkin(which,(Ipopt::Number*)x.data());
+        return tripod_fkin(which,(Ipopt::Number*)x.data(),internal);
     }
 
     /****************************************************************/
@@ -241,8 +302,8 @@ public:
             for (size_t i=0; i<q.length(); i++)
                 q[i]=x[3+i];
 
-            d1=tripod_fkin(1,x);
-            d2=tripod_fkin(2,x);
+            d1=tripod_fkin(1,x,&din1);
+            d2=tripod_fkin(2,x,&din2);
             H=upper_arm.getH(q);
             T=d1.T*H*d2.T*TN;
 
@@ -316,13 +377,14 @@ public:
                            Ipopt::Number obj_value, const Ipopt::IpoptData *ip_data,
                            Ipopt::IpoptCalculatedQuantities *ip_cq)
     {
+        this->x=verify_solution_against_alpha(n,x,m);
+
         zL.resize(n);
         zU.resize(n);
         this->lambda.resize(m);
 
         for (Ipopt::Index i=0; i<n; i++)
-        {
-            this->x[i]=x[i];
+        {            
             zL[i]=z_L[i];
             zU[i]=z_U[i];
         }

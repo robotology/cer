@@ -57,30 +57,11 @@ protected:
     Vector rho0,rho;
     double drho;
 
-    TripodState d;
+    TripodState d,din;
     Vector lll;
 
-public:
     /****************************************************************/
-    TripodNLP(TripodSolver &slv_) : slv(slv_), params(slv.parameters)
-    {
-        zd=(params.l_max+params.l_min)/2.0;
-        ud.resize(3,0.0);
-
-        rho0.resize(3,zd);
-        rho=rho0;
-        drho=DELTA_RHO;
-        lll=rho0;
-    }
-
-    /****************************************************************/
-    TripodState fkin(const Vector &x) const
-    {
-        return fkin((Ipopt::Number*)x.data());
-    }
-
-    /****************************************************************/
-    TripodState fkin(const Ipopt::Number *x) const
+    TripodState fkinHelper(const Ipopt::Number *x, TripodState *internal=NULL) const
     {
         double q33=sqrt(27.0)*params.r/sqrt(12.0*(x[2]*x[2]-(x[0]+x[1])*x[2]+
                                             x[1]*x[1]-x[0]*x[1]+x[0]*x[0]+
@@ -124,12 +105,40 @@ public:
             d.T(2,0)=q31; d.T(2,1)=q32; d.T(2,2)=q33;  d.T(2,3)=d.p[2];
         }
 
+        if (internal!=NULL)
+            *internal=d;
+
         d.n=params.R0*d.n;
         d.u=params.R0*d.u;
         d.p=params.R0*d.p+params.p0;
         d.T=params.T0*d.T;
 
         return d;
+    }
+
+public:
+    /****************************************************************/
+    TripodNLP(TripodSolver &slv_) : slv(slv_), params(slv.parameters)
+    {
+        zd=(params.l_max+params.l_min)/2.0;
+        ud.resize(3,0.0);
+
+        rho0.resize(3,zd);
+        rho=rho0;
+        drho=DELTA_RHO;
+        lll=rho0;
+    }
+
+    /****************************************************************/
+    TripodState fkin(const Vector &x) const
+    {
+        return fkinHelper((Ipopt::Number*)x.data());
+    }
+
+    /****************************************************************/
+    TripodState fkin(const Ipopt::Number *x) const
+    {
+        return fkinHelper(x);
     }
 
     /****************************************************************/
@@ -197,7 +206,7 @@ public:
             for (size_t i=0; i<this->lll.length(); i++)
                 this->lll[i]=x[i];
 
-            d=fkin(x);
+            d=fkinHelper(x,&din);
         }
     }
 
@@ -265,9 +274,9 @@ public:
     {
         computeQuantities(x,new_x);
 
-        Ipopt::Number tmp=(zd-d.p[2]);
+        Ipopt::Number tmp=(zd-din.p[2]);
         g[0]=tmp*tmp;
-        g[1]=d.n[2];
+        g[1]=din.n[2];
 
         return true;
     }
@@ -296,32 +305,32 @@ public:
 
             Ipopt::Number x_dx[3];
             TripodState d_fw,d_bw;
-            double tmp=zd-d.p[2];
+            double tmp=zd-din.p[2];
 
             x_dx[0]=x[0]+drho;
             x_dx[1]=x[1];
             x_dx[2]=x[2];
-            d_fw=fkin(x_dx);
+            fkinHelper(x_dx,&d_fw);
             x_dx[0]=x[0]-drho;
-            d_bw=fkin(x_dx);
+            fkinHelper(x_dx,&d_bw);
             values[0]=-tmp*(d_fw.p[2]-d_bw.p[2])/drho;
             values[3]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
 
             x_dx[0]=x[0];
             x_dx[1]=x[1]+drho;
             x_dx[2]=x[2];
-            d_fw=fkin(x_dx);
+            fkinHelper(x_dx,&d_fw);
             x_dx[1]=x[1]-drho;
-            d_bw=fkin(x_dx);
+            fkinHelper(x_dx,&d_bw);
             values[1]=-tmp*(d_fw.p[2]-d_bw.p[2])/drho;
             values[4]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
 
             x_dx[0]=x[0];
             x_dx[1]=x[1];
             x_dx[2]=x[2]+drho;
-            d_fw=fkin(x_dx);
+            fkinHelper(x_dx,&d_fw);
             x_dx[2]=x[2]-drho;
-            d_bw=fkin(x_dx);
+            fkinHelper(x_dx,&d_bw);
             values[2]=-tmp*(d_fw.p[2]-d_bw.p[2])/drho;
             values[5]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
         }

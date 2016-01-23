@@ -136,10 +136,13 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetNumericValue("nlp_scaling_max_gradient",1.0);
     app->Options()->SetNumericValue("nlp_scaling_min_value",1e-6);
-    app->Options()->SetStringValue("hessian_approximation","limited-memory");    
+    app->Options()->SetStringValue("hessian_approximation","limited-memory");
     app->Options()->SetStringValue("fixed_variable_treatment","make_parameter");
+    app->Options()->SetStringValue("expect_infeasible_problem","yes");
+    app->Options()->SetNumericValue("expect_infeasible_problem_ctol",10.0*slvParameters.constr_tol);
+    app->Options()->SetNumericValue("expect_infeasible_problem_ytol",100.0*slvParameters.constr_tol);
     app->Options()->SetStringValue("derivative_test",print_level>=4?"first-order":"none");
-    app->Options()->SetIntegerValue("print_level",print_level);    
+    app->Options()->SetIntegerValue("print_level",print_level);
     if (slvParameters.warm_start)
     {
         if ((zL.length()>0) && (zU.length()>0) && (lambda.length()>0) && (curMode==mode))
@@ -225,8 +228,9 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         ud.pop_back();
 
         Matrix H=nlp->fkin(q);
-        TripodState d1=nlp->tripod_fkin(1,q);
-        TripodState d2=nlp->tripod_fkin(2,q);
+        TripodState din1,din2;
+        nlp->tripod_fkin(1,q,&din1);
+        nlp->tripod_fkin(2,q,&din2);
         Vector x=H.getCol(3).subVector(0,2);
         Vector u=dcm2axis(H);
         u*=u[3];
@@ -248,10 +252,10 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         yInfo(" *** Arm Solver:            q [*] = (%s)",q.toString(4,4).c_str());
         yInfo(" *** Arm Solver:          e_x [m] = %g",norm(xd-x));
         yInfo(" *** Arm Solver:        e_u [rad] = %g",norm(ud-u));
-        yInfo(" *** Arm Solver:         e_h1 [m] = %g",fabs(slvParameters.torso_heave-d1.p[2]));
-        yInfo(" *** Arm Solver:     alpha1 [deg] = %g",CTRL_RAD2DEG*acos(d1.n[2]));
-        yInfo(" *** Arm Solver:         e_h2 [m] = %g",fabs(slvParameters.lower_arm_heave-d2.p[2]));
-        yInfo(" *** Arm Solver:     alpha2 [deg] = %g",CTRL_RAD2DEG*acos(d2.n[2]));
+        yInfo(" *** Arm Solver:         e_h1 [m] = %g",fabs(slvParameters.torso_heave-din1.p[2]));
+        yInfo(" *** Arm Solver:     alpha1 [deg] = %g",CTRL_RAD2DEG*acos(din1.n[2]));
+        yInfo(" *** Arm Solver:         e_h2 [m] = %g",fabs(slvParameters.lower_arm_heave-din2.p[2]));
+        yInfo(" *** Arm Solver:     alpha2 [deg] = %g",CTRL_RAD2DEG*acos(din2.n[2]));
         yInfo(" *** Arm Solver:          dt [ms] = %g",1000.0*(t1-t0));
         yInfo(" *** Arm Solver ******************************");
     }
