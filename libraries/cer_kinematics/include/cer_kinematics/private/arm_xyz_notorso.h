@@ -70,8 +70,16 @@ public:
             x_u[offs+i]=lower_arm.l_max;
         }
 
+        latch_idx.clear();
+        latch_gl.clear();
+        latch_gu.clear();
+
         g_l[0]=g_u[0]=0.0;
         g_l[1]=lower_arm.cos_alpha_max; g_u[1]=1.0;
+
+        latch_idx.push_back(1);
+        latch_gl.push_back(g_l[1]);
+        latch_gu.push_back(g_u[1]);
 
         return true;
     }
@@ -168,6 +176,8 @@ public:
         double e2=hd2-din2.p[2];
         g[0]=e2*e2;
         g[1]=din2.n[2];
+
+        latch_x_verifying_alpha(n,x,g);
 
         return true;
     }

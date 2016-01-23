@@ -136,11 +136,11 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
     app->Options()->SetNumericValue("nlp_scaling_max_gradient",1.0);
     app->Options()->SetNumericValue("nlp_scaling_min_value",1e-6);
-    app->Options()->SetStringValue("hessian_approximation","limited-memory");    
+    app->Options()->SetStringValue("hessian_approximation","limited-memory");
     app->Options()->SetStringValue("fixed_variable_treatment","make_parameter");
     app->Options()->SetStringValue("expect_infeasible_problem","yes");
-    app->Options()->SetNumericValue("expect_infeasible_problem_ctol",10.0*slvParameters.constr_tol);
-    app->Options()->SetNumericValue("expect_infeasible_problem_ytol",1e-2);
+    app->Options()->SetNumericValue("expect_infeasible_problem_ctol",slvParameters.constr_tol);
+    app->Options()->SetNumericValue("expect_infeasible_problem_ytol",10.0*slvParameters.constr_tol);
     app->Options()->SetStringValue("derivative_test",print_level>=4?"first-order":"none");
     app->Options()->SetIntegerValue("print_level",print_level);
     if (slvParameters.warm_start)

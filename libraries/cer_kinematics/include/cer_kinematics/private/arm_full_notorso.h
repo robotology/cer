@@ -75,6 +75,14 @@ public:
 
         g_l[2]=g_u[2]=0.0;
 
+        latch_idx.clear();
+        latch_gl.clear();
+        latch_gu.clear();
+
+        latch_idx.push_back(1);
+        latch_gl.push_back(g_l[1]);
+        latch_gu.push_back(g_u[1]);
+
         return true;
     }
 
@@ -178,6 +186,8 @@ public:
         g[1]=din2.n[2];
 
         g[2]=norm2(xd-T.getCol(3).subVector(0,2));
+
+        latch_x_verifying_alpha(n,x,g);
 
         return true;
     }

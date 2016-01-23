@@ -75,6 +75,18 @@ public:
         g_l[0]=torso.cos_alpha_max;     g_u[0]=1.0;
         g_l[1]=lower_arm.cos_alpha_max; g_u[1]=1.0;
 
+        latch_idx.clear();
+        latch_gl.clear();
+        latch_gu.clear();
+
+        latch_idx.push_back(0);
+        latch_gl.push_back(g_l[0]);
+        latch_gu.push_back(g_u[0]);
+
+        latch_idx.push_back(1);
+        latch_gl.push_back(g_l[1]);
+        latch_gu.push_back(g_u[1]);
+
         return true;
     }
 
@@ -85,6 +97,8 @@ public:
         computeQuantities(x,new_x);
         g[0]=din1.n[2];
         g[1]=din2.n[2];
+
+        latch_x_verifying_alpha(n,x,g);
 
         return true;
     }
@@ -213,6 +227,18 @@ public:
         g_l[0]=torso.cos_alpha_max;     g_u[0]=1.0;
         g_l[1]=lower_arm.cos_alpha_max; g_u[1]=1.0;
 
+        latch_idx.clear();
+        latch_gl.clear();
+        latch_gu.clear();
+
+        latch_idx.push_back(0);
+        latch_gl.push_back(g_l[0]);
+        latch_gu.push_back(g_u[0]);
+
+        latch_idx.push_back(1);
+        latch_gl.push_back(g_l[1]);
+        latch_gu.push_back(g_u[1]);
+
         return true;
     }
 
@@ -223,6 +249,8 @@ public:
         computeQuantities(x,new_x);
         g[0]=din1.n[2];
         g[1]=din2.n[2];
+
+        latch_x_verifying_alpha(n,x,g);
 
         return true;
     }

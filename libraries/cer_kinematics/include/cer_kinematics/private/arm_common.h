@@ -38,6 +38,10 @@ protected:
     Vector x0,x;
     Vector xd,ud;
 
+    Vector latch_x;
+    VectorOf<int> latch_idx;
+    Vector latch_gl,latch_gu;
+
     Vector zL,zU;
     Vector lambda;
 
@@ -104,6 +108,57 @@ protected:
         d.T=params.T0*d.T;
 
         return d;
+    }
+
+    /****************************************************************/
+    bool verify_alpha(const Ipopt::Number *x, const Ipopt::Number *g)
+    {
+        if (latch_idx.size()==0)
+            return false;
+
+        for (size_t i=0; i<latch_idx.size(); i++)
+        {
+            int idx=latch_idx[i];
+            if ((g[idx]<latch_gl[i]) || (g[idx]>latch_gu[i]))
+                return false;
+        }
+
+        return true;
+    }
+
+    /****************************************************************/
+    void latch_x_verifying_alpha(Ipopt::Index n, const Ipopt::Number *x,
+                                 const Ipopt::Number *g)
+    {
+        if (verify_alpha(x,g))
+        {
+            if (latch_x.length()==0)
+                latch_x.resize(n);
+
+            for (Ipopt::Index i=0; i<n; i++)
+                latch_x[i]=x[i];
+        }        
+    }
+
+    /****************************************************************/
+    Vector verify_solution_against_alpha(Ipopt::Index n, const Ipopt::Number *x,
+                                         Ipopt::Index m)
+    {
+        Vector solution(n);
+        for (Ipopt::Index i=0; i<n; i++)
+            solution[i]=x[i];
+
+        if (latch_idx.size()>0)
+        {
+            Vector g_data(m);
+            Ipopt::Number *g=(Ipopt::Number*)g_data.data();
+
+            eval_g(n,x,true,m,g);
+            if (!verify_alpha(x,g) && (latch_x.length()>0))
+                solution=latch_x;
+        }
+
+        return solution;
     }
 
 public:
@@ -322,13 +377,14 @@ public:
                            Ipopt::Number obj_value, const Ipopt::IpoptData *ip_data,
                            Ipopt::IpoptCalculatedQuantities *ip_cq)
     {
+        this->x=verify_solution_against_alpha(n,x,m);
+
         zL.resize(n);
         zU.resize(n);
         this->lambda.resize(m);
 
         for (Ipopt::Index i=0; i<n; i++)
-        {
-            this->x[i]=x[i];
+        {            
             zL[i]=z_L[i];
             zU[i]=z_U[i];
         }

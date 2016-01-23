@@ -18,6 +18,7 @@
 #ifndef __CER_KINEMATICS_UTILS_H__
 #define __CER_KINEMATICS_UTILS_H__
 
+#include <limits>
 #include <string>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
@@ -243,7 +244,8 @@ struct SolverParameters
                      const double weight_postural_upper_arm_=0.0,
                      const double weight_postural_lower_arm_=0.0,
                      const double tol_=0.1, const double constr_tol_=1e-4,
-                     const int max_iter_=500, const double max_cpu_time_=1.0,
+                     const int max_iter_=std::numeric_limits<int>::max(),
+                     const double max_cpu_time_=1.0,
                      const bool use_central_difference_=false,
                      const bool warm_start_=false) :
                      full_pose(full_pose_), configuration(configuration_),
