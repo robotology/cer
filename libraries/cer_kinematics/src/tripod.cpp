@@ -61,7 +61,7 @@ protected:
     Vector lll;
 
     /****************************************************************/
-    TripodState fkinHelper(const Ipopt::Number *x, TripodState *internal=NULL) const
+    TripodState fkin(const Ipopt::Number *x, TripodState *internal=NULL)
     {
         double q33=sqrt(27.0)*params.r/sqrt(12.0*(x[2]*x[2]-(x[0]+x[1])*x[2]+
                                             x[1]*x[1]-x[0]*x[1]+x[0]*x[0]+
@@ -130,15 +130,9 @@ public:
     }
 
     /****************************************************************/
-    TripodState fkin(const Vector &x) const
+    TripodState fkin(const Vector &x, TripodState *internal=NULL)
     {
-        return fkinHelper((Ipopt::Number*)x.data());
-    }
-
-    /****************************************************************/
-    TripodState fkin(const Ipopt::Number *x) const
-    {
-        return fkinHelper(x);
+        return fkin((Ipopt::Number*)x.data(),internal);
     }
 
     /****************************************************************/
@@ -206,7 +200,7 @@ public:
             for (size_t i=0; i<this->lll.length(); i++)
                 this->lll[i]=x[i];
 
-            d=fkinHelper(x,&din);
+            d=fkin(x,&din);
         }
     }
 
@@ -310,27 +304,27 @@ public:
             x_dx[0]=x[0]+drho;
             x_dx[1]=x[1];
             x_dx[2]=x[2];
-            fkinHelper(x_dx,&d_fw);
+            fkin(x_dx,&d_fw);
             x_dx[0]=x[0]-drho;
-            fkinHelper(x_dx,&d_bw);
+            fkin(x_dx,&d_bw);
             values[0]=-tmp*(d_fw.p[2]-d_bw.p[2])/drho;
             values[3]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
 
             x_dx[0]=x[0];
             x_dx[1]=x[1]+drho;
             x_dx[2]=x[2];
-            fkinHelper(x_dx,&d_fw);
+            fkin(x_dx,&d_fw);
             x_dx[1]=x[1]-drho;
-            fkinHelper(x_dx,&d_bw);
+            fkin(x_dx,&d_bw);
             values[1]=-tmp*(d_fw.p[2]-d_bw.p[2])/drho;
             values[4]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
 
             x_dx[0]=x[0];
             x_dx[1]=x[1];
             x_dx[2]=x[2]+drho;
-            fkinHelper(x_dx,&d_fw);
+            fkin(x_dx,&d_fw);
             x_dx[2]=x[2]-drho;
-            fkinHelper(x_dx,&d_bw);
+            fkin(x_dx,&d_bw);
             values[2]=-tmp*(d_fw.p[2]-d_bw.p[2])/drho;
             values[5]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
         }

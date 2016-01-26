@@ -52,7 +52,7 @@ protected:
 
     /****************************************************************/
     TripodState tripod_fkin(const int which, const Ipopt::Number *x,
-                            TripodState *internal=NULL) const
+                            TripodState *internal=NULL)
     {
         const TripodParametersExtended &params=((which==1)?torso:lower_arm);
         int offs=(which==1)?0:9;
@@ -196,7 +196,7 @@ public:
 
     /****************************************************************/
     TripodState tripod_fkin(const int which, const Vector &x,
-                            TripodState *internal=NULL) const
+                            TripodState *internal=NULL)
     {
         return tripod_fkin(which,(Ipopt::Number*)x.data(),internal);
     }
