@@ -41,7 +41,9 @@ quiver3(ha,0,0,0,0,0,1,A,'Color','b','Linewidth',2);
 A=A*0.75;
 
 hxd=[]; hx=[];
-data=importdata(filename);
+fid=fopen(filename);
+data=textscan(fid,'%.3f %s %d %.3f %.3f %.3f %.3f %.3f %.3f\n');
+fclose(fid);
 cnt=0; line=1;
 
 t=timer;
@@ -71,15 +73,15 @@ period=get(obj,'Period');
 T=period*cnt;
 
 j=[]; k=[];
-while str2double(data.textdata{line,1})<T
-    type=data.textdata{line,2};
+while data{1}(line)<T
+    type=data{2}(line);
     if strcmp(type,'xd')
         j=line;
     elseif strcmp(type,'x')
         k=line;
     end
     line=line+1;
-    if line>length(data.data(:,1))
+    if line>length(data{1})
         stop(obj);
         if do_movie
             close(writer);
@@ -94,8 +96,8 @@ if ~isempty(j)
         delete(hxd);
     end
     
-    x=data.data(j,2:4);
-    u=data.data(j,5:7); n=norm(u);
+    x=[data{4}(j) data{5}(j) data{6}(j)];
+    u=[data{7}(j) data{8}(j) data{9}(j)]; n=norm(u);
     H=axis2dcm([u/n n]);
     
     hxd=hggroup;
@@ -117,8 +119,8 @@ if ~isempty(k)
         delete(hx);
     end
     
-    x=data.data(k,2:4);
-    u=data.data(k,5:7); n=norm(u);
+    x=[data{4}(k) data{5}(k) data{6}(k)];
+    u=[data{7}(k) data{8}(k) data{9}(k)]; n=norm(u);
     H=axis2dcm([u/n n]);
 
     hx=hggroup;
