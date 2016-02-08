@@ -81,7 +81,7 @@ class cer::dev::GazeboTripodMotionControl:
     public yarp::dev::IControlLimits2,
     public yarp::dev::IInteractionMode,
     public yarp::dev::IControlMode2,
-//     public yarp::dev::ITorqueControl,
+//    public yarp::dev::ITorqueControl,
     public yarp::dev::IPositionDirect,
 //     public yarp::dev::IImpedanceControl,
     public yarp::dev::IPidControl,
@@ -109,6 +109,7 @@ public:
 
     // AXIS IAxisInfo
     virtual bool getAxisName(int axis, yarp::os::ConstString& name);
+    virtual bool getJointType(int axis, yarp::dev::JointTypeEnum& type);
 
     //ENCODERS
     virtual bool getEncoder(int j, double* v);
@@ -154,7 +155,10 @@ public:
     virtual bool getRefSpeeds(const int n_joint, const int *joints, double *spds);
     virtual bool getRefAccelerations(const int n_joint, const int *joints, double *accs);
     virtual bool stop(const int n_joint, const int *joints);
-
+    virtual bool getTargetPosition(const int joint, double *ref);
+    virtual bool getTargetPositions(double *refs);
+    virtual bool getTargetPositions(const int n_joint, const int *joints, double *refs);
+    
         // IPOSITION DIRECT
     virtual bool setPositionDirectMode();
     virtual bool setPosition(int j, double ref);
@@ -179,7 +183,10 @@ public:
     virtual bool setVelPids(const yarp::dev::Pid *pids);
     virtual bool getVelPid(int j, yarp::dev::Pid *pid);
     virtual bool getVelPids(yarp::dev::Pid *pids);
-
+    virtual bool getRefVelocity(const int joint, double *vel);
+    virtual bool getRefVelocities(double *vels);
+    virtual bool getRefVelocities(const int n_joint, const int *joints, double *vels);
+    
     //CONTROL MODE
     virtual bool setPositionMode(int j);
     virtual bool setVelocityMode(int j);
@@ -236,15 +243,17 @@ public:
     bool setInteractionModes(int n_joints, int *joints, yarp::dev::InteractionModeEnum* modes);
     bool setInteractionModes(yarp::dev::InteractionModeEnum* modes);
 
+    //TORQUE CONTROL
+    bool getTorque(int j, double *t);
+    bool getTorques(double *t);
+    bool getRefTorque(int j, double *t);
+    bool getRefTorques(double *t);
+    
 #if 0
     //TORQUE CONTROL
     virtual bool setRefTorque(int j, double t);
     virtual bool setRefTorques(const double *t);
     virtual bool setTorqueMode();
-    virtual bool getRefTorque(int j, double *t);
-    virtual bool getRefTorques(double *t);
-    virtual bool getTorque(int j, double *t);
-    virtual bool getTorques(double *t);
 
     virtual bool getBemfParam(int j, double *bemf);
     virtual bool setBemfParam(int j, double bemf);

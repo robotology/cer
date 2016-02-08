@@ -20,6 +20,13 @@ bool GazeboTripodMotionControl::getAxisName(int axis, yarp::os::ConstString& nam
     return true;
 }
 
+bool GazeboTripodMotionControl::getJointType(int axis, yarp::dev::JointTypeEnum& type)
+{ 
+    if (axis < 0 || axis >= (int)m_numberOfJoints) return false;
+    type=VOCAB_JOINTTYPE_PRISMATIC;
+    return true; 
+}
+
 
     //ENCODERS
 bool GazeboTripodMotionControl::getEncoder(int j, double* v)

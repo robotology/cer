@@ -29,16 +29,24 @@ if(GAZEBO_TRIPOD_PLUGIN)
                         ${CMAKE_CURRENT_SOURCE_DIR}/../cermod/tripod)
 
    set(GAZEBO_ROOT $ENV{GAZEBO_PLUGIN_ROOT})
+   set(GAZEBO_PL_LIB_DIRS $ENV{GAZEBO_PLUGIN_PATH})
+
    if(GAZEBO_ROOT)
     # gazeboYarpPlugin repo should export the following info and have well-done config.cmake file
     include_directories($ENV{GAZEBO_PLUGIN_ROOT}/libraries/common/include/
                         $ENV{GAZEBO_PLUGIN_ROOT}/libraries/singleton/include/)
 
-    link_directories($ENV{GAZEBO_PLUGIN_PATH})
+    link_directories(/usr/local/src/robot/gazebo-yarp-plugins/build/bin/lib)
     link_directories(${GAZEBO_LIBRARY_DIRS})
+
+    add_library(gazeboTripod ${gazeboTripod_source} ${gazeboTripod_headers})
+    target_link_libraries(gazeboTripod gazebo_yarp_singleton cer_kinematics ${YARP_LIBRARIES} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+
+    yarp_install(TARGETS gazeboTripod
+                 COMPONENT Runtime
+                 LIBRARY DESTINATION  ${CMAKE_INSTALL_LIBDIR}
+                 ARCHIVE DESTINATION  ${CMAKE_INSTALL_LIBDIR})
    else()
    message("\nError: environment variable 'GAZEBO_PLUGIN_ROOT' not found, please set it to point to source root of Gazebo Yarp Plugins.\n")
    endif()
-    add_library(gazeboTripod ${gazeboTripod_source} ${gazeboTripod_headers})
-    target_link_libraries(gazeboTripod gazebo_yarp_singleton cer_kinematics ${YARP_LIBRARIES} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 endif()

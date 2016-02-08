@@ -329,9 +329,9 @@ bool GazeboTripodMotionControl::gazebo_init()
     }
 
     double speed = 0;
-    if(! (speed = limitsGroup.check("JntVelocityMax")))
+    if(! (speed = limitsGroup.check("jntVelMax")))
     {
-        yError() << "Cannot find 'JntVelocityMax' parameter in config file";
+        yError() << "Cannot find 'jntVelMax' parameter in config file";
         return false;
     }
     for (unsigned int j = 0; j < m_numberOfJoints; ++j)
@@ -364,7 +364,7 @@ bool GazeboTripodMotionControl::configureJointType()
 
             default:
             {
-                std::cout << "Error, joint type is not supported by Gazebo YARP plugin now. Supported joint types are 'revolute' and 'prismatic' \n\t(GEARBOX_JOINT and SLIDER_JOINT using Gazebo enums defined into gazebo/physic/base.hh include file, GetType() returns " << m_jointPointers[i]->GetType() << std::endl;
+                yError() << "Error, joint type is not supported by Gazebo YARP plugin now. Supported joint types are 'revolute' and 'prismatic' \n\t(GEARBOX_JOINT and SLIDER_JOINT using Gazebo enums defined into gazebo/physic/base.hh include file, GetType() returns " << m_jointPointers[i]->GetType() ;
                 m_jointTypes[i] = JointType_Unknown;
                 ret = false;
                 break;
@@ -878,4 +878,101 @@ double GazeboTripodMotionControl::convertGazeboGainToUserGain(int joint, double 
         }
     }
     return newValue;
+}
+
+bool GazeboTripodMotionControl::getTorque(int j, double *t)
+{
+    if(j >= 0 && j < m_numberOfJoints)
+    {
+        *t = 0; //@@@@ THIS IS NOT IMPLEMENTED YET
+	return true;
+    }
+    return false;
+}
+
+bool GazeboTripodMotionControl::getTorques(double *t)
+{
+    bool ret = true;
+    for(unsigned int i = 0; i < m_numberOfJoints; ++i)
+    ret |= getTorque(i,&t[i]);
+    return ret;
+}
+
+bool GazeboTripodMotionControl::getRefTorque(int j, double* t)
+{
+    if (t && j >= 0 && j < (int)m_numberOfJoints) {
+        *t = m_referenceTorques[j];
+        return true;
+    }
+    return false;
+}
+
+bool GazeboTripodMotionControl::getRefTorques(double* t)
+{
+    if (!t) return false;
+    for(unsigned int j = 0; j < m_numberOfJoints; ++j) {
+        t[j] = m_referenceTorques[j];
+    }
+    return true;
+}
+
+bool GazeboTripodMotionControl::getTargetPosition(const int joint, double *ref)
+{
+    if (ref && joint >= 0 && joint < (int)m_numberOfJoints)
+    {
+      *ref = m_trajectoryGenerationReferencePosition[joint];
+      return true;
+    }
+    return false;
+}
+
+bool GazeboTripodMotionControl::getTargetPositions(double *refs)
+{
+    if (!refs) return false; //check or not check?
+    bool ret = true;
+    for (int i = 0; i < this->m_numberOfJoints && ret; i++) {
+        ret = getTargetPosition(i, &refs[i]);
+    }
+    return ret;
+}
+
+bool GazeboTripodMotionControl::getTargetPositions(const int n_joint, const int *joints, double *refs)
+{
+    if (!joints || !refs) return false; //check or not check?
+    bool ret = true;
+    for (int i = 0; i < n_joint && ret; i++) {
+        ret = getTargetPosition(joints[i], &refs[i]);
+    }
+    return ret;
+}
+
+bool GazeboTripodMotionControl::getRefVelocity(const int joint, double *vel) 
+{
+    if (vel && joint >= 0 && joint < (int)m_numberOfJoints)
+    {
+      *vel = m_referenceVelocities[joint];
+      return true;
+    }
+    return false;
+  
+}
+
+bool GazeboTripodMotionControl::getRefVelocities(double *vels) 
+{
+     if (!vels) return false; //check or not check?
+    bool ret = true;
+    for (int i = 0; i < this->m_numberOfJoints && ret; i++) {
+        ret = getRefVelocity(i, &vels[i]);
+    }
+    return ret; 
+}
+
+bool GazeboTripodMotionControl::getRefVelocities(const int n_joint, const int *joints, double *vels) 
+{
+    if (!joints || !vels) return false; //check or not check?
+    bool ret = true;
+    for (int i = 0; i < n_joint && ret; i++) {
+        ret = getRefVelocity(joints[i], &vels[i]);
+    }
+    return ret;
 }
