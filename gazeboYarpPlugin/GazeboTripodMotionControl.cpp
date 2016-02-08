@@ -976,3 +976,51 @@ bool GazeboTripodMotionControl::getRefVelocities(const int n_joint, const int *j
     }
     return ret;
 }
+
+bool GazeboTripodMotionControl::setRefTorque(int j, double t)
+{
+    if (j >= 0 && j < (int)m_numberOfJoints) {
+        m_referenceTorques[j] = t;
+        return true;
+    }
+    return false;
+}
+
+bool GazeboTripodMotionControl::setRefTorques(const double* t)
+{
+    if (!t) return false;
+    for (unsigned int j = 0; j < m_numberOfJoints; ++j) {
+        m_referenceTorques[j] = t[j];
+    }
+    return true;
+}
+
+bool GazeboTripodMotionControl::setTorqueMode()
+{
+    bool ret = true;
+    for (unsigned int j = 0; j < m_numberOfJoints; j++) {
+        ret = ret && this->setControlMode(j, VOCAB_CM_TORQUE);
+    }
+    return ret;
+}
+
+bool GazeboTripodMotionControl::setTorquePid(int joint, const Pid &pid){return NOT_YET_IMPLEMENTED("setTorquePid");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::setTorquePids(const Pid *newPids){return NOT_YET_IMPLEMENTED("setTorquePids");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::getTorquePid(int joint, Pid *pid){return NOT_YET_IMPLEMENTED("getTorquePid");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::getTorquePids(Pid *pids) {return NOT_YET_IMPLEMENTED("getTorquePids");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::getTorqueRange(int, double*, double *){return NOT_YET_IMPLEMENTED("getTorqueRange");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::getTorqueRanges(double *, double *){return NOT_YET_IMPLEMENTED("getTorqueRanges");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::setTorqueErrorLimit(int , double ){return NOT_YET_IMPLEMENTED("setTorqueErrorLimit");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::setTorqueErrorLimits(const double *){return NOT_YET_IMPLEMENTED("setTorqueErrorLimits");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::getTorqueError(int , double *){return NOT_YET_IMPLEMENTED("getTorqueError");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::getTorqueErrors(double *){return NOT_YET_IMPLEMENTED("getTorqueErrors");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::getTorquePidOutput(int , double *){return NOT_YET_IMPLEMENTED("getTorquePidOutput");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::getTorquePidOutputs(double *){return NOT_YET_IMPLEMENTED("getTorquePidOutputs");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::getTorqueErrorLimit(int , double *){return NOT_YET_IMPLEMENTED("getTorqueErrorLimit");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::getTorqueErrorLimits(double *){return NOT_YET_IMPLEMENTED("getTorqueErrorLimits");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::resetTorquePid(int ){return NOT_YET_IMPLEMENTED("resetTorquePid");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::disableTorquePid(int ){return NOT_YET_IMPLEMENTED("disableTorquePid");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::enableTorquePid(int ){return NOT_YET_IMPLEMENTED("enableTorquePid");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::setTorqueOffset(int , double ){return NOT_YET_IMPLEMENTED("setTorqueOffset");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::getBemfParam(int , double *){return NOT_YET_IMPLEMENTED("getBemfParam");} //NOT IMPLEMENTED
+bool GazeboTripodMotionControl::setBemfParam(int , double ){return NOT_YET_IMPLEMENTED("getBemfParam");} //NOT IMPLEMENTED
