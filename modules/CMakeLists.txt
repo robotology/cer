@@ -4,3 +4,5 @@
 
 add_subdirectory(reaching)
 add_subdirectory(teleop)
+add_subdirectory(baseControl)
+

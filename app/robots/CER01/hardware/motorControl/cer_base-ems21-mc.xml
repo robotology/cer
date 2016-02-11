@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+
+<devices robot="CER01" build="1">
+  <device name="cer_base_mc" type="embObjMotionControl">
+      <params file="general.xml" />
+      <params file="hardware/electronics/cer_base-ems21-eln.xml" />
+      <params file="hardware/mechanicals/cer_base-ems21-mec.xml" />
+
+    <group name="LIMITS">
+        <param name="Max">              +1000000        +1000000     0          0     </param>
+        <param name="Min">              -1000000        -1000000     0          0     </param>
+        <param name="Currents">         15000           15000        10000      10000 </param>
+        <param name="RotorMin">         0               0            0          0     </param>
+        <param name="RotorMax">         0               0            0          0     </param>
+        <param name="JntVelocityMax">   1000            1000         0          0     </param>
+    </group>
+
+	<group name="POSITION_CONTROL">
+	    <param name="controlLaw">    joint_pid_v1 </param> 
+        <param name="controlUnits">  machine_units </param> 
+        <param name="kp">            3000        3000          0          0 </param>   
+        <param name="kd">               0           0          0          0 </param>   
+        <param name="ki">            5000        5000          0          0 </param>   
+        <param name="limPwm">        5000        5000          0          0 </param>   
+        <param name="maxPwm">       30000       30000      30000      30000 </param>   
+        <param name="maxInt">        4000        4000          0          0 </param>   
+        <param name="shift">            0           0          0          0 </param>   
+        <param name="ko">               0           0          0          0 </param>   
+        <param name="stictionUp">       0           0          0          0 </param>   
+        <param name="stictionDwn">      0           0          0          0 </param>   
+        <param name="kff">              0           0          0          0 </param>   
+    </group>
+
+    <group name="TORQUE_CONTROL">
+        <param name="controlLaw">    disabled                                 </param> 
+        <param name="controlUnits">  metric_units                             </param> 
+        <param name="kp">              0          0          0          0     </param> 
+        <param name="kd">              0          0          0          0     </param> 
+        <param name="ki">              0          0          0          0     </param> 
+        <param name="maxPwm">          0          0          0          0     </param> 
+        <param name="maxInt">          0          0          0          0     </param> 
+        <param name="shift">           0          0          0          0     </param> 
+        <param name="ko">              0          0          0          0     </param> 
+        <param name="stictionUp">      0          0          0          0     </param> 
+        <param name="stictionDwn">     0          0          0          0     </param> 
+        <param name="kff">             0          0          0          0     </param> 
+        <param name="kbemf">           0          0          0          0     </param> 
+        <param name="filterType">      0          0          0          0     </param> 
+        <param name="ktau">            0          0          0          0     </param> 
+    </group>
+
+    <group name="IMPEDANCE">
+        <param name="stiffness">       0      0      0      0     </param>    
+        <param name="damping">         0      0      0      0     </param>    
+    </group>
+
+  </device>
+</devices>
+
