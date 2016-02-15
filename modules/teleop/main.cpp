@@ -38,6 +38,7 @@ protected:
     IHapticDevice *igeo;
     
     BufferedPort<Bottle>   simPort;
+    BufferedPort<Bottle>   gazeboPort;
     BufferedPort<Property> robotTargetPort;
     BufferedPort<Vector>   robotStatePort;
     RpcClient              robotCmdPort;
@@ -91,11 +92,14 @@ public:
         
         pos0.resize(3,0.0);
         rpy0.resize(3,0.0);
+        cur_x.resize(3, 0.0);
+        cur_o.resize(3, 0.0);
 
         x0.resize(3,0.0);
         o0.resize(4,0.0);
 
         simPort.open(("/"+name+"/sim:o").c_str());
+        gazeboPort.open(("/" + name + "/gazebo:o").c_str());
         robotTargetPort.open(("/"+name+"/target:o").c_str());
         robotStatePort.open(("/"+name+"/state:i").c_str());
         robotCmdPort.open(("/"+name+"/cmd:rpc").c_str());
@@ -110,6 +114,7 @@ public:
         drvGeomagic.close();
 
         simPort.close();
+        gazeboPort.close();
         robotTargetPort.close();
         robotStatePort.close();
         robotCmdPort.close();
@@ -158,9 +163,33 @@ public:
     /**********************************************************/
     void updateSim(const Vector &xd, const Vector &od)
     {
-        Vector rpy=RAD2DEG*dcm2rpy(axis2dcm(od));
-        simPort.prepare().read(cat(xd,rpy));
-        simPort.writeStrict();
+        if (simPort.getOutputCount()>0)
+        {
+            Vector rpy = RAD2DEG*dcm2rpy(axis2dcm(od));
+            simPort.prepare().read(cat(xd, rpy));
+            simPort.writeStrict();
+        }
+    }
+
+    /**********************************************************/
+    void updateGazebo(const Vector &xd, const Vector &od)
+    {
+        if (gazeboPort.getOutputCount() > 0)
+        {
+            Vector rpy = RAD2DEG*dcm2rpy(axis2dcm(od));
+            Bottle& b = gazeboPort.prepare();
+            b.clear();
+            b.addString("setPose");
+            b.addString("sim_target");
+            b.addDouble(xd[0]);
+            b.addDouble(xd[1]);
+            b.addDouble(xd[2]);
+            b.addDouble(rpy[0]);
+            b.addDouble(rpy[1]);
+            b.addDouble(rpy[2]);
+            b.addString("SIM_CER_ROBOT::mobile_base_body");
+            gazeboPort.writeStrict();
+        }
     }
 
     /**********************************************************/
@@ -218,6 +247,7 @@ public:
                 Vector od=dcm2axis(Rd);
                 goToPose(xd,od);
                 updateSim(xd,od);
+                updateGazebo(xd, od);
             }
         }
         else
@@ -229,6 +259,7 @@ public:
             {
                 stopControl();
                 updateSim(cur_x,cur_o);
+                updateGazebo(cur_x, cur_o);
             }
 
             s=idle;
@@ -245,24 +276,31 @@ public:
     /**********************************************************/
     bool updateModule()
     {
-        if (Vector *pose=robotStatePort.read(false))
+        if (robotStatePort.getInputCount() > 0)
         {
-            cur_x=pose->subVector(0,2);
-            cur_o=pose->subVector(3,5);
-            double n=norm(cur_o);
-            cur_o/=n; cur_o.push_back(n);
+            if (Vector *pose = robotStatePort.read(false))
+            {
+                cur_x = pose->subVector(0, 2);
+                cur_o = pose->subVector(3, 5);
+                double n = norm(cur_o);
+                cur_o /= n; cur_o.push_back(n);
+            }
+
+            Vector buttons, pos, rpy;
+            igeo->getButtons(buttons);
+            igeo->getPosition(pos);
+            igeo->getOrientation(rpy);
+
+            bool b0 = (buttons[0] != 0.0);
+            bool b1 = (buttons[1] != 0.0);
+
+            reachingHandler(b0, pos, rpy);
+            yInfo("reaching=%s; torso=%s; b0:%d b1:%d", stateStr[s].c_str(), no_torso ? "off" : "on", b0, b1);
         }
-
-        Vector buttons,pos,rpy;
-        igeo->getButtons(buttons);
-        igeo->getPosition(pos);
-        igeo->getOrientation(rpy);
-
-        bool b0=(buttons[0]!=0.0);
-        bool b1=(buttons[1]!=0.0);
-
-        reachingHandler(b0,pos,rpy);
-        yInfo("reaching=%s; torso=%s;",stateStr[s].c_str(),no_torso?"off":"on");
+        else
+        {
+            yError("No robot connected!");
+        }
 
         return true;
     }
