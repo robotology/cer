@@ -10,7 +10,7 @@ yarp_prepare_device(faceDisplayClient TYPE cer::dev::FaceDisplayClient INCLUDE f
 	INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${iCubDev_INCLUDE_DIRS})
 
 	yarp_add_plugin(faceDisplayClient faceDisplayClient.cpp faceDisplayClient.h)
-	TARGET_LINK_LIBRARIES(faceDisplayClient ethResources iCubDev ${YARP_LIBRARIES} ${ACE_LIBRARIES})
+	TARGET_LINK_LIBRARIES(faceDisplayClient  ${YARP_LIBRARIES} ${ACE_LIBRARIES})
 	yarp_install(TARGETS faceDisplayClient
 	         COMPONENT Runtime
 	         LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR})
