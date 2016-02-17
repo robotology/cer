@@ -8,6 +8,7 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 #include <faceDisplayClient.h>
+#include <IFaceDisplayInterface.h>
 
 using namespace cer::dev;
 using namespace yarp::os;

@@ -4,9 +4,16 @@
  * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  */
 
-#include <faceDisplayServer.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include<opencv/cv.h>
+#include<opencv/cxcore.h>
+#include<opencv/highgui.h>
+
+#include <faceDisplayServer.h>
+#include <IFaceDisplayInterface.h>
 
 using namespace yarp::dev;
 using namespace cer::dev;
@@ -67,14 +74,14 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
     else
          rpcPortName = config.find("name").asString();
 
-    if (!config.check("file"))
+    if (!config.check("display"))
     {
-        yError() << "AnalogServer: missing 'file' parameter. This parameter defines the name of the device file to use in the system, i.e. '/dev/auxdisp'. \n\
+        yError() << "AnalogServer: missing 'display' parameter. This parameter defines the name of the device file to use in the system, i.e. '/dev/auxdisp'. \n\
         Please correct the configuration file\n";
         return false;
     }
     else
-         deviceFileName = config.find("file").asString();
+         deviceFileName = config.find("display").asString();
 
     if(!rpcPort.open(rpcPortName))
     {
@@ -83,6 +90,19 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
     }
 
     // open device file and init some stuff
+    if ((fd=::open(deviceFileName.c_str(), O_RDWR)) < 0)
+    {
+        yError() << "Cannot open device file " << deviceFileName;
+        return false;
+    }
+
+    // THIS SET THE DEAD TIME -- magic numbers from Francesco Diotalevi
+    gen_reg.offset=CER_TIME;
+    gen_reg.rw=WRITE_REGISTER;
+    gen_reg.data=0x440063;
+    ioctl (fd, IOC_GEN_REG, &gen_reg);
+
+    // start the thread
     start();
     return true;
 }
@@ -90,6 +110,7 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
 void FaceDisplayServer::onStop()
 {
     yTrace();
+    ::close(fd);
     rpcPort.interrupt();
     rpcPort.close();
 }
@@ -97,12 +118,141 @@ void FaceDisplayServer::onStop()
 void FaceDisplayServer::run()
 {
     yarp::os::Bottle command;
-    yTrace() << "Started ... waiting for commands";
+    char imageFileName[255];
+    yTrace() << "Started ... ";
+
+    int command_vocab;
+    int param;
+
     while(!isStopping())
     {
+        IplImage* img;
+        yTrace() << "... waiting for commands";
         rpcPort.read(command);
-        if(!isStopping())
-            yDebug() << "FaceDisplayServer: Received command  '" << command.toString() << "'";
+
+        if(command.get(0).isString())
+        {
+            if(command.get(0).asString() == yarp::os::ConstString("face"))
+                command_vocab = VOCAB_FACE;
+            else
+            if(command.get(0).asString() == yarp::os::ConstString("file"))
+                command_vocab = VOCAB_FILE;
+            else
+            {
+                yError() << "Received malformed command:" << command.toString();
+                yError() << "First value must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
+                    ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+            }
+        }
+        else
+        if(!command.get(0).isVocab())
+        {
+            yError() << "Received malformed command:" << command.toString();
+            yError() << "First value must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
+                ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+            continue;
+        }
+
+        if(command.get(1).isString())
+        {
+            if(command.get(1).asString() == yarp::os::ConstString("hap"))
+                param = VOCAB_FACE_HAPPY;
+            else
+            if(command.get(1).asString() == yarp::os::ConstString("sad"))
+                param = VOCAB_FACE_SAD;
+            else
+            if(command.get(1).asString() == yarp::os::ConstString("warn"))
+                param = VOCAB_FACE_WARNING;
+            else
+            {
+                yError() << "Received malformed command:" << command.toString();
+                yError() << "Value following vocab 'FACE' must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
+                        ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
+            }
+        }
+
+        yDebug() << "Received command " << command.toString();
+
+        switch(command_vocab)
+        {
+            case VOCAB_FACE:
+            {
+//                 if(!command.get(1).isVocab())
+//                 {
+//                     yError() << "Received malformed command:" << command.toString();
+//                     yError() << "Value following vocab 'FACE' must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
+//                         ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
+//                         continue;
+//                 }
+                switch(param)
+                {
+                    case VOCAB_FACE_HAPPY:
+                    {
+                        snprintf(imageFileName, 255, "%s", "/home/linaro/AUXDISP/RobotE_PNG_80x32_16bit_04.bmp");
+                    }
+                    break;
+
+                    case VOCAB_FACE_SAD:
+                    {
+                        snprintf(imageFileName, 255, "%s", "/home/linaro/AUXDISP/RobotE_PNG_80x32_16bit_02.bmp");
+                    }
+                    break;
+
+                    case VOCAB_FACE_WARNING:
+                    {
+                        snprintf(imageFileName, 255, "%s", "/home/linaro/AUXDISP/RobotE_PNG_80x32_16bit_01.bmp");
+                    }
+                    break;
+
+                    default:
+                    {
+                        yError() << "Received malformed command:" << command.toString();
+                        yError() << "Unsupported face expression. Supported values are (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
+                            ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
+                            continue;
+                    }
+                }
+            }
+            break;
+
+            case VOCAB_FILE:
+            {
+                if(!command.get(1).isString())
+                {
+                    yError() << "Received malformed command:" << command.toString();
+                    yError() << "Value following vocab 'FILE' must be a string containing file name with absolute path)";
+                    continue;
+                }
+                snprintf(imageFileName, 255, "%s", command.get(1).asString().c_str());
+            }
+            break;
+
+            default:
+            {
+                yError() << "Received malformed command:" << command.toString();
+                yError() << "Unsupported command. Supported commands are (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
+                    ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+                    continue;
+            }
+        }
+
+        // load the image
+        img = cvLoadImage(imageFileName, 1);
+
+        if(!img)
+        {
+            yError() << "Cannot load image " << imageFileName;
+            continue;
+        }
+
+        // Conver into BGR
+        cvCvtColor(img,img,CV_BGR2RGB);
+
+        // Set 24bpp otherwise exit
+        if (img->depth==IPL_DEPTH_8U)
+            ioctl(fd,IOC_SET_BPP,BPP24);
+
+        ::write(fd, img->imageData, img->imageSize);
     }
 }
 
@@ -113,8 +263,8 @@ bool FaceDisplayServer::close()
     {
         Thread::stop();
     }
-    yTrace() << " @ line " << __LINE__;
     Thread::stop();
     detachAll();
+    ::close(fd);
     return true;
 }
