@@ -7,6 +7,7 @@
 #ifndef CER_DEV_FACEDISPLAY_INTERFACE_H_
 #define CER_DEV_FACEDISPLAY_INTERFACE_H_
 
+#include <yarp/os/Vocab.h>
 
 // VOCABS
 #define VOCAB_FACE          VOCAB4('f','a','c','e')
@@ -16,4 +17,25 @@
 #define VOCAB_FACE_SAD      VOCAB3('s','a','d')
 #define VOCAB_FACE_WARNING  VOCAB4('w','a','r','n')
 
-#endif // CER_DEV_FACEDISPLAY_INTERFACE_H_s
+namespace cer {
+    namespace dev {
+        class IFaceDisplay;
+    }
+}
+
+
+/**
+ * Interface a the Facial Display capable of showing images
+ * and a predefined set of face expressions.
+ */
+class cer::dev::IFaceDisplay
+{
+public:
+    virtual bool setFaceExpression(int faceId) = 0;
+    virtual bool getFaceExpression(int *faceId) = 0;
+
+    virtual bool setImageFile(std::string fileName) = 0;
+    virtual bool getImageFile(std::string &fileName) = 0;
+};
+
+#endif // CER_DEV_FACEDISPLAY_INTERFACE_H_

@@ -10,7 +10,6 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/Port.h>
 #include <yarp/os/Time.h>
-#include <yarp/os/Vocab.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/RateThread.h>
 

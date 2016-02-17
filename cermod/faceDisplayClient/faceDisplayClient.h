@@ -10,10 +10,10 @@
 
 #include <yarp/os/Network.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/dev/PreciselyTimed.h>
-#include <yarp/os/Semaphore.h>
-#include <yarp/os/Time.h>
 #include <yarp/dev/PolyDriver.h>
+
+#include <IFaceDisplayInterface.h>
+
 
 namespace cer {
     namespace dev {
@@ -45,10 +45,11 @@ namespace cer {
 * | local          | string |       |               | Yes       | full name if the port opened by the device  | must start with a '/' character |
 * | remote         | string |       |               | Yes       | full name of the port the device need to connect to | must start with a '/' character |
 *  The device will create a port with name <local> and will connect to a port called <remote> at startup,
-* ex: <b> /myModule/left_arm/ForceTorque </b>, and will connect to a port called <b> /icub/left_arm/ForceTorque<b>.
+* ex: <b> /myModule/faceDisplayClient </b>, and will connect to a port called <b>  /myRobot/faceDisplayServer<b>.
 *
 **/
-class cer::dev::FaceDisplayClient:    public yarp::dev::DeviceDriver
+class cer::dev::FaceDisplayClient:  public yarp::dev::DeviceDriver,
+                                    public cer::dev::IFaceDisplay
 {
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 protected:
@@ -63,9 +64,18 @@ protected:
 
 public:
 
+    FaceDisplayClient();
+    ~FaceDisplayClient();
+
     /* DevideDriver methods */
     bool open(yarp::os::Searchable& config);
     bool close();
+
+    bool setFaceExpression(int faceId);
+    bool getFaceExpression(int *faceId);
+
+    bool setImageFile(std::string fileName);
+    bool getImageFile(std::string &fileName);
 };
 
 #endif // CER_DEV_FACEDISPLAYCLIENT_H

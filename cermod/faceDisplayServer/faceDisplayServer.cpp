@@ -119,7 +119,6 @@ void FaceDisplayServer::run()
 {
     yarp::os::Bottle command;
     char imageFileName[255];
-    yTrace() << "Started ... ";
 
     int command_vocab;
     int param;
@@ -128,50 +127,65 @@ void FaceDisplayServer::run()
     {
         IplImage* img;
         yTrace() << "... waiting for commands";
-        rpcPort.read(command);
+        if(!rpcPort.read(command))
+            continue;
 
+        yTrace() << "Received command " << command.toString();
+
+
+// Right now it supports commands both as a string, to be used with yarp write and as vocabs.
+// The support of strings is probably gonna be dropped in the final version.
         if(command.get(0).isString())
         {
             if(command.get(0).asString() == yarp::os::ConstString("face"))
+            {
                 command_vocab = VOCAB_FACE;
+                if(command.get(1).isString())
+                {
+                    if(command.get(1).asString() == yarp::os::ConstString("hap"))
+                        param = VOCAB_FACE_HAPPY;
+                    else
+                    if(command.get(1).asString() == yarp::os::ConstString("sad"))
+                        param = VOCAB_FACE_SAD;
+                    else
+                    if(command.get(1).asString() == yarp::os::ConstString("warn"))
+                        param = VOCAB_FACE_WARNING;
+                    else
+                    {
+                        yError() << "Received malformed command:" << command.toString();
+                        yError() << "Value following vocab 'FACE' must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
+                                ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
+                                continue;
+                    }
+                }
+            }
             else
-            if(command.get(0).asString() == yarp::os::ConstString("file"))
-                command_vocab = VOCAB_FILE;
-            else
+            {
+                if(command.get(0).asString() == yarp::os::ConstString("file"))
+                {
+                    command_vocab = VOCAB_FILE;
+                }
+                else
+                {
+                    yError() << "Received malformed command:" << command.toString();
+                    yError() << "First value must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
+                        ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+                        continue;
+                }
+            }
+        }
+        else
+        {
+            if(!command.get(0).isVocab())
             {
                 yError() << "Received malformed command:" << command.toString();
                 yError() << "First value must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
                     ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+                continue;
             }
+            command_vocab = command.get(0).asVocab();
+            param = command.get(1).asVocab();
         }
-        else
-        if(!command.get(0).isVocab())
-        {
-            yError() << "Received malformed command:" << command.toString();
-            yError() << "First value must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
-                ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
-            continue;
-        }
-
-        if(command.get(1).isString())
-        {
-            if(command.get(1).asString() == yarp::os::ConstString("hap"))
-                param = VOCAB_FACE_HAPPY;
-            else
-            if(command.get(1).asString() == yarp::os::ConstString("sad"))
-                param = VOCAB_FACE_SAD;
-            else
-            if(command.get(1).asString() == yarp::os::ConstString("warn"))
-                param = VOCAB_FACE_WARNING;
-            else
-            {
-                yError() << "Received malformed command:" << command.toString();
-                yError() << "Value following vocab 'FACE' must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
-                        ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
-            }
-        }
-
-        yDebug() << "Received command " << command.toString();
 
         switch(command_vocab)
         {
@@ -223,7 +237,7 @@ void FaceDisplayServer::run()
                     yError() << "Value following vocab 'FILE' must be a string containing file name with absolute path)";
                     continue;
                 }
-                snprintf(imageFileName, 255, "%s", command.get(1).asString().c_str());
+                snprintf(imageFileName, 255, "/home/linaro/AUXDISP/%s", command.get(1).asString().c_str());
             }
             break;
 
@@ -252,7 +266,8 @@ void FaceDisplayServer::run()
         if (img->depth==IPL_DEPTH_8U)
             ioctl(fd,IOC_SET_BPP,BPP24);
 
-        ::write(fd, img->imageData, img->imageSize);
+        if(-1 == ::write(fd, img->imageData, img->imageSize) )
+            yError() << "Failed setting image to display";
     }
 }
 
