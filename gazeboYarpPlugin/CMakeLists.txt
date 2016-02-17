@@ -5,7 +5,12 @@
 option(GAZEBO_TRIPOD_PLUGIN "Compile Gazebo Yarp Plugin to control the tripod device" OFF)
 
 if(GAZEBO_TRIPOD_PLUGIN)
-    find_package(Gazebo   REQUIRED)
+    find_package(Gazebo)
+    if(NOT Gazebo_FOUND)
+        message(WARNING "Gazebo was not found therefore plugins cannot be compiled. Please disable Gazebo plugins.")
+        return()
+    endif(NOT Gazebo_FOUND)
+
     # Add Gazebo CXX flags, to support Gazebo 6 reckless dependency on C++11
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 

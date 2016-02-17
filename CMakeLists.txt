@@ -14,7 +14,10 @@ list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 find_package(ICUB REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 
-find_package(IPOPT REQUIRED)
+find_package(IPOPT)
+if(NOT IPOPT_FOUND)
+    message(WARNING "IPOPT library was not found, kinematics module will not be available.")
+endif(NOT IPOPT_FOUND)
 
 if(NOT WIN32)
     option(CER_SHARED_LIBRARY "Compile shared libraries rather than static libraries" ON)
@@ -41,11 +44,19 @@ add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"               
                           USE_LINK_PATH)
 
 # Everything is configured now, we can start adding source code
+
+
+if(IPOPT_FOUND)
+    add_subdirectory(libraries/cer_kinematics)
+    add_subdirectory(libraries/cer_kinematics_alt)
+    add_subdirectory(modules)
+    add_subdirectory(tools)
+    add_subdirectory(tests)
+endif(IPOPT_FOUND)
+
 add_subdirectory(app)
-add_subdirectory(libraries/cer_kinematics)
-add_subdirectory(libraries/cer_kinematics_alt)
 add_subdirectory(cermod)
 add_subdirectory(gazeboYarpPlugin)
-add_subdirectory(modules)
-add_subdirectory(tools)
-add_subdirectory(tests)
+
+
+
