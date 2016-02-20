@@ -37,7 +37,6 @@ protected:
     PolyDriver     drvGeomagic;
     IHapticDevice *igeo;
     
-    BufferedPort<Bottle>   simPort;
     BufferedPort<Bottle>   gazeboPort;
     BufferedPort<Property> robotTargetPort;
     BufferedPort<Vector>   robotStatePort;
@@ -98,8 +97,7 @@ public:
         x0.resize(3,0.0);
         o0.resize(4,0.0);
 
-        simPort.open(("/"+name+"/sim:o").c_str());
-        gazeboPort.open(("/" + name + "/gazebo:o").c_str());
+        gazeboPort.open(("/"+name+"/gazebo:o").c_str());
         robotTargetPort.open(("/"+name+"/target:o").c_str());
         robotStatePort.open(("/"+name+"/state:i").c_str());
         robotCmdPort.open(("/"+name+"/cmd:rpc").c_str());
@@ -113,7 +111,6 @@ public:
         igeo->setTransformation(eye(4,4));
         drvGeomagic.close();
 
-        simPort.close();
         gazeboPort.close();
         robotTargetPort.close();
         robotStatePort.close();
@@ -154,30 +151,19 @@ public:
         Property &prop=robotTargetPort.prepare(); prop.clear();
         prop.put("mode",no_torso?"full_pose+no_torso":"full_pose+no_heave");
         prop.put("target",target.get(0));
-        robotTargetPort.writeStrict();
+        robotTargetPort.write();
 
         yInfo("going to (%s) (%s)",
               xd.toString(3,3).c_str(),od_.toString(3,3).c_str());
     }
 
     /**********************************************************/
-    void updateSim(const Vector &xd, const Vector &od)
-    {
-        if (simPort.getOutputCount()>0)
-        {
-            Vector rpy = RAD2DEG*dcm2rpy(axis2dcm(od));
-            simPort.prepare().read(cat(xd, rpy));
-            simPort.writeStrict();
-        }
-    }
-
-    /**********************************************************/
     void updateGazebo(const Vector &xd, const Vector &od)
     {
-        if (gazeboPort.getOutputCount() > 0)
+        if (gazeboPort.getOutputCount()>0)
         {
-            Vector rpy = RAD2DEG*dcm2rpy(axis2dcm(od));
-            Bottle& b = gazeboPort.prepare();
+            Vector rpy=RAD2DEG*dcm2rpy(axis2dcm(od));
+            Bottle &b=gazeboPort.prepare();
             b.clear();
             b.addString("setPose");
             b.addString("sim_target");
@@ -188,7 +174,7 @@ public:
             b.addDouble(rpy[1]);
             b.addDouble(rpy[2]);
             b.addString("SIM_CER_ROBOT::mobile_base_body");
-            gazeboPort.writeStrict();
+            gazeboPort.write();
         }
     }
 
@@ -246,8 +232,7 @@ public:
 
                 Vector od=dcm2axis(Rd);
                 goToPose(xd,od);
-                updateSim(xd,od);
-                updateGazebo(xd, od);
+                updateGazebo(xd,od);
             }
         }
         else
@@ -258,8 +243,7 @@ public:
             if (c!=0)
             {
                 stopControl();
-                updateSim(cur_x,cur_o);
-                updateGazebo(cur_x, cur_o);
+                updateGazebo(cur_x,cur_o);
             }
 
             s=idle;
@@ -276,31 +260,30 @@ public:
     /**********************************************************/
     bool updateModule()
     {
-        if (robotStatePort.getInputCount() > 0)
+        if (robotStatePort.getInputCount()>0)
         {
-            if (Vector *pose = robotStatePort.read(false))
+            if (Vector *pose=robotStatePort.read(false))
             {
-                cur_x = pose->subVector(0, 2);
-                cur_o = pose->subVector(3, 5);
-                double n = norm(cur_o);
-                cur_o /= n; cur_o.push_back(n);
+                cur_x=pose->subVector(0,2);
+                cur_o=pose->subVector(3,5);
+                double n=norm(cur_o);
+                cur_o/=n; cur_o.push_back(n);
             }
 
-            Vector buttons, pos, rpy;
+            Vector buttons,pos,rpy;
             igeo->getButtons(buttons);
             igeo->getPosition(pos);
             igeo->getOrientation(rpy);
 
-            bool b0 = (buttons[0] != 0.0);
-            bool b1 = (buttons[1] != 0.0);
+            bool b0=(buttons[0]!=0.0);
+            bool b1=(buttons[1]!=0.0);
 
-            reachingHandler(b0, pos, rpy);
-            yInfo("reaching=%s; torso=%s; b0:%d b1:%d", stateStr[s].c_str(), no_torso ? "off" : "on", b0, b1);
+            reachingHandler(b0,pos,rpy);
+            yInfo("reaching=%s; torso=%s; b0:%d b1:%d",
+                  stateStr[s].c_str(),no_torso?"off":"on",b0,b1);
         }
         else
-        {
             yError("No robot connected!");
-        }
 
         return true;
     }
