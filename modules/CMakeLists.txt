@@ -2,7 +2,10 @@
 # Author: Ugo Pattacini
 # email:  ugo.pattacini@iit.it
 
-add_subdirectory(reaching)
+if(IPOPT_FOUND)
+    add_subdirectory(reaching)
+endif()
+
 add_subdirectory(teleop)
 add_subdirectory(baseControl)
 

@@ -14,7 +14,10 @@ list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 find_package(ICUB REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 
-find_package(IPOPT REQUIRED)
+find_package(IPOPT)
+if(NOT IPOPT_FOUND)
+    message(WARNING "IPOPT library was not found, some kinematics module will not be available.")
+endif()
 
 if(NOT WIN32)
     option(CER_SHARED_LIBRARY "Compile shared libraries rather than static libraries" ON)
@@ -32,7 +35,6 @@ set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "cer is always built with dyn
 include(YarpInstallationHelpers)
 yarp_configure_external_installation(cer WITH_PLUGINS)
 
-
 include(AddInstallRPATHSupport)
 
 add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"                                   # Libraries
@@ -41,11 +43,21 @@ add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"               
                           USE_LINK_PATH)
 
 # Everything is configured now, we can start adding source code
-add_subdirectory(app)
-add_subdirectory(libraries/cer_kinematics)
+
+if(IPOPT_FOUND)
+    add_subdirectory(libraries/cer_kinematics)
+endif()
 add_subdirectory(libraries/cer_kinematics_alt)
+
+add_subdirectory(app)
 add_subdirectory(cermod)
 add_subdirectory(gazeboYarpPlugin)
 add_subdirectory(modules)
 add_subdirectory(tools)
-add_subdirectory(tests)
+
+if(IPOPT_FOUND)
+    add_subdirectory(tests)
+endif()
+
+
+
