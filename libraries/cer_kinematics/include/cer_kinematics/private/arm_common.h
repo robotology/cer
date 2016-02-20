@@ -243,7 +243,7 @@ public:
 
         iKinChain *chain=upper_arm.asChain();
         for (size_t i=0; i<upper_arm.getDOF(); i++)
-            this->x0[3+i]=std::max((*chain)[i].getMin(),std::min((*chain)[i].getMax(),CTRL_DEG2RAD*x0[i]));
+            this->x0[3+i]=std::max((*chain)[i].getMin(),std::min((*chain)[i].getMax(),CTRL_DEG2RAD*x0[3+i]));
 
         this->x0[9]=std::max(lower_arm.l_min,std::min(lower_arm.l_max,x0[9]));
         this->x0[10]=std::max(lower_arm.l_min,std::min(lower_arm.l_max,x0[10]));
