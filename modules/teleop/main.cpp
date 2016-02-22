@@ -166,14 +166,14 @@ public:
             Bottle &b=gazeboPort.prepare();
             b.clear();
             b.addString("setPose");
-            b.addString("sim_target");
+            b.addString("frame2");
             b.addDouble(xd[0]);
             b.addDouble(xd[1]);
             b.addDouble(xd[2]);
             b.addDouble(rpy[0]);
             b.addDouble(rpy[1]);
             b.addDouble(rpy[2]);
-            b.addString("SIM_CER_ROBOT::mobile_base_body");
+            b.addString("frame1::link");
             gazeboPort.write();
         }
     }
