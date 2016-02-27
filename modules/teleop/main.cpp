@@ -19,9 +19,6 @@
 
 #include <hapticdevice/IHapticDevice.h>
 
-#define DEG2RAD     (M_PI/180.0)
-#define RAD2DEG     (180.0/M_PI)
-
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -162,7 +159,7 @@ public:
     {
         if (gazeboPort.getOutputCount()>0)
         {
-            Vector rpy=RAD2DEG*dcm2rpy(axis2dcm(od));
+            Vector rpy=dcm2rpy(axis2dcm(od));
             Bottle &b=gazeboPort.prepare();
             b.clear();
             b.addString("setPose");
