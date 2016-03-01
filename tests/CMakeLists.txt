@@ -24,3 +24,19 @@ target_link_libraries(test-cer_kinematics-b2b ${YARP_LIBRARIES} iKin cer_kinemat
 install(TARGETS test-cer_kinematics-b2b DESTINATION bin)
 
 
+## Tests using RTF - Robot Testing Framework
+
+# find a version of RTF higher then 1.0.1
+# and with yarp support enabled
+find_package(RTF 1.0.1 COMPONENTS YARP REQUIRED)
+
+# set the output plugin directory to collect all the shared libraries
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
+set(CMAKE_SHARED_MODULE_PREFIX "")
+
+# Build example?
+# add_subdirectory(example)
+
+# Build camera tests
+add_subdirectory(src/tripod)
+
