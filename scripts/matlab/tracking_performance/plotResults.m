@@ -98,7 +98,7 @@ if ~isempty(j)
     
     x=[data{4}(j) data{5}(j) data{6}(j)];
     u=[data{7}(j) data{8}(j) data{9}(j)]; n=norm(u);
-    H=axis2dcm([u/n n]);
+    H=axang2rotm([u/n n]);
     
     hxd=hggroup;
     h1=plot3(ha,x(1),x(2),x(3),'ro','LineWidth',3,'MarkerSize',3);
@@ -121,7 +121,7 @@ if ~isempty(k)
     
     x=[data{4}(k) data{5}(k) data{6}(k)];
     u=[data{7}(k) data{8}(k) data{9}(k)]; n=norm(u);
-    H=axis2dcm([u/n n]);
+    H=axang2rotm([u/n n]);
 
     hx=hggroup;
     h1=plot3(ha,x(1),x(2),x(3),'bo','LineWidth',3,'MarkerSize',3);

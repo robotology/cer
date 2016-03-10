@@ -180,7 +180,7 @@ A=max(abs(lim))*0.1;
 
 kin=ComputeFwKinTripod(T1,q(1:3));
 
-T0=axis2dcm([0 0 1 pi]);
+T0=axang2rotm([0 0 1 pi]);
 kin.s1=T0*[kin.s1;1];
 kin.s2=T0*[kin.s2;1];
 kin.s3=T0*[kin.s3;1];
@@ -235,7 +235,7 @@ h6=plot3(hax,[kin.p(1) H1(1,4) H2(1,4) H3(1,4) H5(1,4) H6(1,4) HN(1,4)],...
 kin=ComputeFwKinTripod(T2,q(10:12));
 
 hand_ang=20*pi/180; hand_dist=0.07;
-TN=axis2dcm([0 1 0 -pi/2+hand_ang]);
+TN=axang2rotm([0 1 0 -pi/2+hand_ang]);
 TN(1,4)=hand_dist*sin(hand_ang);
 TN(3,4)=hand_dist*cos(hand_ang);
 
@@ -383,7 +383,7 @@ if ~strcmp(tline,'do')
                 xd=yarpData(1:3);
                 ud=yarpData(4:6);
                 theta=norm(ud); ud=ud/theta;
-                Rd=axis2dcm([ud theta]);
+                Rd=axang2rotm([ud theta]);
 
                 hp=plot3(hax,xd(1),xd(2),xd(3),...
                          'go','LineWidth',3,'MarkerSize',5);

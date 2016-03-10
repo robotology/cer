@@ -55,7 +55,7 @@ sz=size(data);
 for i=1:sz(1)
     u=data(i,7:9);
     n=norm(u);
-    R=axis2dcm([u/n n]);
+    R=axang2rotm([u/n n]);
 
     c='go';
     if data(i,end)<=0
