@@ -181,6 +181,7 @@ A=max(abs(lim))*0.1;
 kin=ComputeFwKinTripod(T1,q(1:3));
 
 T0=axang2rotm([0 0 1 pi]);
+T0=[T0 zeros(3,1); 0 0 0 1];
 kin.s1=T0*[kin.s1;1];
 kin.s2=T0*[kin.s2;1];
 kin.s3=T0*[kin.s3;1];
@@ -236,6 +237,7 @@ kin=ComputeFwKinTripod(T2,q(10:12));
 
 hand_ang=20*pi/180; hand_dist=0.07;
 TN=axang2rotm([0 1 0 -pi/2+hand_ang]);
+TN=[TN zeros(3,1); 0 0 0 1];
 TN(1,4)=hand_dist*sin(hand_ang);
 TN(3,4)=hand_dist*cos(hand_ang);
 

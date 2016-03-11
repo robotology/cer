@@ -446,13 +446,13 @@ bool ArmCOM::getSupportMargin(const Vector &com, double &margin) const
         Vector rot(4,0.0);
         rot[2]=1.0;
         rot[3]=(d[0]!=0.0)?atan2(d[1],d[0]):M_PI/2.0;
-        Matrix R=SE3inv(axis2dcm(rot));
+        Matrix R=axis2dcm(rot).transposed();
 
         Vector p0_rot=R*p0;
         if (p0_rot[1]<0.0)
         {
             rot[3]+=M_PI;
-            R=SE3inv(axis2dcm(rot));
+            R=axis2dcm(rot).transposed();
             p0_rot=R*p0;
         }
 

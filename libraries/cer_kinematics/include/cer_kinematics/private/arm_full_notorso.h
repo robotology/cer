@@ -92,7 +92,7 @@ public:
     {
         computeQuantities(x,new_x);
 
-        Vector e=dcm2axis(Rd*SE3inv(T));
+        Vector e=dcm2axis(Rd*T.transposed());
         e*=e[3]; e.pop_back();
 
         Ipopt::Number postural_upper_arm=0.0;
@@ -129,7 +129,7 @@ public:
     {
         computeQuantities(x,new_x);
 
-        Vector e=dcm2axis(Rd*SE3inv(T));
+        Vector e=dcm2axis(Rd*T.transposed());
         e*=e[3]; e.pop_back();
 
         Ipopt::Number x_dx[12];
@@ -143,7 +143,7 @@ public:
         grad_f[3]=0.0;
 
         // upper_arm
-        Vector eax=dcm2axis(Rd*SE3inv(H_));
+        Vector eax=dcm2axis(Rd*H_.transposed());
         eax*=eax[3]; eax.pop_back();
         Vector grad=-2.0*(J_.submatrix(3,5,0,upper_arm.getDOF()-1).transposed()*eax);
         for (size_t i=1; i<grad.length(); i++)
@@ -156,19 +156,19 @@ public:
 
         x_dx[9]=x[9]+drho;
         d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(M*d_fw.T*TN)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*(M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
         grad_f[9]=2.0*(dot(e,e_fw-e)/drho + wpostural_lower_arm*(x[9]-x[10]));
         x_dx[9]=x[9];
 
         x_dx[10]=x[10]+drho;
         d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(M*d_fw.T*TN)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*(M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
         grad_f[10]=2.0*(dot(e,e_fw-e)/drho + wpostural_lower_arm*(2.0*x[10]-x[9]-x[11]));
         x_dx[10]=x[10];
 
         x_dx[11]=x[11]+drho;
         d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(M*d_fw.T*TN)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*(M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
         grad_f[11]=2.0*(dot(e,e_fw-e)/drho + wpostural_lower_arm*(x[11]-x[10]));
         x_dx[11]=x[11];
 
@@ -305,7 +305,7 @@ public:
     {
         computeQuantities(x,new_x);
 
-        Vector e=dcm2axis(Rd*SE3inv(T));
+        Vector e=dcm2axis(Rd*T.transposed());
         e*=e[3]; e.pop_back();
 
         Ipopt::Number x_dx[12];
@@ -319,7 +319,7 @@ public:
         grad_f[3]=0.0;
 
         // upper_arm
-        Vector eax=dcm2axis(Rd*SE3inv(H_));
+        Vector eax=dcm2axis(Rd*H_.transposed());
         eax*=eax[3]; eax.pop_back();
         Vector grad=-2.0*(J_.submatrix(3,5,0,upper_arm.getDOF()-1).transposed()*eax);
         for (size_t i=1; i<grad.length(); i++)
@@ -332,28 +332,28 @@ public:
 
         x_dx[9]=x[9]+drho;
         d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(M*d_fw.T*TN)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*(M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
         x_dx[9]=x[9]-drho;
         d_bw=tripod_fkin(2,x_dx);
-        e_bw=dcm2axis(Rd*SE3inv(M*d_bw.T*TN)); e_bw*=e_bw[3]; e_bw.pop_back();
+        e_bw=dcm2axis(Rd*(M*d_bw.T*TN).transposed()); e_bw*=e_bw[3]; e_bw.pop_back();
         grad_f[9]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(x[9]-x[10]);
         x_dx[9]=x[9];
 
         x_dx[10]=x[10]+drho;
         d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(M*d_fw.T*TN)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*(M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
         x_dx[10]=x[10]-drho;
         d_bw=tripod_fkin(2,x_dx);
-        e_bw=dcm2axis(Rd*SE3inv(M*d_bw.T*TN)); e_bw*=e_bw[3]; e_bw.pop_back();
+        e_bw=dcm2axis(Rd*(M*d_bw.T*TN).transposed()); e_bw*=e_bw[3]; e_bw.pop_back();
         grad_f[10]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(2.0*x[10]-x[9]-x[11]);
         x_dx[10]=x[10];
 
         x_dx[11]=x[11]+drho;
         d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*SE3inv(M*d_fw.T*TN)); e_fw*=e_fw[3]; e_fw.pop_back();
+        e_fw=dcm2axis(Rd*(M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
         x_dx[11]=x[11]-drho;
         d_bw=tripod_fkin(2,x_dx);
-        e_bw=dcm2axis(Rd*SE3inv(M*d_bw.T*TN)); e_bw*=e_bw[3]; e_bw.pop_back();
+        e_bw=dcm2axis(Rd*(M*d_bw.T*TN).transposed()); e_bw*=e_bw[3]; e_bw.pop_back();
         grad_f[11]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(x[11]-x[10]);
         x_dx[11]=x[11];
 
