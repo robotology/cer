@@ -7,6 +7,7 @@
         <param name="Joints">  4  </param> 
         <param name="AxisName">          "elong_1" "elong_2" "elong_3"  "torso_yaw"        </param>
         <param name="AxisMap">               0        1      2      3         </param>
+        <param name="AxisType">     "prismatic" "prismatic" "prismatic" "revolute" </param>
         <param name="HasHallSensor">         0        0      0      1         </param>
         <param name="HasTempSensor">         0        0      0      0         </param>
         <param name="HasRotorEncoder">       1        1      1      1         </param>

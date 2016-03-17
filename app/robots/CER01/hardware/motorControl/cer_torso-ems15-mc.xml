@@ -10,13 +10,15 @@
       <params file="hardware/mechanicals/cer_torso-ems15-mec.xml" />
 
     <group name="LIMITS">
-        <!--                            0             	1            2          3          -->
-        <param name="Max">              0.2             0.2          0.2        90    </param>
-        <param name="Min">              0               0            0         -90    </param>
-        <param name="Currents">         5000            5000         5000       8000  </param>
-        <param name="RotorMin">         0               0            0          0     </param> 
-        <param name="RotorMax">         0               0            0          0     </param>
-        <param name="JntVelocityMax">   1000            1000         1000      1000   </param>   
+        <param name="jntPosMax">        0.2             0.2          0.2        90    </param>
+        <param name="jntPosMin">        0               0            0         -90    </param>
+        <param name="rotorPosMin">      0               0            0          0     </param>
+        <param name="rotorPosMax">      0               0            0          0     </param>
+        <param name="jntVelMax">        0.1             0.1          0.1      1000    </param>
+        <param name="motorOverloadCurrents">    5000    5000         5000    8000     </param>
+        <param name="motorNominalCurrents">     0       0            0          0     </param>
+        <param name="motorPeakCurrents">        0       0            0          0     </param>
+        <param name="motorPwmLimit">            10000   10000        10000  10000     </param>  
     </group>
 
 	<group name="POSITION_CONTROL">
@@ -25,8 +27,8 @@
         <param name="kp">            3000        3000       3000          0 </param>       
         <param name="kd">               0           0          0          0 </param>       
         <param name="ki">            5000        5000       5000          0 </param>       
-        <param name="limPwm">        5000        5000       5000          0 </param>      
-        <param name="maxPwm">       30000       30000      30000          0 </param>          
+        <param name="limOutput">     5000        5000       5000          0 </param>      
+        <param name="maxOutput">    30000       30000      30000          0 </param>          
         <param name="maxInt">        4000        4000       4000          0 </param>       
         <param name="shift">            0           0          0          0 </param>       
         <param name="ko">               0           0          0          0 </param>       
@@ -41,7 +43,7 @@
         <param name="kp">              0          0          0          0     </param>       
         <param name="kd">              0          0          0          0     </param>       
         <param name="ki">              0          0          0          0     </param>       
-        <param name="maxPwm">          0          0          0          0     </param>       
+        <param name="maxOutput">       0          0          0          0     </param>       
         <param name="maxInt">          0          0          0          0     </param>       
         <param name="shift">           0          0          0          0     </param>       
         <param name="ko">              0          0          0          0     </param>       
