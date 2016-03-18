@@ -23,7 +23,12 @@
 * | Parameter name | Type   | Units | Default Value | Required | Description                                      | Notes |
 * |:--------------:|:------:|:-----:|:-------------:|:--------:|:------------------------------------------------:|:-----:|
 * | robotName      | string | -     | "cer"         | No       | The prefix name of the ports to connect to.      | -     |
+* | posTolerance   | double | meter | 0.005         | No       | Max position error                               | one value for all joints  |
+* | velTolerance   | double | m/s   | 0.01          | No       | Max velocity error                               | one value for all joints  |
 */
+
+#define DEFAULT_POS_THRESHOLD  0.005  // 5mm
+#define DEFAULT_VEL_THRESHOLD  0.01   // 1cm/s
 
 class TripodTest : public YarpTestCase
 {
@@ -37,20 +42,33 @@ public:
 
 private:
 
+    int     numberOfJoints;
+    double  mutualPosTolerance;
+    double  timeout;
+
     yarp::dev::PolyDriver           tripod;
     yarp::sig::Vector               joints;
     RTF::YARP::jointsPosMotion      *helper;
 
-    int numberOfJoints;
-    yarp::dev::IPositionControl *iPos;
-    yarp::dev::IPositionDirect  *iDir;
-    yarp::dev::IControlLimits   *iLim;
-    yarp::dev::IControlMode2    *iMode;
-    yarp::dev::IEncodersTimed   *iEnc;
+    yarp::dev::IPositionControl     *iPos;
+    yarp::dev::IPositionDirect      *iDir;
+    yarp::dev::IControlLimits       *iLim;
+    yarp::dev::IControlMode2        *iMode;
+    yarp::dev::IVelocityControl2    *iVel;
+    yarp::dev::IEncodersTimed       *iEnc;
 
+    yarp::sig::Vector           posTolerance;
+    yarp::sig::Vector           velTolerance;
     yarp::sig::Vector           encoders, targetPos;
     yarp::sig::Vector           timeStamps;
     yarp::sig::Vector           limitsMax, limitsMin;
+
+    std::vector<int>            modes;
+    yarp::sig::Vector           refSpeeds;
+    yarp::sig::Vector           encSpeeds;
+
+    bool checkTimeout(double start);
+    bool mutualTresholdCheck(yarp::sig::Vector data);
 };
 
 #endif //TRIPOD_TEST_H
