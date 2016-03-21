@@ -14,7 +14,7 @@
 #include <yarp/dev/GenericSensorInterfaces.h>
 
 
-namespace cer {
+namespace yarp {
     namespace dev {
         class BoschIMU;
     }
@@ -120,9 +120,9 @@ namespace cer {
 *
 **/
 
-class cer::dev::BoschIMU:   public yarp::dev::DeviceDriver,
-                            public yarp::os::RateThread,
-                            public yarp::dev::IGenericSensor
+class yarp::dev::BoschIMU:   public yarp::dev::DeviceDriver,
+                             public yarp::os::RateThread,
+                             public yarp::dev::IGenericSensor
 {
 protected:
 

@@ -22,7 +22,6 @@
 
 
 using namespace std;
-using namespace cer::dev;
 using namespace yarp::os;
 using namespace yarp::dev;
 
@@ -92,7 +91,7 @@ bool BoschIMU::open(yarp::os::Searchable& config)
     options.c_lflag = 0; // raw input
 
     printf("\n*** NOT BLOCKING READ!! ***\n");
-    options.c_cc[VMIN]  = 0;   // block reading until RX x characers. If x = 0, it is non-blocking.
+    options.c_cc[VMIN]  = 0;   // block reading until RX x characters. If x = 0, it is non-blocking.
     options.c_cc[VTIME] = 2;   // Inter-Character Timer -- i.e. timeout= x*.1 s
 
     //Set local mode and enable the receiver
