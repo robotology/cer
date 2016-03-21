@@ -411,7 +411,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
         return false;
     }
 
-    if(general.find("verbose").asBool())
+    if(general.find("Verbose").asBool())
     {
         yInfo() << "***********************\nRunning in verbose mode!\n***********************\n";
         verbose = true;
@@ -447,7 +447,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
     // Any HW dependant conversion can be done by attached device or remote device.
     // Also axis map can always be straight from 0 to n
 
-    // Update -> convertion from meter to mm coulld be required in order to display data in a human readable way,
+    // Update -> convertion from meter to mm could be required in order to display data in a human readable way,
     // for example in the robotMotorGui ... this operation however should probably be done in the gui and leave
     // data on yarp in meters
 
@@ -466,7 +466,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
 //     ImplementOpenLoopControl::initialize(_njoints, _axisMap);
     ImplementInteractionMode::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
 //     ImplementMotor::initialize(_njoints, _axisMap);
-    
+
    /*
     *  Init the IK library somehow if needed
     */
@@ -524,7 +524,7 @@ bool tripodMotionControl::initKinematics()
     while(!getEncodersRaw(_lastRobot_encoders.data()))
         _lastRobot_encoders.zero();
 
-    solver.setInitialGuess(_lastRobot_encoders);     // TODO: ask Ugo if it make sense
+    solver.setInitialGuess(_lastRobot_encoders);
     return true;
 }
 

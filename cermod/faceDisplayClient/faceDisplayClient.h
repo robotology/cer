@@ -33,7 +33,6 @@ namespace cer {
 #endif /*DOXYGEN_SHOULD_SKIP_THIS*/
 
 /**
-*  @ingroup dev_impl_wrapper
 *
 * \section FaceDisplayClient Description of input parameters
 *
