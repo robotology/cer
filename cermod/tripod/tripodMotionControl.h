@@ -67,6 +67,8 @@ namespace cer {
     }
 }
 
+
+
 using namespace yarp::dev;
 
 class cer::dev::impl::HW_deviceHelper
@@ -146,6 +148,14 @@ private:
                                        * low-level device like canBus/embObjMotionControl. */
 
     yarp::os::Semaphore                      _mutex;
+
+    /* Set the direction of conversion: user2HW true means commands are converted from user perspective to
+     * low-level HW implementation, i.e. from heave+angles into 3 elongations.
+     * user2HW set to false, means the commands are intended to be 3 elongations and converted into heave+angles.
+     * Feedback from encoders is converted in the opposite way.
+     * By default user2HW is true, the opposite is meant to be used with Gazebo simulator.
+     */
+    bool                                    _directionHW2User;
     cer::dev::impl::HW_deviceHelper         _device;
     yarp::dev::PolyDriver                   *_polyDriverDevice;
 

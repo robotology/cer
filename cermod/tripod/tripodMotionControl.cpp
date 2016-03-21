@@ -375,6 +375,7 @@ tripodMotionControl::tripodMotionControl() :
 //     ,SAFETY_THRESHOLD(2.0)
 {
     verbose             = false;
+    _directionHW2User   = true;
     _polyDriverDevice   = NULL;
     useRemoteCB         = false;
     _angleToEncoder     = NULL;
@@ -625,6 +626,7 @@ bool tripodMotionControl::parseTorquePidsGroup(Bottle& pidsGroup, Pid myPid[], d
 }
 #endif
 
+
 bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
 {
     Bottle xtmp;
@@ -638,7 +640,15 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
     _jointNames.resize(_njoints);
     for (i = 1; i < xtmp.size(); i++)
         _jointNames[i-1] = xtmp.get(i).asString();
+
     Bottle general = config.findGroup("GENERAL");
+    if(!general.check("HW2user") )
+        _directionHW2User = false;
+    else
+    {
+        yInfo() << "Direction is HW to User";
+        _directionHW2User = general.find("HW2user").asBool();
+    }
 
     // leggere i valori da file
     if (!extractGroup(general, xtmp, "AxisMap", "a list of reordered indices for the axes", _njoints))
@@ -824,7 +834,18 @@ bool tripodMotionControl::refreshEncoders(double *times)
 
     if(ret)
     {
-        ret = tripod_HW2user( _lastRobot_encoders, _lastUser_encoders);
+        if(_directionHW2User)
+        {
+            ret = tripod_user2HW( _lastRobot_encoders, _lastUser_encoders);
+        }
+        else
+        {
+            ret = tripod_HW2user( _lastRobot_encoders, _lastUser_encoders);
+        }
+    }
+    else
+    {
+        yError() << "TripodMotionControl: error reading encoders";
     }
 
     if(!ret)
@@ -1047,16 +1068,26 @@ bool tripodMotionControl::positionMoveRaw(int j, double ref)
     _mutex.wait();
     _userRef_positions[j] = ref;
 
-    if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+    if(_directionHW2User)
     {
-        yError() << "Requested position is not reachable";
+        if(!tripod_HW2user(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
+        yTrace() << "new Ref: [0]" << _robotRef_positions[0] << " [1]" << _robotRef_positions[1] << "[2]" << _robotRef_positions[2];
+    }
+    else
+    {
+        if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
+        compute_speeds(_robotRef_positions, _lastRobot_encoders);
+        // all joints may need to move in order to achieve the new requested position
+        // even if only one user virtual joint has got new reference.
+        ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
     }
 
-
-    compute_speeds(_robotRef_positions, _lastRobot_encoders);
-    // all joints may need to move in order to achieve the new requested position
-    // even if only one user virtual joint has got new reference.
-    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
     ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
     _mutex.post();
@@ -1072,13 +1103,23 @@ bool tripodMotionControl::positionMoveRaw(const double *refs)
         _userRef_positions[i] = refs[i];
     }
 
-    if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+    if(_directionHW2User)
     {
-        yError() << "Requested position is not reachable";
+        if(!tripod_HW2user(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
+    }
+    else
+    {
+        if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
     }
     _mutex.post();
 
- compute_speeds(_robotRef_positions, _lastRobot_encoders);
+    compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference.
     ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
@@ -1099,9 +1140,19 @@ bool tripodMotionControl::relativeMoveRaw(int j, double delta)
     _userRef_positions[j] += delta;
 
     // calling IK library before propagate the command to HW
-    if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+    if(_directionHW2User)
     {
-        yError() << "Requested position is not reachable";
+        if(!tripod_HW2user(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
+    }
+    else
+    {
+        if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
     }
     _mutex.post();
 
@@ -1127,9 +1178,19 @@ bool tripodMotionControl::relativeMoveRaw(const double *deltas)
         _userRef_positions[i] += deltas[i];
 
     // calling IK library before propagate the command to HW
-    if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+    if(_directionHW2User)
     {
-        yError() << "Requested position is not reachable";
+        if(!tripod_HW2user(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
+    }
+    else
+    {
+        if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
     }
     _mutex.post();
 
@@ -1235,9 +1296,19 @@ bool tripodMotionControl::positionMoveRaw(const int n_joint, const int *joints, 
         _userRef_positions[joints[i]] = refs[i];
     }
 
-    if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+    if(_directionHW2User)
     {
-        yError() << "Requested position is not reachable";
+        if(!tripod_HW2user(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
+    }
+    else
+    {
+        if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
     }
     _mutex.post();
 
@@ -1261,9 +1332,19 @@ bool tripodMotionControl::relativeMoveRaw(const int n_joint, const int *joints, 
         _userRef_positions[joints[i]] += deltas[i];
     }
 
-    if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+    if(_directionHW2User)
     {
-        yError() << "Requested position is not reachable";
+        if(!tripod_HW2user(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
+    }
+    else
+    {
+        if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
     }
     _mutex.post();
 
@@ -1399,8 +1480,8 @@ bool tripodMotionControl::resetEncodersRaw()
 bool tripodMotionControl::getEncoderRaw(int j, double *value)
 {
     bool ret = refreshEncoders(NULL);
-   *value = _lastUser_encoders[j];
-   return ret;
+    *value = _lastUser_encoders[j];
+    return ret;
 }
 
 bool tripodMotionControl::getEncodersRaw(double *encs)
@@ -1780,9 +1861,19 @@ bool tripodMotionControl::setPositionRaw(int j, double ref)
     // calling IK library before propagate the command to HW
     _mutex.wait();
     _userRef_positions[j] = ref;
-    if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+    if(_directionHW2User)
     {
-        yError() << "Requested position is not reachable";
+        if(!tripod_HW2user(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
+    }
+    else
+    {
+        if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
     }
     _mutex.post();
 
@@ -1798,9 +1889,19 @@ bool tripodMotionControl::setPositionsRaw(const int n_joint, const int *joints, 
     for(int i=0; i<n_joint; i++)
         _userRef_positions[joints[i]] = refs[i];
 
-    if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+    if(_directionHW2User)
     {
-        yError() << "Requested position is not reachable";
+        if(!tripod_HW2user(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
+    }
+    else
+    {
+        if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
     }
     _mutex.post();
 
@@ -1815,9 +1916,19 @@ bool tripodMotionControl::setPositionsRaw(const double *refs)
     _mutex.wait();
     memcpy(_userRef_positions.data(), refs, _njoints*sizeof(double));
 
-    if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+    if(_directionHW2User)
     {
-        yError() << "Requested position is not reachable";
+        if(!tripod_HW2user(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
+    }
+    else
+    {
+        if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+        {
+            yError() << "Requested position is not reachable";
+        }
     }
     _mutex.post();
 
