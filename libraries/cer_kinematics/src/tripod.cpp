@@ -445,15 +445,13 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
     // still oriented according to the tripod convention;
     // that's why we rather rely on d.u for computing
     // pitch and roll
-    Matrix T=eye(4,4);
-    Vector u=d.u; double nrm=norm(u);
+    Vector u=d.u;
+    double nrm=norm(u);
     if (nrm>0.0)
-    {
-        u/=nrm; u.push_back(nrm);
-        T=axis2dcm(u);
-    }
+        u/=nrm;
+    u.push_back(nrm);
 
-    Vector rpy=dcm2rpy(T);
+    Vector rpy=dcm2rpy(axis2dcm(u));
     hpr.resize(3);
     hpr[0]=d.p[2];
     hpr[1]=CTRL_RAD2DEG*rpy[1];
