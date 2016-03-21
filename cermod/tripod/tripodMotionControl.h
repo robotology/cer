@@ -41,6 +41,7 @@
 
 //  Yarp stuff
 #include <stdint.h>
+#include <vector>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Time.h>
 #include <yarp/dev/DeviceDriver.h>
@@ -109,6 +110,7 @@ private:
 
 class cer::dev::tripodMotionControl:   public DeviceDriver,
                                         public IMultipleWrapper,
+                                        public IAxisInfo,
 //                                         public IPidControlRaw,
                                         public IControlCalibration2Raw,
                                         public ImplementControlCalibration2<tripodMotionControl, IControlCalibration2>,
@@ -172,6 +174,7 @@ private:
     yarp::sig::Vector  _lastRobot_encoders;    // used for position control.
     yarp::sig::Vector  _robotRef_speeds;       // used for positionMove.
     yarp::sig::Vector  _posDeltas;             // used to compute _robotRef_speeds on the fly.
+    std::vector<std::string> _jointNames;     // holds joint names
 
     yarp::sig::Matrix  _baseTransformation;
 
@@ -183,7 +186,7 @@ private:
     inline bool NOT_YET_IMPLEMENTED(const char *txt);
     inline bool DEPRECATED(const char *txt);
 
-    bool extractGroup(Bottle &input, Bottle &out, const std::string &key1, const std::string &txt, int size);
+    bool extractGroup(Searchable &input, Bottle &out, const std::string &key1, const std::string &txt, int size);
     bool parsePositionPidsGroup(Bottle& pidsGroup, Pid myPid[]);
     bool parseTorquePidsGroup(Bottle& pidsGroup, Pid myPid[], double kbemf[], double ktau[], int filterType[]);
 
@@ -219,6 +222,9 @@ public:
     Semaphore               semaphore;
     yarp::os::ConstString   deviceDescription;
 
+    /////////   Axis info INTERFACE   /////////
+    virtual bool getAxisName(int axis, yarp::os::ConstString& name);
+    virtual bool getJointType(int axis, yarp::dev::JointTypeEnum& type);
 #if 0
     /////////   PID INTERFACE   /////////
     virtual bool setPidRaw(int j, const Pid &pid);

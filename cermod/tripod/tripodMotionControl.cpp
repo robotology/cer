@@ -264,7 +264,7 @@ bool tripodMotionControl::DEPRECATED(const char *txt)
 
 //generic function that check is key1 is present in input bottle and that the result has size elements
 // return true/false
-bool tripodMotionControl::extractGroup(Bottle &input, Bottle &out, const std::string &key1, const std::string &txt, int size)
+bool tripodMotionControl::extractGroup(Searchable &input, Bottle &out, const std::string &key1, const std::string &txt, int size)
 {
     size++;
     Bottle &tmp=input.findGroup(key1.c_str(), txt.c_str());
@@ -629,6 +629,15 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
 {
     Bottle xtmp;
     int i;
+
+    // Set joint names
+    // leggere i valori da file
+    if (!extractGroup(config, xtmp, "jointNames", "a list of axis names", _njoints))
+        return false;
+
+    _jointNames.resize(_njoints);
+    for (i = 1; i < xtmp.size(); i++)
+        _jointNames[i-1] = xtmp.get(i).asString();
     Bottle general = config.findGroup("GENERAL");
 
     // leggere i valori da file
@@ -777,6 +786,23 @@ bool tripodMotionControl::close()
     ImplementInteractionMode::uninitialize();
 
     dealloc();
+    return true;
+}
+
+
+bool tripodMotionControl::getAxisName(int axis, yarp::os::ConstString& name)
+{
+    if (axis < 0 || axis >=  _njoints) return false;
+    name = yarp::os::ConstString(_jointNames[axis]);
+    return true;
+}
+
+bool tripodMotionControl::getJointType(int axis, yarp::dev::JointTypeEnum& type)
+{
+    if (axis < 0 || axis >= _njoints)
+        return false;
+
+    type = yarp::dev::VOCAB_JOINTTYPE_PRISMATIC;
     return true;
 }
 
