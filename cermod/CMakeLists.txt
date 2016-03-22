@@ -11,5 +11,4 @@ endif(IPOPT_FOUND)
 
   add_subdirectory(faceDisplayClient)
   add_subdirectory(faceDisplayServer)
-  add_subdirectory(boschIMU)
 yarp_end_plugin_library(cermod)
