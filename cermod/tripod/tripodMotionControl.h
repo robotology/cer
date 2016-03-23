@@ -1,6 +1,3 @@
-// -*- mode:C++; tab-width:4; c-basic-offset:4; indent-tabs-mode:nil -*-
-
-
 /* Copyright (C) 2015  iCub Facility, Istituto Italiano di Tecnologia
  * Author: Alberto Cardellino
  * email: alberto.cardellino@iit.it
@@ -15,24 +12,6 @@
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
  * Public License for more details
- */
-
-
-/**
- * @ingroup icub_hardware_modules
- * \defgroup tripod motion device
- *
- *
- * Copyright (C) 2015  iCub Facility, Istituto Italiano di Tecnologia
- *
- * Author: Alberto Cardellino
- *
- * CopyPolicy: Released under the terms of the GNU GPL v2.0.
- *
- * This device is designed to interface the user input expressed in torso elevation plus
- * orientation into 3 elongation of the real actuator. This conversion is done by
- * a Inverse Kinematic (IK) library. The result will then be sent to the electronic
- * boards controlling the motors, using needed protocol, could it be can or ethernet.
  */
 
 
@@ -110,7 +89,104 @@ private:
 };
 
 
-class cer::dev::tripodMotionControl:   public DeviceDriver,
+/**
+ *
+ * \section TripodMotionControl Description of input parameters
+ * This device implements a kinematic conversion between a 'user space' in terms of heave+roll+pitch to
+ * a 'hardware space' in terms of three elongations and then propagate the commands to the low-level
+ * device in charge of handling the real motors.
+ * Therefore each command sent to this device will be converted into commands for motors while the encoder
+ * readings will be converted back from 'hardware space' (elongations) into 'user space' (heave+roll+pitch).
+ *
+ * Using the parameter 'HW2user', the direction of conversion can be reversed, therefore commands will be
+ * converted from 'hardware space' into 'user space' while encoders will be converted from 'user space'
+ * into 'hardware space'. This is meant to be used with simulators which are not able to simulate the tripod
+ * mechanism.
+ *
+ *
+ *  Parameters required by this device are:
+ * | Parameter name | SubParameter   | Type    | Units          | Default Value | Required                     | Description                                                       | Notes |
+ * |:--------------:|:--------------:|:-------:|:--------------:|:-------------:|:---------------------------: |:-----------------------------------------------------------------:|:-----:|
+ * | -              |  jointNames    | string  | -              |   -           | Yes                          | name of each joint in sequence                    | optional, default 20ms |
+ * | GENERAL        |      -         | string  | -              |   -           | Yes                          | Name of the group, mandatory      |  |
+ * | -              |  Joints        | int     | -              |   -           | Yes                          | number of joints                    | for this tripod device it must be 3 |
+ * | -              |  AxisMap       | int     | -              |   -           | Yes                          | vector used to remap axis indexes                    |  |
+ * | -              |  Encoder       | double  | -              |   -           | Yes                          | conversion factor between input and output unit measure                     | fot this tripod device it must be 3 |
+ * | -              |  Verbose       | string  | -              |   -           | No                           | enable verbose message                              | |
+ * | -              |  HW2user       | bool    | -              |   -           | No                           | if set to true, the device will reverse the direction of operation, converting from hardware space into user space.                             |  |
+ * | TRIPOD         |      -         | group   | -              |   -           | Yes                          | - | - |
+ * | -              |  Radius        | double  | meter          |   -           | Yes                          | - | - |
+ * | -              |  Min_el        | double  | meter          |   -           | Yes                          | Lower value of elongation for all motors | One value for all motors |
+ * | -              |  Max_el        | double  | meter          |   -           | Yes                          | Upper value of elongation for all motors | One value for all motors |
+ * | -              |  Max_alpha     | double  | degrees        |   -           | Yes                          | Max angle to which the tripod can be inclined | Single value |
+ * | -              |  BASE_TRANSFORMATION   | matrix 4x4 |  -  |   -           | Yes                          | Transformation used to re-allign the base of tripod device to desired position/orientation | - |
+ * | LIMITS         |  -             | group   |  -             |   -           | Yes                          | - |  - |
+ * |   -            | JntVelocityMax | double  | m/s            |   -           | Yes                          | max velocity for motors| one value for all joints |
+ * | CONNECTION     |      -         | group   | -              |   -           | Alternative to network group | This group is used when the device needs to connect to a remote low-level hardware controller or simulator | - |
+ * | -              |  local         | string  | -              |   -           | if connection group is used  | open local port for the remote control board- | - |
+ * | -              |  remote        | double  | meter          |   -           | if connection group is used  | Lower value of elongation for all motors | One value for all motors |
+ * | networks       |      -         | group   | -              |   -           | Alternative to CONNECTION    | This needs to be used to directly attach to low-level hardware controller, like in the yarp robotInterface | - |
+ * | -              | networkName_1  | string  | -              |   -           |   if networks is used        | Name of the device to attach to | The name has to match the one used while creating the device |
+ *
+ *
+ * Config file example in XML format, with mandatory parameters.
+ *
+ * \code{.xml}
+ *
+ *    <group name="GENERAL">
+ *     <param name="Joints">    3       </param>
+ *     <param name="AxisMap">   0 1 2   </param>
+ *     <param name="Encoder">   1 1 1   </param>
+ *     <param name="HW2user">   false   </param>  <!-- optional -->
+ *     <param name="Verbose">   true    </param>  <!-- optional -->
+ *   </group>
+ *
+ *   <group name="TRIPOD">
+ *     <param name="Radius">      0.09   </param>
+ *     <param name="Max_el">      0.2   </param>
+ *     <param name="Min_el">      0.0   </param>
+ *     <param name="Max_alpha">   25.0   </param>
+ *
+ *     <param name="BASE_TRANSFORMATION">  -1.0    0.0     0.0    0.0
+ *                                          0.0   -1.0     0.0    0.0
+ *                                          0.0    0.0     1.0    0.0
+ *                                          0.0    0.0     0.0    1.0
+ *     </param>
+ *   </group>
+ *
+ *   <group name="LIMITS">
+ *       <param name="JntVelocityMax">   0.05  </param>
+ *   </group>
+ * \endcode
+ *
+ * Following parameters are meaningful ONLY for yarprobotinterface, or when the
+ * low level device is available.
+ *
+ * \code{.xml}
+ *
+ *   <action phase="startup" level="5" type="attach">
+ *     <paramlist name="networks">
+ *         <elem name="FirstSetOfJoints"> cer_torso_mc </elem>
+ *     </paramlist>
+ *   </action>
+ *
+ *  <action phase="shutdown" level="5" type="detach" />
+ * \endcode
+ *
+ * Following section is meant to be used when the low-level device is not directly
+ * accessible or to be used with a simulator.
+ *
+ * \code{.xml}
+ *
+ *   <group name="CONNECTION">
+ *     <param name="local">         /icubGazeboSim/torso_out  </param>
+ *     <param name="remote">        /icubGazeboSim/torso      </param>
+ *     <param name="writeStrict">   off                       </param>
+ *   </group>
+ * \endcode
+ */
+
+class cer::dev::tripodMotionControl:    public DeviceDriver,
                                         public IMultipleWrapper,
                                         public IAxisInfo,
 //                                         public IPidControlRaw,
