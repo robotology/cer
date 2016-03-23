@@ -107,12 +107,12 @@ private:
  *  Parameters required by this device are:
  * | Parameter name | SubParameter   | Type    | Units          | Default Value | Required                     | Description                                                       | Notes |
  * |:--------------:|:--------------:|:-------:|:--------------:|:-------------:|:---------------------------: |:-----------------------------------------------------------------:|:-----:|
- * | -              |  jointNames    | string  | -              |   -           | Yes                          | name of each joint in sequence                    | optional, default 20ms |
- * | GENERAL        |      -         | string  | -              |   -           | Yes                          | Name of the group, mandatory      |  |
+ * | -              |  jointNames    | string  | -              |   -           | Yes                          | name of each joint in sequence                    | - |
+ * | GENERAL        |      -         | string  | -              |   -           | Yes                          | Name of the group, mandatory      | - |
  * | -              |  Joints        | int     | -              |   -           | Yes                          | number of joints                    | for this tripod device it must be 3 |
- * | -              |  AxisMap       | int     | -              |   -           | Yes                          | vector used to remap axis indexes                    |  |
+ * | -              |  AxisMap       | int     | -              |   -           | Yes                          | vector used to remap axis indexes                    | - |
  * | -              |  Encoder       | double  | -              |   -           | Yes                          | conversion factor between input and output unit measure                     | fot this tripod device it must be 3 |
- * | -              |  Verbose       | string  | -              |   -           | No                           | enable verbose message                              | |
+ * | -              |  Verbose       | string  | -              |   -           | No                           | enable verbose message                              | - |
  * | -              |  HW2user       | bool    | -              |   -           | No                           | if set to true, the device will reverse the direction of operation, converting from hardware space into user space.                             |  |
  * | TRIPOD         |      -         | group   | -              |   -           | Yes                          | - | - |
  * | -              |  Radius        | double  | meter          |   -           | Yes                          | - | - |
@@ -124,7 +124,7 @@ private:
  * |   -            | JntVelocityMax | double  | m/s            |   -           | Yes                          | max velocity for motors| one value for all joints |
  * | CONNECTION     |      -         | group   | -              |   -           | Alternative to network group | This group is used when the device needs to connect to a remote low-level hardware controller or simulator | - |
  * | -              |  local         | string  | -              |   -           | if connection group is used  | open local port for the remote control board- | - |
- * | -              |  remote        | double  | meter          |   -           | if connection group is used  | Lower value of elongation for all motors | One value for all motors |
+ * | -              |  remote        | string  | -              |   -           | if connection group is used  | Lower value of elongation for all motors | One value for all motors |
  * | networks       |      -         | group   | -              |   -           | Alternative to CONNECTION    | This needs to be used to directly attach to low-level hardware controller, like in the yarp robotInterface | - |
  * | -              | networkName_1  | string  | -              |   -           |   if networks is used        | Name of the device to attach to | The name has to match the one used while creating the device |
  *
