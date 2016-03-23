@@ -293,6 +293,7 @@ bool tripodMotionControl::alloc(int nj)
     _kinematic_mj=allocAndCheck<double>(16);
     _calibrated = allocAndCheck<bool>(nj);
     _stamps = allocAndCheck<double>(nj);
+    _jointType = allocAndCheck<int>(nj);
 
     // Reserve space for data stored locally. values are initialize to 0
     _userRef_positions.resize(nj);
@@ -351,6 +352,7 @@ bool tripodMotionControl::dealloc()
     checkAndDestroy(_currentLimits);
     checkAndDestroy(_calibrated);
     checkAndDestroy(_stamps);
+    checkAndDestroy(_jointType);
 
     return true;
 }
@@ -630,23 +632,16 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
     Bottle xtmp;
     int i;
 
+    Bottle general = config.findGroup("GENERAL");
+
     // Set joint names
     // leggere i valori da file
-    if (!extractGroup(config, xtmp, "jointNames", "a list of axis names", _njoints))
+    if (!extractGroup(general, xtmp, "AxisName", "a list of axis names", _njoints))
         return false;
 
     _jointNames.resize(_njoints);
     for (i = 1; i < xtmp.size(); i++)
         _jointNames[i-1] = xtmp.get(i).asString();
-
-    Bottle general = config.findGroup("GENERAL");
-    if(!general.check("HW2user") )
-        _directionHW2User = false;
-    else
-    {
-        yInfo() << "Direction is HW to User";
-        _directionHW2User = general.find("HW2user").asBool();
-    }
 
     // leggere i valori da file
     if (!extractGroup(general, xtmp, "AxisMap", "a list of reordered indices for the axes", _njoints))
@@ -680,6 +675,27 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
         }
     }
 
+    if(!general.check("HW2user") )
+        _directionHW2User = false;
+    else
+    {
+        yInfo() << "Direction is HW to User";
+        _directionHW2User = general.find("HW2user").asBool();
+    }
+
+    if(!_directionHW2User)
+    {
+        _jointType[0] = VOCAB_JOINTTYPE_PRISMATIC;
+        _jointType[1] = VOCAB_JOINTTYPE_REVOLUTE;
+        _jointType[2] = VOCAB_JOINTTYPE_REVOLUTE;
+    }
+    else
+    {
+        _jointType[0] = VOCAB_JOINTTYPE_PRISMATIC;
+        _jointType[1] = VOCAB_JOINTTYPE_PRISMATIC;
+        _jointType[2] = VOCAB_JOINTTYPE_PRISMATIC;
+    }
+
     /////// Tripod solver configuration
     Bottle &tripod_description=config.findGroup("TRIPOD");
     if (tripod_description.isNull())
@@ -690,25 +706,25 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
 
     // radius
     double radius, lMax, lMin, alpha;
-    if (!extractGroup(tripod_description, xtmp, "Radius","The radius ([m])", 1))
+    if (!extractGroup(tripod_description, xtmp, "radius","The radius ([m])", 1))
         return false;
     else
         radius = xtmp.get(1).asDouble();
 
     // max limit
-        if (!extractGroup(tripod_description, xtmp, "Max_el","The minimum elongation ([m]).", 1))
+        if (!extractGroup(tripod_description, xtmp, "max_el","The minimum elongation ([m]).", 1))
         return false;
     else
         lMax = xtmp.get(1).asDouble();
 
     // min limit
-        if (!extractGroup(tripod_description, xtmp, "Min_el","The maximum permitted bending angle ([deg]).", 1))
+        if (!extractGroup(tripod_description, xtmp, "min_el","The maximum permitted bending angle ([deg]).", 1))
         return false;
     else
         lMin = xtmp.get(1).asDouble();
 
     // alpha max
-        if (!extractGroup(tripod_description, xtmp, "Max_alpha","The maximum permitted bending angle ([deg])", 1))
+        if (!extractGroup(tripod_description, xtmp, "max_alpha","The maximum permitted bending angle ([deg])", 1))
         return false;
     else
         alpha = xtmp.get(1).asDouble();
@@ -737,7 +753,7 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
 
 
     // Read the base transformation Matrix
-    if(!extractGroup(tripod_description, xtmp, "BASE_TRANSFORMATION", "the rototraslation matrix 4x4 which tranforms system references from root frame to the tripod base", 16))
+    if(!extractGroup(tripod_description, xtmp, "base_transform", "the rototraslation matrix 4x4 which tranforms system references from root frame to the tripod base", 16))
         return false;
     else
     {
@@ -761,7 +777,7 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
         yError() << " ***TripodMotionControl detects that Group 'LIMITS' is not found in configuration file***";
         return false;
     }
-    if (!extractGroup(limits_group, xtmp, "JntVelocityMax","The maximum velocity for the joint ([deg/s or m/s])", 1))
+    if (!extractGroup(limits_group, xtmp, "jntVelMax","The maximum velocity for the joint ([deg/s or m/s])", 1))
         return false;
     else
         _velLimitsMax = xtmp.get(1).asDouble();
@@ -810,7 +826,7 @@ bool tripodMotionControl::getJointType(int axis, yarp::dev::JointTypeEnum& type)
     if (axis < 0 || axis >= _njoints)
         return false;
 
-    type = yarp::dev::VOCAB_JOINTTYPE_PRISMATIC;
+    type = (yarp::dev::JointTypeEnum) _jointType[axis];
     return true;
 }
 
