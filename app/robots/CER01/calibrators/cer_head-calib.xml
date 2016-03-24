@@ -16,17 +16,17 @@
     </group>                                                                      
 
     <group name="CALIBRATION">                                                    
-        <param name="calibrationType">                    0               0              </param>
+        <param name="calibrationType">                    3               3              </param>
         <param name="calibration1">                       0               0              </param>
         <param name="calibration2">                       10.0            10.0           </param>
-        <param name="calibration3">                       32767           32767          </param>
+        <param name="calibration3">                       49151           57525          </param>
         <param name="calibration4">                       0               0              </param>
         <param name="calibration5">                       0               0              </param>
-        <param name="calibrationZero">                    0               0              </param>
+        <param name="calibrationZero">                    180             180            </param>
         <param name="calibrationDelta">                   0.0             0.0            </param>
         <param name="startupPosition">                    0.0             0.0            </param>
-        <param name="startupVelocity">                    10.0            10.0          </param>
-        <param name="startupMaxPwm">                      5000            5000           </param>
+        <param name="startupVelocity">                    10.0            10.0           </param>
+        <param name="startupMaxPwm">                      500             500            </param>
         <param name="startupPosThreshold">                2               2              </param>
     </group>
 

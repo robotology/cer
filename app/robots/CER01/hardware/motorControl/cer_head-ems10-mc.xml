@@ -10,26 +10,26 @@
       <params file="hardware/mechanicals/cer_head-ems10-mec.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                45      45            </param>
-        <param name="jntPosMin">                -45     -45           </param>
+        <param name="jntPosMax">                15     45            </param>
+        <param name="jntPosMin">               -10    -45            </param>
         <param name="rotorPosMin">              0       0             </param>
         <param name="rotorPosMax">              0       0             </param>
-        <param name="jntVelMax">                50      50           </param>
+        <param name="jntVelMax">                50      50            </param>
         <param name="motorOverloadCurrents">    8000    8000          </param>
-        <param name="motorNominalCurrents">     8000    8000          </param>
-        <param name="motorPeakCurrents">        8000    8000          </param>
-        <param name="motorPwmLimit">            30000   30000         </param>  
+        <param name="motorNominalCurrents">     800     800            </param>
+        <param name="motorPeakCurrents">        800     800            </param>
+        <param name="motorPwmLimit">           1000    1000            </param>  
     </group>
 
 	<group name="POSITION_CONTROL">
-	<param name="controlLaw">    joint_pid_v1 </param> 
-        <param name="controlUnits">  machine_units </param> 
-        <param name="kp">            3000        3000        </param>       
+	<param name="controlLaw">    joint_pid_v1            </param> 
+        <param name="controlUnits">  machine_units           </param> 
+        <param name="kp">              -5           5        </param>       
         <param name="kd">               0           0        </param>       
-        <param name="ki">            5000        5000        </param>       
-        <param name="limOutput">     5000        5000        </param>      
-        <param name="maxOutput">    30000       30000        </param>          
-        <param name="maxInt">        4000        4000        </param>       
+        <param name="ki">            -100         100        </param>       
+        <param name="limOutput">      500         500        </param>      
+        <param name="maxOutput">     1000        1000        </param>          
+        <param name="maxInt">         300         300        </param>       
         <param name="shift">            0           0        </param>       
         <param name="ko">               0           0        </param>       
         <param name="stictionUp">       0           0        </param>       
