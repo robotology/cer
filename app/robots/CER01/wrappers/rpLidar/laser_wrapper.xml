@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<devices>
+  <device name="cerLaserWrapper" type="Rangefinder2DWrapper">
+
+      <param name="period"> 10 </param>
+      <param name="name">   /cer/laser:o       </param>
+
+      <action phase="startup" level="5" type="attach">
+         <paramlist name="networks">
+            <elem name="cer_laser">  cerLaser </elem>
+         </paramlist>
+      </action>
+
+      <action phase="shutdown" level="5" type="detach" />
+  </device>
+</devices>
