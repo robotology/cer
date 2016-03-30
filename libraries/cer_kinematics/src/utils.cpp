@@ -72,18 +72,18 @@ protected:
 
         if (type=="left")
         {
-            pushLink(new iKinLink(-0.084, 0.312317,100.0*CTRL_DEG2RAD, 180.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD)); 
-            pushLink(new iKinLink(   0.0,-0.159422, 90.0*CTRL_DEG2RAD,  90.0*CTRL_DEG2RAD,-20.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
-            pushLink(new iKinLink( 0.034,      0.0,-90.0*CTRL_DEG2RAD,-100.0*CTRL_DEG2RAD,-10.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink(-0.084, 0.297614,104.0*CTRL_DEG2RAD, 180.0*CTRL_DEG2RAD,-60.0*CTRL_DEG2RAD, 60.0*CTRL_DEG2RAD)); 
+            pushLink(new iKinLink(   0.0,-0.175204, 90.0*CTRL_DEG2RAD,  90.0*CTRL_DEG2RAD,-20.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink( 0.034,      0.0,-90.0*CTRL_DEG2RAD,-104.0*CTRL_DEG2RAD,-10.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
             pushLink(new iKinLink(   0.0,   -0.251, 90.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
             pushLink(new iKinLink(   0.0,      0.0,-90.0*CTRL_DEG2RAD,   0.0*CTRL_DEG2RAD,  0.0*CTRL_DEG2RAD,140.0*CTRL_DEG2RAD));
             pushLink(new iKinLink(   0.0,   -0.071,180.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
         }
         else
         {
-            pushLink(new iKinLink(-0.084,0.312317, 80.0*CTRL_DEG2RAD,-180.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD)); 
-            pushLink(new iKinLink(   0.0,0.159422, 90.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-20.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
-            pushLink(new iKinLink(-0.034,     0.0,-90.0*CTRL_DEG2RAD,-100.0*CTRL_DEG2RAD,-10.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink(-0.084,0.297614, 76.0*CTRL_DEG2RAD,-180.0*CTRL_DEG2RAD,-60.0*CTRL_DEG2RAD, 60.0*CTRL_DEG2RAD)); 
+            pushLink(new iKinLink(   0.0,0.175204, 90.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-20.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink(-0.034,     0.0,-90.0*CTRL_DEG2RAD,-104.0*CTRL_DEG2RAD,-10.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
             pushLink(new iKinLink(   0.0,   0.251,-90.0*CTRL_DEG2RAD,  90.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
             pushLink(new iKinLink(   0.0,     0.0, 90.0*CTRL_DEG2RAD,   0.0*CTRL_DEG2RAD,  0.0*CTRL_DEG2RAD,140.0*CTRL_DEG2RAD));
             pushLink(new iKinLink(   0.0,   0.071,  0.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
