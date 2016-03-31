@@ -107,24 +107,24 @@ private:
  *  Parameters required by this device are:
  * | Parameter name | SubParameter   | Type    | Units          | Default Value | Required                     | Description                                                       | Notes |
  * |:--------------:|:--------------:|:-------:|:--------------:|:-------------:|:---------------------------: |:-----------------------------------------------------------------:|:-----:|
- * | -              |  jointNames    | string  | -              |   -           | Yes                          | name of each joint in sequence                    | optional, default 20ms |
- * | GENERAL        |      -         | string  | -              |   -           | Yes                          | Name of the group, mandatory      |  |
+ * | GENERAL        |      -         | string  | -              |   -           | Yes                          | Name of the group, mandatory      | - |
+ * | -              |  AxisName      | string  | -              |   -           | Yes                          | name of each joint in sequence                    | - |
  * | -              |  Joints        | int     | -              |   -           | Yes                          | number of joints                    | for this tripod device it must be 3 |
- * | -              |  AxisMap       | int     | -              |   -           | Yes                          | vector used to remap axis indexes                    |  |
+ * | -              |  AxisMap       | int     | -              |   -           | Yes                          | vector used to remap axis indexes                    | - |
  * | -              |  Encoder       | double  | -              |   -           | Yes                          | conversion factor between input and output unit measure                     | fot this tripod device it must be 3 |
- * | -              |  Verbose       | string  | -              |   -           | No                           | enable verbose message                              | |
+ * | -              |  Verbose       | string  | -              |   -           | No                           | enable verbose message                              | - |
  * | -              |  HW2user       | bool    | -              |   -           | No                           | if set to true, the device will reverse the direction of operation, converting from hardware space into user space.                             |  |
  * | TRIPOD         |      -         | group   | -              |   -           | Yes                          | - | - |
- * | -              |  Radius        | double  | meter          |   -           | Yes                          | - | - |
- * | -              |  Min_el        | double  | meter          |   -           | Yes                          | Lower value of elongation for all motors | One value for all motors |
- * | -              |  Max_el        | double  | meter          |   -           | Yes                          | Upper value of elongation for all motors | One value for all motors |
- * | -              |  Max_alpha     | double  | degrees        |   -           | Yes                          | Max angle to which the tripod can be inclined | Single value |
- * | -              |  BASE_TRANSFORMATION   | matrix 4x4 |  -  |   -           | Yes                          | Transformation used to re-allign the base of tripod device to desired position/orientation | - |
+ * | -              |  radius        | double  | meter          |   -           | Yes                          | - | - |
+ * | -              |  min_el        | double  | meter          |   -           | Yes                          | Lower value of elongation for all motors | One value for all motors |
+ * | -              |  max_el        | double  | meter          |   -           | Yes                          | Upper value of elongation for all motors | One value for all motors |
+ * | -              |  max_alpha     | double  | degrees        |   -           | Yes                          | Max angle to which the tripod can be inclined | Single value |
+ * | -              |  base_transform | matrix 4x4 |  -  |   -           | Yes                          | Transformation used to re-allign the base of tripod device to desired position/orientation | - |
  * | LIMITS         |  -             | group   |  -             |   -           | Yes                          | - |  - |
- * |   -            | JntVelocityMax | double  | m/s            |   -           | Yes                          | max velocity for motors| one value for all joints |
+ * |   -            |  jntVelMax     | double  | m/s            |   -           | Yes                          | max velocity for motors| one value for all joints |
  * | CONNECTION     |      -         | group   | -              |   -           | Alternative to network group | This group is used when the device needs to connect to a remote low-level hardware controller or simulator | - |
  * | -              |  local         | string  | -              |   -           | if connection group is used  | open local port for the remote control board- | - |
- * | -              |  remote        | double  | meter          |   -           | if connection group is used  | Lower value of elongation for all motors | One value for all motors |
+ * | -              |  remote        | string  | -              |   -           | if connection group is used  | Lower value of elongation for all motors | One value for all motors |
  * | networks       |      -         | group   | -              |   -           | Alternative to CONNECTION    | This needs to be used to directly attach to low-level hardware controller, like in the yarp robotInterface | - |
  * | -              | networkName_1  | string  | -              |   -           |   if networks is used        | Name of the device to attach to | The name has to match the one used while creating the device |
  *
@@ -142,12 +142,12 @@ private:
  *   </group>
  *
  *   <group name="TRIPOD">
- *     <param name="Radius">      0.09   </param>
- *     <param name="Max_el">      0.2   </param>
- *     <param name="Min_el">      0.0   </param>
- *     <param name="Max_alpha">   25.0   </param>
+ *     <param name="radius">      0.09   </param>
+ *     <param name="max_el">      0.2   </param>
+ *     <param name="min_el">      0.0   </param>
+ *     <param name="max_alpha">   25.0   </param>
  *
- *     <param name="BASE_TRANSFORMATION">  -1.0    0.0     0.0    0.0
+ *     <param name="base_transform">  -1.0    0.0     0.0    0.0
  *                                          0.0   -1.0     0.0    0.0
  *                                          0.0    0.0     1.0    0.0
  *                                          0.0    0.0     0.0    1.0
@@ -155,7 +155,7 @@ private:
  *   </group>
  *
  *   <group name="LIMITS">
- *       <param name="JntVelocityMax">   0.05  </param>
+ *       <param name="jntVelMax">   0.05  </param>
  *   </group>
  * \endcode
  *
@@ -254,6 +254,7 @@ private:
     double  *_stamps;
     double   _refSpeed;         // For the tripod device, only one velocity can be defined, it'll be used by all the joints
     double   _velLimitsMax;
+    int     *_jointType;                       // holds joint type enum
     yarp::sig::Vector  _userRef_positions;     // used for position control.
     yarp::sig::Vector  _robotRef_positions;    // used for position control.
     yarp::sig::Vector  _lastUser_encoders;     // used for position control.
@@ -261,7 +262,6 @@ private:
     yarp::sig::Vector  _robotRef_speeds;       // used for positionMove.
     yarp::sig::Vector  _posDeltas;             // used to compute _robotRef_speeds on the fly.
     std::vector<std::string> _jointNames;     // holds joint names
-
     yarp::sig::Matrix  _baseTransformation;
 
     // Kinematics stuff
