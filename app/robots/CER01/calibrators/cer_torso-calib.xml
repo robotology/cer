@@ -18,17 +18,17 @@
 
 
 <group name="CALIBRATION">
-<param name="calibrationType">                    0               0           0         3             </param>
-<param name="calibration1">                       0               0           0         32767.9       </param>
-<param name="calibration2">                       10.0            10.0        10.0      10.0          </param>
+<param name="calibrationType">                    9               9           9         3             </param>
+<param name="calibration1">                       6400            6400        6400      32767.9       </param>
+<param name="calibration2">                       10              10          10        10.0          </param>
 <param name="calibration3">                       0               0           0         35822.8       </param>
 <param name="calibration4">                       0               0           0         0             </param>
 <param name="calibration5">                       0               0           0         0             </param>
-<param name="calibrationZero">                    0               0           0         180           </param>
+<param name="calibrationZero">                    1700            1700        1700      180           </param>
 <param name="calibrationDelta">                   0.0             0.0         0.0       0.0           </param>
-<param name="startupPosition">                    0.0             0.0         0.0       0.0           </param>
+<param name="startupPosition">                    0.1             0.1         0.1       0.0           </param>
 <param name="startupVelocity">                    0.01            0.01        0.01      10.0           </param>
-<param name="startupMaxPwm">                      5000            5000        5000      2500          </param>
+<param name="startupMaxPwm">                      6400            6400        6400      2500          </param>
 <param name="startupPosThreshold">                2               2           2         2             </param>
 </group>
 

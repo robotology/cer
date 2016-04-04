@@ -10,8 +10,8 @@
       <params file="hardware/mechanicals/cer_head-ems10-mec.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                15     45            </param>
-        <param name="jntPosMin">               -10    -45            </param>
+        <param name="jntPosMax">                25     45            </param>
+        <param name="jntPosMin">                -5    -45            </param>
         <param name="rotorPosMin">              0       0             </param>
         <param name="rotorPosMax">              0       0             </param>
         <param name="jntVelMax">                50      50            </param>
