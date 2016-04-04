@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+
+<devices robot="CER01" build="1">
+  <device name="cer_all_joints_mc_wrapper" type="controlboardwrapper2">
+
+      <param name="period"> 10 </param>
+      <param name="name">   /cer/all_joints </param>
+      <param name="joints"> 2 </param>
+      
+      <paramlist name="networks">
+        <elem name="mc1"> 0  1  0  1 </elem>
+       <!--
+        <elem name="mc2"> 0  3  0  3 </elem>
+        -->
+      </paramlist>
+
+      <group name ="ROS">
+        <param name="useROS"> ros_only </param>
+        <param name="ROS_topicName">  /joint_states </param>
+        <param name="ROS_nodeName">   /cer </param>
+      </group>
+      
+      <action phase="startup" level="5" type="attach">
+        <paramlist name="networks">
+         <elem name="mc1"> cer_base_mc </elem>
+        <!--       
+         <elem name="mc2"> cer_base_mc </elem>
+         -->
+         </paramlist>
+      </action>
+
+      <action phase="shutdown" level="5" type="detach" />
+
+  </device>
+</devices>
