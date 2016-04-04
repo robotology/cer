@@ -17,9 +17,29 @@
 */
 
 #include "odometry.h"
+#include <yarp/os/LogStream.h>
+#include <limits.h>
 
 #define RAD2DEG 180.0/3.14159
 #define DEG2RAD 3.14159/180.0
+
+inline TickTime normalizeSecNSec(double yarpTimeStamp)
+{
+    uint64_t time = (uint64_t)(yarpTimeStamp * 1000000000UL);
+    uint64_t nsec_part = (time % 1000000000UL);
+    uint64_t sec_part = (time / 1000000000UL);
+    TickTime ret;
+
+    if (sec_part > UINT_MAX)
+    {
+        yWarning() << "Timestamp exceeded the 64 bit representation, resetting it to 0";
+        sec_part = 0;
+    }
+
+    ret.sec = sec_part;
+    ret.nsec = nsec_part;
+    return ret;
+}
 
 bool Odometry::reset_odometry()
 {
@@ -84,6 +104,7 @@ Odometry::Odometry(unsigned int _period, ResourceFinder &_rf, Property options, 
     enc.resize(2);
     encv.resize(2);
     localName = ctrl_options.find("local").asString();
+    rosNode = NULL;
 }
 
 bool Odometry::open()
@@ -112,6 +133,51 @@ bool Odometry::open()
 
     //reset odometry
     reset_odometry();
+
+    if (ctrl_options.check("GENERAL"))
+    {
+        yarp::os::Bottle g_group = ctrl_options.findGroup("GENERAL");
+        enable_ROS = (g_group.find("useRos").asInt()==1);
+    }
+    else
+    {
+        yError() << "Missing [GENERAL] section";
+        return false;
+    }
+
+    if (ctrl_options.check("ROS_ODOMETRY"))
+    {
+        yarp::os::Bottle r_group = ctrl_options.findGroup("ROS_ODOMETRY");
+        if (r_group.check("odom_frame") == false) { yError() << "Missing odom_frame parameter"; return false; }
+        if (r_group.check("base_frame") == false) { yError() << "Missing base_frame parameter"; return false; }
+        if (r_group.check("node_name") == false)  { yError() << "Missing node_name parameter"; return false; }
+        if (r_group.check("topic_name") == false) { yError() << "Missing topic_name parameter"; return false; }
+        frame_id       = r_group.find("odom_frame").asString();
+        child_frame_id = r_group.find("base_frame").asString();
+        rosNodeName    = r_group.find("node_name").asString();
+        rosTopicName   = r_group.find("topic_name").asString();
+    }
+    else
+    {
+        yError() << "Missing [ROS_ODOMETRY] section";
+        return false;
+    }
+
+    if (enable_ROS)
+    {
+        rosNode = new yarp::os::Node(rosNodeName);   // add a ROS node
+        if (rosNode == NULL)
+        {
+            yError() << " opening " << rosNodeName << " Node, check your yarp-ROS network configuration\n";
+            return false;
+        }
+
+        if (!rosPublisherPort.topic(rosTopicName))
+        {
+            yError() << " opening " << rosTopicName << " Topic, check your yarp-ROS network configuration\n";
+            return false;
+        }
+    }
 
     return true;
 }
@@ -211,5 +277,32 @@ void Odometry::compute()
         v.addDouble(base_vel_lin);
         v.addDouble(base_vel_theta);
         port_vels.write();
+    }
+
+    if (enable_ROS)
+    {
+        nav_msgs_Odometry &rosData = rosPublisherPort.prepare();
+        rosData.header.seq = rosMsgCounter++;
+        rosData.header.stamp = normalizeSecNSec(yarp::os::Time::now());
+        rosData.header.frame_id = frame_id;
+        rosData.child_frame_id = child_frame_id;
+
+        rosData.pose.pose.position.x = odom_x;
+        rosData.pose.pose.position.y = odom_y;
+        rosData.pose.pose.position.z = 0.0;
+        geometry_msgs_Quaternion odom_quat;
+        double halfYaw = odom_theta / 180.0*M_PI * 0.5;
+        double cosYaw = cos(halfYaw);
+        double sinYaw = sin(halfYaw);
+        odom_quat.x = 0;
+        odom_quat.y = 0;
+        odom_quat.z = sinYaw;
+        odom_quat.w = cosYaw;
+        rosData.pose.pose.orientation = odom_quat;
+        rosData.twist.twist.linear.x = odom_vel_x;
+        rosData.twist.twist.linear.y = odom_vel_y;
+        rosData.twist.twist.angular.z = odom_vel_theta / 180.0*M_PI;
+
+        rosPublisherPort.write();
     }
 }
