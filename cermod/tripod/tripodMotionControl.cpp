@@ -632,7 +632,7 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
 
     // Set joint names
     // leggere i valori da file
-    if (!extractGroup(config, xtmp, "jointNames", "a list of axis names", _njoints))
+    if (!extractGroup(config, xtmp, "AxisNames", "a list of axis names", _njoints))
         return false;
 
     _jointNames.resize(_njoints);
@@ -648,12 +648,12 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
         _directionHW2User = general.find("HW2user").asBool();
     }
 
-    // leggere i valori da file
-    if (!extractGroup(general, xtmp, "AxisMap", "a list of reordered indices for the axes", _njoints))
-        return false;
+    if(general.check("AxisMap") )
+        yWarning() << "TripodMotionControl device does not accept 'AxisMap' parameter, ignoring it!";
 
-    for (i = 1; i < xtmp.size(); i++)
-        _axisMap[i-1] = xtmp.get(i).asInt();
+    // No axis mapping allowed here
+    for (i = 0; i < _njoints; i++)
+        _axisMap[i-1] = i;
 
     double tmp_A2E;
     // Encoder scales
