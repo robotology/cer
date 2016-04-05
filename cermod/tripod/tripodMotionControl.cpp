@@ -1061,7 +1061,7 @@ bool tripodMotionControl::getAxes(int *ax)
 
 bool tripodMotionControl::setPositionModeRaw()
 {
-    return _device.pos->setPositionMode();
+    return false;
 }
 
 bool tripodMotionControl::positionMoveRaw(int j, double ref)
@@ -1228,7 +1228,17 @@ bool tripodMotionControl::checkMotionDoneRaw(bool *flag)
 
 bool tripodMotionControl::setRefSpeedRaw(int j, double sp)
 {
-    if(sp > _velLimitsMax)
+    if( j!= 0)
+    {
+        yWarning() << "Only heave velocity can be set, ignoring command";
+        return true;
+    }
+    if(sp < 0)
+    {
+        yWarning() << "Reference speed is negative, saturating it to 0";
+        sp = 0;
+    }
+    else if(sp > _velLimitsMax)
     {
         yWarning() << "Reference speed is higher then maximum, saturating value to " << _velLimitsMax;
         sp = _velLimitsMax;
@@ -1240,7 +1250,7 @@ bool tripodMotionControl::setRefSpeedRaw(int j, double sp)
 
 bool tripodMotionControl::setRefSpeedsRaw(const double *spds)
 {
-    yWarning() << "Only one vel can be set for the whole tripod device!! \n\tUsing spds[0]: " << spds[0] << " for all of them";
+    yWarning() << "Only one velocity value can be set for the whole tripod device!! \n\tUsing spds[0]: " << spds[0] << " for all of them";
     setRefSpeedRaw(0, spds[0]);
     return true;
 }
@@ -1388,7 +1398,11 @@ bool tripodMotionControl::setRefSpeedsRaw(const int n_joint, const int *joints, 
 
 bool tripodMotionControl::setRefAccelerationsRaw(const int n_joint, const int *joints, const double *accs)
 {
-    return _device.pos2->setRefAccelerations(n_joint, joints, accs);
+    bool ret = true;
+    yWarning() << "Only one acceleration value can be set for the whole tripod device!! \n\tUsing accs[0]: " << accs[0] << " for all of them";
+    for(int i=0; i<_njoints; i++)
+        ret &= _device.pos->setRefAcceleration(i, accs[0]);
+    return ret;
 }
 
 bool tripodMotionControl::getRefSpeedsRaw(const int n_joint, const int *joints, double *spds)
