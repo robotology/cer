@@ -105,6 +105,7 @@ Odometry::Odometry(unsigned int _period, ResourceFinder &_rf, Property options, 
     encv.resize(2);
     localName = ctrl_options.find("local").asString();
     rosNode = NULL;
+    rosMsgCounter=0;
 }
 
 bool Odometry::open()
@@ -137,7 +138,10 @@ bool Odometry::open()
     if (ctrl_options.check("GENERAL"))
     {
         yarp::os::Bottle g_group = ctrl_options.findGroup("GENERAL");
-        enable_ROS = (g_group.find("useRos").asInt()==1);
+        enable_ROS = (g_group.find("use_ROS").asInt()==1);
+        if (enable_ROS) yInfo() << "ROS enabled";
+        else
+        yInfo() << "ROS not enabled";
     }
     else
     {
