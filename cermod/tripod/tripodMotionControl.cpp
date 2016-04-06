@@ -519,8 +519,14 @@ bool tripodMotionControl::initKinematics()
 {
     _lastRobot_encoders.resize(_njoints);
 
-    while(!getEncodersRaw(_lastRobot_encoders.data()))
-        _lastRobot_encoders.zero();
+    // Wait to get a valid encoder reading
+    bool ok = true;
+    while(!ok)
+    {
+        ok = true;
+        for(int j=0; j<_njoints; j++)
+            ok &= _device.iJntEnc->getEncoder(j, &_lastRobot_encoders[j]);
+    }
 
     solver.setInitialGuess(_lastRobot_encoders);
     return true;
@@ -632,7 +638,7 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
 
     // Set joint names
     // leggere i valori da file
-    if (!extractGroup(config, xtmp, "jointNames", "a list of axis names", _njoints))
+    if (!extractGroup(config, xtmp, "AxisNames", "a list of axis names", _njoints))
         return false;
 
     _jointNames.resize(_njoints);
@@ -648,12 +654,12 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
         _directionHW2User = general.find("HW2user").asBool();
     }
 
-    // leggere i valori da file
-    if (!extractGroup(general, xtmp, "AxisMap", "a list of reordered indices for the axes", _njoints))
-        return false;
+    if(general.check("AxisMap") )
+        yWarning() << "TripodMotionControl device does not accept 'AxisMap' parameter, ignoring it!";
 
-    for (i = 1; i < xtmp.size(); i++)
-        _axisMap[i-1] = xtmp.get(i).asInt();
+    // No axis mapping allowed here
+    for (i = 0; i < _njoints; i++)
+        _axisMap[i-1] = i;
 
     double tmp_A2E;
     // Encoder scales
@@ -1055,7 +1061,7 @@ bool tripodMotionControl::getAxes(int *ax)
 
 bool tripodMotionControl::setPositionModeRaw()
 {
-    return _device.pos->setPositionMode();
+    return false;
 }
 
 bool tripodMotionControl::positionMoveRaw(int j, double ref)
@@ -1209,12 +1215,30 @@ bool tripodMotionControl::checkMotionDoneRaw(int j, bool *flag)
 
 bool tripodMotionControl::checkMotionDoneRaw(bool *flag)
 {
-    return _device.pos->checkMotionDone(flag);
+    bool ok = true;
+    bool done, doneAll = true;
+    for(int j=0; j<_njoints; j++)
+    {
+        ok &= _device.pos->checkMotionDone(j, &done);
+        doneAll &= done;
+    }
+    *flag = doneAll;
+    return ok;
 }
 
 bool tripodMotionControl::setRefSpeedRaw(int j, double sp)
 {
-    if(sp > _velLimitsMax)
+    if( j!= 0)
+    {
+        yWarning() << "Only heave velocity can be set, ignoring command";
+        return true;
+    }
+    if(sp < 0)
+    {
+        yWarning() << "Reference speed is negative, saturating it to 0";
+        sp = 0;
+    }
+    else if(sp > _velLimitsMax)
     {
         yWarning() << "Reference speed is higher then maximum, saturating value to " << _velLimitsMax;
         sp = _velLimitsMax;
@@ -1226,7 +1250,7 @@ bool tripodMotionControl::setRefSpeedRaw(int j, double sp)
 
 bool tripodMotionControl::setRefSpeedsRaw(const double *spds)
 {
-    yWarning() << "Only one vel can be set for the whole tripod device!! \n\tUsing spds[0]: " << spds[0] << " for all of them";
+    yWarning() << "Only one velocity value can be set for the whole tripod device!! \n\tUsing spds[0]: " << spds[0] << " for all of them";
     setRefSpeedRaw(0, spds[0]);
     return true;
 }
@@ -1238,7 +1262,11 @@ bool tripodMotionControl::setRefAccelerationRaw(int j, double acc)
 
 bool tripodMotionControl::setRefAccelerationsRaw(const double *accs)
 {
-    return _device.pos->setRefAccelerations(accs);
+    bool ret = true;
+    yWarning() << "Only one acceleration value can be set for the whole tripod device!! \n\tUsing accs[0]: " << accs[0] << " for all of them";
+    for(int i=0; i<_njoints; i++)
+        ret &= _device.pos->setRefAcceleration(i, accs[0]);
+    return ret;
 }
 
 bool tripodMotionControl::getRefSpeedRaw(int j, double *spd)
@@ -1266,7 +1294,7 @@ bool tripodMotionControl::getRefAccelerationRaw(int j, double *acc)
 
 bool tripodMotionControl::getRefAccelerationsRaw(double *accs)
 {
-    return _device.pos->getRefAccelerations(accs);
+    return _device.pos2->getRefAccelerations(_njoints, _axisMap, accs);
 }
 
 bool tripodMotionControl::stopRaw(int j)
@@ -1370,7 +1398,11 @@ bool tripodMotionControl::setRefSpeedsRaw(const int n_joint, const int *joints, 
 
 bool tripodMotionControl::setRefAccelerationsRaw(const int n_joint, const int *joints, const double *accs)
 {
-    return _device.pos2->setRefAccelerations(n_joint, joints, accs);
+    bool ret = true;
+    yWarning() << "Only one acceleration value can be set for the whole tripod device!! \n\tUsing accs[0]: " << accs[0] << " for all of them";
+    for(int i=0; i<_njoints; i++)
+        ret &= _device.pos->setRefAcceleration(i, accs[0]);
+    return ret;
 }
 
 bool tripodMotionControl::getRefSpeedsRaw(const int n_joint, const int *joints, double *spds)
@@ -1430,7 +1462,10 @@ bool tripodMotionControl::getControlModeRaw(int j, int *v)
 // IControl Mode 2
 bool tripodMotionControl::getControlModesRaw(int* v)
 {
-    return _device.iMode2->getControlModes(v);
+    bool ret = true;
+    for(int i=0; i<_njoints; i++)
+        ret &= _device.iMode2->getControlMode(i, &v[i]);
+    return ret;
 }
 
 bool tripodMotionControl::getControlModesRaw(const int n_joint, const int *joints, int *modes)
@@ -1450,7 +1485,7 @@ bool tripodMotionControl::setControlModesRaw(const int n_joint, const int *joint
 
 bool tripodMotionControl::setControlModesRaw(int *modes)
 {
-    return _device.iMode2->setControlModes(modes);
+    return _device.iMode2->setControlModes(_njoints, _axisMap, modes);
 }
 
 //////////////////////// BEGIN EncoderInterface
@@ -1496,7 +1531,10 @@ bool tripodMotionControl::getEncoderSpeedRaw(int j, double *sp)
 
 bool tripodMotionControl::getEncoderSpeedsRaw(double *spds)
 {
-    return _device.iJntEnc->getEncoderSpeeds(spds);  // TODO does it make sense??
+    bool ret = true;
+    for(int j=0; j<_njoints; j++)
+        ret &= _device.iJntEnc->getEncoderSpeed(j, &spds[j]);  // TODO does it make sense??
+    return ret;
 }
 
 bool tripodMotionControl::getEncoderAccelerationRaw(int j, double *acc)
@@ -1506,7 +1544,10 @@ bool tripodMotionControl::getEncoderAccelerationRaw(int j, double *acc)
 
 bool tripodMotionControl::getEncoderAccelerationsRaw(double *accs)
 {
-    return _device.iJntEnc->getEncoderAccelerations(accs);  // TODO does it make sense??
+    bool ret = true;
+    for(int j=0; j<_njoints; j++)
+        ret &= _device.iJntEnc->getEncoderAcceleration(j, &accs[j]);  // TODO does it make sense??
+    return ret;
 }
 
 ///////////////////////// END Encoder Interface
@@ -1572,7 +1613,10 @@ bool tripodMotionControl::getMotorEncoderRaw(int m, double *value)
 
 bool tripodMotionControl::getMotorEncodersRaw(double *encs)
 {
-    return _device.iMotEnc->getMotorEncoders(encs);
+    bool ret = true;
+    for(int j=0; j<_njoints; j++)
+        ret &= _device.iMotEnc->getMotorEncoder(j, &encs[j]);
+    return ret;
 }
 
 bool tripodMotionControl::getMotorEncoderSpeedRaw(int m, double *sp)
@@ -1597,7 +1641,10 @@ bool tripodMotionControl::getMotorEncoderAccelerationsRaw(double *accs)
 
 bool tripodMotionControl::getMotorEncodersTimedRaw(double *encs, double *stamps)
 {
-    return _device.iMotEnc->getMotorEncodersTimed(encs, stamps);
+    bool ret = true;
+    for(int j=0; j<_njoints; j++)
+        ret &= _device.iMotEnc->getMotorEncoderTimed(j, &encs[j], &stamps[j]);
+    return ret;
 }
 
 bool tripodMotionControl::getMotorEncoderTimedRaw(int m, double *encs, double *stamp)
@@ -1877,7 +1924,7 @@ bool tripodMotionControl::setPositionRaw(int j, double ref)
 
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference
-    return _device.posDir->setPositions(_robotRef_positions.data());
+    return _device.posDir->setPositions(_njoints, _axisMap, _robotRef_positions.data());
 }
 
 bool tripodMotionControl::setPositionsRaw(const int n_joint, const int *joints, double *refs)
@@ -1905,7 +1952,7 @@ bool tripodMotionControl::setPositionsRaw(const int n_joint, const int *joints, 
 
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference
-    return _device.posDir->setPositions(_robotRef_positions.data());
+    return _device.posDir->setPositions(_njoints, _axisMap, _robotRef_positions.data());
 }
 
 bool tripodMotionControl::setPositionsRaw(const double *refs)
@@ -1932,7 +1979,7 @@ bool tripodMotionControl::setPositionsRaw(const double *refs)
 
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference
-    return _device.posDir->setPositions(_robotRef_positions.data());
+    return _device.posDir->setPositions(_njoints, _axisMap, _robotRef_positions.data());
 }
 
 // InteractionMode
@@ -1948,7 +1995,7 @@ bool tripodMotionControl::getInteractionModesRaw(int n_joints, int *joints, yarp
 
 bool tripodMotionControl::getInteractionModesRaw(yarp::dev::InteractionModeEnum* modes)
 {
-    return _device.iInteract->getInteractionModes(modes);
+    return _device.iInteract->getInteractionModes(_njoints, _axisMap, modes);
 }
 
 bool tripodMotionControl::setInteractionModeRaw(int j, yarp::dev::InteractionModeEnum mode)
@@ -1963,7 +2010,7 @@ bool tripodMotionControl::setInteractionModesRaw(int n_joints, int *joints, yarp
 
 bool tripodMotionControl::setInteractionModesRaw(yarp::dev::InteractionModeEnum* modes)
 {
-    return _device.iInteract->setInteractionModes(modes);
+    return _device.iInteract->setInteractionModes(_njoints, _axisMap, modes);
 }
 
 #if 0
