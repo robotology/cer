@@ -27,8 +27,8 @@
 
 
     <group name="CONNECTION">
-      <param name="local">         /iCub/torso_out  </param>
-      <param name="remote">        /iCub/torso      </param>
+      <param name="local">         /cer/torso_out  </param>
+      <param name="remote">        /cer/torso      </param>
       <param name="writeStrict">   off              </param>
     </group>
 

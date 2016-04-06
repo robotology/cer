@@ -6,19 +6,19 @@
 <devices robot="CER01" build="1">
   <device name="cer_head_mc" type="embObjMotionControl">
       <params file="general.xml" />
-      <params file="hardware/electronics/cer_head-ems10-eln.xml" />
-      <params file="hardware/mechanicals/cer_head-ems10-mec.xml" />
+      <params file="hardware/electronics/cer_head-mcp10-eln.xml" />
+      <params file="hardware/mechanicals/cer_head-mcp10-mec.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                25     45            </param>
         <param name="jntPosMin">                -5    -45            </param>
-        <param name="rotorPosMin">              0       0             </param>
-        <param name="rotorPosMax">              0       0             </param>
-        <param name="jntVelMax">                50      50            </param>
-        <param name="motorOverloadCurrents">    8000    8000          </param>
-        <param name="motorNominalCurrents">     8000    8000            </param>
-        <param name="motorPeakCurrents">        8000    8000            </param>
-        <param name="motorPwmLimit">            3000    3000            </param>  
+        <param name="rotorPosMin">              0       0            </param>
+        <param name="rotorPosMax">              0       0            </param>
+        <param name="jntVelMax">                50      50           </param>
+        <param name="motorOverloadCurrents">    8000    8000         </param>
+        <param name="motorNominalCurrents">     8000    8000         </param>
+        <param name="motorPeakCurrents">        8000    8000         </param>
+        <param name="motorPwmLimit">            3000    3000         </param>  
     </group>
 
 	<group name="POSITION_CONTROL">

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+
+<devices robot="CER01" build="1">
+  <device name="cer_right_upper_arm_mc" type="embObjMotionControl">
+      <params file="general.xml" />
+      <params file="hardware/electronics/cer_right_upper_arm-ems17-eln.xml" />
+      <params file="hardware/mechanicals/cer_right_upper_arm-ems17-mec.xml" />
+
+    <group name="LIMITS">
+        <param name="jntPosMax">                      80            90         80        110        </param>
+        <param name="jntPosMin">                     -30            0         -80        0        </param>
+        <param name="rotorPosMin">                    0             0          0         0          </param> 
+        <param name="rotorPosMax">                    0             0          0         0          </param>
+        <param name="motorOverloadCurrents">          5000          5000       5000      5000      </param>
+        <param name="motorNominalCurrents">           2500          2500       2500      2500      </param>
+        <param name="motorPeakCurrents">              5000          5000       5000      5000      </param>
+        <param name="jntVelMax">                      5000          5000       5000      5000      </param>
+        <param name="motorPwmLimit">                  32000         32000      32000     32000      </param>    
+    </group>
+
+	<group name="POSITION_CONTROL">
+	    <param name="controlLaw">       joint_pid_v1           </param> 
+        <param name="controlUnits">     machine_units          </param> 
+        <param name="kp">               5           5          5         5      </param>       
+        <param name="kd">               1           1          1         1      </param>       
+        <param name="ki">               0.5         0.5        0.5       0.5    </param>       
+        <param name="limPwm">           15000       15000      15000     15000  </param>
+        <param name="maxOutput">        32000       32000      32000     32000  </param>                 
+        <param name="maxInt">           0           0          0         0      </param>       
+        <param name="shift">            0           0          0         0      </param>       
+        <param name="ko">               0           0          0         0      </param>       
+        <param name="stictionUp">       0           0          0         0      </param>       
+        <param name="stictionDwn">      0           0          0         0      </param>     
+        <param name="kff">              0           0          0         0      </param>   
+    </group>
+
+    <group name="TORQUE_CONTROL">
+        <param name="controlLaw">       motor_pid_with_friction_v1  </param> 
+        <param name="controlUnits">     machine_units               </param>         
+        <param name="kp">               1          1         1        1       </param>       
+        <param name="kd">               0          0         0        0       </param>       
+        <param name="ki">               0          0         0        0       </param> 
+        <param name="limPwm">           2500       2500      2500     2500    </param>        
+        <param name="maxOutput">        1500       1500      1500     1500    </param>       
+        <param name="maxInt">           0          0         0        0       </param>       
+        <param name="shift">            0          0         0        0       </param>       
+        <param name="ko">               0          0         0        0       </param>       
+        <param name="stictionUp">       0          0         0        0       </param>       
+        <param name="stictionDwn">      0          0         0        0       </param>       
+        <param name="kff">              0          0         0        0       </param>  
+        <param name="kbemf">            0          0         0        0       </param>            
+        <param name="filterType">       0          0         0        0       </param>     
+        <param name="ktau">             0          0         0        0       </param>
+    </group>
+
+    <group name="IMPEDANCE">
+        <param name="stiffness">        0          0         0        0       </param>    
+        <param name="damping">          0          0         0        0       </param>    
+    </group>
+	
+  </device>
+</devices>
