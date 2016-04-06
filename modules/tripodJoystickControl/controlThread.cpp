@@ -17,9 +17,6 @@
 */
 
 #include "controlThread.h"
-#define MIN_ELONG 0.0
-#define MAX_ELONG 0.2
-#define MAX_ALPHA 25.0
 
 void ControlThread::run()
 {
@@ -40,14 +37,10 @@ void ControlThread::run()
         pitch = val1/100.0*25.0 * sin(val0 / 180.0 * 3.14);
         roll  = val1/100.0*25.0 * cos(val0 / 180.0 * 3.14);
         elong = elong + val2 / 200000.0;
-        if (elong > MAX_ELONG) elong = MAX_ELONG;
-        if (elong < MIN_ELONG) elong = MIN_ELONG;
+        if (elong > max_elong) elong = max_elong;
+        if (elong < min_elong) elong = min_elong;
     }
 
-    char buff [255];
-    sprintf(buff, "elong: %+3.3f  pitch:%+3.3f  roll:%+3.3f ", elong, pitch, roll);
-    yDebug() << buff;
-    
     double enc_elong = 0;
     double enc_roll = 0;
     double enc_pitch = 0;
@@ -58,42 +51,42 @@ void ControlThread::run()
 
     //-----------
 
-    if (elong < MIN_ELONG)
+    if (elong < min_elong)
     {
-        elong = MIN_ELONG;
+        elong = min_elong;
         yDebug() << "Out of limits elong" << elong;
     }
-    if (elong > MAX_ELONG)
+    if (elong > max_elong)
     {
-        elong = MAX_ELONG;
+        elong = max_elong;
         yDebug() << "Out of limits elong" << elong;
     }
     if (motors_enabled) iDir->setPosition(0, elong);
     
     //-----------
 
-    if (pitch < -MAX_ALPHA)
+    if (pitch < -max_alpha)
     {
-        pitch = -MAX_ALPHA;
+        pitch = -max_alpha;
         yDebug() << "Out of limits elong" << pitch;
     }
-    if (pitch > MAX_ALPHA)
+    if (pitch > max_alpha)
     {
-        pitch = MAX_ALPHA;
+        pitch = max_alpha;
         yDebug() << "Out of limits elong" << pitch;
     }
     if (motors_enabled) iDir->setPosition(1, pitch);
 
     //-----------
 
-    if (roll < -MAX_ALPHA)
+    if (roll < -max_alpha)
     {
-        roll = -MAX_ALPHA;
+        roll = -max_alpha;
         yDebug() << "Out of limits elong" << roll;
     }
-    if (roll > MAX_ALPHA)
+    if (roll > max_alpha)
     {
-        roll = MAX_ALPHA;
+        roll = max_alpha;
         yDebug() << "Out of limits elong" << roll;
     }
     if (motors_enabled) iDir->setPosition(2, roll);
@@ -102,5 +95,103 @@ void ControlThread::run()
 
 void ControlThread::printStats()
 {
+    char buff[255];
+    sprintf(buff, "elong: %+3.3f  pitch:%+3.3f  roll:%+3.3f ", elong, pitch, roll);
+    yDebug() << buff;
 }
 
+bool ControlThread::threadInit()
+{
+    //open the joystick port
+    port_joystick_control.open("/tripodJoystickCtrl/joystick:i");
+
+    // open the control board driver
+    yInfo("Opening the motors interface...\n");
+    int trials = 0;
+    double start_time = yarp::os::Time::now();
+    Property control_board_options("(device remote_controlboard)");
+    control_board_options.put("remote", remoteName.c_str());
+    control_board_options.put("local", localName.c_str());
+
+    do
+    {
+        double current_time = yarp::os::Time::now();
+
+        //remove previously existing drivers
+        if (control_board_driver)
+        {
+            delete control_board_driver;
+            control_board_driver = 0;
+        }
+
+        //creates the new device driver
+        control_board_driver = new PolyDriver(control_board_options);
+        bool connected = control_board_driver->isValid();
+
+        //check if the driver is connected
+        if (connected) break;
+
+        //check if the timeout (10s) is expired
+        if (current_time - start_time > 10.0)
+        {
+            yError("It is not possible to instantiate the device driver. I tried %d times!", trials);
+            if (control_board_driver)
+            {
+                delete control_board_driver;
+                control_board_driver = 0;
+            }
+            return false;
+        }
+
+        yarp::os::Time::delay(0.5);
+        trials++;
+        yWarning("Unable to connect the device driver, trying again...");
+    } while (true);
+
+    control_board_driver->view(iDir);
+    control_board_driver->view(iEnc);
+    if (iDir == 0 || iEnc == 0)
+    {
+        yError() << "Failed to open interfaces";
+        return false;
+    }
+    return true;
+}
+
+void ControlThread::afterStart(bool s)
+{
+    if (s)
+        yInfo("Control thread started successfully");
+    else
+        yError("Control thread did not start");
+}
+
+ControlThread::ControlThread(unsigned int _period, ResourceFinder &_rf, Property options) :
+RateThread(_period), rf(_rf),
+ctrl_options(options)
+{
+    control_board_driver = 0;
+    thread_timeout_counter = 0;
+    iDir = 0;
+    iEnc = 0;
+    thread_period = _period;
+
+    remoteName = ctrl_options.find("remote").asString();
+    localName = ctrl_options.find("local").asString();
+    motors_enabled = true;
+
+    max_elong = rf.check("max_elong", Value(0.2)).asDouble();
+    min_elong = rf.check("min_elong", Value(0.0)).asDouble();
+    max_alpha = rf.check("max_alpha", Value(25)).asDouble();
+
+    if (rf.check("no_motors"))
+    {
+        yInfo("'no_motors' option found. Skipping motor control part.");
+        motors_enabled = false;
+    }
+}
+
+void ControlThread::threadRelease()
+{
+    yInfo() << "Thread stopped";
+}

@@ -53,7 +53,7 @@ public:
 
     virtual bool configure(ResourceFinder &rf)
     {
-        string slash="/";
+        string slash = "/";
         string ctrlName;
         string robotName;
         string partName;
@@ -63,19 +63,20 @@ public:
         Time::turboBoost();
 
         // get params from the RF
-        ctrlName=rf.check("ctrlName",Value("tripodJoystickControl")).asString();
-        robotName=rf.check("robot",Value("cer")).asString();
+        ctrlName = rf.check("local", Value("tripodJoystickControl")).asString();
+        robotName = rf.check("robot", Value("cer")).asString();
+        partName = rf.check("part", Value("tripod")).asString();
 
-        remoteName=slash+robotName+"/tripod";
-        localName=slash+ctrlName;
-        
+        remoteName = slash + robotName + slash + partName;
+        localName = slash + ctrlName;
+
         //reads the configuration file
         Property ctrl_options;
 
-        ConstString configFile=rf.findFile("from");
-        if (configFile=="") //--from tripodJoystickCtrl.ini
+        ConstString configFile = rf.findFile("from");
+        if (configFile == "") //--from tripodJoystickCtrl.ini
         {
-            yError("Cannot find .ini configuration file. By default I'm searching for tripodJoystickCtrl.ini");
+            yWarning("Cannot find .ini configuration file. By default I'm searching for tripodJoystickCtrl.ini");
             //return false;
         }
         else
@@ -89,88 +90,86 @@ public:
         //check for robotInterface availablity
         yInfo("Checking for robotInterface availability");
         Port startport;
-        startport.open ("/cer/robotInterfaceCheck:rpc");
-        
+        startport.open("/tripodJoystickCtrl/robotInterfaceCheck:rpc");
+
 
         Bottle cmd; cmd.addString("is_ready");
         Bottle response;
-        int rc_count =0;
-        int rp_count =0;
-        int rf_count =0;
-        double start_time=yarp::os::Time::now();
-        bool not_yet_connected=true;
-        do
-        {
-           if (not_yet_connected)
-           {
-              bool rc = yarp::os::Network::connect ("/cer/robotInterfaceCheck:rpc","/cer/robotInterface");
-              if (rc == false)
-              {
-                 yWarning ("Problems trying to connect to RobotInterface %d", rc_count ++);
-                 yarp::os::Time::delay (1.0);
-                 continue;
-              }
-              else 
-              {
-                 not_yet_connected = false;  
-                 yDebug ("Connection established with robotInterface");
-              }
-           }
+        int rc_count = 0;
+        int rp_count = 0;
+        int rf_count = 0;
+        double start_time = yarp::os::Time::now();
+        bool not_yet_connected = true;
 
-           bool rp = startport.write (cmd, response);
-           if (rp == false)
-           {
-              yWarning ("Problems trying to connect to RobotInterface %d", rp_count ++);
-              if (yarp::os::Time::now()-start_time>30)
-              {
-                 yError ("Timeout expired while trying to connect to robotInterface");
-                 return false;
-              }
-              yarp::os::Time::delay (1.0);
-              continue;
-           }
-           else 
-           {
-              if (response.get(0).asString() != "ok")
-              {
-                 yWarning ("RobotInterface is not ready yet, retrying... %d", rf_count++);
-                 if (yarp::os::Time::now()-start_time>30)
-                 {
-                    yError ("Timeout expired while waiting for robotInterface availability");
-                    return false;
-                 }
-                 yarp::os::Time::delay (1.0);
-                 continue;
-              }
-              else
-              {
-                 yInfo ("RobotInterface is ready");
-                 break;
-              }
-           }
+        bool skip_robot_interface_check = rf.check("skip_robot_interface_check");
+        if (skip_robot_interface_check)
+        {
+            yInfo("skipping robotInterface check");
         }
-        while  (1);
+        else
+        {
+            do
+            {
+                if (not_yet_connected)
+                {
+                    bool rc = yarp::os::Network::connect(localName + "/tripodJoystickCtrl/robotInterfaceCheck:rpc", "/" + robotName + "/robotInterface");
+                    if (rc == false)
+                    {
+                        yWarning("Problems trying to connect to RobotInterface %d", rc_count++);
+                        yarp::os::Time::delay(1.0);
+                        continue;
+                    }
+                    else
+                    {
+                        not_yet_connected = false;
+                        yDebug("Connection established with robotInterface");
+                    }
+                }
+
+                bool rp = startport.write(cmd, response);
+                if (rp == false)
+                {
+                    yWarning("Problems trying to connect to RobotInterface %d", rp_count++);
+                    if (yarp::os::Time::now() - start_time > 30)
+                    {
+                        yError("Timeout expired while trying to connect to robotInterface");
+                        return false;
+                    }
+                    yarp::os::Time::delay(1.0);
+                    continue;
+                }
+                else
+                {
+                    if (response.get(0).asString() != "ok")
+                    {
+                        yWarning("RobotInterface is not ready yet, retrying... %d", rf_count++);
+                        if (yarp::os::Time::now() - start_time > 30)
+                        {
+                            yError("Timeout expired while waiting for robotInterface availability");
+                            return false;
+                        }
+                        yarp::os::Time::delay(1.0);
+                        continue;
+                    }
+                    else
+                    {
+                        yInfo("RobotInterface is ready");
+                        break;
+                    }
+                }
+            } while (1);
+        }
 
         //set the thread rate
         int rate = rf.check("rate",Value(20)).asInt();
         yInfo("baseCtrl thread rate: %d ms.",rate);
 
-        // the motor control thread
-        bool motors_enabled=true;
-        if (rf.check("no_motors"))
+        //start the control thread
+        control_thr = new ControlThread(rate, rf, ctrl_options);
+        if (!control_thr->start())
         {
-            yInfo("'no_motors' option found. Skipping motor control part.");
-            motors_enabled=false;
-        }
-
-        if (motors_enabled==true)
-        {
-            control_thr = new ControlThread(rate, rf, ctrl_options);
-            if (!control_thr->start())
-            {
-                delete control_thr;
-                return false;
-            }
+            delete control_thr;
+            return false;
         }
 
         //try to connect to joystickCtrl output
@@ -234,7 +233,7 @@ public:
         return true;
     }
 
-    virtual double getPeriod()    { return 1.0;  }
+    virtual double getPeriod()    { return 0.1;  }
     virtual bool   updateModule()
     { 
         if (control_thr)
@@ -247,7 +246,7 @@ public:
         }
 
         static int life_counter=0;
-        yInfo( "* Life: %d\n", life_counter);
+        yDebug( "* Life: %d\n", life_counter);
         life_counter++;
 
         return true;
@@ -267,9 +266,18 @@ int main(int argc, char *argv[])
     if (rf.check("help"))
     {
         yInfo("Possible options: ");
+        yInfo("'robot <name>' the robot name for remote connection.");
+        yInfo("'local <name>' the local port name.");
         yInfo("'rate <r>' sets the threads rate (default 20ms).");
         yInfo("'no_motors' motor interface will not be opened.");
         yInfo("'joystick_connect' tries to automatically connect to the joystickCtrl output.");
+        yInfo("'skip_robot_interface_check' does not connect to robotInterface/rpc (useful for simulator)");
+        yInfo("'max_elong' <value> max tripod elongation");
+        yInfo("'min_alpha' <value> min tripod elongation");
+        yInfo("'max_alpha' <value> max alpha angle");
+
+        yInfo("''");
+        yInfo("example: tripodJoystickCtrl --robot SIM_CER_ROBOT --part torso --joystick_connect --skip_robot_interface_check ");
         return 0;
     }
 

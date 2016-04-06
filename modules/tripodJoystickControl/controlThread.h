@@ -73,98 +73,21 @@ protected:
     double                    pitch;
     double                    roll;
 
-public:
+    double                    max_elong;
+    double                    min_elong;
+    double                    max_alpha;
 
+public:
     bool                      motors_enabled;
 
-    ControlThread(unsigned int _period, ResourceFinder &_rf, Property options) :
-               RateThread(_period),     rf(_rf),
-               ctrl_options(options)
-    {
-        control_board_driver     = 0;
-        thread_timeout_counter   = 0;
-        iDir                     = 0;
-        iEnc                     = 0;
-        thread_period            = _period;
+    ControlThread(unsigned int _period, ResourceFinder &_rf, Property options);
 
-        remoteName               = ctrl_options.find("remote").asString();
-        localName                = ctrl_options.find("local").asString();
-        motors_enabled           = true;
-    }
-
-    virtual bool threadInit()
-    {
-        //open the joystick port
-        port_joystick_control.open("/tripodJoystickCtrl/joystick:i");
-
-        // open the control board driver
-        yInfo("Opening the motors interface...\n");
-        int trials = 0;
-        double start_time = yarp::os::Time::now();
-        Property control_board_options("(device remote_controlboard)");
-        control_board_options.put("remote", remoteName.c_str());
-        control_board_options.put("local", localName.c_str());
-
-        do
-        {
-            double current_time = yarp::os::Time::now();
-
-            //remove previously existing drivers
-            if (control_board_driver)
-            {
-                delete control_board_driver;
-                control_board_driver = 0;
-            }
-
-            //creates the new device driver
-            control_board_driver = new PolyDriver(control_board_options);
-            bool connected = control_board_driver->isValid();
-
-            //check if the driver is connected
-            if (connected) break;
-
-            //check if the timeout (10s) is expired
-            if (current_time - start_time > 10.0)
-            {
-                yError("It is not possible to instantiate the device driver. I tried %d times!", trials);
-                if (control_board_driver)
-                {
-                    delete control_board_driver;
-                    control_board_driver = 0;
-                }
-                return false;
-            }
-
-            yarp::os::Time::delay(0.5);
-            trials++;
-            yWarning("Unable to connect the device driver, trying again...");
-        } while (true);
-
-        control_board_driver->view(iDir);
-        control_board_driver->view(iEnc);
-        if (iDir == 0 || iEnc == 0)
-        {
-            yError() << "Failed to open interfaces";
-            return false;
-        }
-        return true;
-    }
-
-    virtual void afterStart(bool s)
-    {
-        if (s)
-            yInfo("Control thread started successfully");
-        else
-            yError("Control thread did not start");
-    }
-
+    virtual bool threadInit();
+    virtual void threadRelease();
+    virtual void afterStart(bool s);
     virtual void run();
 
     void printStats();
-
-    virtual void threadRelease()
-    {
-    }
 };
 
 #endif
