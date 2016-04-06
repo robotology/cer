@@ -36,8 +36,8 @@ inline TickTime normalizeSecNSec(double yarpTimeStamp)
         sec_part = 0;
     }
 
-    ret.sec = sec_part;
-    ret.nsec = nsec_part;
+    ret.sec  = (yarp::os::NetUint32) sec_part;
+    ret.nsec = (yarp::os::NetUint32) nsec_part;
     return ret;
 }
 
@@ -149,21 +149,47 @@ bool Odometry::open()
         return false;
     }
 
+    if (ctrl_options.check("ROS_GENERAL"))
+    {
+        yarp::os::Bottle rg_group = ctrl_options.findGroup("ROS_GENERAL");
+        if (rg_group.check("node_name") == false)  { yError() << "Missing node_name parameter"; return false; }
+        rosNodeName = rg_group.find("node_name").asString();
+    }
+    else
+    {
+        yError() << "Missing [ROS_GENERAL] section";
+        return false;
+    }
+
     if (ctrl_options.check("ROS_ODOMETRY"))
     {
-        yarp::os::Bottle r_group = ctrl_options.findGroup("ROS_ODOMETRY");
-        if (r_group.check("odom_frame") == false) { yError() << "Missing odom_frame parameter"; return false; }
-        if (r_group.check("base_frame") == false) { yError() << "Missing base_frame parameter"; return false; }
-        if (r_group.check("node_name") == false)  { yError() << "Missing node_name parameter"; return false; }
-        if (r_group.check("topic_name") == false) { yError() << "Missing topic_name parameter"; return false; }
-        frame_id       = r_group.find("odom_frame").asString();
-        child_frame_id = r_group.find("base_frame").asString();
-        rosNodeName    = r_group.find("node_name").asString();
-        rosTopicName   = r_group.find("topic_name").asString();
+        yarp::os::Bottle ro_group = ctrl_options.findGroup("ROS_ODOMETRY");
+        if (ro_group.check("odom_frame") == false) { yError() << "Missing odom_frame parameter"; return false; }
+        if (ro_group.check("base_frame") == false) { yError() << "Missing base_frame parameter"; return false; }
+        if (ro_group.check("topic_name") == false) { yError() << "Missing topic_name parameter"; return false; }
+        odometry_frame_id  = ro_group.find("odom_frame").asString();
+        child_frame_id = ro_group.find("base_frame").asString();
+        rosTopicName_odometry   = ro_group.find("topic_name").asString();
     }
     else
     {
         yError() << "Missing [ROS_ODOMETRY] section";
+        return false;
+    }
+
+    if (ctrl_options.check("ROS_FOOTPRINT"))
+    {
+        yarp::os::Bottle rf_group = ctrl_options.findGroup("ROS_FOOTPRINT");
+        if (rf_group.check("topic_name") == false)  { yError() << "Missing topic_name parameter"; return false; }
+        if (rf_group.check("footprint_diameter") == false)  { yError() << "Missing footprint_diameter parameter"; return false; }
+        if (rf_group.check("footprint_frame") == false) { yError() << "Missing footprint_frame parameter"; return false; }
+        footprint_frame_id = rf_group.find("footprint_frame").asString();
+        rosTopicName_footprint = rf_group.find("topic_name").asString();
+        footprint_diameter = rf_group.find("footprint_diameter").asDouble();
+    }
+    else
+    {
+        yError() << "Missing [ROS_FOOTPRINT] section";
         return false;
     }
 
@@ -176,10 +202,25 @@ bool Odometry::open()
             return false;
         }
 
-        if (!rosPublisherPort.topic(rosTopicName))
+        if (!rosPublisherPort_odometry.topic(rosTopicName_odometry))
         {
-            yError() << " opening " << rosTopicName << " Topic, check your yarp-ROS network configuration\n";
+            yError() << " opening " << rosTopicName_odometry << " Topic, check your yarp-ROS network configuration\n";
             return false;
+        }
+
+        if (!rosPublisherPort_footprint.topic(rosTopicName_footprint))
+        {
+            yError() << " opening " << rosTopicName_footprint << " Topic, check your yarp-ROS network configuration\n";
+            return false;
+        }
+
+        footprint.polygon.points.resize(12);
+        double r = footprint_diameter;
+        for (int i = 0; i< 12; i++)
+        {
+            double t = M_PI * 2 / 12 * i;
+            footprint.polygon.points[i].x = (yarp::os::NetFloat32) (r*cos(t));
+            footprint.polygon.points[i].y = (yarp::os::NetFloat32) (r*sin(t));
         }
     }
 
@@ -285,10 +326,10 @@ void Odometry::compute()
 
     if (enable_ROS)
     {
-        nav_msgs_Odometry &rosData = rosPublisherPort.prepare();
-        rosData.header.seq = rosMsgCounter++;
+        nav_msgs_Odometry &rosData = rosPublisherPort_odometry.prepare();
+        rosData.header.seq = rosMsgCounter;
         rosData.header.stamp = normalizeSecNSec(yarp::os::Time::now());
-        rosData.header.frame_id = frame_id;
+        rosData.header.frame_id = odometry_frame_id;
         rosData.child_frame_id = child_frame_id;
 
         rosData.pose.pose.position.x = odom_x;
@@ -307,6 +348,18 @@ void Odometry::compute()
         rosData.twist.twist.linear.y = odom_vel_y;
         rosData.twist.twist.angular.z = odom_vel_theta / 180.0*M_PI;
 
-        rosPublisherPort.write();
+        rosPublisherPort_odometry.write();
     }
+
+    if (enable_ROS)
+    {
+        geometry_msgs_PolygonStamped &rosData = rosPublisherPort_footprint.prepare();
+        rosData = footprint;
+        rosData.header.seq = rosMsgCounter;
+        rosData.header.stamp = normalizeSecNSec(yarp::os::Time::now());
+        rosData.header.frame_id = footprint_frame_id;
+        rosPublisherPort_footprint.write();
+    }
+
+    rosMsgCounter++;
 }
