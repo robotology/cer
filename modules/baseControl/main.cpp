@@ -63,10 +63,11 @@ public:
         Time::turboBoost();
 
         // get params from the RF
-        ctrlName=rf.check("ctrlName",Value("cer")).asString();
+        ctrlName=rf.check("local",Value("baseControl")).asString();
         robotName=rf.check("robot",Value("cer")).asString();
+        partName = rf.check("part", Value("mobile_base")).asString();
 
-        remoteName=slash+robotName+"/base";
+        remoteName=slash+robotName+slash+partName;
         localName=slash+ctrlName;
         
         //reads the configuration file
@@ -89,7 +90,7 @@ public:
         //check for robotInterface availablity
         yInfo("Checking for robotInterface availability");
         Port startport;
-        startport.open ("/cer/robotInterfaceCheck:rpc");
+        startport.open ("/baseControl/robotInterfaceCheck:rpc");
         
 
         Bottle cmd; cmd.addString("is_ready");
@@ -99,57 +100,65 @@ public:
         int rf_count =0;
         double start_time=yarp::os::Time::now();
         bool not_yet_connected=true;
-        do
-        {
-           if (not_yet_connected)
-           {
-              bool rc = yarp::os::Network::connect ("/cer/robotInterfaceCheck:rpc","/cer/robotInterface");
-              if (rc == false)
-              {
-                 yWarning ("Problems trying to connect to RobotInterface %d", rc_count ++);
-                 yarp::os::Time::delay (1.0);
-                 continue;
-              }
-              else 
-              {
-                 not_yet_connected = false;  
-                 yDebug ("Connection established with robotInterface");
-              }
-           }
 
-           bool rp = startport.write (cmd, response);
-           if (rp == false)
-           {
-              yWarning ("Problems trying to connect to RobotInterface %d", rp_count ++);
-              if (yarp::os::Time::now()-start_time>30)
-              {
-                 yError ("Timeout expired while trying to connect to robotInterface");
-                 return false;
-              }
-              yarp::os::Time::delay (1.0);
-              continue;
-           }
-           else 
-           {
-              if (response.get(0).asString() != "ok")
-              {
-                 yWarning ("RobotInterface is not ready yet, retrying... %d", rf_count++);
-                 if (yarp::os::Time::now()-start_time>30)
-                 {
-                    yError ("Timeout expired while waiting for robotInterface availability");
-                    return false;
-                 }
-                 yarp::os::Time::delay (1.0);
-                 continue;
-              }
-              else
-              {
-                 yInfo ("RobotInterface is ready");
-                 break;
-              }
-           }
+        bool skip_robot_interface_check = rf.check("skip_robot_interface_check");
+        if (skip_robot_interface_check)
+        {
+            yInfo("skipping robotInterface check");
         }
-        while  (1);
+        else
+        {
+            do
+            {
+               if (not_yet_connected)
+               {
+                  bool rc = yarp::os::Network::connect (localName + "/baseControl/robotInterfaceCheck:rpc","/" + robotName + "/robotInterface");
+                  if (rc == false)
+                  {
+                     yWarning ("Problems trying to connect to RobotInterface %d", rc_count ++);
+                     yarp::os::Time::delay (1.0);
+                     continue;
+                  }
+                  else 
+                  {
+                     not_yet_connected = false;  
+                     yDebug ("Connection established with robotInterface");
+                  }
+               }
+    
+               bool rp = startport.write (cmd, response);
+               if (rp == false)
+               {
+                  yWarning ("Problems trying to connect to RobotInterface %d", rp_count ++);
+                  if (yarp::os::Time::now()-start_time>30)
+                  {
+                     yError ("Timeout expired while trying to connect to robotInterface");
+                     return false;
+                  }
+                  yarp::os::Time::delay (1.0);
+                  continue;
+               }
+               else 
+               {
+                  if (response.get(0).asString() != "ok")
+                  {
+                     yWarning ("RobotInterface is not ready yet, retrying... %d", rf_count++);
+                     if (yarp::os::Time::now()-start_time>30)
+                     {
+                        yError ("Timeout expired while waiting for robotInterface availability");
+                        return false;
+                     }
+                     yarp::os::Time::delay (1.0);
+                     continue;
+                  }
+                  else
+                  {
+                     yInfo ("RobotInterface is ready");
+                     break;
+                  }
+               }
+            } while (1);
+        }
 
         //set the thread rate
         int rate = rf.check("rate",Value(20)).asInt();
@@ -180,9 +189,9 @@ public:
             do
             {
                 yarp::os::Time::delay(1.0);
-                if (yarp::os::Network::connect("/joystickCtrl:o","/cer/joystick:i"))
+                if (yarp::os::Network::connect("/joystickCtrl:o","/baseControl/joystick:i"))
                     {
-                        yInfo("Joystick has been automaticallly connected");
+                        yInfo("Joystick has been automatically connected");
                         break;
                     }
                 else
@@ -382,6 +391,7 @@ int main(int argc, char *argv[])
         yInfo("'no_motors' motor interface will not be opened.");
         yInfo("'no_start' do not automatically enables pwm.");
         yInfo("'joystick_connect' tries to automatically connect to the joystickCtrl output.");
+        yInfo("'skip_robot_interface_check' does not connect to robotInterface/rpc (useful for simulator)");
         return 0;
     }
 
