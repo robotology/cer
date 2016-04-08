@@ -1,0 +1,106 @@
+<application>
+  <name>Oculus CER Gazebo</name>
+  <dependencies></dependencies>
+
+  <module>
+    <name>imageSplitter</name>
+    <parameters>--remote /SIM_CER_ROBOT/cam/cameras:o --nameLeft /SIM_CER_ROBOT/cam/left:o --nameRight /SIM_CER_ROBOT/cam/right:o --carrier shmem</parameters>
+    <node>/iitlapwge0936</node>
+  </module>
+
+  <module>
+    <name>camCalibWithPose</name>
+    <parameters>--context cameraCalibration --from icubSimEyes.ini --group CAMERA_CALIBRATION_LEFT --name /SIM_CER_ROBOT/camCalibWithPose/left</parameters>
+    <node>/iitlapwge0936</node>
+  </module>
+
+  <module>
+    <name>camCalibWithPose</name>
+    <parameters>--context cameraCalibration --from icubSimEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /SIM_CER_ROBOT/camCalibWithPose/right</parameters>
+    <node>/iitlapwge0936</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--device ovrheadset --hfov 88 --w 960 --h 720 --imagepose</parameters>
+    <node>/iiticublap057</node>
+  </module>
+
+  <module>
+    <name>positionDirectControl</name>
+    <parameters>--robot SIM_CER_ROBOT --part head --joints "(0 1)"</parameters>
+    <node>/iitlapwge0936</node>
+  </module>
+
+  <connection>
+    <from>/SIM_CER_ROBOT/cam/left:o</from>
+    <to>/SIM_CER_ROBOT/camCalibWithPose/left/in</to>
+    <protocol>shmem</protocol>
+  </connection>
+
+  <connection>
+    <from>/SIM_CER_ROBOT/cam/right:o</from>
+    <to>/SIM_CER_ROBOT/camCalibWithPose/right/in</to>
+    <protocol>shmem</protocol>
+  </connection>
+
+<!--
+  <connection>
+    <from>/SIM_CER_ROBOT/inertial</from>
+    <to>/SIM_CER_ROBOT/camCalibWithPose/left/imu/in</to>
+    <protocol>shmem</protocol>
+  </connection>
+
+  <connection>
+    <from>/SIM_CER_ROBOT/inertial</from>
+    <to>/SIM_CER_ROBOT/camCalibWithPose/right/imu/in</to>
+    <protocol>shmem</protocol>
+  </connection>
+-->
+
+  <connection>
+    <from>/SIM_CER_ROBOT/head/state:o</from>
+    <to>/SIM_CER_ROBOT/camCalibWithPose/right/head_encs/in</to>
+    <protocol>shmem</protocol>
+  </connection>
+
+  <connection>
+    <from>/SIM_CER_ROBOT/head/state:o</from>
+    <to>/SIM_CER_ROBOT/camCalibWithPose/left/head_encs/in</to>
+    <protocol>shmem</protocol>
+  </connection>
+
+<!--
+  <connection>
+    <from>/SIM_CER_ROBOT/torso/state:o</from>
+    <to>/SIM_CER_ROBOT/camCalibWithPose/right/torso_encs/in</to>
+    <protocol>shmem</protocol>
+  </connection>
+
+  <connection>
+    <from>/SIM_CER_ROBOT/torso/state:o</from>
+    <to>/SIM_CER_ROBOT/camCalibWithPose/left/torso_encs/in</to>
+    <protocol>shmem</protocol>
+  </connection>
+-->
+
+  <connection>
+    <from>/SIM_CER_ROBOT/camCalibWithPose/left/out</from>
+    <to>/oculus/display/left:i</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <from>/SIM_CER_ROBOT/camCalibWithPose/right/out</from>
+    <to>/oculus/display/right:i</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <from>/oculus/headpose/orientation:o</from>
+    <to>/directPositionControl/SIM_CER_ROBOT/head/command:i</to>
+    <protocol>udp</protocol>
+  </connection>
+
+</application>
+
