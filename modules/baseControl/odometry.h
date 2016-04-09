@@ -41,6 +41,8 @@
 #include <yarp/os/Publisher.h>
 #include "include/nav_msgs_Odometry.h"
 #include "include/geometry_msgs_PolygonStamped.h"
+#include "include/geometry_msgs_TransformStamped.h"
+#include "include/tf_tfMessage.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -97,6 +99,8 @@ private:
     geometry_msgs_PolygonStamped                               footprint;
     std::string                                                footprint_frame_id;
 
+    yarp::os::Publisher<tf_tfMessage>                          rosPublisherPort_tf;
+
     yarp::sig::Vector enc;
     yarp::sig::Vector encv;
 
@@ -107,6 +111,8 @@ public:
     double              odom_vel_theta;
 
     //estimated cartesian velocity in the base relative reference frame
+    double              base_vel_x;
+    double              base_vel_y;
     double              base_vel_lin;
     double              base_vel_theta;
 

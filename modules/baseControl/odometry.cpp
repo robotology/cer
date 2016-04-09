@@ -221,6 +221,7 @@ bool Odometry::open()
             double t = M_PI * 2 / 12 * i;
             footprint.polygon.points[i].x = (yarp::os::NetFloat32) (r*cos(t));
             footprint.polygon.points[i].y = (yarp::os::NetFloat32) (r*sin(t));
+            footprint.polygon.points[i].z = 0;
         }
     }
 
@@ -249,6 +250,11 @@ void Odometry::compute()
     el.time=Time::now();
     encv= encvel_estimator->estimate(el);
 
+    //compute the orientation.
+    //odom_theta = geom_r*(enc[0] + enc[1]) / (2 * geom_L);
+    odom_theta = geom_r*(- enc[0] + enc[1]) / ( geom_L);
+    //odom_theta = 0;
+
     //build the kinematics matrix
     yarp::sig::Matrix kin;
     kin.resize(3,2);
@@ -265,8 +271,9 @@ void Odometry::compute()
     odom_cart_vels  = kin*encv;
     base_cart_vels = kin*encv; //@@@
 
-    base_vel_lin   = base_cart_vels[1];
-    double dummy   = base_cart_vels[0];
+    base_vel_x     = base_cart_vels[1];
+    base_vel_y     = base_cart_vels[0];
+    base_vel_lin   = base_vel_x*base_vel_x + base_vel_y*base_vel_y;
     base_vel_theta = base_cart_vels[2];
     
     odom_vel_x      = odom_cart_vels[1];
@@ -346,6 +353,9 @@ void Odometry::compute()
         rosData.pose.pose.orientation = odom_quat;
         rosData.twist.twist.linear.x = odom_vel_x;
         rosData.twist.twist.linear.y = odom_vel_y;
+        rosData.twist.twist.linear.z = 0;
+        rosData.twist.twist.angular.x = 0;
+        rosData.twist.twist.angular.y = 0;
         rosData.twist.twist.angular.z = odom_vel_theta / 180.0*M_PI;
 
         rosPublisherPort_odometry.write();
@@ -359,6 +369,28 @@ void Odometry::compute()
         rosData.header.stamp = normalizeSecNSec(yarp::os::Time::now());
         rosData.header.frame_id = footprint_frame_id;
         rosPublisherPort_footprint.write();
+    }
+
+    if (enable_ROS)
+    {
+        tf_tfMessage &rosData = rosPublisherPort_tf.prepare();
+        geometry_msgs_TransformStamped transform;
+        transform.child_frame_id = child_frame_id;
+        transform.header.frame_id = odometry_frame_id;
+        transform.header.seq = rosMsgCounter;
+        transform.header.stamp = normalizeSecNSec(yarp::os::Time::now());
+        double halfYaw = odom_theta / 180.0*M_PI * 0.5;
+        double cosYaw = cos(halfYaw);
+        double sinYaw = sin(halfYaw);
+        transform.transform.rotation.x = 0;
+        transform.transform.rotation.y = 0;
+        transform.transform.rotation.z = sinYaw;
+        transform.transform.rotation.w = cosYaw;
+        transform.transform.translation.x = odom_x;
+        transform.transform.translation.y = odom_y;
+        transform.transform.translation.z = 0;
+        rosData.transforms.push_back(transform);
+        rosPublisherPort_tf.write();
     }
 
     rosMsgCounter++;
