@@ -15,10 +15,6 @@
 #include <yarp/os/idl/WireTypes.h>
 #include "TickTime.h"
 #include "std_msgs_Header.h"
-#include "geometry_msgs_Point.h"
-#include "geometry_msgs_Quaternion.h"
-#include "geometry_msgs_Pose.h"
-#include "geometry_msgs_PoseWithCovariance.h"
 
 class geometry_msgs_Vector3 : public yarp::os::idl::WirePortable {
 public:

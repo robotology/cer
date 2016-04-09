@@ -20,6 +20,21 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/nav_msgs_Odometry_msg.cmake)
 #                ros_msg_include_dirs)
 include(${CMAKE_CURRENT_SOURCE_DIR}/geometry_msgs_PolygonStamped_msg.cmake)
 
+
+#yarp_idl_to_dir("${CMAKE_CURRENT_SOURCE_DIR}/messages/geometry_msgs/TransformStamped.msg"
+#                "${CMAKE_CURRENT_SOURCE_DIR}"
+#                ros_msg_sources
+#                ros_msg_headers
+#                ros_msg_include_dirs)
+include(${CMAKE_CURRENT_SOURCE_DIR}/geometry_msgs_TransformStamped_msg.cmake)
+
+#yarp_idl_to_dir("${CMAKE_CURRENT_SOURCE_DIR}/messages/tf/tfMessage.msg"
+#                "${CMAKE_CURRENT_SOURCE_DIR}"
+#                ros_msg_sources
+#                ros_msg_headers
+#                ros_msg_include_dirs)
+include(${CMAKE_CURRENT_SOURCE_DIR}/tf_tfMessage_msg.cmake)
+
 set(PROJECTNAME baseControl)
 project(${PROJECTNAME})
 
