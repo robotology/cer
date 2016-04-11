@@ -37,18 +37,6 @@ FaceDisplayServer::~FaceDisplayServer()
     threadRelease();
 }
 
-bool FaceDisplayServer::attachAll(const PolyDriverList &analog2attach)
-{
-    yError() << "FaceDisplayServer: Attach metod is not yet implemented";
-    return false;
-}
-
-bool FaceDisplayServer::detachAll()
-{
-    yError() << "FaceDisplayServer: Detach metod is not yet implemented";
-    return false;
-}
-
 void FaceDisplayServer::setId(const std::string &id)
 {
     sensorId=id;

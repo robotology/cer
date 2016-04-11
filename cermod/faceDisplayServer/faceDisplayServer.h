@@ -92,9 +92,10 @@ typedef struct auxdisp_regs {
  * \endcode
  */
 
+};
+
 class cer::dev::FaceDisplayServer:  public yarp::os::Thread,
-                                    public yarp::dev::DeviceDriver,
-                                    public yarp::dev::IMultipleWrapper
+                                    public yarp::dev::DeviceDriver
 {
 public:
     // Constructor used by yarp factory
@@ -109,14 +110,7 @@ public:
     void setId(const std::string &id);
     std::string getId();
 
-    /**
-      * Specify which analog sensor this thread has to read from.
-      */
-    bool attachAll(const yarp::dev::PolyDriverList &p);
-    bool detachAll();
-
     void onStop();
-
     void run();
 
 private:
