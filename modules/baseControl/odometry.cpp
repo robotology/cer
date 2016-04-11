@@ -214,6 +214,12 @@ bool Odometry::open()
             return false;
         }
 
+        if (!rosPublisherPort_tf.topic("/tf"))
+        {
+            yError() << " opening " << "/tf" << " Topic, check your yarp-ROS network configuration\n";
+            return false;
+        }
+
         footprint.polygon.points.resize(12);
         double r = footprint_diameter;
         for (int i = 0; i< 12; i++)
@@ -389,7 +395,16 @@ void Odometry::compute()
         transform.transform.translation.x = odom_x;
         transform.transform.translation.y = odom_y;
         transform.transform.translation.z = 0;
-        rosData.transforms.push_back(transform);
+        if (rosData.transforms.size() == 0)
+        {
+            rosData.transforms.push_back(transform);
+        }
+        else
+        {
+            rosData.transforms[0] = transform;
+        }
+
+        
         rosPublisherPort_tf.write();
     }
 
