@@ -99,7 +99,7 @@
   <connection>
     <from>/oculus/headpose/orientation:o</from>
     <to>/directPositionControl/SIM_CER_ROBOT/head/command:i</to>
-    <protocol>udp</protocol>
+    <protocol>udp+send.portmonitor+type.dll+file.oculus2cer</protocol>
   </connection>
 
 </application>
