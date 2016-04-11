@@ -149,6 +149,60 @@ void FaceDisplayServer::onStop()
     rpcPort.close();
 }
 
+
+void FaceDisplayServer::measureTiming()
+{
+    static bool initted = false;
+
+    _now = yarp::os::Time::now();
+
+    if(!initted)
+    {
+        _last = _now;
+        _start = _now;
+        counterImages = 0;
+        cycleTime.clear();
+
+        initted = true;
+        return;
+    }
+
+    counterImages++;
+    _elapsedTime = _now - _last;
+    cycleTime.push_back(_elapsedTime);
+    _last = _now;
+
+    // report images x sec
+    if(_now -_start > 1.0f)
+    {
+        double _max=0, _min=cycleTime[0], _mean=0, _sum_deviation=0;
+
+        for(int i=0; i<cycleTime.size(); i++)
+        {
+            _mean += cycleTime[i];
+            if(cycleTime[i] > _max)
+                _max = cycleTime[i];
+
+            if(cycleTime[i] < _min)
+                _min = cycleTime[i];
+        }
+        _mean=_mean/cycleTime.size();
+
+        for(int i=0; i<cycleTime.size(); i++)
+        {
+            _sum_deviation += (cycleTime[i]-_mean)*(cycleTime[i]-_mean);
+        }
+
+        _sum_deviation = sqrt(_sum_deviation / cycleTime.size());
+
+        yInfo() << "Images per secs: " << counterImages;
+        yInfo() << "Time to write an image: Max " << _max << " Min " << _min;
+        yInfo() << "Mean " << _mean << " deviation " << _sum_deviation;
+
+        initted = false;
+    }
+}
+
 void FaceDisplayServer::run()
 {
     yarp::os::Bottle command;
@@ -174,8 +228,6 @@ void FaceDisplayServer::run()
         img[9] = cvLoadImage(yarp::os::ConstString(rootPath + "/CCPP4.bmp").c_str(), 1);
 
 
-        yInfo() << "width is " << img[0]->width << "height" << img[0]->height;
-
         // Convert into BGR
         for(int i=0; i<10; i++)
         {
@@ -188,14 +240,9 @@ void FaceDisplayServer::run()
                 yError() << "img not valid at index " << i;
         }
 
+        imageIdx = 0;
+        measureTiming();
 
-        double  last, elapsedTime, start;
-        int     imageIdx            = 0;
-        int     counterImages       = 0;
-        std::vector<double> cycleTime;
-
-        double  now                 = yarp::os::Time::now();
-        start = now;
         while(!isStopping())
         {
             if(-1 == ::write(fd, img[imageIdx]->imageData, img[imageIdx]->imageSize) )
@@ -205,47 +252,7 @@ void FaceDisplayServer::run()
             if(imageIdx >= 10)
                 imageIdx = 0;
 
-            now = yarp::os::Time::now();
-            elapsedTime = now - last;
-            cycleTime.push_back(elapsedTime);
-
-//             yDebug() << "counterImages: "   << counterImages << " now " << now << "last" << last << "elapsedTime" << elapsedTime
-//                                                              << "start" << start << "diff" << start-now;
-
-            counterImages++;
-            // report images x sec
-            if(now-start > 1.0f)
-            {
-                double max=0, min=cycleTime[0], mean=0, sum_deviation=0;
-
-                for(int i=0; i<cycleTime.size(); i++)
-                {
-                    mean += cycleTime[i];
-                    if(cycleTime[i] > max)
-                        max = cycleTime[i];
-
-                    if(cycleTime[i] < min)
-                        min = cycleTime[i];
-                }
-                mean=mean/cycleTime.size();
-
-                for(int i=0; i<cycleTime.size(); i++)
-                {
-                    sum_deviation += (cycleTime[i]-mean)*(cycleTime[i]-mean);
-                }
-
-                sum_deviation = sqrt(sum_deviation / cycleTime.size());
-
-                yInfo() << "Images per secs: " << counterImages;
-                yInfo() << "Time to write an image: Max " << max << " Min " << min;
-                yInfo() << "Mean " << mean << " deviation " << sum_deviation;
-
-                counterImages = 0;
-                cycleTime.clear();
-                now  = yarp::os::Time::now();
-                start = now;
-            }
-            last = now;
+            measureTiming();
         }
         return;
     }
@@ -290,6 +297,7 @@ void FaceDisplayServer::run()
 
         ::write(fd, black.data, black.total()*3);
 
+        measureTiming();
         while(!isStopping())
         {
             for(int row=0; (row< img.rows) && (!isStopping()); row++)
@@ -303,6 +311,8 @@ void FaceDisplayServer::run()
 
                     if(-1 == ::write(fd, img.data, img.total()*3) )
                         yError() << "Failed setting image to display";
+
+                    measureTiming();
                 }
             }
             toggleColor = !toggleColor;

@@ -167,6 +167,13 @@ private:
     int                     color_choise;
     yarp::os::Semaphore     mutex;
 
+    // for timing measurement
+    double                  _now, _last, _elapsedTime, _start;
+    int                     imageIdx;
+    int                     counterImages;
+    std::vector<double>     cycleTime;
+    void measureTiming();
+
 #endif //DOXYGEN_SHOULD_SKIP_THIS
 };
 
