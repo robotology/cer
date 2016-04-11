@@ -87,8 +87,10 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
     // THIS SET THE DEAD TIME -- magic numbers from Francesco Diotalevi
     gen_reg.offset=CER_TIME;
     gen_reg.rw=WRITE_REGISTER;
-    gen_reg.data=0x440063;
-    ioctl (fd, IOC_GEN_REG, &gen_reg);
+    gen_reg.data=0x220063;
+//     gen_reg.data=0x110063;
+    ioctl(fd, IOC_GEN_REG, &gen_reg);
+
 
     // start the thread
     start();
