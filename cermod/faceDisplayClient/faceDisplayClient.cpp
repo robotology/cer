@@ -45,14 +45,27 @@ bool cer::dev::FaceDisplayClient::open(yarp::os::Searchable &config)
 
     if (!rpcPort.open(local.c_str()))
     {
-        yError("FaceDisplayClient::open() error could not open rpc port %s, check network", local.c_str());
+        yError("FaceDisplayClient: could not open rpc port %s", local.c_str());
         return false;
     }
 
-    bool ok=Network::connect(local.c_str(), remote.c_str());
+    if(! imagePort.open(local+"/image:o") )
+    {
+        yError() <<  "FaceDisplayClient: could not open streaming port" << local + "/image:o";
+        return false;
+    }
+
+    bool ok=Network::connect(local.c_str(), (remote+"/rpc"));
     if (!ok)
     {
-        yError("FaceDisplayClient::open() error could not connect to %s\n", remote.c_str());
+        yError("FaceDisplayClient: could not connect to %s\n", (remote+"/rpc").c_str());
+        return false;
+    }
+
+    ok = Network::connect((local+"/image:o").c_str(), (remote+"/image:i").c_str());
+    if (!ok)
+    {
+        yError("FaceDisplayClient: could not connect to %s\n", (remote+"/image:i").c_str());
         return false;
     }
 
