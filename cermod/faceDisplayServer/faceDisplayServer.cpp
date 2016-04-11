@@ -384,38 +384,58 @@ void FaceDisplayServer::run()
         yTrace() << "Received command " << command.toString();
 
 
-// Right now it supports commands both as a string, to be used with yarp write and as vocabs.
-// The support of strings is probably gonna be dropped in the final version.
+        // Right now it supports commands both as a string, to be used with yarp write and as vocabs.
+        // The support of strings is probably gonna be dropped in the final version.
         if(command.get(0).isString())
         {
-            if(command.get(0).asString() == yarp::os::ConstString("face"))
+            if(command.get(0).asString() == yarp::os::ConstString("set"))
             {
-                command_vocab = VOCAB_FACE;
-                if(command.get(1).isString())
+                action = VOCAB_SET;
+                if(command.get(1).asString() == yarp::os::ConstString("face"))
                 {
-                    if(command.get(1).asString() == yarp::os::ConstString("hap"))
-                        param = VOCAB_FACE_HAPPY;
-                    else
-                    if(command.get(1).asString() == yarp::os::ConstString("sad"))
-                        param = VOCAB_FACE_SAD;
-                    else
-                    if(command.get(1).asString() == yarp::os::ConstString("warn"))
-                        param = VOCAB_FACE_WARNING;
+                    type = VOCAB_FACE;
+                    if(command.get(2).isString())
+                    {
+                        if(command.get(2).asString() == yarp::os::ConstString("hap"))
+                            param = VOCAB_FACE_HAPPY;
+                        else
+                        if(command.get(2).asString() == yarp::os::ConstString("sad"))
+                            param = VOCAB_FACE_SAD;
+                        else
+                        if(command.get(2).asString() == yarp::os::ConstString("warn"))
+                            param = VOCAB_FACE_WARNING;
+                        else
+                        {
+                            yError() << "Received malformed command:" << command.toString();
+                            yError() << "Value following vocab 'FACE' must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
+                                    ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
+                                    continue;
+                        }
+                    }
+                }
+                else
+                {
+                    if(command.get(1).asString() == yarp::os::ConstString("file"))
+                    {
+                        type = VOCAB_FILE;
+                    }
                     else
                     {
                         yError() << "Received malformed command:" << command.toString();
-                        yError() << "Value following vocab 'FACE' must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
-                                ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
-                                continue;
+                        yError() << "First value must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
+                            ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+                            continue;
                     }
                 }
             }
-            else
+            if(command.get(0).asString() == yarp::os::ConstString("get"))
             {
-                if(command.get(0).asString() == yarp::os::ConstString("file"))
-                {
-                    command_vocab = VOCAB_FILE;
-                }
+                action = VOCAB_GET;
+                if(command.get(1).asString() == yarp::os::ConstString("face"))
+                    type = VOCAB_FACE;
+
+                else if(command.get(1).asString() == yarp::os::ConstString("file"))
+                    type = VOCAB_FILE;
                 else
                 {
                     yError() << "Received malformed command:" << command.toString();
@@ -434,91 +454,138 @@ void FaceDisplayServer::run()
                     ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
                 continue;
             }
-            command_vocab = command.get(0).asVocab();
-            param = command.get(1).asVocab();
+
+            action = command.get(0).asVocab();
+            type   = command.get(1).asVocab();
+            param  = command.get(2).asVocab();
         }
 
-        switch(command_vocab)
+        switch(action)
         {
-            case VOCAB_FACE:
+            case VOCAB_SET:
             {
-//                 if(!command.get(1).isVocab())
-//                 {
-//                     yError() << "Received malformed command:" << command.toString();
-//                     yError() << "Value following vocab 'FACE' must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
-//                         ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
-//                         continue;
-//                 }
-                switch(param)
+                switch(type)
                 {
-                    case VOCAB_FACE_HAPPY:
+                    case VOCAB_FACE:
                     {
-                        snprintf(imageFileName, 255, "%s", "/home/linaro/AUXDISP/RobotE_PNG_80x32_16bit_04.bmp");
+                        switch(param)
+                        {
+                            case VOCAB_FACE_HAPPY:
+                            {
+                                snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_04.bmp").c_str());
+                            }
+                            break;
+
+                            case VOCAB_FACE_SAD:
+                            {
+                                snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_02.bmp").c_str());
+                            }
+                            break;
+
+                            case VOCAB_FACE_WARNING:
+                            {
+                                snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_01.bmp").c_str());
+                            }
+                            break;
+
+                            default:
+                            {
+                                yError() << "Received malformed command:" << command.toString();
+                                yError() << "Unsupported face expression. Supported values are (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
+                                    ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
+                                    continue;
+                            }
+                        }
                     }
                     break;
 
-                    case VOCAB_FACE_SAD:
+                    case VOCAB_FILE:
                     {
-                        snprintf(imageFileName, 255, "%s", "/home/linaro/AUXDISP/RobotE_PNG_80x32_16bit_02.bmp");
-                    }
-                    break;
-
-                    case VOCAB_FACE_WARNING:
-                    {
-                        snprintf(imageFileName, 255, "%s", "/home/linaro/AUXDISP/RobotE_PNG_80x32_16bit_01.bmp");
+                        if(!command.get(2).isString())
+                        {
+                            yError() << "Received malformed command:" << command.toString();
+                            yError() << "Value following vocab 'FILE' must be a string containing file name with absolute path)";
+                            continue;
+                        }
+                        snprintf(imageFileName, 255, "%s/%s", rootPath.c_str(), command.get(2).asString().c_str());
                     }
                     break;
 
                     default:
                     {
-                        yError() << "Received malformed command:" << command.toString();
-                        yError() << "Unsupported face expression. Supported values are (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
-                            ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
+                        yError() << "Received malformed SET command:" << command.toString();
+                        yError() << "Unsupported command. Supported commands are (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
+                            ", " << yarp::os::Vocab::decode(VOCAB_IMAGE) << ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+                            continue;
+                    }
+                }
+            }  break;
+            // end VOCAB_SET
+
+            case VOCAB_GET:
+            {
+                switch(type)
+                {
+                    case VOCAB_FACE:
+                    {
+                        yDebug() << "Received command: Get Face";
+                    }
+                    break;
+
+                    case VOCAB_FILE:
+                    {
+                        yDebug() << " Received command: Get File";
+    //                     snprintf(imageFileName, 255, "%s/%s", rootPath.c_str(), command.get(1).asString().c_str());
+                    }
+                    break;
+
+                    case VOCAB_IMAGE:
+                    {
+                    yDebug() << "Received command: Get Image";
+
+                    }
+                    break;
+
+                    default:
+                    {
+                        yError() << "Received malformed GET command:" << command.toString();
+                        yError() << "Unsupported command. Supported commands are (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
+                            ", " << yarp::os::Vocab::decode(VOCAB_IMAGE) << ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
                             continue;
                     }
                 }
             }
-            break;
-
-            case VOCAB_FILE:
-            {
-                if(!command.get(1).isString())
-                {
-                    yError() << "Received malformed command:" << command.toString();
-                    yError() << "Value following vocab 'FILE' must be a string containing file name with absolute path)";
-                    continue;
-                }
-                snprintf(imageFileName, 255, "/home/linaro/AUXDISP/%s", command.get(1).asString().c_str());
-            }
-            break;
+            break;// end VOCAB_GET
 
             default:
             {
                 yError() << "Received malformed command:" << command.toString();
-                yError() << "Unsupported command. Supported commands are (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
-                    ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+                yError() << "Unsupported command. Supported commands are (" << yarp::os::Vocab::decode(VOCAB_SET) <<  \
+                    ", " << yarp::os::Vocab::decode(VOCAB_GET) << ")";
                     continue;
             }
         }
 
-        // load the image
-        img = cvLoadImage(imageFileName, 1);
 
-        if(!img)
+        if(action == VOCAB_SET)
         {
-            yError() << "Cannot load image " << imageFileName;
-            continue;
+            // load the image
+            img = cvLoadImage(imageFileName, 1);
+
+            if(!img)
+            {
+                yError() << "Cannot load image " << imageFileName;
+                continue;
+            }
+
+            // Conver into BGR
+            cvCvtColor(img,img,CV_BGR2RGB);
+
+            mutex.wait();
+            if(-1 == ::write(fd, img->imageData, img->imageSize) )
+                yError() << "Failed setting image to display";
+            mutex.post();
         }
-
-        // Conver into BGR
-        cvCvtColor(img,img,CV_BGR2RGB);
-
-        // Set 24bpp otherwise exit
-        if (img->depth==IPL_DEPTH_8U)
-            ioctl(fd,IOC_SET_BPP,BPP24);
-
-        if(-1 == ::write(fd, img->imageData, img->imageSize) )
-            yError() << "Failed setting image to display";
     }
 }
 

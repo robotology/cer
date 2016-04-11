@@ -86,6 +86,7 @@ bool FaceDisplayClient::setFaceExpression(int faceId)
 {
     yTrace() << "\n\tset face" << yarp::os::Vocab::decode(faceId);
     Bottle cmd;
+    cmd.addVocab(VOCAB_SET);
     cmd.addVocab(VOCAB_FACE);
     cmd.addVocab(faceId);
 
@@ -95,14 +96,17 @@ bool FaceDisplayClient::setFaceExpression(int faceId)
 bool FaceDisplayClient::getFaceExpression(int* faceId)
 {
     yTrace();
-    yError() << "Not Yet Implemented FaceDisplayClient::getFaceExpression";
-    return false;
+    Bottle cmd;
+    cmd.addVocab(VOCAB_GET);
+    cmd.addVocab(VOCAB_FACE);
+
+    return rpcPort.write(cmd);
 }
 
 bool FaceDisplayClient::setImageFile(std::string fileName)
 {
-    yTrace() << "\n\tset image" << fileName;
     Bottle cmd;
+    cmd.addVocab(VOCAB_SET);
     cmd.addVocab(VOCAB_FILE);
     cmd.addString(fileName);
 
@@ -112,20 +116,32 @@ bool FaceDisplayClient::setImageFile(std::string fileName)
 bool FaceDisplayClient::getImageFile(std::string& fileName)
 {
     yTrace();
-    yError() << "Not Yet Implemented FaceDisplayClient::getFaceExpression";
-    return false;
+    Bottle cmd;
+    cmd.addVocab(VOCAB_GET);
+    cmd.addVocab(VOCAB_FACE);
+    return rpcPort.write(cmd);
 }
 
+bool FaceDisplayClient::setImage(yarp::sig::Image img)
+{
+    yTrace();
+    yarp::sig::Image & imgSend =  imagePort.prepare();
+    imgSend = img;
+    imagePort.write();
+    return true;
+}
 
+bool FaceDisplayClient::getImage(yarp::sig::Image* img)
+{
+    Bottle cmd;
+    cmd.addVocab(VOCAB_GET);
+    cmd.addVocab(VOCAB_IMAGE);
 
+    bool ret =rpcPort.write(cmd);
 
+    if(ret)
+        *img = *imagePort.read();
 
-
-
-
-
-
-
-
-
+    return ret;
+}
 
