@@ -108,6 +108,7 @@ public:
     //estimated cartesian velocity in the fixed odometry reference frame (world)
     double              odom_vel_x;
     double              odom_vel_y;
+    double              odom_vel_lin;
     double              odom_vel_theta;
 
     //estimated cartesian velocity in the base relative reference frame
