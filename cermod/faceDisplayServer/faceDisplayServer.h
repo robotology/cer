@@ -12,10 +12,12 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/RateThread.h>
+#include <yarp/os/LogStream.h>
 
-#include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/Wrapper.h>
 #include <yarp/sig/Image.h>
+#include <yarp/dev/Wrapper.h>
+#include <yarp/os/Semaphore.h>
+#include <yarp/dev/PolyDriver.h>
 
 #include <unistd.h>
 #include <stdint.h>
@@ -58,7 +60,9 @@ typedef struct auxdisp_regs {
     uint32_t data;
 } auxdisp_regs_t;
 
-#define DEFAULT_THREAD_PERIOD 20 //ms
+#define IMAGE_WIDTH    80
+#define IMAGE_HEIGHT   32
+#define IMAGE_BPP      24
 
 /**
  *  @ingroup dev_impl_wrapper
@@ -92,6 +96,35 @@ typedef struct auxdisp_regs {
  * \endcode
  */
 
+class ImagePort : public yarp::os::BufferedPort<yarp::sig::FlexImage>
+{
+private:
+    int _fd;
+    yarp::os::Semaphore *mutex;
+    using BufferedPort<yarp::sig::FlexImage>::onRead;
+
+public:
+
+    ImagePort(yarp::os::Semaphore *_mutex) : mutex(_mutex)    { _fd =0; };
+
+    bool init(int fd)   { _fd = fd; }
+
+    virtual void onRead(yarp::sig::FlexImage& img)
+    {
+        // process data in b
+        yDebug() <<  "Got a new image of size: w " << img.width() << " h " << img.height() << " bytesize " <<img.getRawImageSize();
+
+        if( (img.width() != IMAGE_WIDTH) || (img.height() != IMAGE_HEIGHT) || img.getPixelCode() != VOCAB_PIXEL_RGB)
+        mutex->wait();
+        if(_fd)
+        {
+            if(-1 == ::write(_fd, img.getRawImage(), img.getRawImageSize()) )
+                yError() << "Failed setting image to display";
+        }
+        else
+            yError() << "Display not available or initted";
+        mutex->post();
+    }
 };
 
 class cer::dev::FaceDisplayServer:  public yarp::os::Thread,
@@ -116,15 +149,23 @@ public:
 private:
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
     yarp::os::Port          rpcPort;
-    yarp::os::ConstString   rpcPortName;
+    ImagePort               imagePort;      // receive images to be displayed
+
+    yarp::os::ConstString   rootPath;
     yarp::os::ConstString   deviceFileName;
 
     int _rate;
-    yarp::sig::Image        image;
+    yarp::sig::FlexImage    image;
     yarp::os::ConstString   sensorId;
 
     int fd;                 // file descriptor for device file
     auxdisp_regs_t          gen_reg;
+
+    // for self tests only
+    int                     selfTest;
+    int                     steps;
+    int                     color_choise;
+    yarp::os::Semaphore     mutex;
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS
 };

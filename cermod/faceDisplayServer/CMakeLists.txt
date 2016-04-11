@@ -4,7 +4,9 @@
 
 yarp_prepare_device(faceDisplayServer TYPE cer::dev::FaceDisplayServer INCLUDE faceDisplayServer.h)
 
- IF (ENABLE_faceDisplayServer)
+project(FaceDisplayServer)
+
+IF (ENABLE_faceDisplayServer)
 
   find_package(OpenCV REQUIRED)
 
