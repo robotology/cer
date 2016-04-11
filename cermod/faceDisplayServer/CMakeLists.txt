@@ -8,7 +8,13 @@ project(FaceDisplayServer)
 
 IF (ENABLE_faceDisplayServer)
 
-  find_package(OpenCV REQUIRED)
+  ## Use opencv
+  find_package(OpenCV)
+  if(NOT OpenCV_FOUND)
+      message(WARNING "OpenCV was not found therefore FaceDisplayServer cannot be compiled. Please disable it or install OpenCV.")
+      return()
+  endif(NOT OpenCV_FOUND)
+
 
   include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${YARP_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIR})
 
