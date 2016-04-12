@@ -5,53 +5,53 @@
 option(GAZEBO_TRIPOD_PLUGIN "Compile Gazebo Yarp Plugin to control the tripod device" OFF)
 
 if(GAZEBO_TRIPOD_PLUGIN)
-    find_package(Gazebo)
-    if(NOT Gazebo_FOUND)
-        message(WARNING "Gazebo was not found therefore plugins cannot be compiled. Please disable Gazebo plugins.")
-        return()
-    endif(NOT Gazebo_FOUND)
+  find_package(Gazebo)
+  find_package(GazeboYarpPlugins)
 
-    # Add Gazebo CXX flags, to support Gazebo 6 reckless dependency on C++11
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+  if(NOT Gazebo_FOUND)
+    message(SEND_ERROR "Gazebo was not found therefore Gazebo plugins cannot be compiled.")
+    return()
+  endif()
+
+  if(NOT GazeboYarpPlugins_FOUND)
+    message(SEND_ERROR "Gazebo YARP Plugins was not found therefore Gazebo plugins cannot be compiled.")
+    return()
+  endif()
+
+  # Add Gazebo CXX flags, to support Gazebo 6 reckless dependency on C++11
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
 
-    set(gazeboTripod_source     GazeboYarpTripod.cpp
-                                GazeboTripodMotionControl.cpp
-                                GazeboTripod_Implementation.cpp)
+  set(gazeboTripod_source     GazeboYarpTripod.cpp
+                              GazeboTripodMotionControl.cpp
+                              GazeboTripod_Implementation.cpp)
 
-    set(gazeboTripod_headers    GazeboYarpTripod.h
-                                GazeboTripodMotionControl.h )
+  set(gazeboTripod_headers    GazeboYarpTripod.h
+                              GazeboTripodMotionControl.h )
 
-    get_property(cer_kinematics_INCLUDE_DIRS
-                 TARGET cer_kinematics
-                 PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
+  get_property(cer_kinematics_INCLUDE_DIRS
+               TARGET cer_kinematics
+               PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
 
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-                        ${YARP_INCLUDE_DIRS}
-                        ${Boost_INCLUDE_DIRS}
-                        ${GAZEBO_INCLUDE_DIRS}
-                        ${cer_kinematics_INCLUDE_DIRS}
-                        ${CMAKE_CURRENT_SOURCE_DIR}/../cermod/tripod)
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+                      ${YARP_INCLUDE_DIRS}
+                      ${Boost_INCLUDE_DIRS}
+                      ${GAZEBO_INCLUDE_DIRS}
+                      ${GazeboYarpPlugins_INCLUDE_DIRS}
+                      ${cer_kinematics_INCLUDE_DIRS}
+                      ${CMAKE_CURRENT_SOURCE_DIR}/../cermod/tripod)
 
-   set(GAZEBO_ROOT $ENV{GAZEBO_PLUGIN_ROOT})
-   set(GAZEBO_PL_LIB_DIRS $ENV{GAZEBO_PLUGIN_PATH})
+  link_directories(${GAZEBO_LIBRARY_DIRS})
+  add_library(gazeboTripod ${gazeboTripod_source} ${gazeboTripod_headers})
 
-   if(GAZEBO_ROOT)
-    # gazeboYarpPlugin repo should export the following info and have well-done config.cmake file
-    include_directories($ENV{GAZEBO_PLUGIN_ROOT}/libraries/common/include/
-                        $ENV{GAZEBO_PLUGIN_ROOT}/libraries/singleton/include/)
+  target_link_libraries(gazeboTripod GazeboYarpPlugins::singleton
+                                     cer_kinematics
+                                     ${YARP_LIBRARIES}
+                                     ${GAZEBO_LIBRARIES}
+                                     ${Boost_LIBRARIES})
 
-    link_directories(/usr/local/src/robot/gazebo-yarp-plugins/build/bin/lib)
-    link_directories(${GAZEBO_LIBRARY_DIRS})
-
-    add_library(gazeboTripod ${gazeboTripod_source} ${gazeboTripod_headers})
-    target_link_libraries(gazeboTripod gazebo_yarp_singleton cer_kinematics ${YARP_LIBRARIES} ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
-
-    yarp_install(TARGETS gazeboTripod
-                 COMPONENT Runtime
-                 LIBRARY DESTINATION  ${CMAKE_INSTALL_LIBDIR}
-                 ARCHIVE DESTINATION  ${CMAKE_INSTALL_LIBDIR})
-   else()
-   message("\nError: environment variable 'GAZEBO_PLUGIN_ROOT' not found, please set it to point to source root of Gazebo Yarp Plugins.\n")
-   endif()
+  yarp_install(TARGETS gazeboTripod
+               COMPONENT Runtime
+               LIBRARY DESTINATION  ${CMAKE_INSTALL_LIBDIR}
+               ARCHIVE DESTINATION  ${CMAKE_INSTALL_LIBDIR})
 endif()

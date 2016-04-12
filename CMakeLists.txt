@@ -8,6 +8,8 @@
 cmake_minimum_required(VERSION 2.8.9)
 project(cer)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
 find_package(YARP 2.3.64.4 REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 
