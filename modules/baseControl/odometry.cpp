@@ -91,16 +91,19 @@ Odometry::Odometry(unsigned int _period, ResourceFinder &_rf, Property options, 
 
     odom_vel_x=0;
     odom_vel_y=0;
-    odom_vel_theta = 0;
-
-    base_vel_lin=0;
-    base_vel_theta=0;
+    odom_vel_lin=0;
+    odom_vel_theta=0;
+    base_vel_x = 0;
+    base_vel_y = 0;
+    base_vel_lin = 0;
+    base_vel_theta = 0;
 
     traveled_distance=0;
     traveled_angle=0;
     geom_r = 320.0 / 2 / 1000.0;     //m  320 diametro
     geom_L = 338 /1000.0;            //m  338 distanza centro ruota
     encvel_estimator =new iCub::ctrl::AWLinEstimator(2,1.0);
+    encw_estimator = new iCub::ctrl::AWLinEstimator(1, 1.0);
     enc.resize(2);
     encv.resize(2);
     localName = ctrl_options.find("local").asString();
@@ -259,6 +262,13 @@ void Odometry::compute()
     //compute the orientation.
     odom_theta = -(geom_r / geom_L) * (-enc[0] + enc[1]);
 
+    iCub::ctrl::AWPolyElement el2;
+    el2.data = yarp::sig::Vector(1,odom_theta);
+    el2.time = Time::now();
+    yarp::sig::Vector vvv;
+    vvv.resize(1, 0.0);
+    vvv = encw_estimator->estimate(el2);
+
     //build the kinematics matrix
     /*yarp::sig::Matrix kin;
     kin.resize(3,2);
@@ -289,12 +299,13 @@ void Odometry::compute()
     base_vel_x = 0;
     base_vel_y = geom_r / 2 * encv[0] + geom_r / 2 * encv[1]; 
     base_vel_lin = sqrt(base_vel_x*base_vel_x + base_vel_y*base_vel_y);
-    base_vel_theta = -(geom_r / geom_L) * encv[0] + (geom_r / geom_L) * encv[1];
+    base_vel_theta = vvv[0];///-(geom_r / geom_L) * encv[0] + (geom_r / geom_L) * encv[1];
+    //yDebug() << base_vel_theta << vvv[0];
 
-    odom_vel_lin = geom_r * (encv[0] + encv[1]) / 2 ;
+    odom_vel_lin = base_vel_lin;
     odom_vel_x = -odom_vel_lin * cos(odom_theta);
     odom_vel_y = -odom_vel_lin * sin(odom_theta);
-    odom_vel_theta = geom_r * (encv[0] + encv[1]) / geom_L;
+    odom_vel_theta = base_vel_theta;
 
     //the integration step
     odom_x=odom_x + (odom_vel_x * period/1000.0);

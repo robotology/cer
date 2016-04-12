@@ -75,6 +75,7 @@ private:
     double              velL_est;
     double              velR_est;
     iCub::ctrl::AWLinEstimator      *encvel_estimator;
+    iCub::ctrl::AWLinEstimator      *encw_estimator;
 
     //robot geometry
     double              geom_r;
