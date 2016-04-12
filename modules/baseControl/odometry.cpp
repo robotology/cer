@@ -298,7 +298,7 @@ void Odometry::compute()
 
     base_vel_x = 0;
     base_vel_y = geom_r / 2 * encv[0] + geom_r / 2 * encv[1]; 
-    base_vel_lin = sqrt(base_vel_x*base_vel_x + base_vel_y*base_vel_y);
+    base_vel_lin = base_vel_y;
     base_vel_theta = vvv[0];///-(geom_r / geom_L) * encv[0] + (geom_r / geom_L) * encv[1];
     //yDebug() << base_vel_theta << vvv[0];
 
