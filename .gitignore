@@ -31,5 +31,11 @@
 # Debug files
 *.dSYM/
 
-#build folder
+# Build folders
 build*/
+
+# Editor files
+*kdev4*
+
+# Backup files
+*~
