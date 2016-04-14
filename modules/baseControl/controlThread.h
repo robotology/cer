@@ -45,9 +45,6 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-#define MAX_LINEAR_VEL  0.4  // maximum linear  velocity (m/s)
-#define MAX_ANGULAR_VEL 24.0 // maximum angular velocity (deg/s)
-
 enum
 {
     BASE_CONTROL_NONE = 0,
@@ -89,6 +86,7 @@ private:
     bool                both_lin_ang_enabled;
     int                 input_filter_enabled;
     bool                debug_enabled;
+    double              max_motor_pwm;
 
 protected:
     ResourceFinder            &rf;
@@ -134,137 +132,12 @@ public:
         angular_speed_pid        = 0;
         linear_ol_pid            = 0;
         angular_ol_pid           = 0;
+        max_motor_pwm            = 0;
         remoteName               = ctrl_options.find("remote").asString();
         localName                = ctrl_options.find("local").asString();
     }
 
-    virtual bool threadInit()
-    {
-        string control_type = ctrl_options.findGroup("GENERAL").check("control_mode", Value("none"), "type of control for the wheels").asString().c_str();
-
-        // open the control board driver
-        yInfo("Opening the motors interface...\n");
-        int trials=0;
-        double start_time = yarp::os::Time::now();
-        Property control_board_options("(device remote_controlboard)");
-        control_board_options.put("remote",remoteName.c_str());
-        control_board_options.put("local",localName.c_str());
-
-        do
-        {
-            double current_time = yarp::os::Time::now();
-
-            //remove previously existing drivers
-            if (control_board_driver)
-            {
-                delete control_board_driver;
-                control_board_driver=0;
-            }
-
-            //creates the new device driver
-            control_board_driver=new PolyDriver(control_board_options);
-            bool connected =control_board_driver->isValid();
-
-            //check if the driver is connected
-            if (connected) break;
-        
-            //check if the timeout (10s) is expired
-            if (current_time-start_time > 10.0)
-            {
-                yError("It is not possible to instantiate the device driver. I tried %d times!", trials);
-                if (control_board_driver)
-                {
-                    delete control_board_driver;
-                    control_board_driver=0;
-                }
-                return false;
-            }
-
-            yarp::os::Time::delay(0.5);
-            trials++;
-            yWarning("Unable to connect the device driver, trying again...");
-        }
-        while (true);
-
-        //create the odometry and the motor handlers
-        odometry_handler = new Odometry((int)(thread_period), rf, ctrl_options, control_board_driver);
-        motor_handler = new MotorControl((int)(thread_period), rf, ctrl_options, control_board_driver);
-        odometry_handler->open();
-        motor_handler->open();
-
-        yInfo("%s", ctrl_options.toString().c_str());
-        //create the pid controllers
-        if (!ctrl_options.check("HEADING_VELOCITY_PID"))
-        {
-            yError("Error reading from .ini file, section PID");
-            return false;
-        }
-        if (!ctrl_options.check("LINEAR_VELOCITY_PID"))
-        {
-            yError("Error reading from .ini file, section PID");
-            return false;
-        }
-        if (!ctrl_options.check("ANGULAR_VELOCITY_PID"))
-        {
-            yError("Error reading from .ini file, section PID");
-            return false;
-        }
-        yarp::sig::Vector kp[3],ki[3],kd[3];
-        yarp::sig::Vector wp[3],wi[3],wd[3];
-        yarp::sig::Vector N[3];
-        yarp::sig::Vector Tt[3];
-        yarp::sig::Matrix sat[3];
-        for (int i=0; i<3; i++)
-        {
-            kp[i].resize(1); ki[i].resize(1); kd[i].resize(1);
-            kp[i]=ki[i]=kd[i]=0.0;
-            wp[i].resize(1); wi[i].resize(1); wd[i].resize(1);
-            wp[i]=wi[i]=wd[i]=1.0;
-            N[i].resize(1); Tt[i].resize(1); sat[i].resize(1,2);
-            N[i]=10;
-            Tt[i]=1;
-        }
-
-        kp[0] = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("kp", Value(0), "kp gain").asDouble();
-        kd[0] = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("kd", Value(0), "kd gain").asDouble();
-        ki[0] = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("ki", Value(0), "ki gain").asDouble();
-        sat[0](0, 0) = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("min", Value(0), "min").asDouble();
-        sat[0](0, 1) = ctrl_options.findGroup("LINEAR_VELOCITY_PID").check("max", Value(0), "max").asDouble();
-
-        kp[1] = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("kp", Value(0), "kp gain").asDouble();
-        kd[1] = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("kd", Value(0), "kd gain").asDouble();
-        ki[1] = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("ki", Value(0), "ki gain").asDouble();
-        sat[1](0, 0) = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("min", Value(0), "min").asDouble();
-        sat[1](0, 1) = ctrl_options.findGroup("ANGULAR_VELOCITY_PID").check("max", Value(0), "max").asDouble();
-
-        linear_speed_pid    = new iCub::ctrl::parallelPID(thread_period/1000.0,kp[0],ki[0],kd[0],wp[0],wi[0],wd[0],N[0],Tt[0],sat[0]);
-        angular_speed_pid   = new iCub::ctrl::parallelPID(thread_period/1000.0,kp[1],ki[1],kd[1],wp[1],wi[1],wd[1],N[1],Tt[1],sat[1]);
-
-        linear_ol_pid    = new iCub::ctrl::parallelPID(thread_period/1000.0,kp[0],ki[0],kd[0],wp[0],wi[0],wd[0],N[0],Tt[0],sat[0]);
-        angular_ol_pid   = new iCub::ctrl::parallelPID(thread_period/1000.0,kp[1],ki[1],kd[1],wp[1],wi[1],wd[1],N[1],Tt[1],sat[1]);
-
-        //debug ports
-        if (debug_enabled)
-        {
-            port_debug_linear.open((localName+"/debug/linear:o").c_str());
-            port_debug_angular.open((localName+"/debug/angular:o").c_str());
-        }
-
-        //start the motors
-        if (rf.check("no_start"))
-        {
-            yInfo("no_start option found");
-            return true;
-        }
-
-	yInfo() << control_type.c_str();
-        if      (control_type==string("velocity_pid"))    {this->set_control_type("velocity_pid");    yInfo("setting control mode velocity");  this->get_motor_handler()->set_control_velocity(); return true;}
-        else if (control_type==string("velocity_no_pid")) {this->set_control_type("velocity_no_pid"); yInfo("setting control mode velocity");  this->get_motor_handler()->set_control_velocity(); return true;}
-        else if (control_type==string("openloop_pid"))    {this->set_control_type("openloop_pid");    yInfo("setting control mode openloop");  this->get_motor_handler()->set_control_openloop(); return true;}
-        else if (control_type==string("openloop_no_pid")) {this->set_control_type("openloop_no_pid"); yInfo("setting control mode openloop");  this->get_motor_handler()->set_control_openloop(); return true;}
-        else if (control_type==string("none"))            {this->set_control_type("none");            yInfo("setting control mode none");  return true;}
-	else                                              {yError ("Invalid control_mode");  return false;}
-    }
+    virtual bool threadInit();
 
     virtual void afterStart(bool s)
     {

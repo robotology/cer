@@ -187,6 +187,17 @@ MotorControl::MotorControl(unsigned int _period, ResourceFinder &_rf, Property o
     max_angular_vel = DEFAULT_MAX_ANGULAR_VEL;
     motors_filter_enabled = ctrl_options.findGroup("GENERAL").check("motors_filter_enabled",Value(4),"motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
     
+    if (!ctrl_options.check("max_linear_vel"))
+    {
+        yError("Error reading from .ini file, missing, max_linear_vel parameter, section GENERAL");
+        return;
+    }
+    if (!ctrl_options.check("max_angular_vel"))
+    {
+        yError("Error reading from .ini file, missing, max_angular_vel parameter, section GENERAL");
+        return;
+    }
+
     double tmp =0;
     tmp = (ctrl_options.findGroup("GENERAL").check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
     if (tmp>0 && tmp < DEFAULT_MAX_ANGULAR_VEL) max_angular_vel = tmp;
