@@ -24,7 +24,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
 include_directories(${FaceDisplayServer_SOURCE_DIR})
 
 # add the source codes to build the plugin library
-add_library(${TESTNAME} MODULE displayTest.h  displayTest.cpp)
+add_library(${TESTNAME} MODULE displayTest.h displayTest.cpp)
 
 # add required libraries
 target_link_libraries(${TESTNAME} ${RTF_LIBRARIES} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES})

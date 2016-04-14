@@ -21,7 +21,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${YARP_HELPERS_INCLUDE_DIR})
 
 # add the source codes to build the plugin library
-add_library(${TESTNAME} MODULE tripodTest.h  tripodTest.cpp)
+add_library(${TESTNAME} MODULE tripodTest.h tripodTest.cpp)
 
 # add required libraries
 target_link_libraries(${TESTNAME} ${RTF_LIBRARIES} ${YARP_LIBRARIES})
