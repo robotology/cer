@@ -8,12 +8,12 @@
 #define CER_DEV_FACEDISPLAYCLIENT_H
 
 
+#include <yarp/sig/Image.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/dev/PolyDriver.h>
 
 #include <IFaceDisplayInterface.h>
-
 
 namespace cer {
     namespace dev {
@@ -53,6 +53,7 @@ class cer::dev::FaceDisplayClient:  public yarp::dev::DeviceDriver,
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 protected:
     yarp::os::Port rpcPort;
+    yarp::os::BufferedPort<yarp::sig::FlexImage>  imagePort;
     yarp::os::ConstString local;
     yarp::os::ConstString remote;
     std::string deviceId;
@@ -75,6 +76,9 @@ public:
 
     bool setImageFile(std::string fileName);
     bool getImageFile(std::string &fileName);
+
+    virtual bool setImage(yarp::sig::Image  img);
+    virtual bool getImage(yarp::sig::Image *img);
 };
 
 #endif // CER_DEV_FACEDISPLAYCLIENT_H

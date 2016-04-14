@@ -39,4 +39,5 @@ set(CMAKE_SHARED_MODULE_PREFIX "")
 
 # Build camera tests
 # add_subdirectory(src/tripod)
+add_subdirectory(src/displayTest)
 
