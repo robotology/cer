@@ -6,6 +6,8 @@
 
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
+#include <yarp/sig/ImageFile.h>
+
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <opencv/cv.h>
@@ -382,6 +384,82 @@ void FaceDisplayServer::run()
         }
     }
 
+
+    if(selfTest == 4)
+    {
+        yInfo() << "Running selfTest 4";
+
+        // load the image
+        IplImage* img;
+        img = cvLoadImage("/home/linaro/AUXDISP/All_ins/All_greens-dx2sx-central.bmp", 1);
+
+        if(!img)
+        {
+            yError() << "Cannot load image " << "/home/linaro/AUXDISP/All_ins/All_greens-dx2sx-central.bmp";
+            return;
+        }
+
+        // Conver into BGR
+        cvCvtColor(img,img,CV_BGR2RGB);
+
+        int imageSize = IMAGE_WIDTH*IMAGE_HEIGHT*3;
+        int rowSize = IMAGE_WIDTH*3;
+        //  there is a dummy line between each image for easier understanding
+        while(!isStopping())
+        {
+            for(int offset=0; offset<img->imageSize && !isStopping(); offset+= (imageSize+rowSize))
+            {
+                mutex.wait();
+                if(-1 == ::write(fd, img->imageData+offset, imageSize) )
+                    yError() << "Failed setting image to display";
+                mutex.post();
+                yarp::os::Time::delay(1.0);
+            }
+        }
+    }
+
+    if(selfTest == 5)
+    {
+        yInfo() << "Running selfTest 5";
+
+        // load the image
+        IplImage* img;
+        img = cvLoadImage("/home/linaro/AUXDISP/All_ins/All_greens-up2down-central.bmp", 1);
+
+        if(!img)
+        {
+            yError() << "Cannot load image " << "/home/linaro/AUXDISP/All_ins/All_greens-up2down-central.bmp";
+            return;
+        }
+
+        // Conver into BGR
+        cvCvtColor(img,img,CV_BGR2RGB);
+
+        int imageSize = IMAGE_WIDTH*IMAGE_HEIGHT*3;
+        int rowSize = IMAGE_WIDTH*3;
+        //  there is a dummy line between each image for easier understanding
+        while(!isStopping())
+        {
+            int centralOffset = 7*imageSize +7*rowSize;
+            for(int offset=centralOffset; (offset<img->imageSize) && (!isStopping()); offset+= (imageSize+rowSize))
+            {
+                mutex.wait();
+                if(-1 == ::write(fd, img->imageData+offset, imageSize) )
+                    yError() << "Failed setting image to display";
+                mutex.post();
+                yarp::os::Time::delay(1.0);
+            }
+
+            for(int offset=centralOffset; (offset>0) && (!isStopping()); offset-= (imageSize+rowSize))
+            {
+                mutex.wait();
+                if(-1 == ::write(fd, img->imageData+offset, imageSize) )
+                    yError() << "Failed setting image to display";
+                mutex.post();
+                yarp::os::Time::delay(1.0);
+            }
+        }
+    }
 
     // normal workflow
     while(!isStopping())
