@@ -324,7 +324,6 @@ void FaceDisplayServer::run()
     }
 
 
-
     if(selfTest == 3)
     {
         bool toggleImage = false;
@@ -418,6 +417,7 @@ void FaceDisplayServer::run()
         }
     }
 
+
     if(selfTest == 5)
     {
         yInfo() << "Running selfTest 5";
@@ -460,6 +460,138 @@ void FaceDisplayServer::run()
             }
         }
     }
+
+
+    if(selfTest == 6)
+    {
+        bool ok = true;
+
+        // Create an empty black image
+        cv::Mat face(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3, cv::Scalar(0,0,0));
+
+        // Load all required pieces of image
+        cv::Mat imgHappyEye  = cv::imread(yarp::os::ConstString(rootPath + "/runtime/happyEye.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+        cv::Mat imgHappyBars = cv::imread(yarp::os::ConstString(rootPath + "/runtime/happyBars.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+        cv::Mat imgSadEye    = cv::imread(yarp::os::ConstString(rootPath + "/runtime/sadEye.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+        cv::Mat imgSadBars   = cv::imread(yarp::os::ConstString(rootPath + "/runtime/sadBars.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+        cv::Mat imgHappyEye_orig  = cv::imread(yarp::os::ConstString(rootPath + "/Robot_espressioni-01.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+
+        if(imgHappyEye.empty() )
+        {
+            yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/happyEye.bmp") << "image";
+            ok = false;
+        }
+
+        if(imgHappyBars.empty() )
+        {
+            yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/happyBars.bmp") << "image";
+            ok = false;
+        }
+
+        if(imgSadEye.empty() )
+        {
+            yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/sadEye.bmp") << "image";
+            ok = false;
+        }
+
+        if(imgSadBars.empty() )
+        {
+            yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/sadBars.bmp") << "image";
+            ok = false;
+        }
+
+        if(!ok)
+        {
+            yError() << "FaceDisplayServer: Failed loading required set of images for the eyes.";
+            return;
+        }
+
+        yInfo() << "imgFace      cols " << face.cols << " rows " << face.rows << " channels " << face.channels();
+        yInfo() << "imgHappyEye  cols " << imgHappyEye.cols << " rows " << imgHappyEye.rows << " channels " << imgHappyEye.channels() << " tot " << imgHappyEye.total() << " elemSize " << imgHappyEye.elemSize();
+        yInfo() << "imgHappyBars cols " << imgHappyBars.cols << " rows " << imgHappyBars.rows << " channels " << imgHappyBars.channels() << " tot " << imgHappyBars.total() << " elemSize " << imgHappyBars.elemSize();
+        yInfo() << "imgHappyEye  cols " << imgHappyEye_orig.cols << " rows " << imgHappyEye_orig.rows << " channels " << imgHappyEye_orig.channels() << " tot " << imgHappyEye_orig.total() << " elemSize " << face.elemSize();
+
+        cv::imwrite(yarp::os::ConstString(rootPath + "/runtime/runtime-HappyBars.bmp").c_str(), imgHappyBars);
+
+
+        size_t eyeSize      = imgHappyEye.total()  * imgHappyEye.elemSize();
+        size_t eyeLineSize  = imgHappyBars.cols    * imgHappyBars.elemSize();
+        size_t barsSize     = imgHappyBars.total() * imgHappyBars.elemSize();
+
+        size_t faceLineSize = face.cols            * face.elemSize();
+        size_t faceSize     = face.total()         * face.elemSize();
+
+        yInfo() << "EyeSize  is " << eyeSize;
+        yInfo() << "BarsSize is " << barsSize;
+        yInfo() << "faceSize is " << faceSize;
+
+        float bar_offset_y, le_offset_x, le_offset_y, re_offset_x, re_offset_y;
+        // Following values never change
+        const int bar_offset_x  = 2;
+        const float eyeWidth    = 21;
+        const float eyeHeight   = 14;
+
+        // limits WRT rest position
+        const int min_offset_x = -3;
+        const int max_offset_x = +3;
+        const int min_offset_y = -7;
+        const int max_offset_y = +7;
+
+        //
+        // Generating base image
+        //
+
+        // offset for rest position:
+        le_offset_x  = 9;
+        le_offset_y  = 9;
+        re_offset_x  = 50;
+        re_offset_y  = 9;
+        bar_offset_y = 11;
+
+        // Copy bars
+        imgHappyBars.copyTo(face(cv::Rect(bar_offset_x, bar_offset_y, imgHappyBars.cols, imgHappyBars.rows)));
+
+        // add eyes
+        imgHappyEye.copyTo(face(cv::Rect(le_offset_x, le_offset_y, imgHappyEye.cols, imgHappyEye.rows)));
+        imgHappyEye.copyTo(face(cv::Rect(re_offset_x, re_offset_y, imgHappyEye.cols, imgHappyEye.rows)));
+
+        cv::imwrite(yarp::os::ConstString(rootPath + "/runtime/runtime-HappyEye.bmp").c_str(), face);
+        mutex.wait();
+        if(-1 == ::write(fd, face.data, faceSize) )
+            yError() << "Failed setting image to display";
+        mutex.post();
+
+
+        while(!isStopping())
+        {
+            // moving eyes around
+            for(int y=min_offset_y; y<max_offset_y && !isStopping(); y++)
+            {
+                for(int x=min_offset_x; x<max_offset_x && !isStopping(); x++)
+                {
+                    face = cv::Scalar(0,0,0);
+
+                    face.zeros(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3);
+                    // Copy bars
+                    imgHappyBars.copyTo(face(cv::Rect(bar_offset_x, bar_offset_y+(y/2), imgHappyBars.cols, imgHappyBars.rows)));
+
+                    // add eyes
+                    imgHappyEye.copyTo(face(cv::Rect(le_offset_x+x, le_offset_y+y, imgHappyEye.cols, imgHappyEye.rows)));
+                    imgHappyEye.copyTo(face(cv::Rect(re_offset_x+x, re_offset_y+y, imgHappyEye.cols, imgHappyEye.rows)));
+
+                    cv::imwrite(yarp::os::ConstString(rootPath + "/runtime/runtime-HappyEye_"+yarp::os::Value(x).toString()+"_"+yarp::os::Value(y).toString()+".bmp").c_str(), face);
+                    mutex.wait();
+                    if(-1 == ::write(fd, face.data, faceSize) )
+                        yError() << "Failed setting image to display";
+                    mutex.post();
+
+                    yarp::os::Time::delay(0.2);
+                }
+            }
+        }
+        return;
+    }
+
 
     // normal workflow
     while(!isStopping())
