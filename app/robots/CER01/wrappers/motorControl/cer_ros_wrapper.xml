@@ -16,7 +16,7 @@
       </paramlist>
 
       <group name ="ROS">
-        <param name="useROS"> ros_only </param>
+        <param name="useROS"> only </param>
         <param name="ROS_topicName">  /joint_states </param>
         <param name="ROS_nodeName">   /cer </param>
       </group>
