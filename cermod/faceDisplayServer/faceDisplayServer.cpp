@@ -21,6 +21,7 @@
 #include <faceDisplayServer.h>
 #include <IFaceDisplayInterface.h>
 
+
 using namespace yarp::dev;
 using namespace cer::dev;
 using namespace yarp::os;
@@ -34,10 +35,24 @@ using namespace std;
 // Constructor used when there is only one output port
 FaceDisplayServer::FaceDisplayServer(): sensorId("low-res display"),
                                         selfTest(0),
-                                        imagePort(&mutex)
+                                        imagePort(&mutex),
+                                        face(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
+                                        faceExpression(FACE_EXPR),
+                                        moveUp(0),
+                                        moveRight(0),
+                                        currentEye(&imgHappyEye),
+                                        currentBars(&imgHappyBars),
+                                        bar_offset_x(2),
+                                        eyeWidth    (21),
+                                        eyeHeight   ( 14),
+                                        min_offset_x (-3),
+                                        max_offset_x (+3),
+                                        min_offset_y (-7),
+                                        max_offset_y (+7),
+                                        color_choise (0)
+
 {
     yTrace();
-    color_choise = 0;
 }
 
 FaceDisplayServer::~FaceDisplayServer()
@@ -139,6 +154,52 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
     mutex.post();
     imagePort.init(fd);
 
+    // Load all required pieces of image
+    bool ok = true;
+    imgHappyEye  = cv::imread(yarp::os::ConstString(rootPath + "/runtime/happyEye.bmp").c_str(),  CV_LOAD_IMAGE_COLOR);
+    imgHappyBars = cv::imread(yarp::os::ConstString(rootPath + "/runtime/happyBars.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+    imgSadEye    = cv::imread(yarp::os::ConstString(rootPath + "/runtime/sadEye.bmp").c_str(),    CV_LOAD_IMAGE_UNCHANGED);
+    imgSadBars   = cv::imread(yarp::os::ConstString(rootPath + "/runtime/sadBars.bmp").c_str(),   CV_LOAD_IMAGE_UNCHANGED);
+
+    if(imgHappyEye.empty() )
+    {
+        yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/happyEye.bmp") << "image";
+        ok = false;
+    }
+
+    if(imgHappyBars.empty() )
+    {
+        yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/happyBars.bmp") << "image";
+        ok = false;
+    }
+
+    if(imgSadEye.empty() )
+    {
+        yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/sadEye.bmp") << "image";
+        ok = false;
+    }
+
+    if(imgSadBars.empty() )
+    {
+        yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/sadBars.bmp") << "image";
+        ok = false;
+    }
+
+    if(!ok)
+    {
+        yError() << "FaceDisplayServer: Failed loading required set of images for the eyes.";
+        return false;
+    }
+
+    cv::cvtColor(imgHappyEye, imgHappyEye,CV_BGR2RGB);
+    cv::cvtColor(imgHappyBars,imgHappyBars,CV_BGR2RGB);
+    cv::cvtColor(imgSadEye,   imgSadEye,CV_BGR2RGB);
+    cv::cvtColor(imgSadBars,  imgSadBars,CV_BGR2RGB);
+
+//     yDebug() << "imgFace      cols " << face.cols << " rows " << face.rows << " channels " << face.channels();
+//     yDebug() << "imgHappyEye  cols " << imgHappyEye.cols << " rows " << imgHappyEye.rows << " channels " << imgHappyEye.channels() << " tot " << imgHappyEye.total() << " elemSize " << imgHappyEye.elemSize();
+//     yDebug() << "imgHappyBars cols " << imgHappyBars.cols << " rows " << imgHappyBars.rows << " channels " << imgHappyBars.channels() << " tot " << imgHappyBars.total() << " elemSize " << imgHappyBars.elemSize();
+
     // start the thread
     start();
     return true;
@@ -150,7 +211,6 @@ void FaceDisplayServer::onStop()
     rpcPort.interrupt();
     rpcPort.close();
 }
-
 
 void FaceDisplayServer::measureTiming()
 {
@@ -204,6 +264,8 @@ void FaceDisplayServer::measureTiming()
         initted = false;
     }
 }
+
+
 
 void FaceDisplayServer::run()
 {
@@ -462,141 +524,49 @@ void FaceDisplayServer::run()
     }
 
 
-    if(selfTest == 6)
-    {
-        bool ok = true;
+    size_t eyeSize      = imgHappyEye.total()  * imgHappyEye.elemSize();
+    size_t eyeLineSize  = imgHappyBars.cols    * imgHappyBars.elemSize();
+    size_t barsSize     = imgHappyBars.total() * imgHappyBars.elemSize();
 
-        // Create an empty black image
-        cv::Mat face(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3, cv::Scalar(0,0,0));
+    size_t faceLineSize = face.cols            * face.elemSize();
+    size_t faceSize     = face.total()         * face.elemSize();
 
-        // Load all required pieces of image
-        cv::Mat imgHappyEye  = cv::imread(yarp::os::ConstString(rootPath + "/runtime/happyEye.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
-        cv::Mat imgHappyBars = cv::imread(yarp::os::ConstString(rootPath + "/runtime/happyBars.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
-        cv::Mat imgSadEye    = cv::imread(yarp::os::ConstString(rootPath + "/runtime/sadEye.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
-        cv::Mat imgSadBars   = cv::imread(yarp::os::ConstString(rootPath + "/runtime/sadBars.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
-        cv::Mat imgHappyEye_orig  = cv::imread(yarp::os::ConstString(rootPath + "/Robot_espressioni-01.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
-
-        if(imgHappyEye.empty() )
-        {
-            yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/happyEye.bmp") << "image";
-            ok = false;
-        }
-
-        if(imgHappyBars.empty() )
-        {
-            yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/happyBars.bmp") << "image";
-            ok = false;
-        }
-
-        if(imgSadEye.empty() )
-        {
-            yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/sadEye.bmp") << "image";
-            ok = false;
-        }
-
-        if(imgSadBars.empty() )
-        {
-            yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/sadBars.bmp") << "image";
-            ok = false;
-        }
-
-        if(!ok)
-        {
-            yError() << "FaceDisplayServer: Failed loading required set of images for the eyes.";
-            return;
-        }
-
-        yInfo() << "imgFace      cols " << face.cols << " rows " << face.rows << " channels " << face.channels();
-        yInfo() << "imgHappyEye  cols " << imgHappyEye.cols << " rows " << imgHappyEye.rows << " channels " << imgHappyEye.channels() << " tot " << imgHappyEye.total() << " elemSize " << imgHappyEye.elemSize();
-        yInfo() << "imgHappyBars cols " << imgHappyBars.cols << " rows " << imgHappyBars.rows << " channels " << imgHappyBars.channels() << " tot " << imgHappyBars.total() << " elemSize " << imgHappyBars.elemSize();
-        yInfo() << "imgHappyEye  cols " << imgHappyEye_orig.cols << " rows " << imgHappyEye_orig.rows << " channels " << imgHappyEye_orig.channels() << " tot " << imgHappyEye_orig.total() << " elemSize " << face.elemSize();
-
-        cv::imwrite(yarp::os::ConstString(rootPath + "/runtime/runtime-HappyBars.bmp").c_str(), imgHappyBars);
+    yInfo() << "EyeSize  is " << eyeSize;
+    yInfo() << "BarsSize is " << barsSize;
+    yInfo() << "faceSize is " << faceSize;
 
 
-        size_t eyeSize      = imgHappyEye.total()  * imgHappyEye.elemSize();
-        size_t eyeLineSize  = imgHappyBars.cols    * imgHappyBars.elemSize();
-        size_t barsSize     = imgHappyBars.total() * imgHappyBars.elemSize();
 
-        size_t faceLineSize = face.cols            * face.elemSize();
-        size_t faceSize     = face.total()         * face.elemSize();
+    //
+    // Generating base image
+    //
 
-        yInfo() << "EyeSize  is " << eyeSize;
-        yInfo() << "BarsSize is " << barsSize;
-        yInfo() << "faceSize is " << faceSize;
+    // offset for rest position:
+    le_offset_x  = 9;
+    le_offset_y  = 9;
+    re_offset_x  = 50;
+    re_offset_y  = 9;
+    bar_offset_y = 11;
 
-        float bar_offset_y, le_offset_x, le_offset_y, re_offset_x, re_offset_y;
-        // Following values never change
-        const int bar_offset_x  = 2;
-        const float eyeWidth    = 21;
-        const float eyeHeight   = 14;
+    // Copy bars
+    imgHappyBars.copyTo(face(cv::Rect(bar_offset_x, bar_offset_y, currentBars->cols, currentBars->rows)));
 
-        // limits WRT rest position
-        const int min_offset_x = -3;
-        const int max_offset_x = +3;
-        const int min_offset_y = -7;
-        const int max_offset_y = +7;
+    // add eyes
+    imgHappyEye.copyTo(face(cv::Rect(le_offset_x, le_offset_y, currentEye->cols, currentEye->rows)));
+    imgHappyEye.copyTo(face(cv::Rect(re_offset_x, re_offset_y, currentEye->cols, currentEye->rows)));
 
-        //
-        // Generating base image
-        //
+    // save to file for debugging purpose
+    // cv::imwrite(yarp::os::ConstString(rootPath + "/runtime/runtime-HappyEye.bmp").c_str(), face);
 
-        // offset for rest position:
-        le_offset_x  = 9;
-        le_offset_y  = 9;
-        re_offset_x  = 50;
-        re_offset_y  = 9;
-        bar_offset_y = 11;
-
-        // Copy bars
-        imgHappyBars.copyTo(face(cv::Rect(bar_offset_x, bar_offset_y, imgHappyBars.cols, imgHappyBars.rows)));
-
-        // add eyes
-        imgHappyEye.copyTo(face(cv::Rect(le_offset_x, le_offset_y, imgHappyEye.cols, imgHappyEye.rows)));
-        imgHappyEye.copyTo(face(cv::Rect(re_offset_x, re_offset_y, imgHappyEye.cols, imgHappyEye.rows)));
-
-        cv::imwrite(yarp::os::ConstString(rootPath + "/runtime/runtime-HappyEye.bmp").c_str(), face);
-        mutex.wait();
-        if(-1 == ::write(fd, face.data, faceSize) )
-            yError() << "Failed setting image to display";
-        mutex.post();
-
-
-        while(!isStopping())
-        {
-            // moving eyes around
-            for(int y=min_offset_y; y<max_offset_y && !isStopping(); y++)
-            {
-                for(int x=min_offset_x; x<max_offset_x && !isStopping(); x++)
-                {
-                    face = cv::Scalar(0,0,0);
-
-                    face.zeros(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3);
-                    // Copy bars
-                    imgHappyBars.copyTo(face(cv::Rect(bar_offset_x, bar_offset_y+(y/2), imgHappyBars.cols, imgHappyBars.rows)));
-
-                    // add eyes
-                    imgHappyEye.copyTo(face(cv::Rect(le_offset_x+x, le_offset_y+y, imgHappyEye.cols, imgHappyEye.rows)));
-                    imgHappyEye.copyTo(face(cv::Rect(re_offset_x+x, re_offset_y+y, imgHappyEye.cols, imgHappyEye.rows)));
-
-                    cv::imwrite(yarp::os::ConstString(rootPath + "/runtime/runtime-HappyEye_"+yarp::os::Value(x).toString()+"_"+yarp::os::Value(y).toString()+".bmp").c_str(), face);
-                    mutex.wait();
-                    if(-1 == ::write(fd, face.data, faceSize) )
-                        yError() << "Failed setting image to display";
-                    mutex.post();
-
-                    yarp::os::Time::delay(0.2);
-                }
-            }
-        }
-        return;
-    }
+    mutex.wait();
+    if(-1 == ::write(fd, face.data, faceSize) )
+        yError() << "Failed setting image to display";
+    mutex.post();
 
 
     // normal workflow
     while(!isStopping())
     {
-        IplImage* img;
         yTrace() << "\n\t... waiting for commands";
         if(!rpcPort.read(command))
             continue;
@@ -608,8 +578,20 @@ void FaceDisplayServer::run()
         // The support of strings is probably gonna be dropped in the final version.
         if(command.get(0).isString())
         {
-            if(command.get(0).asString() == yarp::os::ConstString("set"))
+            yarp::os::ConstString cmd = command.get(0).asString();
+
+            if(cmd == "up")    { moveUp++;    /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveUp>max_offset_y) moveUp=max_offset_y; }
+            if(cmd == "down")  { moveUp--;    /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveUp<min_offset_y) moveUp=min_offset_y; }
+            if(cmd == "left")  { moveRight++; /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveRight>max_offset_x) moveRight=max_offset_x; }
+            if(cmd == "right") { moveRight--; /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveRight<min_offset_x) moveRight=min_offset_x; }
+
+            yDebug() << "moveUp " << moveUp << "moveRight " << moveRight << "max_offset_y" << max_offset_y;
+
+            yTrace() << "cmd is:" << cmd;
+            if(cmd == yarp::os::ConstString("set"))
             {
+                yTrace() << "GOT SET";
+
                 action = VOCAB_SET;
                 if(command.get(1).asString() == yarp::os::ConstString("face"))
                 {
@@ -617,13 +599,24 @@ void FaceDisplayServer::run()
                     if(command.get(2).isString())
                     {
                         if(command.get(2).asString() == yarp::os::ConstString("hap"))
+                        {
+                            faceExpression=FACE_EXPR;
                             param = VOCAB_FACE_HAPPY;
+                        }
                         else
                         if(command.get(2).asString() == yarp::os::ConstString("sad"))
+                        {
+                            yDebug() << "got sad";
+                            faceExpression=FACE_EXPR;
                             param = VOCAB_FACE_SAD;
+                        }
                         else
                         if(command.get(2).asString() == yarp::os::ConstString("warn"))
+                        {
+                            yDebug() << "got warn";
+                            faceExpression=IMAGE_EXPR;
                             param = VOCAB_FACE_WARNING;
+                        }
                         else
                         {
                             yError() << "Received malformed command:" << command.toString();
@@ -686,25 +679,37 @@ void FaceDisplayServer::run()
             {
                 switch(type)
                 {
+                    case VOCAB_MOVE:
+                    {
+                        // nothing to do here;
+                    }break;
+
                     case VOCAB_FACE:
                     {
                         switch(param)
                         {
                             case VOCAB_FACE_HAPPY:
                             {
-                                snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_04.bmp").c_str());
+//                                 snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_04.bmp").c_str());
+                                currentEye  = &imgHappyEye;
+                                currentBars = &imgHappyBars;
+                                faceExpression = FACE_EXPR;
                             }
                             break;
 
                             case VOCAB_FACE_SAD:
                             {
-                                snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_02.bmp").c_str());
+//                                 snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_02.bmp").c_str());
+                                currentEye  = &imgSadEye;
+                                currentBars = &imgSadBars;
+                                faceExpression = FACE_EXPR;
                             }
                             break;
 
                             case VOCAB_FACE_WARNING:
                             {
                                 snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_01.bmp").c_str());
+                                faceExpression = IMAGE_EXPR;
                             }
                             break;
 
@@ -728,6 +733,8 @@ void FaceDisplayServer::run()
                             continue;
                         }
                         snprintf(imageFileName, 255, "%s/%s", rootPath.c_str(), command.get(2).asString().c_str());
+                        faceExpression = IMAGE_EXPR;
+
                     }
                     break;
 
@@ -761,8 +768,7 @@ void FaceDisplayServer::run()
 
                     case VOCAB_IMAGE:
                     {
-                    yDebug() << "Received command: Get Image";
-
+                        yDebug() << "Received command: Get Image";
                     }
                     break;
 
@@ -787,22 +793,52 @@ void FaceDisplayServer::run()
         }
 
 
+        // moving eyes around
         if(action == VOCAB_SET)
         {
-            // load the image
-            img = cvLoadImage(imageFileName, 1);
-
-            if(!img)
+            switch(faceExpression)
             {
-                yError() << "Cannot load image " << imageFileName;
-                continue;
+                case FACE_EXPR:
+                {
+                    yTrace() << "setting face";
+                    face = cv::Scalar(0,0,0);
+
+            //         face.zeros(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3);
+                    // Copy bars
+                    currentBars->copyTo(face(cv::Rect(bar_offset_x, bar_offset_y+(moveUp/2), currentBars->cols, currentBars->rows)));
+
+                    // add eyes
+                    currentEye->copyTo(face(cv::Rect(le_offset_x+moveRight, le_offset_y+moveUp, currentEye->cols, currentEye->rows)));
+                    currentEye->copyTo(face(cv::Rect(re_offset_x+moveRight, re_offset_y+moveUp, currentEye->cols, currentEye->rows)));
+
+                    // for debugging only
+                    // cv::imwrite(yarp::os::ConstString(rootPath + "/runtime/runtime-HappyEye_"+yarp::os::Value(moveRight).toString()+"_"+yarp::os::Value(moveUp).toString()+".bmp").c_str(), face);
+                    currentFace = &face;
+                }
+                break;
+
+
+            // load the image
+                case IMAGE_EXPR:
+                {
+                    yTrace() << "setting image";
+                    imageFromFile  = cv::imread(imageFileName,  CV_LOAD_IMAGE_ANYCOLOR);
+
+                    if(imageFromFile.empty())
+                    {
+                        yError() << "Cannot load image " << imageFileName;
+                        continue;
+                    }
+
+//                     Conver into BGR
+                    cv::cvtColor(imageFromFile,imageFromFile,CV_BGR2RGB);
+                    currentFace = &imageFromFile;
+                }
+                break;
             }
 
-            // Conver into BGR
-            cvCvtColor(img,img,CV_BGR2RGB);
-
             mutex.wait();
-            if(-1 == ::write(fd, img->imageData, img->imageSize) )
+            if(-1 == ::write(fd, currentFace->data, currentFace->total()*currentFace->elemSize()) )
                 yError() << "Failed setting image to display";
             mutex.post();
         }
