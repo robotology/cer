@@ -12,6 +12,7 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/dev/PolyDriver.h>
+#include <yarp/os/Thread.h>
 
 #include <IFaceDisplayInterface.h>
 
@@ -48,7 +49,8 @@ namespace cer {
 *
 **/
 class cer::dev::FaceDisplayClient:  public yarp::dev::DeviceDriver,
-                                    public cer::dev::IFaceDisplay
+                                    public cer::dev::IFaceDisplay,
+                                    public yarp::os::Thread
 {
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
 protected:
@@ -70,6 +72,9 @@ public:
     /* DevideDriver methods */
     bool open(yarp::os::Searchable& config);
     bool close();
+
+    bool threadInit();
+    void run();
 
     bool setFaceExpression(int faceId);
     bool getFaceExpression(int *faceId);

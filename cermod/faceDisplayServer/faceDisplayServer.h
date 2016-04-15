@@ -7,6 +7,12 @@
 #ifndef CER_DEV_FACEDISPLAYSERVER_H_
 #define CER_DEV_FACEDISPLAYSERVER_H_
 
+#include <unistd.h>
+#include <stdint.h>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/core/mat.hpp>
+
 #include <yarp/os/Network.h>
 #include <yarp/os/Port.h>
 #include <yarp/os/Time.h>
@@ -19,8 +25,6 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/dev/PolyDriver.h>
 
-#include <unistd.h>
-#include <stdint.h>
 
 namespace cer{
     namespace dev{
@@ -53,16 +57,23 @@ namespace cer{
 #define BPP24  (1)
 #define BPP16  (2)
 
+#define IMAGE_WIDTH    80
+#define IMAGE_HEIGHT   32
+#define IMAGE_BPP      24
 
+
+typedef enum
+{
+    FACE_EXPR = 0,
+    IMAGE_EXPR
+} FaceExpression;
+
+// To config the driver
 typedef struct auxdisp_regs {
     uint32_t offset;
     char rw;
     uint32_t data;
 } auxdisp_regs_t;
-
-#define IMAGE_WIDTH    80
-#define IMAGE_HEIGHT   32
-#define IMAGE_BPP      24
 
 /**
  *  @ingroup dev_impl_wrapper
@@ -144,6 +155,7 @@ public:
     std::string getId();
 
     void onStop();
+
     void run();
 
 private:
@@ -155,6 +167,7 @@ private:
     yarp::os::ConstString   deviceFileName;
 
     int _rate;
+    yarp::os::Semaphore     mutex;
     yarp::sig::FlexImage    image;
     yarp::os::ConstString   sensorId;
 
@@ -165,7 +178,33 @@ private:
     int                     selfTest;
     int                     steps;
     int                     color_choise;
-    yarp::os::Semaphore     mutex;
+
+    // version2
+    FaceExpression          faceExpression;
+    cv::Mat                 face;
+    cv::Mat                *currentEye;
+    cv::Mat                *currentBars;
+    cv::Mat                *currentFace;
+    cv::Mat                 imgHappyEye;
+    cv::Mat                 imgHappyBars;
+    cv::Mat                 imgSadEye;
+    cv::Mat                 imgSadBars;
+    cv::Mat                 imageFromFile;
+    double                  moveUp;
+    double                  moveRight;
+    float bar_offset_y, le_offset_x, le_offset_y, re_offset_x, re_offset_y;
+
+    // Following values never change
+    const int bar_offset_x;
+    const float eyeWidth;
+    const float eyeHeight;
+
+    // limits WRT rest position
+    const int min_offset_x;
+    const int max_offset_x;
+    const int min_offset_y;
+    const int max_offset_y;
+
 
     // for timing measurement
     double                  _now, _last, _elapsedTime, _start;

@@ -16,6 +16,7 @@
 
 #define VOCAB_FACE          VOCAB4('f','a','c','e')
 #define VOCAB_FILE          VOCAB4('f','i','l','e')
+#define VOCAB_MOVE          VOCAB4('m','o','v','e')
 #define VOCAB_IMAGE         VOCAB3('i','m','g')
 
 #define VOCAB_FACE_HAPPY    VOCAB3('h','a','p')
