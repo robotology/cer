@@ -11,22 +11,22 @@
 		</group>
 
 <group name="HOME">
-<param name="positionHome">                       0.00            0.07        0.07      0.07          </param>
-<param name="velocityHome">                       10.00           0.01        0.01      0.01          </param>
+<param name="positionHome">                       0.07           0.07        0.07      0.0          </param>
+<param name="velocityHome">                       0.01           0.01        0.01      0.0          </param>
 </group>
 
 <group name="CALIBRATION">
 <param name="calibrationType">                    9               9           9         3             </param>
-<param name="calibration1">                       6400            6400        6400      0             </param>
+<param name="calibration1">                       6400            10000       6400      0             </param>
 <param name="calibration2">                       10              10          10        0             </param>
-<param name="calibration3">                       0               0           0         35822.8       </param>
+<param name="calibration3">                       0               0           0         40191.8       </param>
 <param name="calibration4">                       0               0           0         0             </param>
 <param name="calibration5">                       0               0           0         0             </param>
 <param name="calibrationZero">                    1700            1700        1700      180           </param>
 <param name="calibrationDelta">                   0.0             0.0         0.0       0.0           </param>
 <param name="startupPosition">                    0.1             0.1         0.1       0.0           </param>
 <param name="startupVelocity">                    0.01            0.01        0.01      10.0          </param>
-<param name="startupMaxPwm">                      6400            6400        6400      2500          </param>
+<param name="startupMaxPwm">                      20000           20000       20000     2500          </param>
 <param name="startupPosThreshold">                0.002           0.002       0.002     2             </param>
 </group>
 

@@ -9,8 +9,8 @@
     <devices file="wrappers/motorControl/cer_torso-mc_wrapper.xml" />
 
     <!-- TRIPOD LIB -->
-    <devices file="hardware/motorControl/cer_torso_tripod-mc.xml" />
-    <devices file="wrappers/motorControl/cer_torso_tripod-mc_wrapper.xml" />
+<!--    <devices file="hardware/motorControl/cer_torso_tripod-mc.xml" /> -->
+<!--    <devices file="wrappers/motorControl/cer_torso_tripod-mc_wrapper.xml" /> -->
 
     <!--  CALIBRATORS -->
     <devices file="calibrators/cer_torso-calib.xml" />
