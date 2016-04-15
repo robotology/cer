@@ -18,7 +18,7 @@
 
 #include "odometry.h"
 #include <yarp/os/LogStream.h>
-#include <limits.h>
+#include <limits>
 
 #define RAD2DEG 180.0/3.14159
 #define DEG2RAD 3.14159/180.0
@@ -30,7 +30,7 @@ inline TickTime normalizeSecNSec(double yarpTimeStamp)
     uint64_t sec_part = (time / 1000000000UL);
     TickTime ret;
 
-    if (sec_part > UINT_MAX)
+    if (sec_part > std::numeric_limits<unsigned int>::max())
     {
         yWarning() << "Timestamp exceeded the 64 bit representation, resetting it to 0";
         sec_part = 0;

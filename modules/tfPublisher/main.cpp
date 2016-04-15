@@ -30,7 +30,7 @@
 #include "include/geometry_msgs_TransformStamped.h"
 #include "include/tf_tfMessage.h"
 #include <yarp/os/Publisher.h>
-
+#include <limits>
 
 #include <iostream>
 #include <iomanip>
@@ -46,7 +46,7 @@ inline TickTime normalizeSecNSec(double yarpTimeStamp)
     uint64_t sec_part = (time / 1000000000UL);
     TickTime ret;
 
-    if (sec_part > UINT_MAX)
+    if (sec_part > std::numeric_limits<unsigned int>::max())
     {
         yWarning() << "Timestamp exceeded the 64 bit representation, resetting it to 0";
         sec_part = 0;
@@ -199,8 +199,8 @@ public:
             {
                 tf temp;
                 temp.name = command.get(1).asString();
-                if (command.get(2).asString() == "fixed") temp.type = tf::tf_type_enum::fixed;
-                if (command.get(2).asString() == "external") temp.type = tf::tf_type_enum::external;
+                if (command.get(2).asString() == "fixed") temp.type = tf::fixed;
+                if (command.get(2).asString() == "external") temp.type = tf::external;
                 temp.parent_frame = command.get(3).asString();
                 temp.child_frame = command.get(4).asString();
                 temp.x = command.get(5).asDouble();
