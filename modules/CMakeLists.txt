@@ -6,4 +6,5 @@ add_subdirectory(reaching)
 add_subdirectory(teleop)
 add_subdirectory(baseControl)
 add_subdirectory(tripodJoystickControl)
+add_subdirectory(tfPublisher)
 
