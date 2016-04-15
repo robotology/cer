@@ -580,8 +580,8 @@ void FaceDisplayServer::run()
         {
             yarp::os::ConstString cmd = command.get(0).asString();
 
-            if(cmd == "up")    { moveUp++;    /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveUp>max_offset_y) moveUp=max_offset_y; }
-            if(cmd == "down")  { moveUp--;    /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveUp<min_offset_y) moveUp=min_offset_y; }
+            if(cmd == "up")    { moveUp--;    /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveUp<min_offset_y) moveUp=min_offset_y; }
+            if(cmd == "down")  { moveUp++;    /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveUp>max_offset_y) moveUp=max_offset_y; }
             if(cmd == "left")  { moveRight++; /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveRight>max_offset_x) moveRight=max_offset_x; }
             if(cmd == "right") { moveRight--; /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveRight<min_offset_x) moveRight=min_offset_x; }
 
