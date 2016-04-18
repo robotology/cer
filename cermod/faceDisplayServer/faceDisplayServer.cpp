@@ -708,7 +708,7 @@ void FaceDisplayServer::run()
 
                             case VOCAB_FACE_WARNING:
                             {
-                                snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_01.bmp").c_str());
+                                snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/bar2.bmp").c_str());
                                 faceExpression = IMAGE_EXPR;
                             }
                             break;
