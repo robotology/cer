@@ -2,7 +2,7 @@
 <!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
 
 <devices robot="CER01" build="1">
-  <device name="cer_torso_tripod_mc" type="tripodMotionControl">
+  <device name="cer_left_wrist_tripod_mc" type="tripodMotionControl">
       <params file="general.xml" />
 
     <group name="GENERAL">
@@ -14,10 +14,10 @@
     </group>
 
     <group name="TRIPOD">
-      <param name="Radius">      0.09   </param>
-      <param name="Max_el">      0.170  </param>
+      <param name="Radius">      0.018   </param>
+      <param name="Max_el">      0.130  </param>
       <param name="Min_el">      0.0    </param>
-      <param name="Max_alpha">   25.0   </param>
+      <param name="Max_alpha">   30.0   </param>
 
       <param name="BASE_TRANSFORMATION">  -1.0    0.0     0.0    0.0
                                            0.0   -1.0     0.0    0.0
@@ -30,19 +30,10 @@
         <param name="JntVelocityMax">   0.05  </param>
     </group>
 
-
-    <!--
-    <group name="CONNECTION">
-      <param name="local">         /icubGazeboSim/torso_out  </param>
-      <param name="remote">        /icubGazeboSim/torso      </param>
-      <param name="writeStrict">   off                       </param>
-    </group>
-     -->
-
     <!-- action is alternative to CONNECTION group -->
     <action phase="startup" level="5" type="attach">
       <paramlist name="networks">
-          <elem name="FirstSetOfJoints"> cer_torso_mc </elem>
+          <elem name="FirstSetOfJoints"> cer_left_lower_arm_mc </elem>
       </paramlist>
     </action>
 

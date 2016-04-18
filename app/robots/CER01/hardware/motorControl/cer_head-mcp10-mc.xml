@@ -10,8 +10,8 @@
       <params file="hardware/mechanicals/cer_head-mcp10-mec.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                25     45            </param>
-        <param name="jntPosMin">                -5    -45            </param>
+        <param name="jntPosMax">                35      45            </param>
+        <param name="jntPosMin">                -25    -45            </param>
         <param name="rotorPosMin">              0       0            </param>
         <param name="rotorPosMax">              0       0            </param>
         <param name="jntVelMax">                50      50           </param>
@@ -26,7 +26,7 @@
         <param name="controlUnits">  machine_units           </param> 
         <param name="kp">              -5           5        </param>       
         <param name="kd">              -0           0        </param>       
-        <param name="ki">              -5         100        </param>       
+        <param name="ki">              -5          50        </param>       
         <param name="limOutput">      500         500        </param>      
         <param name="maxOutput">     3000        3000        </param>          
         <param name="maxInt">        3000        3000        </param>       
