@@ -5,7 +5,7 @@
     <params file="hardware/electronics/pc104.xml" />
 
     <!-- DEVICE -->
-    <devices file="hardware/motorControl/cer_head-ems10-mc.xml" />
+    <devices file="hardware/motorControl/cer_head-mcp10-mc.xml" />
     <devices file="wrappers/motorControl/cer_head-mc_wrapper.xml" />
 
     <!--  CALIBRATORS -->
