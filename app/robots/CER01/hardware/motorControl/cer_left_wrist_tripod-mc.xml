@@ -5,12 +5,13 @@
   <device name="cer_left_wrist_tripod_mc" type="tripodMotionControl">
       <params file="general.xml" />
 
+      <param name="AxisNames">  "left_wrist_heave_eq" "left_wrist_pitch_eq" "left_wrist_roll_eq"  </param>
+
     <group name="GENERAL">
-      <param name="Joints">    3       </param>
-      <param name="AxisMap">   0 1 2   </param>
-      <param name="AxisName">  "tripod_0"   "tripod_1"   "tripod_2"  </param>
-      <param name="Verbose">   true    </param>
-      <param name="Encoder">   1 1 1   </param>
+      <param name="Joints">      3       </param>
+      <param name="AxisMap">     0 1 2   </param>
+       <param name="Verbose">     true    </param>
+      <param name="Encoder">     1 1 1   </param>
     </group>
 
     <group name="TRIPOD">
