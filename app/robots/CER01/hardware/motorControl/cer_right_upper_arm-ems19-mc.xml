@@ -8,7 +8,7 @@
       <params file="hardware/mechanicals/cer_right_upper_arm-ems19-mec.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                      85            95         85        95        </param>
+        <param name="jntPosMax">                      85            70         85        95        </param>
         <param name="jntPosMin">                     -25           -5         -85        5         </param>
         <param name="rotorPosMin">                    0             0          0         0         </param> 
         <param name="rotorPosMax">                    0             0          0         0         </param>
