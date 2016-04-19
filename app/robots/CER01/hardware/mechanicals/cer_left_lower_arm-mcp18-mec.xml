@@ -5,25 +5,25 @@
     <group name="GENERAL">
         <param name="MotioncontrolVersion">  2 </param>
         <param name="Joints">                4  </param> 
-        <param name="AxisName">              "l_wrist_prosupination" "l_wrist_tripod_0" "l_wrist_tripod_1" "l_wrist_tripod_2" </param>
-        <param name="AxisMap">               0            1            2             3             </param>
-        <param name="AxisType">              "revolute"   "prismatic"  "prismatic"  "prismatic"    </param>
-        <param name="HasHallSensor">         0            0            0             0             </param>
-        <param name="HasTempSensor">         0            0            0             0             </param>
-        <param name="HasRotorEncoder">       0            0            0             0             </param>
-        <param name="HasRotorEncoderIndex">  0            0            0             0             </param>
-        <param name="Encoder">               11650.844    56333.333    56333.333    56333.333      </param>
-        <param name="TorqueId">              0            0            0             0             </param>
-        <param name="TorqueChan">            0            0            0             0             </param>
-        <param name="TorqueMax">             0            0            0             0             </param>
-        <param name="JointEncoderType">      "AEA"        "NONE"       "NONE"        "NONE"        </param>
-        <param name="RotorEncoderType">      "NONE"       "ROIE"       "ROIE"        "ROIE"        </param>
-        <param name="JointEncoderRes">       4096         65535        65535         65535         </param>
-        <param name="RotorEncoderRes">       0            65535        65535         65535         </param>
-        <param name="RotorIndexOffset">      0            0            0             0             </param>
-        <param name="Gearbox">               1            1            1             1             </param>
-        <param name="MotorType">             "DC"         "DC"         "DC"          "DC"          </param>
-        <param name="MotorPoles">            0            0            0             0             </param>
+        <param name="AxisName">              "l_wrist_tripod_0" "l_wrist_tripod_1" "l_wrist_tripod_2" "l_wrist_prosupination"  </param>
+        <param name="AxisMap">               0                  1                  2                  3                       </param>
+        <param name="AxisType">              "prismatic"        "prismatic"        "prismatic"        "revolute"              </param>
+        <param name="HasHallSensor">         0                  0                  0                  0                       </param>
+        <param name="HasTempSensor">         0                  0                  0                  0                       </param>
+        <param name="HasRotorEncoder">       0                  0                  0                  0                       </param>
+        <param name="HasRotorEncoderIndex">  0                  0                  0                  0                       </param>
+        <param name="Encoder">               56333.333          56333.333          56333.333          11650.844               </param>
+        <param name="TorqueId">              0                  0                  0                  0                       </param>
+        <param name="TorqueChan">            0                  0                  0                  0                       </param>
+        <param name="TorqueMax">             0                  0                  0                  0                       </param>
+        <param name="JointEncoderType">      "NONE"             "NONE"             "NONE"             "AEA"                   </param>
+        <param name="RotorEncoderType">      "ROIE"             "ROIE"             "ROIE"             "NONE"                  </param>
+        <param name="JointEncoderRes">       65535              65535              65535              4096                    </param>
+        <param name="RotorEncoderRes">       65535              65535              65535              0                       </param>
+        <param name="RotorIndexOffset">      0                  0                  0                  0                       </param>
+        <param name="Gearbox">               1                  1                  1                  1                       </param>
+        <param name="MotorType">             "DC"               "DC"               "DC"               "DC"                    </param>
+        <param name="MotorPoles">            0                  0                  0                  0                       </param>
         <param name="Verbose">               0   </param>
     </group>
 
@@ -35,12 +35,12 @@
     </group>
     
     <group name="VELOCITY">
-        <param name="MOT_speed_estimation">     1		1	  1    1   </param>
-        <param name="MOT_accel_estimation">     1		1	  1    1   </param>
-        <param name="JNT_accel_estimation">     5		5	  5    5   </param>
-        <param name="JNT_speed_estimation">     5		5	  5    5   </param>
-        <param name="Shifts">                   8		8	  8    8   </param>
-        <param name="Timeout">                  100		100	  100  100 </param>
+        <param name="MOT_speed_estimation">     1       1     1    1   </param>
+        <param name="MOT_accel_estimation">     1       1     1    1   </param>
+        <param name="JNT_accel_estimation">     5       5     5    5   </param>
+        <param name="JNT_speed_estimation">     5       5     5    5   </param>
+        <param name="Shifts">                   8       8     8    8   </param>
+        <param name="Timeout">                  100     100   100  100 </param>
     </group>
 
 </params>
