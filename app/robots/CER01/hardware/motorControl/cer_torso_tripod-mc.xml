@@ -5,10 +5,11 @@
   <device name="cer_torso_tripod_mc" type="tripodMotionControl">
       <params file="general.xml" />
 
+    <param name="AxisName">  "torso_heave_eq"   "torso_pitch_eq"   "torso_roll_eq"  </param>
+
     <group name="GENERAL">
       <param name="Joints">    3       </param>
       <param name="AxisMap">   0 1 2   </param>
-      <param name="AxisName">  "tripod_0"   "tripod_1"   "tripod_2"  </param>
       <param name="Verbose">   true    </param>
       <param name="Encoder">   1 1 1   </param>
     </group>

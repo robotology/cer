@@ -11,23 +11,23 @@
         </group>
 
 <group name="HOME">
-<param name="positionHome">                  0.03       0.03       0.03       0.00       </param>
-<param name="velocityHome">                  0.005      0.005      0.005     10.00       </param>
-</group>                                                                   
-                                                                           
-<group name="CALIBRATION">                                                 
-<param name="calibrationType">               8          8          8         10          </param>
-<param name="calibration1">                  -1500      -1500      -1500     -250         </param>
-<param name="calibration2">                  280        280        280       0           </param>
-<param name="calibration3">                  0          0          0         0           </param>
-<param name="calibration4">                  0          0          0         0           </param>
-<param name="calibration5">                  0          0          0         0           </param>
-<param name="calibrationZero">               0          0          0         85          </param>
-<param name="calibrationDelta">              0          0          0         0           </param>
-<param name="startupPosition">               0.03       0.03       0.03      0           </param>
-<param name="startupVelocity">               0.007      0.007      0.007     15.0        </param>
-<param name="startupMaxPwm">                 1500       1500       1500      0           </param>
-<param name="startupPosThreshold">           0.002       0.002     0.002     2           </param>
+<param name="positionHome">              0.03       0.03       0.03         0.00       </param>
+<param name="velocityHome">              0.005      0.005      0.005       10.00       </param>
+</group>                                                                  
+                                                                          
+<group name="CALIBRATION">                                                
+<param name="calibrationType">           8          8          8           10          </param>
+<param name="calibration1">              -1500      -1500      -1500       -250         </param>
+<param name="calibration2">              700        700        700         0           </param>
+<param name="calibration3">              0          0          0           0           </param>
+<param name="calibration4">              0          0          0           0           </param>
+<param name="calibration5">              0          0          0           0           </param>
+<param name="calibrationZero">           0          0          0           85          </param>
+<param name="calibrationDelta">          0          0          0           0           </param>
+<param name="startupPosition">           0.03       0.03       0.03        0           </param>
+<param name="startupVelocity">           0.007      0.007      0.007       15.0        </param>
+<param name="startupMaxPwm">             1500        1500      1500        0           </param>
+<param name="startupPosThreshold">       0.002       0.002     0.002       2           </param>
 </group>
 
         <param name="CALIB_ORDER">(0 1 2)</param>
