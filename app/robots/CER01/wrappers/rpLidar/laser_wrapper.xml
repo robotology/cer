@@ -13,7 +13,7 @@
 
       <group name ="ROS">
          <param name ="useROS"> true </param>
-         <param name ="ROS_nodeName"> /cer_laser </param>
+         <param name ="ROS_nodeName"> /cer-laser </param>
          <param name ="ROS_topicName"> /laser </param>
          <param name ="frame_id"> /lidar </param>
       </group>

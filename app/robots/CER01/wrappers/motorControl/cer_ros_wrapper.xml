@@ -6,13 +6,25 @@
 
       <param name="period"> 10 </param>
       <param name="name">   /cer/all_joints </param>
-      <param name="joints"> 2 </param>
+      <param name="joints"> 26 </param>
       
       <paramlist name="networks">
-        <elem name="mc1"> 0  1  0  1 </elem>
-       <!--
-        <elem name="mc2"> 0  3  0  3 </elem>
-        -->
+        <!-- <elem name="base">            0  1  0  1 </elem> -->
+
+        <elem name="head">            0  1   0  1 </elem>  <!-- 2 -->
+        <elem name="torso">           2  4   0  2 </elem>  <!-- 3 -->
+        <elem name="torso_yaw">       5  5   3  3 </elem>  <!-- 1 -->
+
+        <elem name="right_upper_arm"> 6  9   0  3 </elem>  <!-- 4 -->
+        <elem name="right_wrist">     10 12  0  2 </elem>  <!-- 3 -->
+        <elem name="right_lower_arm"> 13 13  3  3 </elem>  <!-- 1 -->
+        <elem name="right_hand">      14 15  0  1 </elem>  <!-- 2 -->
+
+        <elem name="left_upper_arm">  16 19  0  3 </elem>  <!-- 4 -->
+        <elem name="left_wrist">      20 22  0  2 </elem>  <!-- 3 -->
+        <elem name="left_lower_arm">  23 23  3  3 </elem>  <!-- 1 -->
+        <elem name="left_hand">       24 25  0  1 </elem>  <!-- 2 -->
+
       </paramlist>
 
       <group name ="ROS">
@@ -23,10 +35,23 @@
       
       <action phase="startup" level="5" type="attach">
         <paramlist name="networks">
-         <elem name="mc1"> cer_base_mc </elem>
-        <!--       
-         <elem name="mc2"> cer_base_mc </elem>
-         -->
+
+         <!-- <elem name="base">            cer_base_mc </elem>  -->      
+   
+         <elem name="head">            cer_head_mc </elem>     
+         <elem name="torso">           cer_torso_tripod_mc </elem>
+         <elem name="torso_yaw">       cer_torso_yaw_mc   </elem>
+
+         <elem name="right_upper_arm"> cer_right_upper_arm_mc </elem>
+         <elem name="right_wrist">     cer_right_wrist_tripod_mc </elem>
+         <elem name="right_lower_arm"> cer_right_lower_arm_mc </elem>
+         <elem name="right_hand">      cer_right_hand_mc </elem>
+
+         <elem name="left_upper_arm">  cer_left_upper_arm_mc </elem>
+         <elem name="left_wrist">      cer_left_wrist_tripod_mc </elem>
+         <elem name="left_lower_arm">  cer_left_lower_arm_mc </elem>
+         <elem name="left_hand">       cer_left_hand_mc </elem>
+
          </paramlist>
       </action>
 
