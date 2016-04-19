@@ -10,7 +10,7 @@
     <group name="GENERAL">
       <param name="Joints">    3       </param>
       <param name="AxisMap">   0 1 2   </param>
-      <param name="Verbose">   true    </param>
+     <!--  <param name="Verbose">     true    </param> -->
       <param name="Encoder">   1 1 1   </param>
     </group>
 
@@ -20,8 +20,8 @@
       <param name="Min_el">      0.0    </param>
       <param name="Max_alpha">   30.0   </param>
 
-      <param name="BASE_TRANSFORMATION">  -1.0    0.0     0.0    0.0
-                                           0.0   -1.0     0.0    0.0
+      <param name="BASE_TRANSFORMATION">   1.0    0.0     0.0    0.0
+                                           0.0    1.0     0.0    0.0
                                            0.0    0.0     1.0    0.0
                                            0.0    0.0     0.0    1.0
       </param>
