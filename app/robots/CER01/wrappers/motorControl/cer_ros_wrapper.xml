@@ -40,7 +40,7 @@
    
          <elem name="head">            cer_head_mc </elem>     
          <elem name="torso">           cer_torso_tripod_mc </elem>
-         <elem name="torso_yaw">       cer_torso_yaw_mc   </elem>
+         <elem name="torso_yaw">       cer_torso_mc   </elem>
 
          <elem name="right_upper_arm"> cer_right_upper_arm_mc </elem>
          <elem name="right_wrist">     cer_right_wrist_tripod_mc </elem>
