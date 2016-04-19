@@ -5,7 +5,7 @@
   <device name="cer_torso_tripod_mc" type="tripodMotionControl">
       <params file="general.xml" />
 
-    <param name="AxisName">  "torso_heave_eq"   "torso_pitch_eq"   "torso_roll_eq"  </param>
+    <param name="AxisNames">  "torso_heave_eq"   "torso_pitch_eq"   "torso_roll_eq"  </param>
 
     <group name="GENERAL">
       <param name="Joints">    3       </param>
