@@ -1578,12 +1578,12 @@ bool tripodMotionControl::getNumberOfMotorEncodersRaw(int* num)
 
 bool tripodMotionControl::setMotorEncoderRaw(int m, const double val)
 {
-    return NOT_YET_IMPLEMENTED("setMotorEncoder");
+    return false;//NOT_YET_IMPLEMENTED("setMotorEncoder");
 }
 
 bool tripodMotionControl::setMotorEncodersRaw(const double *vals)
 {
-    return NOT_YET_IMPLEMENTED("setMotorEncoders");
+    return false;//NOT_YET_IMPLEMENTED("setMotorEncoders");
 }
 
 bool tripodMotionControl::setMotorEncoderCountsPerRevolutionRaw(int m, const double cpr)
@@ -1621,22 +1621,22 @@ bool tripodMotionControl::getMotorEncodersRaw(double *encs)
 
 bool tripodMotionControl::getMotorEncoderSpeedRaw(int m, double *sp)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    return false;//NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
 
 bool tripodMotionControl::getMotorEncoderSpeedsRaw(double *spds)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    return false;//NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
 
 bool tripodMotionControl::getMotorEncoderAccelerationRaw(int m, double *acc)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    return false;//NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
 
 bool tripodMotionControl::getMotorEncoderAccelerationsRaw(double *accs)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    return false;//NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
 
 bool tripodMotionControl::getMotorEncodersTimedRaw(double *encs, double *stamps)
