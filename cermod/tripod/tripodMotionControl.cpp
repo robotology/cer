@@ -659,7 +659,7 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
 
     // No axis mapping allowed here
     for (i = 0; i < _njoints; i++)
-        _axisMap[i-1] = i;
+        _axisMap[i] = i;
 
     double tmp_A2E;
     // Encoder scales
