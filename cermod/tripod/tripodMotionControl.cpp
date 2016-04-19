@@ -816,7 +816,12 @@ bool tripodMotionControl::getJointType(int axis, yarp::dev::JointTypeEnum& type)
     if (axis < 0 || axis >= _njoints)
         return false;
 
-    type = yarp::dev::VOCAB_JOINTTYPE_PRISMATIC;
+    if(axis == 0)
+        type = yarp::dev::VOCAB_JOINTTYPE_PRISMATIC;
+
+    else
+        type = yarp::dev::VOCAB_JOINTTYPE_REVOLUTE;
+
     return true;
 }
 
