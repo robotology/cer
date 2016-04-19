@@ -359,9 +359,7 @@ public:
             Hd(2,3)=zd;
 
             Matrix Hee=d.T;
-            Hd(0,3)=d.p[0];
-            Hd(1,3)=d.p[1];
-            Hd(2,3)=d.p[2];
+            Hd.setSubcol(d.p,0,3);
 
             return slv.callback->exec(iter,Hd,lll,Hee);
         }

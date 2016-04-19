@@ -247,9 +247,7 @@ public:
             Vector ud_=(1.0/n)*ud;
             ud_.push_back(n);
             Matrix Hd=axis2dcm(ud_);
-            Hd(0,3)=xd[0];
-            Hd(1,3)=xd[1];
-            Hd(2,3)=xd[2];
+            Hd.setSubcol(xd,0,3);
 
             solver.setSolverParameters(p);
             solver.setInitialGuess(q);
