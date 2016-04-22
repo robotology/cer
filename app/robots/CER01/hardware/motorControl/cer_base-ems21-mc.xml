@@ -22,12 +22,12 @@
     <group name="POSITION_CONTROL">
 	<param name="controlLaw">    joint_pid_v1 </param> 
         <param name="controlUnits">  machine_units </param> 
-        <param name="kp">            3000        3000          0          0 </param>   
+        <param name="kp">               0           0          0          0 </param>   
         <param name="kd">               0           0          0          0 </param>   
-        <param name="ki">            5000        5000          0          0 </param>   
-        <param name="limOutput">     5000        5000          0          0 </param>   
-        <param name="maxOutput">    30000       30000      30000      30000 </param>   
-        <param name="maxInt">        4000        4000          0          0 </param>   
+        <param name="ki">               0           0          0          0 </param>   
+        <param name="limOutput">        0           0          0          0 </param>   
+        <param name="maxOutput">     5000        5000          0          0 </param>   
+        <param name="maxInt">           0           0          0          0 </param>   
         <param name="shift">            0           0          0          0 </param>   
         <param name="ko">               0           0          0          0 </param>   
         <param name="stictionUp">       0           0          0          0 </param>   
