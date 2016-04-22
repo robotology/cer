@@ -303,7 +303,17 @@ int ControlThread::get_control_type ()
 
 bool ControlThread::threadInit()
 {
-    string control_type = ctrl_options.findGroup("GENERAL").check("control_mode", Value("none"), "type of control for the wheels").asString().c_str();
+    if (!ctrl_options.check("GENERAL"))
+    {
+        yError() << "Missing [GENERAL] section";
+        return false;
+    }
+    yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
+
+    string control_type = general_options.check("control_mode", Value("none"), "type of control for the wheels").asString().c_str();
+    input_filter_enabled = general_options.check("input_filter_enabled", Value(0), "input filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
+    lin_ang_ratio = general_options.check("linear_angular_ratio", Value(0.7), "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
+    max_motor_pwm = general_options.check("max_motor_pwm", Value(0), "max_motor_pwm").asDouble();
 
     // open the control board driver
     yInfo("Opening the motors interface...\n");
@@ -349,18 +359,21 @@ bool ControlThread::threadInit()
     } while (true);
 
     //create the odometry and the motor handlers
-    odometry_handler = new Odometry((int)(thread_period), rf, ctrl_options, control_board_driver);
-    motor_handler = new MotorControl((int)(thread_period), rf, ctrl_options, control_board_driver);
-    odometry_handler->open();
-    motor_handler->open();
-
-    yInfo("%s", ctrl_options.toString().c_str());
-    if (!ctrl_options.check("max_motor_pwm"))
+    odometry_handler = new Odometry((int)(thread_period), control_board_driver);
+    motor_handler = new MotorControl((int)(thread_period), control_board_driver);
+    if (odometry_handler->open(rf, ctrl_options) == false)
     {
-        yError("Error reading from .ini file, missing, max_motor_pwm parameter, section GENERAL");
+        yError() << "Problem occurred while opening odometry handler";
         return false;
     }
-    max_motor_pwm = ctrl_options.findGroup("GENERAL").check("max_motor_pwm", Value(0), "max_motor_pwm").asDouble();
+
+    if (motor_handler->open(rf, ctrl_options) == false)
+    {
+        yError() << "Problem occurred while opening motor handler";
+        return false;
+    }
+
+    yInfo("%s", ctrl_options.toString().c_str());
 
     //create the pid controllers
     if (!ctrl_options.check("HEADING_VELOCITY_PID"))

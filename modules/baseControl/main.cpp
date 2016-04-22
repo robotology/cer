@@ -161,8 +161,8 @@ public:
         }
 
         //set the thread rate
-        int rate = rf.check("rate",Value(20)).asInt();
-        yInfo("baseCtrl thread rate: %d ms.",rate);
+        int period = rf.check("period",Value(20)).asInt();
+        yInfo("baseCtrl thread rate: %d ms.",period);
 
         // the motor control thread
         bool motors_enabled=true;
@@ -174,7 +174,8 @@ public:
 
         if (motors_enabled==true)
         {
-            control_thr = new ControlThread(rate, rf, ctrl_options);
+            control_thr = new ControlThread(period, rf, ctrl_options);
+
             if (!control_thr->start())
             {
                 delete control_thr;

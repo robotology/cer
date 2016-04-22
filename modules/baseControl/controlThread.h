@@ -117,8 +117,8 @@ public:
         thread_timeout_counter   = 0;
         base_control_type        = BASE_CONTROL_NONE;
 
-        input_filter_enabled = ctrl_options.findGroup("GENERAL").check("input_filter_enabled", Value(0), "input filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
-        lin_ang_ratio = ctrl_options.findGroup("GENERAL").check("linear_angular_ratio", Value(0.7), "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
+        input_filter_enabled     = 0;
+        lin_ang_ratio            = 0.7;
 
         debug_enabled            = false;
         both_lin_ang_enabled     = true;

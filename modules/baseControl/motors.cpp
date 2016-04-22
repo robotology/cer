@@ -119,9 +119,12 @@ MotorControl::~MotorControl()
     close();
 }
 
-bool MotorControl::open()
+bool MotorControl::open(ResourceFinder &_rf, Property &_options)
 {
-    if (rf.check("no_motors_filter"))
+    ctrl_options = _options;
+    localName = ctrl_options.find("local").asString();
+
+    if (_rf.check("no_motors_filter"))
     {
         yInfo("'no_filter' option found. Turning off PWM filter.");
         motors_filter_enabled=0;
@@ -137,29 +140,55 @@ bool MotorControl::open()
     ok = ok & control_board_driver->view(icmd);
     if(!ok)
     {
-        yError("One or more devices has not been viewed\nreturning...\n");
-        //return false;
+        yError("One or more devices has not been viewed, returning\n");
+        return false;
     }
+
     // open control input ports
     port_movement_control.open((localName+"/control:i").c_str());
     port_auxiliary_control.open((localName+"/aux_control:i").c_str());
     port_joystick_control.open((localName+"/joystick:i").c_str());
 
+    if (!ctrl_options.check("GENERAL"))
+    {
+        yError() << "Missing [GENERAL] section";
+        return false;
+    }
+    yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
+
+    motors_filter_enabled = general_options.check("motors_filter_enabled", Value(4), "motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
+
+    if (!general_options.check("max_linear_vel"))
+    {
+        yError("Error reading from .ini file, missing, max_linear_vel parameter, section GENERAL");
+        return false;
+    }
+    if (!general_options.check("max_angular_vel"))
+    {
+        yError("Error reading from .ini file, missing, max_angular_vel parameter, section GENERAL");
+        return false;
+    }
+
+    double tmp = 0;
+    tmp = (general_options.check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
+    if (tmp>0 && tmp < DEFAULT_MAX_ANGULAR_VEL) max_angular_vel = tmp;
+    tmp = (general_options.check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asDouble();
+    if (tmp>0 && tmp < DEFAULT_MAX_LINEAR_VEL) max_linear_vel = tmp;
+
+    localName = ctrl_options.find("local").asString();
+
     return true;
 }
 
-MotorControl::MotorControl(unsigned int _period, ResourceFinder &_rf, Property options,
-            PolyDriver* _driver) :
-            rf(_rf),
-            ctrl_options (options)
-    {
-    control_board_driver= _driver;
+MotorControl::MotorControl(unsigned int _period, PolyDriver* _driver)
+{
+    control_board_driver = _driver;
 
-    thread_timeout_counter     = 0;
+    thread_timeout_counter = 0;
 
-    command_received    = 0;
-    joystick_received   = 0;
-    auxiliary_received  = 0;
+    command_received = 0;
+    joystick_received = 0;
+    auxiliary_received = 0;
 
     mov_timeout_counter = 0;
     joy_timeout_counter = 0;
@@ -185,27 +214,8 @@ MotorControl::MotorControl(unsigned int _period, ResourceFinder &_rf, Property o
 
     max_linear_vel = DEFAULT_MAX_LINEAR_VEL;
     max_angular_vel = DEFAULT_MAX_ANGULAR_VEL;
-    motors_filter_enabled = ctrl_options.findGroup("GENERAL").check("motors_filter_enabled",Value(4),"motors filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
-    
-    if (!ctrl_options.check("max_linear_vel"))
-    {
-        yError("Error reading from .ini file, missing, max_linear_vel parameter, section GENERAL");
-        return;
-    }
-    if (!ctrl_options.check("max_angular_vel"))
-    {
-        yError("Error reading from .ini file, missing, max_angular_vel parameter, section GENERAL");
-        return;
-    }
 
-    double tmp =0;
-    tmp = (ctrl_options.findGroup("GENERAL").check("max_angular_vel", Value(0), "maximum angular velocity of the platform [deg/s]")).asDouble();
-    if (tmp>0 && tmp < DEFAULT_MAX_ANGULAR_VEL) max_angular_vel = tmp;
-    tmp = (ctrl_options.findGroup("GENERAL").check("max_linear_vel", Value(0), "maximum linear velocity of the platform [m/s]")).asDouble();
-    if (tmp>0 && tmp < DEFAULT_MAX_LINEAR_VEL) max_linear_vel = tmp;
-    
     thread_period = _period;
-    localName = ctrl_options.find("local").asString();
 }
 
 void MotorControl::read_percent_polar(const Bottle *b, double& des_dir, double& lin_spd, double& ang_spd, double& pwm_gain)
@@ -444,12 +454,25 @@ void MotorControl::execute_openloop(double appl_linear_speed, double appl_angula
     decouple(appl_linear_speed,appl_angular_speed);
 
     //Use a low pass filter to obtain smooth control
-    if (motors_filter_enabled>0)
+    if (motors_filter_enabled == 1)
+    {
+        F_L = control_filters::lp_filter_1Hz(F_L, 0);
+        F_R = control_filters::lp_filter_1Hz(F_R, 1);
+    }
+    else if (motors_filter_enabled == 2)
+    {
+        F_L = control_filters::lp_filter_2Hz(F_L, 0);
+        F_R = control_filters::lp_filter_2Hz(F_R, 1);
+    }
+    else if (motors_filter_enabled == 4) //default
     {
         F_L = control_filters::lp_filter_4Hz(F_L, 0);
         F_R = control_filters::lp_filter_4Hz(F_R, 1);
-        //F_L  = ratelim_filter_0(F_L,0);
-        //F_R  = ratelim_filter_0(F_R,1);
+    }
+    else if (motors_filter_enabled == 8)
+    {
+        F_L = control_filters::lp_filter_8Hz(F_L, 0);
+        F_R = control_filters::lp_filter_8Hz(F_R, 1);
     }
 
     //Apply the commands

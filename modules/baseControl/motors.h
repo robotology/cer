@@ -84,7 +84,7 @@ private:
     double              max_angular_vel;
 
 protected:
-    ResourceFinder            &rf;
+    //ResourceFinder            rf;
     PolyDriver                *control_board_driver;
     BufferedPort<Bottle>      port_movement_control;
     BufferedPort<Bottle>      port_auxiliary_control;
@@ -102,13 +102,13 @@ protected:
 
 public:
 
-    MotorControl(unsigned int _period, ResourceFinder &_rf, Property options, PolyDriver* _driver);
+    MotorControl(unsigned int _period, PolyDriver* _driver);
     ~MotorControl();
     bool set_control_velocity();
     bool set_control_openloop();
     bool set_control_idle();
 
-    bool   open();
+    bool open(ResourceFinder &_rf, Property &_options);
     void read_inputs(double *linear_speed,double *angular_speed,double *desired_direction, double *pwm_gain);
     void execute_none();
     void execute_openloop(double appl_linear_speed, double appl_angular_speed);

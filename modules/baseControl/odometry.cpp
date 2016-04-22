@@ -80,9 +80,8 @@ Odometry::~Odometry()
     close();
 }
 
-Odometry::Odometry(unsigned int _period, ResourceFinder &_rf, Property options, PolyDriver* _driver):rf(_rf)
+Odometry::Odometry(unsigned int _period, PolyDriver* _driver)
 {
-    ctrl_options = options;
     period = _period;
     control_board_driver= _driver;
     odom_x=0;
@@ -111,24 +110,26 @@ Odometry::Odometry(unsigned int _period, ResourceFinder &_rf, Property options, 
     rosMsgCounter=0;
 }
 
-bool Odometry::open()
+bool Odometry::open(ResourceFinder &_rf, Property& _options)
 {
+    ctrl_options = _options;
+
     // open the control board driver
     yInfo("Opening the motors interface...");
 
     Property control_board_options("(device remote_controlboard)");
     if (!control_board_driver)
     {
-        yError("ERROR: control board driver not ready!");
-            return false;
+        yError("control board driver not ready!");
+        return false;
     }
     // open the interfaces for the control boards
     bool ok = true;
     ok = ok & control_board_driver->view(ienc);
     if(!ok)
     {
-        yError("ERROR: one or more devices has not been viewed\nreturning...");
-        //return false;
+        yError("one or more devices has not been viewed");
+        return false;
     }
     // open control input ports
     port_odometry.open((localName+"/odometry:o").c_str());

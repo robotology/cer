@@ -32,7 +32,7 @@ double control_filters::lp_filter_8Hz(double input, int i)
 
 double control_filters::lp_filter_4Hz(double input, int i)
 {
-    //This is a butterworth low pass first order, with a cut off freqency of 2Hz
+    //This is a butterworth low pass first order, with a cut off freqency of 4Hz
     //It must be used with a sampling frequency of 50Hz (20ms)
     static double xv[2][10], yv[2][10];
     xv[0][i] = xv[1][i]; 

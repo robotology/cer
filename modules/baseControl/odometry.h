@@ -128,7 +128,7 @@ public:
     double              odom_theta;
 
 private:
-    ResourceFinder                  &rf;
+    //ResourceFinder                  rf;
     PolyDriver                      *control_board_driver;
     BufferedPort<Bottle>            port_odometry;
     BufferedPort<Bottle>            port_odometer;
@@ -138,10 +138,10 @@ private:
     IEncoders                       *ienc;
 
 public:
-    Odometry(unsigned int _period, ResourceFinder &_rf, Property options, PolyDriver* _driver); 
+    Odometry(unsigned int _period, PolyDriver* _driver); 
     ~Odometry();
     bool reset_odometry();
-    bool open();
+    bool open(ResourceFinder &_rf, Property &options);
     void compute();
     void printStats();
     void close();
