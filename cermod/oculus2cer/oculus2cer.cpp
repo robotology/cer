@@ -6,30 +6,40 @@
 
 #include "oculus2cer.h"
 
-#include <yarp/os/Bottle.h>
 #include <yarp/os/Log.h>
-#include <yarp/os/Things.h>
 #include <yarp/os/Value.h>
 
 
-yarp::os::Things& Oculus2Cer::update(yarp::os::Things& thing)
+Oculus2Cer::Oculus2Cer()
+{
+    this->things.setPortWriter(&this->bottle);
+}
+
+bool Oculus2Cer::accept(yarp::os::Things& thing)
 {
     yarp::os::Bottle* bt = thing.cast_as<yarp::os::Bottle>();
     if (bt == NULL) {
         yWarning("Oculus2Cer: expected type Bottle but got wrong data type!");
-        return thing;
+        return false;
     }
     if (bt->size() != 3) {
         yWarning("Oculus2Cer: expected Bottle of size 3 but got wrong size!");
-        return thing;
+        return false;
     }
+    return true;
+}
+
+yarp::os::Things& Oculus2Cer::update(yarp::os::Things& thing)
+{
+    yarp::os::Bottle* bt = thing.cast_as<yarp::os::Bottle>();
+    yAssert(bt);
 
     double pitch = bt->get(0).asDouble();
     double yaw   = bt->get(2).asDouble();
 
-    bt->clear();
-    bt->addDouble(-pitch);
-    bt->addDouble(yaw);
+    this->bottle.clear();
+    this->bottle.addDouble(-pitch);
+    this->bottle.addDouble(yaw);
 
-    return thing;
+    return this->things;
 }

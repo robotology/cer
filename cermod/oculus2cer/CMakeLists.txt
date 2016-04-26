@@ -20,7 +20,7 @@ if(ENABLE_cermod_oculus2cer)
                   oculus2cer.h)
 
   target_link_libraries(cer_pm_oculus2cer YARP::YARP_OS
-                                           YARP::YARP_init)
+                                          YARP::YARP_init)
 
   yarp_install(TARGETS cer_pm_oculus2cer
                COMPONENT Runtime
