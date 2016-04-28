@@ -11,23 +11,23 @@
     </group>
 
     <group name="HOME">
-        <param name="positionHome">                       0.00            0.00           </param>
-        <param name="velocityHome">                       10.00           10.00          </param>
+        <param name="positionHome">                       30.00           30.00           </param>
+        <param name="velocityHome">                       40.00           40.00          </param>
     </group>                                                                      
 
     <group name="CALIBRATION">                                                    
         <param name="calibrationType">                    11              11             </param>
         <param name="calibration1">                      -1500            1500           </param>
         <param name="calibration2">                       900             900            </param>
-        <param name="calibration3">                       26214           63897          </param>
-        <param name="calibration4">                       43325           25031          </param>
+        <param name="calibration3">                       26216           62987          </param>
+        <param name="calibration4">                       42179           24575          </param>
         <param name="calibration5">                       15000           20000          </param>
-        <param name="calibrationZero">                    0               0              </param>
+        <param name="calibrationZero">                    180             180            </param>
         <param name="calibrationDelta">                   0.0             0.0            </param>
         <param name="startupPosition">                    30.0            30.0           </param>
-        <param name="startupVelocity">                    30.0            30.0           </param>
+        <param name="startupVelocity">                    40.0            40.0           </param>
         <param name="startupMaxPwm">                      1500            1500           </param>
-        <param name="startupPosThreshold">                6               6              </param>
+        <param name="startupPosThreshold">                10              10              </param>
     </group>
 
 		<param name="CALIB_ORDER">(0 1) </param>
