@@ -6,10 +6,12 @@ project(cer_kinematics_alt)
 
 set(headers_private include/${PROJECT_NAME}/private/Geometry.h
                     include/${PROJECT_NAME}/private/Matrix.h
-                    include/${PROJECT_NAME}/private/Joints.h)
+                    include/${PROJECT_NAME}/private/Joints.h
+					include/${PROJECT_NAME}/private/SolverImpl.h)
 set(headers         include/${PROJECT_NAME}/Solver.h)
 set(sources         src/Solver.cpp
-                    src/Joints.cpp)
+                    src/Joints.cpp
+					src/SolverImpl.cpp)
 
 source_group("Header Files" FILES ${headers_private} ${headers})
 source_group("Source Files" FILES ${sources})

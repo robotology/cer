@@ -21,22 +21,15 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
 
-namespace cer {
-namespace kinematics_alt {
-
 #define PERIOD                  0.01 // [sec]
 #define SOLVER_TIMEOUT          0.0075 // [sec]
 #define DEFAULT_POS_THRESHOLD   0.01 // [m]
 
-#define DEFAULT_TORSO_EXTENSION 0.0   // [m]
-#define TORSO_MAX_TILT          30.0  // [deg]
-#define MIN_TORSO_EXTENSION    -0.05  // [m]
-#define MAX_TORSO_EXTENSION     0.15  // [m]
-
-#define MIN_ARM_EXTENSION       0.0   // [m]
-#define MAX_ARM_EXTENSION       0.14  // [m]
 #define DEFAULT_ARM_EXTENSION   0.01  // [m]
-#define WRIST_MAX_TILT          35.0  // [deg]
+#define DEFAULT_TORSO_EXTENSION 0.0   // [m]
+
+namespace cer {
+namespace kinematics_alt {
 
 // joint identifiers
 enum 
@@ -124,6 +117,8 @@ public:
               double armElong=DEFAULT_ARM_EXTENSION,
               double torsoElong=DEFAULT_TORSO_EXTENSION,
               double timeoutSec=SOLVER_TIMEOUT);
+
+    bool controller(const yarp::sig::Vector &q, const yarp::sig::Vector &Vstar, const yarp::sig::Vector &Wstar, yarp::sig::Vector &qvelout);
 
 protected:
     LeftSideSolverImpl *solverImpl;
