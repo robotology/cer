@@ -25,7 +25,7 @@
         <param name="controlUnits">     machine_units          </param> 
         <param name="kp">               5           5          5         5      </param>       
         <param name="kd">               1           1          1         1      </param>       
-        <param name="ki">               0           0          0         0    </param>       
+        <param name="ki">               0           0          0         0.5    </param>       
         <param name="limPwm">           15000       15000      15000     15000  </param>
         <param name="maxOutput">        32000       32000      32000     32000  </param>                 
         <param name="maxInt">           0           0          0         0      </param>       
@@ -36,6 +36,22 @@
         <param name="kff">              0           0          0         0      </param>   
     </group>
 
+    <group name="VELOCITY_CONTROL">
+	    <param name="controlLaw">       joint_pid_v1           </param> 
+        <param name="controlUnits">     machine_units          </param> 
+        <param name="kp">               5           5          5         1      </param>       
+        <param name="kd">               1           1          1         0      </param>       
+        <param name="ki">               0           0          0         5      </param>       
+        <param name="limPwm">           15000       15000      15000     15000  </param>
+        <param name="maxOutput">        32000       32000      32000     32000  </param>                 
+        <param name="maxInt">           0           0          0         0      </param>       
+        <param name="shift">            0           0          0         0      </param>       
+        <param name="ko">               0           0          0         0      </param>       
+        <param name="stictionUp">       0           0          0         0      </param>       
+        <param name="stictionDwn">      0           0          0         0      </param>     
+        <param name="kff">              0           0          0         0      </param>   
+    </group>
+    
     <group name="TORQUE_CONTROL">
         <param name="controlLaw">       motor_pid_with_friction_v1  </param> 
         <param name="controlUnits">     machine_units               </param>         
@@ -55,6 +71,17 @@
         <param name="ktau">             0          0         0        0       </param>
     </group>
 
+    <group name="CURRENT_CONTROL">
+	    <param name="controlLaw">       2foc_feedback          </param> 
+        <param name="controlUnits">     metric_units           </param> 
+        <param name="kp">               8           8          8         8      </param>       
+        <param name="kd">               0           0          0         0      </param>       
+        <param name="ki">               2           2          2         2      </param>
+        <param name="scale">            10          10         10        10     </param>
+        <param name="maxOutput">        32000       32000      32000     32000  </param>                 
+        <param name="maxInt">           32000       32000      32000     32000  </param>        
+    </group>
+    
     <group name="IMPEDANCE">
         <param name="stiffness">        0          0         0        0       </param>    
         <param name="damping">          0          0         0        0       </param>    
