@@ -57,8 +57,9 @@ bool LeftSideSolver::ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &qout,d
 {
     return solverImpl->ikin(Hd,qout,armElong,torsoElong,timeoutSec);
 }
-
+/*
 bool LeftSideSolver::controller(yarp::sig::Vector &qposin, yarp::sig::Vector &Vstar, yarp::sig::Vector &Wstar, yarp::sig::Vector &qvelout)
 {
     return solverImpl->controller(qposin, Vstar, Wstar, qvelout);
 }
+*/

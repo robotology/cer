@@ -118,7 +118,7 @@ public:
               double torsoElong=DEFAULT_TORSO_EXTENSION,
               double timeoutSec=SOLVER_TIMEOUT);
 
-    bool controller(const yarp::sig::Vector &q, const yarp::sig::Vector &Vstar, const yarp::sig::Vector &Wstar, yarp::sig::Vector &qvelout);
+    //bool controller(const yarp::sig::Vector &q, const yarp::sig::Vector &Vstar, const yarp::sig::Vector &Wstar, yarp::sig::Vector &qvelout);
 
 protected:
     LeftSideSolverImpl *solverImpl;
