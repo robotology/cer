@@ -1061,7 +1061,7 @@ bool tripodMotionControl::doneRaw(int axis)
 bool tripodMotionControl::getAxes(int *ax)
 {
     *ax=_njoints;
-    return true;
+    return _device.isConfigured();
 }
 
 bool tripodMotionControl::setPositionModeRaw()
