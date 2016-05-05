@@ -69,7 +69,7 @@ quiver3(hax,0,0,0,1,0,0,A,'Color','r','Linewidth',2);
 quiver3(hax,0,0,0,0,1,0,A,'Color','g','Linewidth',2);
 quiver3(hax,0,0,0,0,0,1,A,'Color','b','Linewidth',2);
 
-floor_z=-0.63;
+floor_z=-0.16;
 
 % casters
 c1=[0.078  0.09];

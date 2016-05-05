@@ -179,7 +179,7 @@ public:
      *                          root frame.
      */
     ArmCOM(ArmSolver &solver_, const double external_weight=0.0,
-           const double floor_z=-0.63);
+           const double floor_z=-0.16);
 
     /**
      * CoM computation.
