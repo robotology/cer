@@ -40,6 +40,7 @@
 
 #include "odometry.h"
 #include "motors.h"
+#include "input.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -100,22 +101,21 @@ private:
 protected:
     ResourceFinder            &rf;
     PolyDriver                *control_board_driver;
-    BufferedPort<Bottle>      port_movement_control;
-    BufferedPort<Bottle>      port_auxiliary_control;
-    BufferedPort<Bottle>      port_joystick_control;
 
     BufferedPort<Bottle>      port_debug_linear;
     BufferedPort<Bottle>      port_debug_angular;
 
     Odometry*                 odometry_handler;
     MotorControl*             motor_handler;
+    Input*                    input_handler;
 
     string                    remoteName;
     string                    localName;
 
 public:
-    Odometry* const     get_odometry_handler() {return odometry_handler;}
-    MotorControl* const get_motor_handler()    {return motor_handler;}
+    Odometry* const     get_odometry_handler() { return odometry_handler;}
+    MotorControl* const get_motor_handler()    { return motor_handler;}
+    Input* const get_input_handler()           { return input_handler; }
     void                enable_debug(bool b);
 
     ControlThread(unsigned int _period, ResourceFinder &_rf, Property options) :
@@ -128,7 +128,7 @@ public:
 
         input_filter_enabled     = 0;
         lin_ang_ratio            = 0.7;
-		robot_type               = ROBOT_TYPE_NONE;
+        robot_type               = ROBOT_TYPE_NONE;
 
         debug_enabled            = false;
         both_lin_ang_enabled     = true;
@@ -174,6 +174,7 @@ public:
     {
         if (odometry_handler)  {delete odometry_handler; odometry_handler=0;}
         if (motor_handler)     {delete motor_handler; motor_handler=0;}
+		if (input_handler)     {delete input_handler; input_handler = 0; }
 
         if (linear_speed_pid)    {delete linear_speed_pid;  linear_speed_pid=0;}
         if (angular_speed_pid)   {delete angular_speed_pid; angular_speed_pid=0;}

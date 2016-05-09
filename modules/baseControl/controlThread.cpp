@@ -211,7 +211,7 @@ void ControlThread::run()
     double pidout_direction     = 0;
 
     //input_linear_speed and input_angular speed ranges are: 0-100
-    this->motor_handler->read_inputs(&input_linear_speed, &input_angular_speed, &input_desired_direction, &input_pwm_gain);
+    this->input_handler->read_inputs(&input_linear_speed, &input_angular_speed, &input_desired_direction, &input_pwm_gain);
     apply_input_filter(input_linear_speed, input_angular_speed,input_desired_direction);
     apply_ratio_limiter(input_linear_speed, input_angular_speed);
 
@@ -370,6 +370,7 @@ bool ControlThread::threadInit()
 		robot_type = ROBOT_TYPE_DIFFERENTIAL;
 		odometry_handler = new CER_Odometry((int)(thread_period), control_board_driver);
 		motor_handler = new MotorControl((int)(thread_period), control_board_driver);
+		input_handler = new Input((int)(thread_period), control_board_driver);
 	}
 	else if (robot_type_s == "ikart_V1")
 	{
@@ -377,6 +378,7 @@ bool ControlThread::threadInit()
 		robot_type = ROBOT_TYPE_THREE_ROTOCASTER;
 		odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
 		motor_handler = new MotorControl((int)(thread_period), control_board_driver);
+		input_handler = new Input((int)(thread_period), control_board_driver);
 	}
 	else if (robot_type_s == "ikart_V2")
 	{
@@ -384,6 +386,7 @@ bool ControlThread::threadInit()
 		robot_type = ROBOT_TYPE_THREE_MECHANUM;
 		odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
 		motor_handler = new MotorControl((int)(thread_period), control_board_driver);
+		input_handler = new Input((int)(thread_period), control_board_driver);
 	}
 	else
 	{
@@ -402,6 +405,12 @@ bool ControlThread::threadInit()
         yError() << "Problem occurred while opening motor handler";
         return false;
     }
+
+	if (input_handler->open(rf, ctrl_options) == false)
+	{
+		yError() << "Problem occurred while opening input handler";
+		return false;
+	}
 
     yInfo("%s", ctrl_options.toString().c_str());
 
