@@ -53,59 +53,43 @@ using namespace yarp::math;
 #define M_PI 3.14159265
 #endif
 
+#ifndef RAD2DEG
+#define RAD2DEG 180.0/3.14159
+#endif 
+
+#ifndef DEG2RAD
+#define DEG2RAD 3.14159/180.0
+#endif
+
 class Odometry
 {
-private:
-    Property ctrl_options;
+protected:
+    Property              ctrl_options;
     yarp::os::Semaphore   mutex;
     yarp::os::Stamp       timeStamp;
 
-    //encoder variables
-    double              encL_offset;
-    double              encR_offset;
+	//thread period
+	double                period;
 
-    double              encL;
-    double              encR;
+	//ros
+	bool                                            enable_ROS;
+	yarp::os::Publisher<nav_msgs_Odometry>          rosPublisherPort_odometry;
+	std::string                                     odometry_frame_id;
+	std::string                                     child_frame_id;
+	std::string                                     rosNodeName;
+	std::string                                     rosTopicName_odometry;
+	yarp::os::Node                                  *rosNode;
+	yarp::os::NetUint32                             rosMsgCounter;
 
-    //measured motor velocity
-    double              velL;
-    double              velR;
+	yarp::os::Publisher<geometry_msgs_PolygonStamped>          rosPublisherPort_footprint;
+	double                                                     footprint_diameter;
+	std::string                                                rosTopicName_footprint;
+	geometry_msgs_PolygonStamped                               footprint;
+	std::string                                                footprint_frame_id;
 
-    //estimated motor velocity
-    double              velL_est;
-    double              velR_est;
-    iCub::ctrl::AWLinEstimator      *encvel_estimator;
-    iCub::ctrl::AWLinEstimator      *encw_estimator;
+	yarp::os::Publisher<tf_tfMessage>                          rosPublisherPort_tf;
 
-    //robot geometry
-    double              geom_r;
-    double              geom_L;
-
-    //thread period
-    double              period;
-
-    //ros
-    bool                enable_ROS;
-    yarp::os::Publisher<nav_msgs_Odometry>          rosPublisherPort_odometry;
-    std::string                                     odometry_frame_id;
-    std::string                                     child_frame_id;
-    std::string                                     rosNodeName;
-    std::string                                     rosTopicName_odometry;
-    yarp::os::Node                                  *rosNode;
-    yarp::os::NetUint32                             rosMsgCounter;
-
-    yarp::os::Publisher<geometry_msgs_PolygonStamped>          rosPublisherPort_footprint;
-    double                                                     footprint_diameter;
-    std::string                                                rosTopicName_footprint;
-    geometry_msgs_PolygonStamped                               footprint;
-    std::string                                                footprint_frame_id;
-
-    yarp::os::Publisher<tf_tfMessage>                          rosPublisherPort_tf;
-
-    yarp::sig::Vector enc;
-    yarp::sig::Vector encv;
-
-public:
+protected:
     //estimated cartesian velocity in the fixed odometry reference frame (world)
     double              odom_vel_x;
     double              odom_vel_y;
@@ -127,7 +111,7 @@ public:
     double              odom_y;
     double              odom_theta;
 
-private:
+protected:
     //ResourceFinder                  rf;
     PolyDriver                      *control_board_driver;
     BufferedPort<Bottle>            port_odometry;
@@ -140,12 +124,14 @@ private:
 public:
     Odometry(unsigned int _period, PolyDriver* _driver); 
     ~Odometry();
-    bool reset_odometry();
-    bool open(ResourceFinder &_rf, Property &options);
-    void compute();
-    void printStats();
-    void close();
-
+	virtual bool reset_odometry() = 0;
+	virtual bool open(ResourceFinder &_rf, Property &options) = 0;
+	virtual void compute() = 0;
+	virtual void broadcast();
+	virtual void printStats() = 0;
+	virtual void close();
+	virtual double get_base_vel_lin();
+	virtual double get_base_vel_theta();
 };
 
 #endif

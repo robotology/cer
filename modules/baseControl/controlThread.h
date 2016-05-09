@@ -47,6 +47,14 @@ using namespace yarp::dev;
 
 enum
 {
+	ROBOT_TYPE_NONE = 0,
+	ROBOT_TYPE_DIFFERENTIAL = 1,
+	ROBOT_TYPE_THREE_ROTOCASTER = 2,
+	ROBOT_TYPE_THREE_MECHANUM = 3
+};
+
+enum
+{
     BASE_CONTROL_NONE = 0,
     BASE_CONTROL_OPENLOOP_NO_PID = 1,
     BASE_CONTROL_OPENLOOP_PID = 2,
@@ -82,6 +90,7 @@ private:
     iCub::ctrl::parallelPID*    angular_ol_pid;
 
     //controller parameters
+	int                 robot_type;
     double              lin_ang_ratio;
     bool                both_lin_ang_enabled;
     int                 input_filter_enabled;
@@ -119,6 +128,7 @@ public:
 
         input_filter_enabled     = 0;
         lin_ang_ratio            = 0.7;
+		robot_type               = ROBOT_TYPE_NONE;
 
         debug_enabled            = false;
         both_lin_ang_enabled     = true;

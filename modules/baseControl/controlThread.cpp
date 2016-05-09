@@ -18,6 +18,8 @@
 
 #include "controlThread.h"
 #include "filters.h"
+#include "cer_odometry.h"
+#include "ikart_odometry.h"
 
 void ControlThread::apply_ratio_limiter (double& linear_speed, double& angular_speed)
 {
@@ -135,8 +137,8 @@ void ControlThread::set_pid (string id, double kp, double ki, double kd)
 void ControlThread::apply_control_speed_pid(double& pidout_linear_speed,double& pidout_angular_speed, 
                            const double ref_linear_speed, const double ref_angular_speed)
 {
-    double feedback_linear_speed = this->odometry_handler->base_vel_lin / this->motor_handler->get_max_linear_vel() * 200;
-    double feedback_angular_speed = this->odometry_handler->base_vel_theta / this->motor_handler->get_max_angular_vel() * 200;
+    double feedback_linear_speed = this->odometry_handler->get_base_vel_lin() / this->motor_handler->get_max_linear_vel() * 200;
+    double feedback_angular_speed = this->odometry_handler->get_base_vel_theta() / this->motor_handler->get_max_angular_vel() * 200;
     yarp::sig::Vector tmp;
     tmp = linear_speed_pid->compute(yarp::sig::Vector(1,ref_linear_speed),yarp::sig::Vector(1,feedback_linear_speed));
  //   pidout_linear_speed  = exec_pwm_gain * tmp[0];
@@ -172,8 +174,8 @@ void ControlThread::apply_control_speed_pid(double& pidout_linear_speed,double& 
 
 void ControlThread::apply_control_openloop_pid(double& pidout_linear_speed,double& pidout_angular_speed, const double ref_linear_speed,const double ref_angular_speed)
 {
-    double feedback_linear_speed = this->odometry_handler->base_vel_lin / this->motor_handler->get_max_linear_vel() * 100;
-    double feedback_angular_speed = this->odometry_handler->base_vel_theta / this->motor_handler->get_max_angular_vel() * 100;
+    double feedback_linear_speed = this->odometry_handler->get_base_vel_lin() / this->motor_handler->get_max_linear_vel() * 100;
+    double feedback_angular_speed = this->odometry_handler->get_base_vel_theta() / this->motor_handler->get_max_angular_vel() * 100;
     yarp::sig::Vector tmp;
     tmp = linear_ol_pid->compute(yarp::sig::Vector(1,ref_linear_speed),yarp::sig::Vector(1,feedback_linear_speed));
     pidout_linear_speed  = exec_pwm_gain * tmp[0];
@@ -202,6 +204,7 @@ void ControlThread::apply_control_openloop_pid(double& pidout_linear_speed,doubl
 void ControlThread::run()
 {
     this->odometry_handler->compute();
+	this->odometry_handler->broadcast();
 
     double pidout_linear_speed  = 0;
     double pidout_angular_speed = 0;
@@ -314,6 +317,7 @@ bool ControlThread::threadInit()
     input_filter_enabled = general_options.check("input_filter_enabled", Value(0), "input filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
     lin_ang_ratio = general_options.check("linear_angular_ratio", Value(0.7), "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
     max_motor_pwm = general_options.check("max_motor_pwm", Value(0), "max_motor_pwm").asDouble();
+	string robot_type_s = general_options.check("robot_type", Value("none"), "geometry of the robot").asString();
 
     // open the control board driver
     yInfo("Opening the motors interface...\n");
@@ -359,8 +363,34 @@ bool ControlThread::threadInit()
     } while (true);
 
     //create the odometry and the motor handlers
-    odometry_handler = new Odometry((int)(thread_period), control_board_driver);
-    motor_handler = new MotorControl((int)(thread_period), control_board_driver);
+
+	if (robot_type_s == "cer")
+	{
+		yInfo("Using cer robot type");
+		robot_type = ROBOT_TYPE_DIFFERENTIAL;
+		odometry_handler = new CER_Odometry((int)(thread_period), control_board_driver);
+		motor_handler = new MotorControl((int)(thread_period), control_board_driver);
+	}
+	else if (robot_type_s == "ikart_V1")
+	{
+		yInfo("Using ikart_V1 robot type");
+		robot_type = ROBOT_TYPE_THREE_ROTOCASTER;
+		odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
+		motor_handler = new MotorControl((int)(thread_period), control_board_driver);
+	}
+	else if (robot_type_s == "ikart_V2")
+	{
+		yInfo("Using ikart_V2 robot type");
+		robot_type = ROBOT_TYPE_THREE_MECHANUM;
+		odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
+		motor_handler = new MotorControl((int)(thread_period), control_board_driver);
+	}
+	else
+	{
+		yError() << "Invalid Robot type selected: ROBOT_TYPE_NONE";
+		return false;
+	}
+    
     if (odometry_handler->open(rf, ctrl_options) == false)
     {
         yError() << "Problem occurred while opening odometry handler";
