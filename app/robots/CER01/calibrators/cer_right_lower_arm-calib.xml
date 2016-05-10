@@ -2,7 +2,7 @@
 <!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
 
 <devices robot="CER01" build="1">
-    <device name="right_arm_calibrator" type="parametricCalibratorEth">
+    <device name="cer_right_lower_arm_calibrator" type="parametricCalibratorEth">
         <params file="general.xml" />
                 
         <group name="GENERAL">
@@ -26,8 +26,8 @@
 <param name="calibrationDelta">          0          0          0           0           </param>
 <param name="startupPosition">           0.03       0.03       0.03        0           </param>
 <param name="startupVelocity">           0.007      0.007      0.007       15.0        </param>
-<param name="startupMaxPwm">             1500        1500      1500        0           </param>
-<param name="startupPosThreshold">       0.002       0.002     0.002       2           </param>
+<param name="startupMaxPwm">             2000        2000      2000        0           </param>
+<param name="startupPosThreshold">       0.005       0.005     0.005       2           </param>
 </group>
 
         <param name="CALIB_ORDER">(0 1 2)</param>

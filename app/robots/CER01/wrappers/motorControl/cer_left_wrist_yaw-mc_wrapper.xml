@@ -2,10 +2,10 @@
 <!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
 
 <devices robot="CER01" build="1">
-  <device name="cer_left_lower_arm_mc_wrapper" type="controlboardwrapper2">
+  <device name="cer_left_wrist_yaw_mc_wrapper" type="controlboardwrapper2">
       <paramlist name="networks">
 	<!-- elem name hereafter are custom names that live only in this file, they are used in the attach phase -->
-	  <elem name="FirstSetOfJoints">  3  3  3  3 </elem>
+	  <elem name="FirstSetOfJoints">  0  0  3  3 </elem>
       </paramlist>
 
       <param name="period"> 10 </param>
