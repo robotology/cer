@@ -23,8 +23,8 @@
     <group name="POSITION_CONTROL">
         <param name="controlLaw">       joint_pid_v1           </param> 
         <param name="controlUnits">     machine_units          </param> 
-        <param name="kp">               1           1          1         1      </param>       
-        <param name="kd">               0           0          0         0      </param>       
+        <param name="kp">               5           5          5         5      </param>       
+        <param name="kd">               1           1          1         1      </param>       
         <param name="ki">               0.5         0.5        0.5       0.5    </param>       
         <param name="limPwm">           15000       15000      15000     15000  </param>
         <param name="maxOutput">        32000       32000      32000     32000  </param>                 
