@@ -15,6 +15,7 @@
 #include "include/geometry_msgs_TransformStamped.h"
 #include "include/tf_tfMessage.h"
 #include <yarp/os/Publisher.h>
+#include <yarp/os/Subscriber.h>
 #include <limits>
 #include <iostream>
 #include <iomanip>
@@ -40,6 +41,7 @@ protected:
     Port                                 rpcPort, rosReaderPort;
     std::vector<tf>                      tfVector;
     yarp::os::Publisher<tf_tfMessage>    rosPublisherPort_tf;
+    yarp::os::Subscriber<tf_tfMessage>   rosSubscriberPort_tf;
     int                                  rosMsgCounter;
     double                               period;
     yarp::os::Node*                      rosNode;

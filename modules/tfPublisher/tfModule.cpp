@@ -34,7 +34,13 @@ bool tfModule::configure(ResourceFinder &rf)
 
     if ( !rosPublisherPort_tf.topic( ROSTOPICNAM ) )
     {
-        yError() << " opening " << ROSTOPICNAM << " Topic, check your yarp-ROS network configuration\n";
+        yError() << " Unable to publish data on " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
+
+    if (!rosSubscriberPort_tf.topic(ROSTOPICNAM))
+    {
+        yError() << " Unable to subscribe to " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
         return false;
     }
 
@@ -245,15 +251,21 @@ double tfModule::getPeriod()
 
 bool tfModule::updateModule()
 {
-    tf_tfMessage&                     rosData = rosPublisherPort_tf.prepare();
+    tf_tfMessage*                     rosInData = rosSubscriberPort_tf.read(false);
+    if (rosInData != 0)
+    {
+        //TODO
+    }
+
+    tf_tfMessage&                     rosOutData = rosPublisherPort_tf.prepare();
     geometry_msgs_TransformStamped    transform;
-    int                               tfVecSize;
+    unsigned int                      tfVecSize;
 
     tfVecSize = tfVector.size();
 
-    if (rosData.transforms.size() != tfVecSize)
+    if (rosOutData.transforms.size() != tfVecSize)
     {
-        rosData.transforms.resize(tfVecSize);
+        rosOutData.transforms.resize(tfVecSize);
     }
 
     for (size_t i = 0; i < tfVecSize; i++)
@@ -271,7 +283,7 @@ bool tfModule::updateModule()
         transform.transform.translation.y   = tfVector[i].tY;
         transform.transform.translation.z   = tfVector[i].tZ;
 
-        rosData.transforms[i]               = transform;
+        rosOutData.transforms[i] = transform;
     }
     rosPublisherPort_tf.write();
     rosMsgCounter++;
