@@ -20,6 +20,8 @@
 #include "filters.h"
 #include "cer_odometry.h"
 #include "ikart_odometry.h"
+#include "cer_motors.h"
+#include "ikart_motors.h"
 
 void ControlThread::apply_ratio_limiter (double& linear_speed, double& angular_speed)
 {
@@ -204,7 +206,7 @@ void ControlThread::apply_control_openloop_pid(double& pidout_linear_speed,doubl
 void ControlThread::run()
 {
     this->odometry_handler->compute();
-	this->odometry_handler->broadcast();
+    this->odometry_handler->broadcast();
 
     double pidout_linear_speed  = 0;
     double pidout_angular_speed = 0;
@@ -229,7 +231,7 @@ void ControlThread::run()
         pidout_direction     = exec_desired_direction;
         if (pidout_direction > -90 && pidout_direction < 90) pidout_linear_speed = -fabs(pidout_linear_speed);
         else pidout_linear_speed = + fabs(pidout_linear_speed);
-        this->motor_handler->execute_openloop(pidout_linear_speed,pidout_angular_speed);
+        this->motor_handler->execute_openloop(pidout_linear_speed, pidout_direction, pidout_angular_speed);
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_NO_PID)
     {
@@ -245,7 +247,7 @@ void ControlThread::run()
         pidout_linear_speed  = exec_linear_speed;
         pidout_angular_speed = exec_angular_speed;
         pidout_direction     = exec_desired_direction;
-        this->motor_handler->execute_speed(pidout_linear_speed,pidout_angular_speed);
+        this->motor_handler->execute_speed(pidout_linear_speed, pidout_direction, pidout_angular_speed);
     }
     else if (base_control_type == BASE_CONTROL_OPENLOOP_PID)
     {
@@ -253,7 +255,7 @@ void ControlThread::run()
         exec_angular_speed = input_angular_speed / 100.0 * max_motor_pwm * exec_pwm_gain;
         
         apply_control_openloop_pid(pidout_linear_speed,pidout_angular_speed,exec_linear_speed,exec_angular_speed);
-        this->motor_handler->execute_speed(pidout_linear_speed,pidout_angular_speed);
+        this->motor_handler->execute_speed(pidout_linear_speed, pidout_direction, pidout_angular_speed);
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_PID)
     {
@@ -263,7 +265,7 @@ void ControlThread::run()
         apply_control_speed_pid(pidout_linear_speed,pidout_angular_speed,exec_linear_speed,exec_angular_speed);
         
         pidout_angular_speed += exec_angular_speed;
-        this->motor_handler->execute_speed(pidout_linear_speed,pidout_angular_speed);
+        this->motor_handler->execute_speed(pidout_linear_speed, pidout_direction, pidout_angular_speed);
     }
     else
     {
@@ -369,7 +371,7 @@ bool ControlThread::threadInit()
 		yInfo("Using cer robot type");
 		robot_type = ROBOT_TYPE_DIFFERENTIAL;
 		odometry_handler = new CER_Odometry((int)(thread_period), control_board_driver);
-		motor_handler = new MotorControl((int)(thread_period), control_board_driver);
+		motor_handler = new CER_MotorControl((int)(thread_period), control_board_driver);
 		input_handler = new Input((int)(thread_period), control_board_driver);
 	}
 	else if (robot_type_s == "ikart_V1")
@@ -377,7 +379,7 @@ bool ControlThread::threadInit()
 		yInfo("Using ikart_V1 robot type");
 		robot_type = ROBOT_TYPE_THREE_ROTOCASTER;
 		odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
-		motor_handler = new MotorControl((int)(thread_period), control_board_driver);
+		motor_handler = new iKart_MotorControl((int)(thread_period), control_board_driver);
 		input_handler = new Input((int)(thread_period), control_board_driver);
 	}
 	else if (robot_type_s == "ikart_V2")
@@ -385,7 +387,7 @@ bool ControlThread::threadInit()
 		yInfo("Using ikart_V2 robot type");
 		robot_type = ROBOT_TYPE_THREE_MECHANUM;
 		odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
-		motor_handler = new MotorControl((int)(thread_period), control_board_driver);
+		motor_handler = new iKart_MotorControl((int)(thread_period), control_board_driver);
 		input_handler = new Input((int)(thread_period), control_board_driver);
 	}
 	else

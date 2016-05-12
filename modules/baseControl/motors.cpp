@@ -21,86 +21,6 @@
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 
-bool MotorControl::set_control_openloop()
-{
-    yInfo ("Setting openloop mode");
-    icmd->setOpenLoopMode(0);
-    icmd->setOpenLoopMode(1);
-    iopl->setRefOutput(0,0);
-    iopl->setRefOutput(1,0);
-    return true;
-}
-
-bool MotorControl::set_control_velocity()
-{
-    yInfo ("Setting velocity mode");
-    icmd->setVelocityMode(0);
-    icmd->setVelocityMode(1);
-    ivel->velocityMove(0,0);
-    ivel->velocityMove(1,0);
-    return true;
-}
-
-bool MotorControl::set_control_idle()
-{
-    yInfo ("Setting ilde mode");
-    icmd->setControlMode(0, VOCAB_CM_IDLE);
-    icmd->setControlMode(1, VOCAB_CM_IDLE);
-    icmd->setControlMode(2, VOCAB_CM_IDLE);
-    icmd->setControlMode(3, VOCAB_CM_IDLE);
-    yInfo("Motors now off");
-    return true;
-}
-
-bool MotorControl::check_motors_on()
-{
-    int c0(0),c1(0),c2(0);
-    yarp::os::Time::delay(0.05);
-    icmd->getControlMode(0,&c0);
-    icmd->getControlMode(0,&c1);
-    if (c0 != VOCAB_CM_IDLE && c1 != VOCAB_CM_IDLE)
-    {
-        yInfo("Motors now on\n");
-        return true;
-    }
-    else
-    {
-        yInfo("Unable to turn motors on! fault pressed?\n");
-        return false;
-    }
-}
-
-void MotorControl::updateControlMode()
-{
-    icmd->getControlModes(board_control_modes);
-    /*
-        for (int i=0; i<3; i++)
-        if (board_control_modes[i]==VOCAB_CM_IDLE)
-        {
-            yWarning ("One motor is in idle state. Turning off control.");
-            turn_off_control();
-            break;
-        }
-    */
-}
-
-void MotorControl::printStats()
-{
-    yInfo( "* Motor thread:\n");
-    yInfo( "timeouts: %d\n", thread_timeout_counter);
-
-    double val = 0;
-    for (int i=0; i<2; i++)
-    {
-        if      (i==0) val=F_L;
-        else if (i==1) val=F_R;
-        if (board_control_modes[i]==VOCAB_CM_IDLE)
-            yInfo( "F%d: IDLE\n", i);
-        else
-            yInfo( "F%d: %+.1f\n", i, val);
-    }
-}
-
 void MotorControl::close()
 {
 }
@@ -108,6 +28,26 @@ void MotorControl::close()
 MotorControl::~MotorControl()
 {
     close();
+}
+
+void  MotorControl::apply_motor_filter(int i)
+{
+    if (motors_filter_enabled == 1)
+    {
+        F[i] = control_filters::lp_filter_1Hz(F[i], i);
+    }
+    else if (motors_filter_enabled == 2)
+    {
+        F[i] = control_filters::lp_filter_2Hz(F[i], i);
+    }
+    else if (motors_filter_enabled == 4) //default
+    {
+        F[i] = control_filters::lp_filter_4Hz(F[i], i);
+    }
+    else if (motors_filter_enabled == 8)
+    {
+        F[i] = control_filters::lp_filter_8Hz(F[i], i);
+    }
 }
 
 bool MotorControl::open(ResourceFinder &_rf, Property &_options)
@@ -172,90 +112,8 @@ MotorControl::MotorControl(unsigned int _period, PolyDriver* _driver)
 
     thread_timeout_counter = 0;
 
-    F_L = 0;
-    F_R = 0;
-
     max_linear_vel = DEFAULT_MAX_LINEAR_VEL;
     max_angular_vel = DEFAULT_MAX_ANGULAR_VEL;
 
     thread_period = _period;
-}
-
-void MotorControl::decouple(double appl_linear_speed, double appl_angular_speed)
-{
-    //wheel contribution calculation
-    F_L = appl_linear_speed + appl_angular_speed;
-    F_R = appl_linear_speed - appl_angular_speed;
-}
-
-void MotorControl::execute_speed(double appl_linear_speed, double appl_angular_speed)
-{
-    decouple(appl_linear_speed,appl_angular_speed);
-
-    //Use a low pass filter to obtain smooth control
-    if (motors_filter_enabled == 1) 
-    {
-        F_L = control_filters::lp_filter_1Hz(F_L, 0);
-        F_R = control_filters::lp_filter_1Hz(F_R, 1);
-    }
-    else if (motors_filter_enabled == 2) 
-    {
-        F_L = control_filters::lp_filter_2Hz(F_L, 0);
-        F_R = control_filters::lp_filter_2Hz(F_R, 1);
-    }
-    else if (motors_filter_enabled == 4) //default
-    {
-        F_L = control_filters::lp_filter_4Hz(F_L, 0);
-        F_R = control_filters::lp_filter_4Hz(F_R, 1);
-    }
-    else if (motors_filter_enabled == 8)
-    {
-        F_L = control_filters::lp_filter_8Hz(F_L, 0);
-        F_R = control_filters::lp_filter_8Hz(F_R, 1);
-    }
-
-    //Apply the commands
-#ifdef  CONTROL_DEBUG
-    yDebug (">**: %+6.6f %+6.6f **** %+6.6f %+6.6f\n",exec_linear_speed,exec_desired_direction,-F_L,-F_R);
-#endif
-    ivel->velocityMove(0,-F_L);
-    ivel->velocityMove(1,-F_R);
-}
-
-void MotorControl::execute_openloop(double appl_linear_speed, double appl_angular_speed)
-{
-    decouple(appl_linear_speed,appl_angular_speed);
-
-    //Use a low pass filter to obtain smooth control
-    if (motors_filter_enabled == 1)
-    {
-        F_L = control_filters::lp_filter_1Hz(F_L, 0);
-        F_R = control_filters::lp_filter_1Hz(F_R, 1);
-    }
-    else if (motors_filter_enabled == 2)
-    {
-        F_L = control_filters::lp_filter_2Hz(F_L, 0);
-        F_R = control_filters::lp_filter_2Hz(F_R, 1);
-    }
-    else if (motors_filter_enabled == 4) //default
-    {
-        F_L = control_filters::lp_filter_4Hz(F_L, 0);
-        F_R = control_filters::lp_filter_4Hz(F_R, 1);
-    }
-    else if (motors_filter_enabled == 8)
-    {
-        F_L = control_filters::lp_filter_8Hz(F_L, 0);
-        F_R = control_filters::lp_filter_8Hz(F_R, 1);
-    }
-
-    //Apply the commands
-    iopl->setRefOutput(0, -F_L);
-    iopl->setRefOutput(1, -F_R);
-}
-
-void MotorControl::execute_none()
-{
-    iopl->setRefOutput(0,0);
-    iopl->setRefOutput(1,0);
-    iopl->setRefOutput(2,0);
 }

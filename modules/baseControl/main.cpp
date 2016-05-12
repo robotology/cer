@@ -360,6 +360,7 @@ public:
             control_thr->get_motor_handler()->updateControlMode();
             control_thr->get_odometry_handler()->printStats();
             control_thr->get_motor_handler()->printStats();
+			control_thr->get_input_handler()->printStats();
         }
         else
         {
