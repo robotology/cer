@@ -32,7 +32,7 @@
     </group>
 
     <!-- action is alternative to CONNECTION group -->
-    <action phase="startup" level="5" type="attach">
+    <action phase="startup" level="1" type="attach">
       <paramlist name="networks">
           <elem name="FirstSetOfJoints"> cer_right_lower_arm_mc </elem>
       </paramlist>

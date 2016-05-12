@@ -8,3 +8,5 @@ add_subdirectory(baseControl)
 add_subdirectory(tripodJoystickControl)
 add_subdirectory(tfPublisher)
 
+
+add_subdirectory(audioSplitter)
