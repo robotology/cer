@@ -16,56 +16,20 @@
 * Public License for more details
 */
 #include <yarp/os/Network.h>
-#include <yarp/os/RFModule.h>
-#include <yarp/os/Bottle.h>
-#include <yarp/os/Port.h>
-#include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
-#include <yarp/os/Os.h>
-#include <yarp/os/Vocab.h>
 #include <yarp/os/Log.h>
-#include <yarp/os/LogStream.h>
-#include <yarp/os/Time.h>
-#include <yarp/sig/Vector.h>
-#include <yarp/os/Node.h>
-#include "include/geometry_msgs_TransformStamped.h"
-#include "include/tf_tfMessage.h"
-#include <yarp/os/Publisher.h>
-#include <yarp/math/Math.h>
-#include <limits>
 
-#include <iostream>
-#include <iomanip>
-#include <string>
+
+#include "tfModule.h"
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::math;
 using namespace yarp::sig;
 
-inline TickTime normalizeSecNSec(double yarpTimeStamp)
-{
-    uint64_t time;
-    uint64_t nsec_part;
-    uint64_t sec_part;
-    TickTime ret;
 
-    time        = (uint64_t)(yarpTimeStamp * 1000000000UL);
-    nsec_part   = (time % 1000000000UL);
-    sec_part    = (time / 1000000000UL);
 
-    if ( sec_part > std::numeric_limits<unsigned int>::max() )
-    {
-        yWarning() << "Timestamp exceeded the 64 bit representation, resetting it to 0";
-        sec_part = 0;
-    }
-
-    ret.sec     = (yarp::os::NetUint32) sec_part;
-    ret.nsec    = (yarp::os::NetUint32) nsec_part;
-    return ret;
-}
-
-class tf
+/*class tf
 {
     public:
     
@@ -157,8 +121,8 @@ protected:
 public:
     tfModule() 
     {
-        rosMsgCounter    = 0;
-        period           = 0.010;     //ms
+        rosMsgCounter   = 0;
+        period          = PERIOD;     //ms
     }
 
     ~tfModule()
@@ -176,19 +140,19 @@ public:
         string    localName;
         double    start_time;
 
-        localName     = string("/tfpublisher");
+        localName = string(RPCPORTNAME);
         start_time    = yarp::os::Time::now();
         rate          = rf.check("rate", Value( 20 )).asInt(); //set the thread rate
-        rosNode       = new yarp::os::Node("/tfNode");
+        rosNode = new yarp::os::Node(ROSNODENAME);
 
         yInfo("tfPublisher thread rate: %d ms.", rate);
 
         rpcPort.open( ( localName+"/rpc" ).c_str() );
         attach( rpcPort );
 
-        if (!rosPublisherPort_tf.topic("/tfTopic"))
+        if (!rosPublisherPort_tf.topic(ROSTOPICNAM))
         {
-            yError() << " opening " << "/tfTopic" << " Topic, check your yarp-ROS network configuration\n";
+            yError() << " opening " << ROSTOPICNAM << " Topic, check your yarp-ROS network configuration\n";
             return false;
         }
 
@@ -197,58 +161,62 @@ public:
 
     bool respond(const Bottle& command, Bottle& reply) 
     {
-        reply.clear(); 
+        reply.clear();
+
         if ( command.get(0).asString()=="help" )
         {
             reply.addVocab( yarp::os::Vocab::encode( "many" ) );
             reply.addString( "Available commands are:" );
-            reply.addString( "create_frame" );
-
+            reply.addString( "create_fixed_frame   -   usage: create_fixed_frame <frameName> <parentName> <childName> <x> <y> <z> <roll> <pitch> <yaw>" );
+            reply.addString( "delete_fixed_frame   -   usage: 1. delete_fixed_frame <frameName> 2. delete_fixed_frame <parentName> <childName>");
 
             return true;
         }
-        else if ( command.get(0).asString() == "create_frame" )
+        else if ( command.get(0).asString() == "create_fixed_frame" )
         {
-            if ( command.size() == 11 )
+            if (command.size() != 10)
             {
-                tf        temp;
-                double    x, y, z, roll, pitch, yaw;
-                temp.name = command.get(1).asString();
-                
-                if ( command.get(2).asString() == "fixed" ) temp.type       = tf::fixed;
-                if ( command.get(2).asString() == "external" ) temp.type    = tf::external;
-                
-                temp.parent_frame    = command.get(3).asString();
-                temp.child_frame     = command.get(4).asString();
-                x                    = command.get(5).asDouble();
-                y                    = command.get(6).asDouble();
-                z                    = command.get(7).asDouble();
-                roll                 = command.get(8).asDouble();
-                pitch                = command.get(9).asDouble();
-                yaw                  = command.get(10).asDouble();
-
-                temp.transFromVec( x, y, z );
-                temp.rotFromRPY( roll, pitch, yaw );
-                
-                for ( size_t i = 0; i < tfVector.size(); i++ )
-                {
-                    if ( tfVector[i].name == temp.name )
-                    {
-                        reply.addString( "already exists!" );
-                        return true;
-                    }
-                    if (tfVector[i].parent_frame == temp.parent_frame && tfVector[i].child_frame == temp.child_frame)
-                    {
-                        reply.addString("tf with the same hierarchy already exists!");
-                        return true;
-                    }
-
-                }
-                reply.addString( "ok" );
-                tfVector.push_back( temp );
+                reply.addString("invalid params");
                 return true;
             }
-            reply.addString( "invalid params" );
+            
+            tf        temp;
+            double    x, y, z, roll, pitch, yaw;
+
+            temp.name           = command.get( 1 ).asString();
+            temp.type           = tf::fixed;                
+            temp.parent_frame   = command.get( 2 ).asString();
+            temp.child_frame    = command.get( 3 ).asString();
+            x                   = command.get( 4 ).asDouble();
+            y                   = command.get( 5 ).asDouble();
+            z                   = command.get( 6 ).asDouble();
+            roll                = command.get( 7 ).asDouble();
+            pitch               = command.get( 8 ).asDouble();
+            yaw                 = command.get( 9 ).asDouble();
+
+            temp.transFromVec( x, y, z );
+            temp.rotFromRPY( roll, pitch, yaw );
+            
+            for ( size_t i = 0; i < tfVector.size(); i++ )
+            {
+                if ( tfVector[i].name == temp.name )
+                {
+                    reply.addString( "already exists!" );
+                    return true;
+                }
+
+                if (
+                    tfVector[i].parent_frame == temp.parent_frame && tfVector[i].child_frame == temp.child_frame ||
+                    tfVector[i].parent_frame == temp.child_frame && tfVector[i].child_frame == temp.parent_frame
+                   )
+                {
+                    reply.addString("tf with the same hierarchy already exists!");
+                    return true;
+                }
+            }
+
+            reply.addString( "ok" );
+            tfVector.push_back( temp );
             return true;
         }
         else if ( command.get(0).asString() == "delete_frame" )
@@ -313,22 +281,11 @@ public:
 
             rosData.transforms[i] = transform;
         }
-
-
-        /*if (rosData.transforms.size() == 0)
-        {
-            rosData.transforms.push_back(transform);
-        }
-        else
-        {
-            rosData.transforms[0] = transform;
-        }*/
         rosPublisherPort_tf.write();
-
         rosMsgCounter++;
         return true;
     }
-};
+};*/
 
 
 
