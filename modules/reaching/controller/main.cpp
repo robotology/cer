@@ -191,7 +191,7 @@ public:
 
         option.put("device","remote_controlboard");
         option.put("remote",("/"+robot+"/torso_tripod").c_str());
-        option.put("local",("/cer_controller/"+arm_type+"/torso_tripod").c_str()); 
+        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso_tripod").c_str()); 
         if (!drivers[0].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/torso_tripod").c_str());
@@ -202,7 +202,7 @@ public:
         option.clear();
         option.put("device","remote_controlboard");
         option.put("remote",("/"+robot+"/torso_yaw").c_str());
-        option.put("local",("/cer_controller/"+arm_type+"/torso_yaw").c_str());
+        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso_yaw").c_str());
         if (!drivers[1].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/torso_yaw").c_str());
@@ -213,7 +213,7 @@ public:
         option.clear();
         option.put("device","remote_controlboard");
         option.put("remote",("/"+robot+"/"+arm_type+"_upper_arm").c_str());
-        option.put("local",("/cer_controller/"+arm_type+"/"+arm_type+"_upper_arm").c_str());
+        option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_upper_arm").c_str());
         if (!drivers[2].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_upper_arm").c_str());
@@ -224,7 +224,7 @@ public:
         option.clear();
         option.put("device","remote_controlboard");
         option.put("remote",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
-        option.put("local",("/cer_controller/"+arm_type+"/"+arm_type+"_wrist_tripod").c_str());
+        option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_wrist_tripod").c_str());
         if (!drivers[3].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
@@ -240,13 +240,13 @@ public:
             drivers[i].view(iposd[i]);
         }
 
-        statePort.open(("/cer_controller/"+arm_type+"/state:o").c_str());
-        solverPort.open(("/cer_controller/"+arm_type+"/solver:rpc").c_str());
+        statePort.open(("/cer_reaching-controller/"+arm_type+"/state:o").c_str());
+        solverPort.open(("/cer_reaching-controller/"+arm_type+"/solver:rpc").c_str());
 
-        targetPort.open(("/cer_controller/"+arm_type+"/target:i").c_str());
+        targetPort.open(("/cer_reaching-controller/"+arm_type+"/target:i").c_str());
         targetPort.setReader(*this);
 
-        rpcPort.open(("/cer_controller/"+arm_type+"/rpc").c_str());
+        rpcPort.open(("/cer_reaching-controller/"+arm_type+"/rpc").c_str());
         attach(rpcPort);
         
         qd=getEncoders();

@@ -105,9 +105,9 @@ TripodParameters::TripodParameters(const double r_, const double l_min_,
 
 /****************************************************************/
 ArmParameters::ArmParameters(const string &type) :
-               torso(0.09,0.05,0.17,30.0),
+               torso(0.09,0.0,0.17,30.0),
                upper_arm(UpperArm(type)),
-               lower_arm(0.018,0.0,0.14,35.0)
+               lower_arm(0.018,0.0,0.13,30.0)
 {
     Vector rot(4,0.0);
     rot[2]=1.0; rot[3]=M_PI;
@@ -140,7 +140,7 @@ bool SolverParameters::setMode(const string &mode)
     while (!mode_.empty())
     {
         if (stepModeParser(mode_,submode))
-        {            
+        {
             if (submode=="full_pose")
             {
                 full_pose=true;

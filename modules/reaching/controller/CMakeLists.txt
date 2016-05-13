@@ -2,7 +2,7 @@
 # Author: Ugo Pattacini
 # email:  ugo.pattacini@iit.it
 
-project(cer_controller)
+project(cer_reaching-controller)
 
 get_property(cer_kinematics_INCLUDE_DIRS
              TARGET cer_kinematics
