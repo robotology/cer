@@ -59,9 +59,16 @@ bool tfModule::respond(const Bottle& command, Bottle& reply)
     }
     else if ( request == "create_fixed_frame")
     {
+        
         if (command.size() != 10)
         {
             reply.addString("invalid params");
+            return true;
+        }
+        
+        if (rosHasFrame(command.get(PARENT).asString(), command.get(CHILD).asString()))
+        {
+            reply.addString("someone else is already injecting this frame");
             return true;
         }
         return createFixedFrameCmd(command, reply);
@@ -249,17 +256,34 @@ double tfModule::getPeriod()
     return period;
 }
 
-bool tfModule::updateModule()
+bool tfModule::rosHasFrame( string parent, string child )
 {
-    tf_tfMessage*                     rosInData = rosSubscriberPort_tf.read(false);
-    if (rosInData != 0)
+    int i;
+    for (i = 0; i < rosTf.size(); i++)
     {
-        //TODO
+        if (
+            rosTf[i].header.frame_id == parent && rosTf[i].child_frame_id == child ||
+            rosTf[i].header.frame_id == child && rosTf[i].child_frame_id == parent
+           )
+        {
+            return true;
+        }
     }
 
+    return false;
+}
+
+bool tfModule::updateModule()
+{
+    tf_tfMessage*                     rosInData  = rosSubscriberPort_tf.read( false );
     tf_tfMessage&                     rosOutData = rosPublisherPort_tf.prepare();
     geometry_msgs_TransformStamped    transform;
-    unsigned int                      tfVecSize;
+    unsigned int                      tfVecSize, i;
+
+    if( rosInData != 0 )
+    {
+        rosTf = rosInData->transforms;
+    }
 
     tfVecSize = tfVector.size();
 
@@ -268,7 +292,7 @@ bool tfModule::updateModule()
         rosOutData.transforms.resize(tfVecSize);
     }
 
-    for (size_t i = 0; i < tfVecSize; i++)
+    for( size_t i = 0; i < tfVecSize; i++ )
     {
 
         transform.child_frame_id            = tfVector[i].child_frame;
@@ -283,7 +307,7 @@ bool tfModule::updateModule()
         transform.transform.translation.y   = tfVector[i].tY;
         transform.transform.translation.z   = tfVector[i].tZ;
 
-        rosOutData.transforms[i] = transform;
+        rosOutData.transforms[i]            = transform;
     }
     rosPublisherPort_tf.write();
     rosMsgCounter++;

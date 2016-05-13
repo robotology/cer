@@ -35,6 +35,8 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
 
+typedef geometry_msgs_TransformStamped tfStamped;
+
 class tfModule : public RFModule
 {
 protected:
@@ -45,6 +47,8 @@ protected:
     int                                  rosMsgCounter;
     double                               period;
     yarp::os::Node*                      rosNode;
+    std::vector<tfStamped>               rosTf;
+    enum                                 cmd_type_enum { CMD = 0, NAME, PARENT, CHILD, X, Y, Z, ROLL, PITCH, YAW } type;
 
 public:
                     tfModule();
@@ -59,6 +63,7 @@ public:
     void            replyFrameInfo( const tf& frame, Bottle& reply );
     bool            deleteFrame( const string& name );
     bool            deleteFrame( const string& parent, const string& child );
+    bool            rosHasFrame( string parent, string child );
     virtual bool    close();
     virtual double  getPeriod();
     virtual bool    updateModule();
