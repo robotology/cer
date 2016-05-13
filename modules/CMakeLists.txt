@@ -8,5 +8,6 @@ add_subdirectory(baseControl)
 add_subdirectory(tripodJoystickControl)
 add_subdirectory(tfPublisher)
 
-
-add_subdirectory(audioSplitter)
+if(NOT WIN32)
+	add_subdirectory(audioSplitter)
+endif()
