@@ -37,7 +37,7 @@
 #include <yarp/os/Stamp.h>
 #include <string>
 #include <math.h>
-#include "odometry.h"
+#include "../odometry.h"
 
 using namespace std;
 using namespace yarp::os;

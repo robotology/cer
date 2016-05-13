@@ -39,11 +39,7 @@
 #include <math.h>
 #include <yarp/os/Node.h>
 #include <yarp/os/Publisher.h>
-#include "include/nav_msgs_Odometry.h"
-#include "include/geometry_msgs_PolygonStamped.h"
-#include "include/geometry_msgs_TransformStamped.h"
-#include "include/tf_tfMessage.h"
-#include "odometry.h"
+#include "../odometry.h"
 
 using namespace std;
 using namespace yarp::os;

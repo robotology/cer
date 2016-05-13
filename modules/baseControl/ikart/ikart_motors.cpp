@@ -16,12 +16,12 @@
 * Public License for more details
 */
 
-#include "cer_motors.h"
-#include "filters.h"
+#include "ikart_motors.h"
+#include "../filters.h"
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
 
-bool CER_MotorControl::set_control_openloop()
+bool iKart_MotorControl::set_control_openloop()
 {
     yInfo ("Setting openloop mode");
     icmd->setOpenLoopMode(0);
@@ -31,7 +31,7 @@ bool CER_MotorControl::set_control_openloop()
     return true;
 }
 
-bool CER_MotorControl::set_control_velocity()
+bool iKart_MotorControl::set_control_velocity()
 {
     yInfo ("Setting velocity mode");
     icmd->setVelocityMode(0);
@@ -41,7 +41,7 @@ bool CER_MotorControl::set_control_velocity()
     return true;
 }
 
-bool CER_MotorControl::set_control_idle()
+bool iKart_MotorControl::set_control_idle()
 {
     yInfo ("Setting ilde mode");
     icmd->setControlMode(0, VOCAB_CM_IDLE);
@@ -52,7 +52,7 @@ bool CER_MotorControl::set_control_idle()
     return true;
 }
 
-bool CER_MotorControl::check_motors_on()
+bool iKart_MotorControl::check_motors_on()
 {
     int c0(0),c1(0),c2(0);
     yarp::os::Time::delay(0.05);
@@ -70,10 +70,11 @@ bool CER_MotorControl::check_motors_on()
     }
 }
 
-void CER_MotorControl::updateControlMode()
+void iKart_MotorControl::updateControlMode()
 {
     icmd->getControlMode(0, &board_control_modes[0]);
     icmd->getControlMode(1, &board_control_modes[1]);
+    icmd->getControlMode(2, &board_control_modes[2]);
     /*
         for (int i=0; i<3; i++)
         if (board_control_modes[i]==VOCAB_CM_IDLE)
@@ -85,16 +86,17 @@ void CER_MotorControl::updateControlMode()
     */
 }
 
-void CER_MotorControl::printStats()
+void iKart_MotorControl::printStats()
 {
     yInfo( "* Motor thread:\n");
     yInfo( "timeouts: %d\n", thread_timeout_counter);
 
     double val = 0;
-    for (int i=0; i<2; i++)
+    for (int i=0; i<3; i++)
     {
-        if      (i==0) val=F[0];
-        else if (i==1) val=F[1];
+        if      (i==0) val = F[0];
+        else if (i==1) val = F[1];
+        else if (i==2) val = F[2];
         if (board_control_modes[i]==VOCAB_CM_IDLE)
             yInfo( "F%d: IDLE\n", i);
         else
@@ -102,16 +104,16 @@ void CER_MotorControl::printStats()
     }
 }
 
-void CER_MotorControl::close()
+void iKart_MotorControl::close()
 {
 }
 
-CER_MotorControl::~CER_MotorControl()
+iKart_MotorControl::~iKart_MotorControl()
 {
     close();
 }
 
-bool CER_MotorControl::open(ResourceFinder &_rf, Property &_options)
+bool iKart_MotorControl::open(ResourceFinder &_rf, Property &_options)
 {
     ctrl_options = _options;
     localName = ctrl_options.find("local").asString();
@@ -167,13 +169,13 @@ bool CER_MotorControl::open(ResourceFinder &_rf, Property &_options)
     return true;
 }
 
-CER_MotorControl::CER_MotorControl(unsigned int _period, PolyDriver* _driver) : MotorControl(_period, _driver)
+iKart_MotorControl::iKart_MotorControl(unsigned int _period, PolyDriver* _driver) : MotorControl(_period, _driver)
 {
     control_board_driver = _driver;
 
     thread_timeout_counter = 0;
 
-    F.resize(2, 0.0);
+    F.resize(3,0.0);
 
     max_linear_vel = DEFAULT_MAX_LINEAR_VEL;
     max_angular_vel = DEFAULT_MAX_ANGULAR_VEL;
@@ -181,16 +183,20 @@ CER_MotorControl::CER_MotorControl(unsigned int _period, PolyDriver* _driver) : 
     thread_period = _period;
 }
 
-void CER_MotorControl::decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
+void iKart_MotorControl::decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
 {
     //wheel contribution calculation
-    F[0] = appl_linear_speed + appl_angular_speed;
-    F[1] = appl_linear_speed - appl_angular_speed;
+    double wheels_off = 0;
+
+    F[0] = appl_linear_speed * cos((150.0 - appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
+    F[1] = appl_linear_speed * cos((030.0 - appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
+    F[2] = appl_linear_speed * cos((270.0 - appl_desired_direction + wheels_off) / 180.0 * 3.14159265) + appl_angular_speed;
 }
 
-void CER_MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
+void iKart_MotorControl::execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
 {
-    decouple(appl_linear_speed, appl_desired_direction, appl_angular_speed);
+    decouple(appl_linear_speed, appl_desired_direction,appl_angular_speed);
+    //Use a low pass filter to obtain smooth control
     //Use a low pass filter to obtain smooth control
     for (size_t i=0; i < F.size(); i++)
     {
@@ -201,13 +207,16 @@ void CER_MotorControl::execute_speed(double appl_linear_speed, double appl_desir
 #ifdef  CONTROL_DEBUG
     yDebug (">**: %+6.6f %+6.6f **** %+6.6f %+6.6f\n",exec_linear_speed,exec_desired_direction,-F_L,-F_R);
 #endif
-    ivel->velocityMove(0,-F[0]);
-    ivel->velocityMove(1,-F[1]);
+    ivel->velocityMove(0, -F[0]);
+    ivel->velocityMove(1, -F[1]);
+    ivel->velocityMove(2, -F[2]);
 }
 
-void CER_MotorControl::execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
+void iKart_MotorControl::execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed)
 {
-    decouple(appl_linear_speed, appl_desired_direction, appl_angular_speed);
+    decouple(appl_linear_speed, appl_desired_direction,appl_angular_speed);
+
+    //Use a low pass filter to obtain smooth control
     //Use a low pass filter to obtain smooth control
     for (size_t i=0; i < F.size(); i++)
     {
@@ -217,10 +226,12 @@ void CER_MotorControl::execute_openloop(double appl_linear_speed, double appl_de
     //Apply the commands
     iopl->setRefOutput(0, -F[0]);
     iopl->setRefOutput(1, -F[1]);
+    iopl->setRefOutput(1, -F[2]);
 }
 
-void CER_MotorControl::execute_none()
+void iKart_MotorControl::execute_none()
 {
     iopl->setRefOutput(0,0);
     iopl->setRefOutput(1,0);
+    iopl->setRefOutput(2,0);
 }

@@ -38,8 +38,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/tf_tfMessage_msg.cmake)
 set(PROJECTNAME baseControl)
 project(${PROJECTNAME})
 
-file(GLOB folder_source *.cpp)
-file(GLOB folder_header *.h)
+file(GLOB folder_source *.cpp cer/*.cpp ikart/*.cpp)
+file(GLOB folder_header *.h cer/*.h ikart/*.h)
 
 source_group("Source Files" FILES ${folder_source})
 source_group("Header Files" FILES ${folder_header})

@@ -18,10 +18,10 @@
 
 #include "controlThread.h"
 #include "filters.h"
-#include "cer_odometry.h"
-#include "ikart_odometry.h"
-#include "cer_motors.h"
-#include "ikart_motors.h"
+#include "cer/cer_odometry.h"
+#include "ikart/ikart_odometry.h"
+#include "cer/cer_motors.h"
+#include "ikart/ikart_motors.h"
 
 void ControlThread::apply_ratio_limiter (double& linear_speed, double& angular_speed)
 {

@@ -16,8 +16,8 @@
 * Public License for more details
 */
 
-#ifndef IKART_MOTORS_CTRL_H
-#define IKART_MOTORS_CTRL_H
+#ifndef CER_MOTORS_CTRL_H
+#define CER_MOTORS_CTRL_H
 
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
@@ -35,7 +35,7 @@
 #include <iCub/ctrl/pids.h>
 #include <string>
 #include <math.h>
-#include "motors.h"
+#include "../motors.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -44,11 +44,11 @@ using namespace yarp::dev;
 #define DEFAULT_MAX_LINEAR_VEL  0.42  // maximum linear  velocity (m/s)
 #define DEFAULT_MAX_ANGULAR_VEL 24.0  // maximum angular velocity (deg/s)
 
-class iKart_MotorControl : public MotorControl
+class CER_MotorControl : public MotorControl
 {
 public:
-    iKart_MotorControl(unsigned int _period, PolyDriver* _driver);
-    ~iKart_MotorControl();
+    CER_MotorControl(unsigned int _period, PolyDriver* _driver);
+    ~CER_MotorControl();
     bool set_control_velocity();
     bool set_control_openloop();
     bool set_control_idle();
