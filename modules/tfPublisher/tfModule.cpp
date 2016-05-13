@@ -1,5 +1,6 @@
 
 #include "tfModule.h"
+#include <yarp/os/Nodes.h>
 
 tfModule::tfModule()
 {
@@ -26,23 +27,25 @@ bool tfModule::configure(ResourceFinder &rf)
     start_time  = yarp::os::Time::now();
     rate        = rf.check("rate", Value(20)).asInt(); //set the thread rate
     rosNode     = new yarp::os::Node(ROSNODENAME);
-
+    
     yInfo("tfPublisher thread rate: %d ms.", rate);
 
     rpcPort.open((localName + "/rpc").c_str());
     attach(rpcPort);
-
-    if ( !rosPublisherPort_tf.topic( ROSTOPICNAM ) )
-    {
-        yError() << " Unable to publish data on " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
-        return false;
-    }
 
     if (!rosSubscriberPort_tf.topic(ROSTOPICNAM))
     {
         yError() << " Unable to subscribe to " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
         return false;
     }
+    
+    if (!rosPublisherPort_tf.topic(ROSTOPICNAM))
+    {
+        yError() << " Unable to publish data on " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
+
+    yDebug("papparappa");
 
     return true;
 }
@@ -176,6 +179,15 @@ bool tfModule::listCmd( Bottle& reply )
     {
             reply.addString( tfVector[i].name + ", " );
     }
+
+    reply.addString("ros Tf:");
+
+    for (size_t i = 0; i < rosTf.size(); i++)
+    {
+        reply.addString(rosTf[i].header.frame_id + ", " + rosTf[i].child_frame_id);
+    }
+
+
     return true;
 }
 bool tfModule::getFrameCmd(const string& name, Bottle& reply)
@@ -284,7 +296,7 @@ bool tfModule::updateModule()
     {
         rosTf = rosInData->transforms;
     }
-
+    
     tfVecSize = tfVector.size();
 
     if (rosOutData.transforms.size() != tfVecSize)
