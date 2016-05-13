@@ -16,13 +16,13 @@
         </module>
 
         <module>
-                <name>cer_solver</name>
+                <name>cer_reaching-solver</name>
                 <parameters>--robot SIM_CER_ROBOT</parameters>
                 <node>linux</node>
         </module>
 
         <module>
-                <name>cer_controller</name>
+                <name>cer_reaching-controller</name>
                 <parameters>--robot SIM_CER_ROBOT</parameters>
                 <node>linux</node>
         </module>
@@ -30,26 +30,26 @@
 <!----- connections ------>
 
         <connection>
-                <from>/cer_controller/left/state:o</from>
+                <from>/cer_reaching-controller/left/state:o</from>
                 <to>/cer_teleop/state:i</to>
                 <protocol>tcp</protocol>
         </connection>
 
         <connection>
-                <from>/cer_controller/left/solver:rpc</from>
-                <to>/cer_solver/left/rpc</to>
+                <from>/cer_reaching-controller/left/solver:rpc</from>
+                <to>/cer_reaching-solver/left/rpc</to>
                 <protocol>tcp</protocol>
         </connection>
 
         <connection>
                 <from>/cer_teleop/target:o</from>
-                <to>/cer_controller/left/target:i</to>
+                <to>/cer_reaching-controller/left/target:i</to>
                 <protocol>tcp</protocol>
         </connection>
  
         <connection>
                 <from>/cer_teleop/cmd:rpc</from>
-                <to>/cer_controller/left/rpc</to>
+                <to>/cer_reaching-controller/left/rpc</to>
                 <protocol>tcp</protocol>
         </connection>
 

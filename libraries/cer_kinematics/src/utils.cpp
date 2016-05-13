@@ -66,27 +66,23 @@ protected:
     /****************************************************************/
     void allocate(const string &type)
     {
-        Matrix HN=eye(4,4); 
-        HN(2,3)=0.22;
-        setHN(HN);
-
         if (type=="left")
         {
-            pushLink(new iKinLink(-0.084, 0.297614,104.0*CTRL_DEG2RAD, 180.0*CTRL_DEG2RAD,-60.0*CTRL_DEG2RAD, 60.0*CTRL_DEG2RAD)); 
-            pushLink(new iKinLink(   0.0,-0.175204, 90.0*CTRL_DEG2RAD,  90.0*CTRL_DEG2RAD,-20.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
-            pushLink(new iKinLink( 0.034,      0.0,-90.0*CTRL_DEG2RAD,-104.0*CTRL_DEG2RAD,-10.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
-            pushLink(new iKinLink(   0.0,   -0.251, 90.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
-            pushLink(new iKinLink(   0.0,      0.0,-90.0*CTRL_DEG2RAD,   0.0*CTRL_DEG2RAD,  0.0*CTRL_DEG2RAD,140.0*CTRL_DEG2RAD));
-            pushLink(new iKinLink(   0.0,   -0.071,180.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink(-0.084, 0.325869, 104.0*CTRL_DEG2RAD, 180.0*CTRL_DEG2RAD,-60.0*CTRL_DEG2RAD, 60.0*CTRL_DEG2RAD)); 
+            pushLink(new iKinLink(   0.0,-0.182419,  90.0*CTRL_DEG2RAD,  90.0*CTRL_DEG2RAD,-30.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink( 0.034,      0.0, -90.0*CTRL_DEG2RAD,-104.0*CTRL_DEG2RAD,-10.0*CTRL_DEG2RAD, 75.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink(   0.0,   -0.251,  90.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink(   0.0,      0.0, -90.0*CTRL_DEG2RAD,   0.0*CTRL_DEG2RAD,  0.0*CTRL_DEG2RAD,101.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink(   0.0,   -0.291,-180.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
         }
         else
         {
-            pushLink(new iKinLink(-0.084,0.297614, 76.0*CTRL_DEG2RAD,-180.0*CTRL_DEG2RAD,-60.0*CTRL_DEG2RAD, 60.0*CTRL_DEG2RAD)); 
-            pushLink(new iKinLink(   0.0,0.175204, 90.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-20.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
-            pushLink(new iKinLink(-0.034,     0.0,-90.0*CTRL_DEG2RAD,-104.0*CTRL_DEG2RAD,-10.0*CTRL_DEG2RAD,100.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink(-0.084,0.325869, 76.0*CTRL_DEG2RAD, 180.0*CTRL_DEG2RAD,-60.0*CTRL_DEG2RAD, 60.0*CTRL_DEG2RAD)); 
+            pushLink(new iKinLink(   0.0,0.182419, 90.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-30.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink(-0.034,     0.0,-90.0*CTRL_DEG2RAD,-104.0*CTRL_DEG2RAD,-10.0*CTRL_DEG2RAD, 75.0*CTRL_DEG2RAD));
             pushLink(new iKinLink(   0.0,   0.251,-90.0*CTRL_DEG2RAD,  90.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
-            pushLink(new iKinLink(   0.0,     0.0, 90.0*CTRL_DEG2RAD,   0.0*CTRL_DEG2RAD,  0.0*CTRL_DEG2RAD,140.0*CTRL_DEG2RAD));
-            pushLink(new iKinLink(   0.0,   0.071,  0.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink(   0.0,     0.0, 90.0*CTRL_DEG2RAD,   0.0*CTRL_DEG2RAD,  0.0*CTRL_DEG2RAD,101.0*CTRL_DEG2RAD));
+            pushLink(new iKinLink(   0.0,   0.291,  0.0*CTRL_DEG2RAD, -90.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD, 90.0*CTRL_DEG2RAD));
         }
     }
 };
@@ -109,21 +105,28 @@ TripodParameters::TripodParameters(const double r_, const double l_min_,
 
 /****************************************************************/
 ArmParameters::ArmParameters(const string &type) :
-               torso(0.09,-0.05,0.15,30.0),
+               torso(0.09,0.0,0.17,30.0),
                upper_arm(UpperArm(type)),
-               lower_arm(0.018,0.0,0.14,35.0)
+               lower_arm(0.018,0.0,0.13,30.0)
 {
     Vector rot(4,0.0);
     rot[2]=1.0; rot[3]=M_PI;
     torso.T0=axis2dcm(rot);
+    torso.T0(0,3)=0.044;
+    torso.T0(2,3)=0.470;
 
-    double hand_ang=CTRL_DEG2RAD*20.0;
-    double hand_dist=0.07;
-    rot=0.0;
-    rot[1]=1.0; rot[3]=-M_PI/2.0+hand_ang;
-    TN=axis2dcm(rot);
-    TN(0,3)=hand_dist*sin(hand_ang);
-    TN(2,3)=hand_dist*cos(hand_ang);
+    TN=zeros(4,4);
+    TN(0,0)=0.258819; TN(0,2)=-0.965926; TN(0,3)=0.0269172;
+    TN(1,1)=1.0;
+    TN(2,0)=-TN(0,2); TN(2,2)=TN(0,0); TN(2,3)=0.100456;
+    TN(3,3)=1.0;
+    if (upper_arm.getType()=="right")
+    {
+        TN(0,2)=-TN(0,2);
+        TN(1,1)=-TN(1,1);
+        TN(2,0)=TN(0,2);
+        TN(2,2)=-TN(0,0);
+    }
 }
 
 
@@ -137,7 +140,7 @@ bool SolverParameters::setMode(const string &mode)
     while (!mode_.empty())
     {
         if (stepModeParser(mode_,submode))
-        {            
+        {
             if (submode=="full_pose")
             {
                 full_pose=true;

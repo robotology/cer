@@ -287,41 +287,35 @@ ArmCOM::ArmCOM(ArmSolver &solver_, const double external_weight,
     // CoM absolute positions
     // mobilebase_lowertorso
     Vector tmp(4,1.0);
-    tmp[0]=-0.048;
+    tmp[0]=0.019;
     tmp[1]=0.0;
-    tmp[2]=-0.415;
+    tmp[2]=0.081;
     relComs.push_back(tmp);
     
     // head
-    tmp[0]=-0.028;
+    tmp[0]=-0.014;
     tmp[1]=0.0;
-    tmp[2]=0.521;
+    tmp[2]=0.997;
     relComs.push_back(tmp);
 
     // l0
-    tmp[0]=-0.014;
+    tmp[0]=0.007;
     tmp[1]=0.0;
-    tmp[2]=0.18;
+    tmp[2]=0.715;
     relComs.push_back(tmp);
    
     // l3
-    tmp[0]=-0.084;
-    tmp[1]=0.191*((arm_type=="left")?1.0:-1.0);
-    tmp[2]=0.215;
+    tmp[0]=-0.041;
+    tmp[1]=0.212*((arm_type=="left")?1.0:-1.0);
+    tmp[2]=0.699;
     relComs.push_back(tmp);
    
     // l5
-    tmp[0]=-0.084;
-    tmp[1]=0.191*((arm_type=="left")?1.0:-1.0);
-    tmp[2]=-0.089;
+    tmp[0]=-0.040;
+    tmp[1]=0.210*((arm_type=="left")?1.0:-1.0);
+    tmp[2]=0.438;
     relComs.push_back(tmp);
     
-    // hand
-    tmp[0]=0.0;
-    tmp[1]=0.0;
-    tmp[2]=0.0;
-    relComs.push_back(tmp);
-
     // compute CoMs relative positions wrt q0
     Vector q0(12,0.0);
 
@@ -336,24 +330,28 @@ ArmCOM::ArmCOM(ArmSolver &solver_, const double external_weight,
     solver.fkin(q0,frame,3+5);
     relComs[4]=SE3inv(frame)*relComs[4];
 
+    // hand
+    tmp[0]=tmp[1]=tmp[2]=0.0;
+    relComs.push_back(tmp);
+
     // same order as per relComs
-    weights.push_back(25.0);
-    weights.push_back(2.5);
-    weights.push_back(7.5);
-    weights.push_back(1.5);
-    weights.push_back(1.0);
-    weights.push_back(0.6+external_weight);
+    weights.push_back(31.0);
+    weights.push_back(2.88);
+    weights.push_back(12.8);
+    weights.push_back(1.43);
+    weights.push_back(1.13);
+    weights.push_back(0.667+external_weight);
     weight_tot=dot(weights,Vector(weights.length(),1.0));
 
     // support polygon
     Vector c1(4,1.0);
-    c1[0]=0.078; c1[1]=0.09;
+    c1[0]=0.155; c1[1]=0.0685;
     Vector c2(4,1.0);
-    c2[0]=-0.244; c2[1]=0.0;
+    c2[0]=-0.170; c2[1]=0.0;
     Vector c3(4,1.0);
     c3[0]=c1[0]; c3[1]=-c1[1];
     Vector w1(4,1.0);
-    w1[0]=-0.074; w1[1]=0.17;
+    w1[0]=0.0; w1[1]=0.169;
     Vector w2(4,1.0);
     w2[0]=w1[0]; w2[1]=-w1[1];
 

@@ -34,7 +34,7 @@ end
 % parameters
 P.l=0.09;
 P.L=0.2;
-P.alpha_M=33;
+P.alpha_M=30;
 P.transparency=0.3;
 P.marker_size=4;
 
@@ -182,7 +182,6 @@ end
 function hg=DrawTripod(kinData)
 
 global P s1 s2 s3;
-global rho;
 global hfig;
 
 set(0,'CurrentFigure',hfig);

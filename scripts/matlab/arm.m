@@ -3,7 +3,7 @@ function arm(varargin)
 % Copyright (C) 2015 iCub Facility - Istituto Italiano di Tecnologia
 % Author: Ugo Pattacini <ugo.pattacini@iit.it>
 
-global T1 T2 DH q;
+global T1 T2 DH TN q;
 global floor_z;
 global hfig hg_arm hg_target hg_coms;
 global rx;
@@ -31,19 +31,31 @@ T1.marker_size=4;
 
 % arm
 if strcmpi(type,'left')
-    DH=[-0.084, 0.297614, 104*pi/180, 180*pi/180;...
-             0,-0.175204,  90*pi/180,  90*pi/180;...
+    DH=[-0.084, 0.325869, 104*pi/180, 180*pi/180;...
+             0,-0.182419,  90*pi/180,  90*pi/180;...
          0.034,        0, -90*pi/180,-104*pi/180;...
              0,   -0.251,  90*pi/180, -90*pi/180;...
              0,        0, -90*pi/180,   0*pi/180;...
-             0,   -0.071,-180*pi/180, -90*pi/180];
+             0,   -0.291,-180*pi/180, -90*pi/180];
 else
-    DH=[-0.084,0.297614, 76*pi/180,-180*pi/180;...
-             0,0.175204, 90*pi/180, -90*pi/180;...
+    DH=[-0.084,0.325869, 76*pi/180,-180*pi/180;...
+             0,0.182419, 90*pi/180, -90*pi/180;...
         -0.034,       0,-90*pi/180,-104*pi/180;...
              0,   0.251,-90*pi/180,  90*pi/180;...
              0,       0, 90*pi/180,   0*pi/180;...
-             0,   0.071,  0*pi/180, -90*pi/180];
+             0,   0.291,  0*pi/180, -90*pi/180];
+end
+
+TN=zeros(4,4);
+TN(1,1)=0.258819; TN(1,3)=-0.965926; TN(1,4)=0.0269172;
+TN(2,2)=1.0;
+TN(3,1)=-TN(1,3); TN(3,3)=TN(1,1); TN(3,4)=0.100456;
+TN(4,4)=1;
+if strcmpi(type,'right')
+    TN(1,3)=-TN(1,3);
+    TN(2,2)=-TN(2,2);
+    TN(3,1)=TN(1,3);
+    TN(3,3)=-TN(1,1);
 end
 
 % tripod 2
@@ -55,9 +67,9 @@ T2.marker_size=2;
 hfig=figure('Name','Arm','Color','w');
 set(hfig,'Toolbar','figure');
 hold on; view([1 1 1]); grid;
-xlim(0.7*[-0.5 1.5]); xlabel('x [m]');
-ylim(0.7*[-1.5 1.5]); ylabel('y [m]');
-zlim(0.7*[-1 1]); zlabel('z [m]');
+xlim([-0.3 1.3]); xlabel('x [m]');
+ylim([-1.1 1.1]); ylabel('y [m]');
+zlim([-0.2 1.5]); zlabel('z [m]');
 
 hax=get(hfig,'CurrentAxes');
 set(hax,'DataAspectRatio',[1 1 1]);
@@ -69,11 +81,11 @@ quiver3(hax,0,0,0,1,0,0,A,'Color','r','Linewidth',2);
 quiver3(hax,0,0,0,0,1,0,A,'Color','g','Linewidth',2);
 quiver3(hax,0,0,0,0,0,1,A,'Color','b','Linewidth',2);
 
-floor_z=-0.63;
+floor_z=-0.16;
 
 % casters
-c1=[0.078  0.09];
-c2=[-0.244 0.0];
+c1=[0.155  0.0685];
+c2=[-0.170 0.0];
 c3=[c1(1) -c1(2)];
 
 caster_reduction=0.023;
@@ -91,8 +103,8 @@ theta=atan2(c3(2),c3(1));
 c3=r*[cos(theta) sin(theta)];
 
 % support polygon
-hp=patch([c1(1) c3(1) -0.074 c2(1) -0.074],...
-         [c1(2) c3(2) -0.17 c2(2) 0.17],...
+hp=patch([c1(1) c3(1)  0     c2(1) 0],...
+         [c1(2) c3(2) -0.169 c2(2) 0.169],...
          floor_z*ones(1,5),[0.65 0.65 0.65]);
 alpha(hp,0.75);
 
@@ -170,7 +182,7 @@ H=[[c_theta -s_theta*c_alpha  s_theta*s_alpha DH(i,1)*c_theta];...
 %--------------------------------------------------------------------------
 function hg=DrawArm
 
-global T1 T2 q;
+global T1 T2 TN q;
 global hfig;
 
 set(0,'CurrentFigure',hfig);
@@ -181,7 +193,7 @@ A=max(abs(lim))*0.1;
 kin=ComputeFwKinTripod(T1,q(1:3));
 
 T0=axang2rotm([0 0 1 pi]);
-T0=[T0 zeros(3,1); 0 0 0 1];
+T0=[T0 [0.044 0 0.470]'; 0 0 0 1];
 kin.s1=T0*[kin.s1;1];
 kin.s2=T0*[kin.s2;1];
 kin.s3=T0*[kin.s3;1];
@@ -223,37 +235,27 @@ H3=H2*ComputeFwKinArm(3);
 H4=H3*ComputeFwKinArm(4);
 H5=H4*ComputeFwKinArm(5);
 H6=H5*ComputeFwKinArm(6);
-HN=H6*[ 1 0 0    0;...
-        0 1 0    0;...
-        0 0 1 0.22;...
-        0 0 0    1];
 
-h6=plot3(hax,[kin.p(1) H1(1,4) H2(1,4) H3(1,4) H5(1,4) H6(1,4) HN(1,4)],...
-         [kin.p(2) H1(2,4) H2(2,4) H3(2,4) H5(2,4) H6(2,4) HN(2,4)],...
-         [kin.p(3) H1(3,4) H2(3,4) H3(3,4) H5(3,4) H6(3,4) HN(3,4)],...
+h6=plot3(hax,[kin.p(1) H1(1,4) H2(1,4) H3(1,4) H5(1,4) H6(1,4)],...
+         [kin.p(2) H1(2,4) H2(2,4) H3(2,4) H5(2,4) H6(2,4)],...
+         [kin.p(3) H1(3,4) H2(3,4) H3(3,4) H5(3,4) H6(3,4)],...
          'k','LineWidth',3);
 
 kin=ComputeFwKinTripod(T2,q(10:12));
 
-hand_ang=20*pi/180; hand_dist=0.07;
-TN=axang2rotm([0 1 0 -pi/2+hand_ang]);
-TN=[TN zeros(3,1); 0 0 0 1];
-TN(1,4)=hand_dist*sin(hand_ang);
-TN(3,4)=hand_dist*cos(hand_ang);
+Tee=H6*[kin.dcm kin.p; 0 0 0 1]*TN;
 
-Tee=HN*[kin.dcm kin.p; 0 0 0 1]*TN;
-
-kin.s1=HN*[kin.s1;1];
-kin.s2=HN*[kin.s2;1];
-kin.s3=HN*[kin.s3;1];
-kin.v1=HN*[kin.v1;1];
-kin.v2=HN*[kin.v2;1];
-kin.v3=HN*[kin.v3;1];
-kin.p1=HN*[kin.p1;1];
-kin.p2=HN*[kin.p2;1];
-kin.p3=HN*[kin.p3;1];
-kin.p=HN*[kin.p;1]; kin.p=kin.p(1:3);
-kin.n=HN(1:3,1:3)*kin.n;
+kin.s1=H6*[kin.s1;1];
+kin.s2=H6*[kin.s2;1];
+kin.s3=H6*[kin.s3;1];
+kin.v1=H6*[kin.v1;1];
+kin.v2=H6*[kin.v2;1];
+kin.v3=H6*[kin.v3;1];
+kin.p1=H6*[kin.p1;1];
+kin.p2=H6*[kin.p2;1];
+kin.p3=H6*[kin.p3;1];
+kin.p=H6*[kin.p;1]; kin.p=kin.p(1:3);
+kin.n=H6(1:3,1:3)*kin.n;
 
 h7=plot3(hax,[kin.s1(1) kin.v1(1)],[kin.s1(2) kin.v1(2)],...
          [kin.s1(3) kin.v1(3)],...
