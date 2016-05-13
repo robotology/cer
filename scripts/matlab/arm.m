@@ -67,9 +67,9 @@ T2.marker_size=2;
 hfig=figure('Name','Arm','Color','w');
 set(hfig,'Toolbar','figure');
 hold on; view([1 1 1]); grid;
-xlim(0.7*[-0.5 1.5]); xlabel('x [m]');
-ylim(0.7*[-1.5 1.5]); ylabel('y [m]');
-zlim(0.7*[-1 1]); zlabel('z [m]');
+xlim([-0.3 1.3]); xlabel('x [m]');
+ylim([-1.1 1.1]); ylabel('y [m]');
+zlim([-0.2 1.5]); zlabel('z [m]');
 
 hax=get(hfig,'CurrentAxes');
 set(hax,'DataAspectRatio',[1 1 1]);
@@ -243,19 +243,19 @@ h6=plot3(hax,[kin.p(1) H1(1,4) H2(1,4) H3(1,4) H5(1,4) H6(1,4)],...
 
 kin=ComputeFwKinTripod(T2,q(10:12));
 
-Tee=HN*[kin.dcm kin.p; 0 0 0 1]*TN;
+Tee=H6*[kin.dcm kin.p; 0 0 0 1]*TN;
 
-kin.s1=HN*[kin.s1;1];
-kin.s2=HN*[kin.s2;1];
-kin.s3=HN*[kin.s3;1];
-kin.v1=HN*[kin.v1;1];
-kin.v2=HN*[kin.v2;1];
-kin.v3=HN*[kin.v3;1];
-kin.p1=HN*[kin.p1;1];
-kin.p2=HN*[kin.p2;1];
-kin.p3=HN*[kin.p3;1];
-kin.p=HN*[kin.p;1]; kin.p=kin.p(1:3);
-kin.n=HN(1:3,1:3)*kin.n;
+kin.s1=H6*[kin.s1;1];
+kin.s2=H6*[kin.s2;1];
+kin.s3=H6*[kin.s3;1];
+kin.v1=H6*[kin.v1;1];
+kin.v2=H6*[kin.v2;1];
+kin.v3=H6*[kin.v3;1];
+kin.p1=H6*[kin.p1;1];
+kin.p2=H6*[kin.p2;1];
+kin.p3=H6*[kin.p3;1];
+kin.p=H6*[kin.p;1]; kin.p=kin.p(1:3);
+kin.n=H6(1:3,1:3)*kin.n;
 
 h7=plot3(hax,[kin.s1(1) kin.v1(1)],[kin.s1(2) kin.v1(2)],...
          [kin.s1(3) kin.v1(3)],...

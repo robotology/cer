@@ -182,7 +182,6 @@ end
 function hg=DrawTripod(kinData)
 
 global P s1 s2 s3;
-global rho;
 global hfig;
 
 set(0,'CurrentFigure',hfig);

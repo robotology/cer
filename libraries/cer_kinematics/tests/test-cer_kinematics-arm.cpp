@@ -63,7 +63,7 @@ public:
     {
         string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
         double external_weight=rf.check("external-weight",Value(2.0)).asDouble();
-        double floor_z=rf.check("floor-z",Value(-0.63)).asDouble();
+        double floor_z=rf.check("floor-z",Value(-0.16)).asDouble();
         int verbosity=rf.check("verbosity",Value(1)).asInt();
         bool enable_callback=rf.check("enable-callback");
 

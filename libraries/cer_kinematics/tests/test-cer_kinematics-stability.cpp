@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
     string grasp_type=rf.check("grasp-type",Value("top")).asString().c_str();
     double table_height=rf.check("table-height",Value(0.7)).asDouble();
     double external_weight=rf.check("external-weight",Value(2.0)).asDouble();
-    double floor_z=rf.check("floor-z",Value(-0.63)).asDouble();
+    double floor_z=rf.check("floor-z",Value(-0.16)).asDouble();
     double step=rf.check("step",Value(0.05)).asDouble();
 
     // define solver and its parameters
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
     std::signal(SIGINT,signal_handler);
     for (Hd(0,3)=0.3; Hd(0,3)<=1.0; Hd(0,3)+=step)
     {
-        for (Hd(1,3)=0.5; Hd(1,3)>=-0.5; Hd(1,3)-=step)
+        for (Hd(1,3)=1.0; Hd(1,3)>=0.0; Hd(1,3)-=step)
         {
             // inverse kinematics
             solver.setInitialGuess(q);
