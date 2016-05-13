@@ -313,7 +313,7 @@ ArmCOM::ArmCOM(ArmSolver &solver_, const double external_weight,
     // l5
     tmp[0]=-0.040;
     tmp[1]=0.210*((arm_type=="left")?1.0:-1.0);
-    tmp[2]=-0.438;
+    tmp[2]=0.438;
     relComs.push_back(tmp);
     
     // compute CoMs relative positions wrt q0
