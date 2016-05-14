@@ -270,8 +270,7 @@ double tfModule::getPeriod()
 
 bool tfModule::rosHasFrame( string parent, string child )
 {
-    int i;
-    for (i = 0; i < rosTf.size(); i++)
+    for (size_t i = 0; i < rosTf.size(); i++)
     {
         if (
             rosTf[i].header.frame_id == parent && rosTf[i].child_frame_id == child ||
@@ -290,7 +289,7 @@ bool tfModule::updateModule()
     tf_tfMessage*                     rosInData  = rosSubscriberPort_tf.read( false );
     tf_tfMessage&                     rosOutData = rosPublisherPort_tf.prepare();
     geometry_msgs_TransformStamped    transform;
-    unsigned int                      tfVecSize, i;
+    unsigned int                      tfVecSize;
 
     if( rosInData != 0 )
     {

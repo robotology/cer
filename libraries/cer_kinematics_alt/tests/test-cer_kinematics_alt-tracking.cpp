@@ -436,8 +436,8 @@ int main(int argc, char *argv[])
     yarp::os::ResourceFinder rf;
     rf.setVerbose(true);
     rf.setDefaultConfigFile("iCubWalk.ini");
-    rf.setDefaultContext("/conf/iCubWalk");
-    rf.configure("ICUB_ROOT",argc,argv);
+    rf.setDefaultContext("iCubWalk");
+    rf.configure(argc,argv);
 
     CerTestModule CER;
 
