@@ -42,8 +42,3 @@ yarp_install(TARGETS ${PROJECT_NAME}
 set_property(TARGET ${PROJECT_NAME}
              PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include
                                                           ${ICUB_INCLUDE_DIRS})
-
-option(COMPILE_KIN_TESTS "Compile CER Kinematics Tests" OFF)
-if(COMPILE_KIN_TESTS)
-    add_subdirectory(tests)
-endif()
