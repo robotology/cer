@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
 
     Matrix H;
     solver.fkin(q,H);
+    cout<<"arm="<<arm_type<<endl;
     cout<<"q=("<<q.toString(3,3)<<")"<<endl;
     cout<<"H="<<H.toString(3,3)<<endl;
     cout<<endl;
