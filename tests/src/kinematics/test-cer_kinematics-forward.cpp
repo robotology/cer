@@ -15,53 +15,48 @@
  * Public License for more details
 */
 
+#include <string>
 #include <iostream>
 #include <iomanip>
+#include <algorithm>
 
+#include <yarp/os/all.h>
 #include <yarp/sig/all.h>
 #include <cer_kinematics/arm.h>
 
 using namespace std;
+using namespace yarp::os;
 using namespace yarp::sig;
 using namespace cer::kinematics;
 
 
 /****************************************************************/
-int main()
+int main(int argc, char *argv[])
 {
-    // define solver and its parameters
-    ArmParameters armp("left");
+    ResourceFinder rf;
+    rf.configure(argc,argv);
+
+    if (rf.check("help"))
+    {
+        cout<<"Options:"<<endl;
+        cout<<"--arm-type left|right"<<endl;
+        cout<<"--q \"(0.0 1.0 ... 11.0)\""<<endl;
+        return 0;
+    }
+
+    Vector q(12,0.0);
+    string arm_type=rf.check("arm-type",Value("left")).asString();    
+    if (Bottle *b=rf.find("q").asList())
+    {
+        size_t len=std::min(q.length(),(size_t)b->size());
+        for (size_t i=0; i<len; i++)
+            q[i]=b->get(i).asDouble();
+    }
+
+    ArmParameters armp(arm_type);
     ArmSolver solver(armp);
-
-    Vector q(12);
+    
     Matrix H;
-
-    // pose #0
-    q=0.0;
-    solver.fkin(q,H);
-    cout<<"q=("<<q.toString(3,3)<<")"<<endl;
-    cout<<"H="<<H.toString(3,3)<<endl;
-    cout<<endl;
-
-    // pose #1
-    q[3]=-18.0;
-    q[4]=+44.0;
-    q[5]=+74.0;
-    q[6]=-89.0;
-    q[7]=+95.0;
-    q[8]=+34.0;
-    solver.fkin(q,H);
-    cout<<"q=("<<q.toString(3,3)<<")"<<endl;
-    cout<<"H="<<H.toString(3,3)<<endl;
-    cout<<endl;
-
-    // pose #2
-    q[0] =0.10;
-    q[1] =0.11;
-    q[2] =0.09;
-    q[9] =0.05;
-    q[10]=0.06;
-    q[11]=0.04;
     solver.fkin(q,H);
     cout<<"q=("<<q.toString(3,3)<<")"<<endl;
     cout<<"H="<<H.toString(3,3)<<endl;
