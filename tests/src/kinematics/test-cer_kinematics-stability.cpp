@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2015 iCub Facility - Istituto Italiano di Tecnologia
  * Author: Ugo Pattacini
