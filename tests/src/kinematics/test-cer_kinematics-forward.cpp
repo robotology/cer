@@ -44,8 +44,11 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+    string arm_type=rf.check("arm-type",Value("left")).asString();
+    ArmParameters armp(arm_type);
+    ArmSolver solver(armp);
+    
     Vector q(12,0.0);
-    string arm_type=rf.check("arm-type",Value("left")).asString();    
     if (Bottle *b=rf.find("q").asList())
     {
         size_t len=std::min(q.length(),(size_t)b->size());
@@ -53,9 +56,6 @@ int main(int argc, char *argv[])
             q[i]=b->get(i).asDouble();
     }
 
-    ArmParameters armp(arm_type);
-    ArmSolver solver(armp);
-    
     Matrix H;
     solver.fkin(q,H);
     cout<<"q=("<<q.toString(3,3)<<")"<<endl;
