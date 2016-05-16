@@ -217,6 +217,15 @@ void ControlThread::run()
     apply_input_filter(input_linear_speed, input_angular_speed,input_desired_direction);
     apply_ratio_limiter(input_linear_speed, input_angular_speed);
 
+    /*
+    if (!lateral_movement_enabled)
+    {
+        if (input_desired_direction>-90 && input_desired_direction <90) input_desired_direction = 0;
+        else if (input_desired_direction <= -90) input_desired_direction = 180;
+        else if (input_desired_direction >= +90) input_desired_direction = 180;
+    }
+    */
+
     exec_pwm_gain = input_pwm_gain / 100.0 * 1.0;
     exec_desired_direction = input_desired_direction;
 
