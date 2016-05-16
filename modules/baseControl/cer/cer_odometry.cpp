@@ -36,11 +36,11 @@ void CER_Odometry::printStats()
     mutex.wait();
     //yInfo (stdout,"Odometry Thread: Curr motor velocities: %+3.3f %+3.3f %+3.3f\n", velA, velB, velC);
     yInfo("* Odometry Thread:");
-    yInfo("enc1:%+9.1f enc2:%+9.1f  ******** env1:%+9.3f env2:%+9.3f ",
-    enc[0]*57, enc[1]*57, encv[0]*57, encv[1]*57);
-    
-    yInfo("ivlx:%+9.3f ivlx:%+9.3f             ******** ovlx:%+9.3f ovly:%+9.3f ovlt:%+9.3f ******** x: %+5.3f y: %+5.3f t: %+5.3f",
-    base_vel_lin, base_vel_theta, odom_vel_x, odom_vel_y, odom_vel_theta, odom_x, odom_y, odom_theta);
+    yInfo("enc1:%+9.1f enc2:%+9.1f  ", enc[0]*57, enc[1]*57);
+    yInfo("env1:%+9.3f env2:%+9.3f ", encv[0] * 57, encv[1] * 57);
+    yInfo("ivlx:%+9.3f ivlx:%+9.3f",base_vel_lin, base_vel_theta);
+    yInfo("ovlx:%+9.3f ovly:%+9.3f ovlt:%+9.3f", odom_vel_x, odom_vel_y, odom_vel_theta);
+    yInfo("x: %+5.3f y: %+5.3f t: %+5.3f", odom_x, odom_y, odom_theta);
     mutex.post();
 }
 
@@ -108,11 +108,11 @@ bool CER_Odometry::open(ResourceFinder &_rf, Property& _options)
     //reset odometry
     reset_odometry();
 
-	//the base class open
-	if (!Odometry::open(_rf, _options))
-	{
-		yError() << "Error in Odometry::open()"; return false;
-	}
+    //the base class open
+    if (!Odometry::open(_rf, _options))
+    {
+        yError() << "Error in Odometry::open()"; return false;
+    }
 
     return true;
 }

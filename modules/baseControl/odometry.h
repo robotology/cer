@@ -68,26 +68,26 @@ protected:
     yarp::os::Semaphore   mutex;
     yarp::os::Stamp       timeStamp;
 
-	//thread period
-	double                period;
+    //thread period
+    double                period;
 
-	//ros
-	bool                                            enable_ROS;
-	yarp::os::Publisher<nav_msgs_Odometry>          rosPublisherPort_odometry;
-	std::string                                     odometry_frame_id;
-	std::string                                     child_frame_id;
-	std::string                                     rosNodeName;
-	std::string                                     rosTopicName_odometry;
-	yarp::os::Node                                  *rosNode;
-	yarp::os::NetUint32                             rosMsgCounter;
+    //ros
+    bool                                            enable_ROS;
+    yarp::os::Publisher<nav_msgs_Odometry>          rosPublisherPort_odometry;
+    std::string                                     odometry_frame_id;
+    std::string                                     child_frame_id;
+    std::string                                     rosNodeName;
+    std::string                                     rosTopicName_odometry;
+    yarp::os::Node                                  *rosNode;
+    yarp::os::NetUint32                             rosMsgCounter;
 
-	yarp::os::Publisher<geometry_msgs_PolygonStamped>          rosPublisherPort_footprint;
-	double                                                     footprint_diameter;
-	std::string                                                rosTopicName_footprint;
-	geometry_msgs_PolygonStamped                               footprint;
-	std::string                                                footprint_frame_id;
+    yarp::os::Publisher<geometry_msgs_PolygonStamped>          rosPublisherPort_footprint;
+    double                                                     footprint_diameter;
+    std::string                                                rosTopicName_footprint;
+    geometry_msgs_PolygonStamped                               footprint;
+    std::string                                                footprint_frame_id;
 
-	yarp::os::Publisher<tf_tfMessage>                          rosPublisherPort_tf;
+    yarp::os::Publisher<tf_tfMessage>                          rosPublisherPort_tf;
 
 protected:
     //estimated cartesian velocity in the fixed odometry reference frame (world)
@@ -124,14 +124,14 @@ protected:
 public:
     Odometry(unsigned int _period, PolyDriver* _driver); 
     ~Odometry();
-	virtual bool reset_odometry() = 0;
-	virtual bool open(ResourceFinder &_rf, Property &options) = 0;
-	virtual void compute() = 0;
-	virtual void broadcast();
-	virtual void printStats() = 0;
-	virtual void close();
-	virtual double get_base_vel_lin();
-	virtual double get_base_vel_theta();
+    virtual bool reset_odometry() = 0;
+    virtual bool open(ResourceFinder &_rf, Property &options) = 0;
+    virtual void compute() = 0;
+    virtual void broadcast();
+    virtual void printStats() = 0;
+    virtual void close();
+    virtual double get_base_vel_lin();
+    virtual double get_base_vel_theta();
 };
 
 #endif

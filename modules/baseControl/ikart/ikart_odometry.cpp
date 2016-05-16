@@ -27,7 +27,7 @@ bool iKart_Odometry::reset_odometry()
     odom_x=0;
     odom_y=0;
     encvel_estimator->reset();
-	yInfo("Odometry reset done");
+    yInfo("Odometry reset done");
     return true;
 }
 
@@ -73,17 +73,17 @@ iKart_Odometry::iKart_Odometry(unsigned int _period, PolyDriver* _driver) : Odom
     encv.resize(3);
     localName = ctrl_options.find("local").asString();
 
-	string robot_type_s = ctrl_options.check("robot_type", Value("none"), "geometry of the robot").asString();
+    string robot_type_s = ctrl_options.check("robot_type", Value("none"), "geometry of the robot").asString();
 
-	if (robot_type_s == "ikart_v1")
+    if (robot_type_s == "ikart_v1")
     {
         geom_r = 62.5/1000.0;     //m
-		g_angle = 0;
+        g_angle = 0;
     }
-	else if (robot_type_s == "ikart_v2")
+    else if (robot_type_s == "ikart_v2")
     {
         geom_r = 76.15/1000.0;     //m
-		g_angle = 45;
+        g_angle = 45;
     }
 }
 
@@ -114,11 +114,11 @@ bool iKart_Odometry::open(ResourceFinder &_rf, Property &_options)
     //reset odometry
     reset_odometry();
 
-	//the base class open
-	if (!Odometry::open(_rf, _options))
-	{
-		yError() << "Error in Odometry::open()"; return false;
-	}
+    //the base class open
+    if (!Odometry::open(_rf, _options))
+    {
+        yError() << "Error in Odometry::open()"; return false;
+    }
 
     return true;
 }

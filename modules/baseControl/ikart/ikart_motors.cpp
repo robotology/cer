@@ -176,6 +176,7 @@ iKart_MotorControl::iKart_MotorControl(unsigned int _period, PolyDriver* _driver
     thread_timeout_counter = 0;
 
     F.resize(3,0.0);
+    board_control_modes.resize(3, 0);
 
     max_linear_vel = DEFAULT_MAX_LINEAR_VEL;
     max_angular_vel = DEFAULT_MAX_ANGULAR_VEL;

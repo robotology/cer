@@ -23,7 +23,7 @@
 
 void Input::printStats()
 {
-    yInfo( "* Motor thread:\n");
+    yInfo( "* Input thread:\n");
     yInfo( "timeouts: %d joy: %d cmd %d\n", thread_timeout_counter, joy_timeout_counter, mov_timeout_counter);
 
     if (joystick_received>0) 

@@ -360,7 +360,7 @@ public:
             control_thr->get_motor_handler()->updateControlMode();
             control_thr->get_odometry_handler()->printStats();
             control_thr->get_motor_handler()->printStats();
-			control_thr->get_input_handler()->printStats();
+            control_thr->get_input_handler()->printStats();
         }
         else
         {
@@ -368,7 +368,7 @@ public:
         }
 
         static int life_counter=0;
-        yInfo( "* Life: %d\n", life_counter);
+        yInfo( "* Life: %d\n\n", life_counter);
         life_counter++;
 
         return true;

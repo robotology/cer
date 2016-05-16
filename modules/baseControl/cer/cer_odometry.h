@@ -74,8 +74,8 @@ private:
     yarp::sig::Vector encv;
 
 public:
-	CER_Odometry(unsigned int _period, PolyDriver* _driver);
-	virtual ~CER_Odometry();
+    CER_Odometry(unsigned int _period, PolyDriver* _driver);
+    virtual ~CER_Odometry();
     bool reset_odometry();
     bool open(ResourceFinder &_rf, Property &options);
     void compute();

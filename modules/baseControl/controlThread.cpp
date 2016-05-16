@@ -282,7 +282,7 @@ void ControlThread::printStats()
 {
     yInfo ("* Control thread:\n");
     yInfo ("Input command: %+5.0f %+5.0f %+5.0f  %+5.0f      ", input_linear_speed, input_angular_speed, input_desired_direction, input_pwm_gain);
-    yInfo ("***** %+5.2f %+5.2f\n", input_linear_speed / 100.0*this->get_motor_handler()->get_max_linear_vel(), input_angular_speed / 100.0*this->get_motor_handler()->get_max_angular_vel());
+    yInfo ("Robot command: %+5.2f %+5.2f\n", input_linear_speed / 100.0*this->get_motor_handler()->get_max_linear_vel(), input_angular_speed / 100.0*this->get_motor_handler()->get_max_angular_vel());
 }
 
 bool ControlThread::set_control_type (string s)
@@ -319,7 +319,7 @@ bool ControlThread::threadInit()
     input_filter_enabled = general_options.check("input_filter_enabled", Value(0), "input filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
     lin_ang_ratio = general_options.check("linear_angular_ratio", Value(0.7), "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
     max_motor_pwm = general_options.check("max_motor_pwm", Value(0), "max_motor_pwm").asDouble();
-	string robot_type_s = general_options.check("robot_type", Value("none"), "geometry of the robot").asString();
+    string robot_type_s = general_options.check("robot_type", Value("none"), "geometry of the robot").asString();
 
     // open the control board driver
     yInfo("Opening the motors interface...\n");
@@ -366,35 +366,35 @@ bool ControlThread::threadInit()
 
     //create the odometry and the motor handlers
 
-	if (robot_type_s == "cer")
-	{
-		yInfo("Using cer robot type");
-		robot_type = ROBOT_TYPE_DIFFERENTIAL;
-		odometry_handler = new CER_Odometry((int)(thread_period), control_board_driver);
-		motor_handler = new CER_MotorControl((int)(thread_period), control_board_driver);
-		input_handler = new Input((int)(thread_period), control_board_driver);
-	}
-	else if (robot_type_s == "ikart_V1")
-	{
-		yInfo("Using ikart_V1 robot type");
-		robot_type = ROBOT_TYPE_THREE_ROTOCASTER;
-		odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
-		motor_handler = new iKart_MotorControl((int)(thread_period), control_board_driver);
-		input_handler = new Input((int)(thread_period), control_board_driver);
-	}
-	else if (robot_type_s == "ikart_V2")
-	{
-		yInfo("Using ikart_V2 robot type");
-		robot_type = ROBOT_TYPE_THREE_MECHANUM;
-		odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
-		motor_handler = new iKart_MotorControl((int)(thread_period), control_board_driver);
-		input_handler = new Input((int)(thread_period), control_board_driver);
-	}
-	else
-	{
-		yError() << "Invalid Robot type selected: ROBOT_TYPE_NONE";
-		return false;
-	}
+    if (robot_type_s == "cer")
+    {
+        yInfo("Using cer robot type");
+        robot_type = ROBOT_TYPE_DIFFERENTIAL;
+        odometry_handler = new CER_Odometry((int)(thread_period), control_board_driver);
+        motor_handler = new CER_MotorControl((int)(thread_period), control_board_driver);
+        input_handler = new Input((int)(thread_period), control_board_driver);
+    }
+    else if (robot_type_s == "ikart_V1")
+    {
+        yInfo("Using ikart_V1 robot type");
+        robot_type = ROBOT_TYPE_THREE_ROTOCASTER;
+        odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
+        motor_handler = new iKart_MotorControl((int)(thread_period), control_board_driver);
+        input_handler = new Input((int)(thread_period), control_board_driver);
+    }
+    else if (robot_type_s == "ikart_V2")
+    {
+        yInfo("Using ikart_V2 robot type");
+        robot_type = ROBOT_TYPE_THREE_MECHANUM;
+        odometry_handler = new iKart_Odometry((int)(thread_period), control_board_driver);
+        motor_handler = new iKart_MotorControl((int)(thread_period), control_board_driver);
+        input_handler = new Input((int)(thread_period), control_board_driver);
+    }
+    else
+    {
+        yError() << "Invalid Robot type selected: ROBOT_TYPE_NONE";
+        return false;
+    }
     
     if (odometry_handler->open(rf, ctrl_options) == false)
     {
@@ -408,11 +408,11 @@ bool ControlThread::threadInit()
         return false;
     }
 
-	if (input_handler->open(rf, ctrl_options) == false)
-	{
-		yError() << "Problem occurred while opening input handler";
-		return false;
-	}
+    if (input_handler->open(rf, ctrl_options) == false)
+    {
+        yError() << "Problem occurred while opening input handler";
+        return false;
+    }
 
     yInfo("%s", ctrl_options.toString().c_str());
 

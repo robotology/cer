@@ -70,16 +70,16 @@ private:
     //robot geometry
     double              geom_r;
     double              geom_L;
-	double              g_angle;
+    double              g_angle;
 
     yarp::sig::Vector enc;
     yarp::sig::Vector encv;
 
 public:
-	iKart_Odometry(unsigned int _period, PolyDriver* _driver);
-	virtual ~iKart_Odometry();
+    iKart_Odometry(unsigned int _period, PolyDriver* _driver);
+    virtual ~iKart_Odometry();
     bool reset_odometry();
-	bool open(ResourceFinder &_rf, Property &_options);
+    bool open(ResourceFinder &_rf, Property &_options);
     void compute();
     void printStats();
 
