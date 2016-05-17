@@ -21,7 +21,7 @@
         <param name="JointEncoderRes">         -4096         -4096       -4096         -4096        </param>
         <param name="RotorEncoderRes">          8192          8192        8192          8192        </param>
         <param name="RotorIndexOffset">         0             0           0             0           </param>
-        <param name="Gearbox">                  117.333      -117.333     38           -214.285     </param>
+        <param name="Gearbox">                  117.333      -117.333     38           -100.0       </param>
         <param name="MotorType">                "BLL_MECAP"   "BLL_MECAP" "BLL_MECAP"   "BLL_MECAP" </param>
         <param name="MotorPoles">               8             8           8             8           </param>
         <param name="Verbose">                  0             </param>

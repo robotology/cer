@@ -11,7 +11,7 @@
 
     <group name="LIMITS">
         <param name="jntPosMax">                0.17    0.17         0.17       30     </param>
-        <param name="jntPosMin">                0.02    0.02         0.02      -30     </param>
+        <param name="jntPosMin">                0.0     0.0          0.0       -30     </param>
         <param name="rotorPosMin">              0       0            0          0      </param>
         <param name="rotorPosMax">              0       0            0          0      </param>
         <param name="jntVelMax">                0.1     0.1          0.1        30000   </param>

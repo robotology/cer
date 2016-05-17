@@ -12,7 +12,7 @@
         <param name="HasTempSensor">         0                  0                  0                  0                       </param>
         <param name="HasRotorEncoder">       0                  0                  0                  0                       </param>
         <param name="HasRotorEncoderIndex">  0                  0                  0                  0                       </param>
-        <param name="Encoder">               56333.333          56333.333          56333.333          11650.844               </param>
+        <param name="Encoder">               56333.333          56333.333          56333.333          182.044                 </param>
         <param name="TorqueId">              0                  0                  0                  0                       </param>
         <param name="TorqueChan">            0                  0                  0                  0                       </param>
         <param name="TorqueMax">             0                  0                  0                  0                       </param>
