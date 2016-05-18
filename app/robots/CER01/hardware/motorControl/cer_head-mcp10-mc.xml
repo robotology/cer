@@ -15,13 +15,29 @@
         <param name="rotorPosMin">              0       0            </param>
         <param name="rotorPosMax">              0       0            </param>
         <param name="jntVelMax">                50      50           </param>
-        <param name="motorOverloadCurrents">    8000    8000         </param>
+        <param name="motorOverloadCurrents">    5000    5000         </param>
         <param name="motorNominalCurrents">     8000    8000         </param>
         <param name="motorPeakCurrents">        8000    8000         </param>
         <param name="motorPwmLimit">            3000    3000         </param>  
     </group>
 
-	<group name="POSITION_CONTROL">
+    <group name="POSITION_CONTROL">
+	<param name="controlLaw">    joint_pid_v1            </param> 
+        <param name="controlUnits">  machine_units           </param> 
+        <param name="kp">              -5           5        </param>       
+        <param name="kd">              -0           0        </param>       
+        <param name="ki">              -5          50        </param>       
+        <param name="limOutput">      500         500        </param>      
+        <param name="maxOutput">     3000        3000        </param>          
+        <param name="maxInt">        3000        3000        </param>       
+        <param name="shift">            0           0        </param>       
+        <param name="ko">               0           0        </param>       
+        <param name="stictionUp">       0           0        </param>       
+        <param name="stictionDwn">      0           0        </param>     
+        <param name="kff">              0           0        </param>   
+    </group>
+
+    <group name="VELOCITY_CONTROL">
 	<param name="controlLaw">    joint_pid_v1            </param> 
         <param name="controlUnits">  machine_units           </param> 
         <param name="kp">              -5           5        </param>       

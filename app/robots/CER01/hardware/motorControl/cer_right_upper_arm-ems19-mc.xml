@@ -20,7 +20,7 @@
         <param name="motorPwmLimit">                  32000         32000      32000     32000     </param>    
     </group>
 
-	<group name="POSITION_CONTROL">
+    <group name="POSITION_CONTROL">
         <param name="controlLaw">       joint_pid_v1           </param> 
         <param name="controlUnits">     machine_units          </param> 
         <param name="kp">               5           5          5         5      </param>       
