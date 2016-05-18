@@ -28,7 +28,7 @@ bool tfModule::configure(ResourceFinder &rf)
     start_time  = yarp::os::Time::now();
     rate        = rf.check("rate", Value(20)).asInt(); //set the thread rate
     rosNode     = new yarp::os::Node(ROSNODENAME);
-    
+
     yInfo("tfPublisher thread rate: %d ms.", rate);
 
     rpcPort.open((localName + "/rpc").c_str());
@@ -45,8 +45,8 @@ bool tfModule::configure(ResourceFinder &rf)
         yError() << " Unable to subscribe to " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
         return false;
     }
-    
-    
+
+
 
     return true;
 }
@@ -71,13 +71,13 @@ bool tfModule::respond(const Bottle& command, Bottle& reply)
     }
     else if ( request == "create_fixed_frame")
     {
-        
+
         if (command.size() != 10)
         {
             reply.addString("invalid params");
             return true;
         }
-        
+
         if (rosHasFrame(command.get(2).asString(), command.get(3).asString()))
         {
             reply.addString("someone else is already injecting this frame");
@@ -183,17 +183,17 @@ bool tfModule::deleteFixedFrameCmd(const Bottle& command, Bottle& reply)
         reply.addString("not found");
         return true;
     }
-    
+
 }
 bool tfModule::listCmd( Bottle& reply )
 {
     string  tfCount;
-    char    buffer[100]; memset(buffer, 0, 100);
-    
-    tfCount = itoa(tfVector.size(), buffer, 10);
-    
+    //char    buffer[100]; memset(buffer, 0, 100);
+
+    tfCount = to_string(tfVector.size());//itoa(tfVector.size(), buffer, 10);
+
     reply.addString( "there are currently "+ tfCount + " frame/s" );
-    
+
     for (size_t i = 0; i < tfVector.size(); i++)
     {
             reply.addString( tfVector[i].name + ", " );
@@ -231,10 +231,10 @@ void tfModule::replyFrameInfo(const tf& frame, Bottle& reply)
     reply.addString( "Parent: " + frame.parent_frame );
     reply.addString( "Child: " + frame.child_frame );
     reply.addString( "Traslation(X - Y - Z): " + TEXT( frame.tX ) + sep + TEXT( frame.tY ) + sep + TEXT( frame.tZ ) );
-    reply.addString( 
-                    "Rotation(R - P - Y in degrees): " + 
-                    TEXT( TODEG( rpyVec[0] ) ) + sep + 
-                    TEXT( TODEG( rpyVec[1] ) ) + sep + 
+    reply.addString(
+                    "Rotation(R - P - Y in degrees): " +
+                    TEXT( TODEG( rpyVec[0] ) ) + sep +
+                    TEXT( TODEG( rpyVec[1] ) ) + sep +
                     TEXT( TODEG( rpyVec[2] ) )
                    );
 }
@@ -320,7 +320,7 @@ bool tfModule::updateModule()
     {
         rosTf = rosInData->transforms;
     }
-    
+
     tfVecSize = tfVector.size();
 
     if (rosOutData.transforms.size() != tfVecSize)
