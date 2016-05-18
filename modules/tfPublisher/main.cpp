@@ -18,6 +18,7 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Log.h>
+//#include <vld.h> //<<<<<<<for who uses vld: add include and lib/win32 directory and uncomment  
 
 
 #include "tfModule.h"

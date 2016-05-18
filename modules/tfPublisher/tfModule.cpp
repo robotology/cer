@@ -4,8 +4,9 @@
 
 tfModule::tfModule()
 {
-    rosMsgCounter = 0;
-    period = PERIOD;     //ms
+    rosMsgCounter   = 0;
+    period          = PERIOD;     //ms
+    rosNode         = 0;
 }
 
 tfModule::~tfModule()
@@ -33,20 +34,28 @@ bool tfModule::configure(ResourceFinder &rf)
     rpcPort.open((localName + "/rpc").c_str());
     attach(rpcPort);
 
-    if (!rosSubscriberPort_tf.topic(ROSTOPICNAM))
-    {
-        yError() << " Unable to subscribe to " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
-        return false;
-    }
-    
     if (!rosPublisherPort_tf.topic(ROSTOPICNAM))
     {
         yError() << " Unable to publish data on " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
         return false;
     }
 
-    yDebug("papparappa");
+    if (!rosSubscriberPort_tf.topic(ROSTOPICNAM))
+    {
+        yError() << " Unable to subscribe to " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
+        return false;
+    }
+    
+    
 
+    return true;
+}
+
+bool tfModule::interruptModule()
+{
+    rpcPort.interrupt();
+    rosPublisherPort_tf.interrupt();
+    rosSubscriberPort_tf.interrupt();
     return true;
 }
 
@@ -69,7 +78,7 @@ bool tfModule::respond(const Bottle& command, Bottle& reply)
             return true;
         }
         
-        if (rosHasFrame(command.get(PARENT).asString(), command.get(CHILD).asString()))
+        if (rosHasFrame(command.get(2).asString(), command.get(3).asString()))
         {
             reply.addString("someone else is already injecting this frame");
             return true;
@@ -95,9 +104,13 @@ bool tfModule::respond(const Bottle& command, Bottle& reply)
 bool tfModule::helpCmd( Bottle& reply )
 {
     reply.addString("Available commands are:");
+    reply.addString("  "); reply.addString("  ");
     reply.addString("'create_fixed_frame'   -   usage: create_fixed_frame <frameName> <parentName> <childName> <x> <y> <z> <roll> <pitch> <yaw>");
+    reply.addString("  ");
     reply.addString("'delete_fixed_frame'   -   usage: 1. delete_fixed_frame <frameName> 2. delete_fixed_frame <parentName> <childName>");
+    reply.addString("  ");
     reply.addString("'list' output all current frames name ");
+    reply.addString("  ");
     reply.addString("'get_frame' output specified frame's data  -  usage: get_frame <frameName> ");
     return true;
 }
@@ -174,13 +187,19 @@ bool tfModule::deleteFixedFrameCmd(const Bottle& command, Bottle& reply)
 }
 bool tfModule::listCmd( Bottle& reply )
 {
-    reply.addString( "there are currently " + to_string(tfVector.size()) + " frame/s" );
+    string  tfCount;
+    char    buffer[100]; memset(buffer, 0, 100);
+    
+    tfCount = itoa(tfVector.size(), buffer, 10);
+    
+    reply.addString( "there are currently "+ tfCount + " frame/s" );
+    
     for (size_t i = 0; i < tfVector.size(); i++)
     {
             reply.addString( tfVector[i].name + ", " );
     }
 
-    reply.addString("ros Tf:");
+    reply.addString("  "); reply.addString("ros Tf:"); reply.addString("  ");
 
     for (size_t i = 0; i < rosTf.size(); i++)
     {
@@ -257,8 +276,14 @@ bool tfModule::deleteFrame( const string& parent, const string& child )
 
 bool tfModule::close()
 {
-    rpcPort.interrupt();
     rpcPort.close();
+    rosPublisherPort_tf.close();
+    rosSubscriberPort_tf.close();
+    if (rosNode)
+    {
+        delete  rosNode;
+        rosNode = 0;
+    }
 
     return true;
 }

@@ -48,7 +48,6 @@ protected:
     double                               period;
     yarp::os::Node*                      rosNode;
     std::vector<tfStamped>               rosTf;
-    enum                                 cmd_type_enum { CMD = 0, NAME, PARENT, CHILD, X, Y, Z, ROLL, PITCH, YAW } type;
 
 public:
                     tfModule();
@@ -67,4 +66,5 @@ public:
     virtual bool    close();
     virtual double  getPeriod();
     virtual bool    updateModule();
+    virtual bool    interruptModule();
 };
