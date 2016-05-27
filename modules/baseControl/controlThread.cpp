@@ -244,8 +244,11 @@ void ControlThread::run()
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_NO_PID)
     {
-        exec_linear_speed = input_linear_speed / 100.0 *  this->motor_handler->get_max_linear_vel() * exec_pwm_gain;
-        exec_angular_speed = input_angular_speed / 100.0 * this->motor_handler->get_max_angular_vel() * exec_pwm_gain;
+        const double max_wheels_vel = 200;
+        exec_linear_speed = input_linear_speed / 100.0 *  max_wheels_vel * exec_pwm_gain;
+        exec_angular_speed = input_angular_speed / 100.0 * max_wheels_vel * exec_pwm_gain;
+        //exec_linear_speed = input_linear_speed / 100.0 *  this->motor_handler->get_max_linear_vel() * exec_pwm_gain;
+        //exec_angular_speed = input_angular_speed / 100.0 * this->motor_handler->get_max_angular_vel() * exec_pwm_gain;
 
 //#define PRINT_CURRENT_VEL
 #ifdef  PRINT_CURRENT_VEL
@@ -268,8 +271,11 @@ void ControlThread::run()
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_PID)
     {
-        exec_linear_speed = input_linear_speed / 100.0 *  this->motor_handler->get_max_linear_vel() * exec_pwm_gain;
-        exec_angular_speed = input_angular_speed / 100.0 *  this->motor_handler->get_max_angular_vel() * exec_pwm_gain;
+        const double max_wheels_vel = 200;
+        exec_linear_speed = input_linear_speed / 100.0 * max_wheels_vel * exec_pwm_gain;
+        exec_angular_speed = input_angular_speed / 100.0 *  max_wheels_vel * exec_pwm_gain;
+        //exec_linear_speed = input_linear_speed / 100.0 *  this->motor_handler->get_max_linear_vel() * exec_pwm_gain;
+        //exec_angular_speed = input_angular_speed / 100.0 *  this->motor_handler->get_max_angular_vel() * exec_pwm_gain;
         
         apply_control_speed_pid(pidout_linear_speed,pidout_angular_speed,exec_linear_speed,exec_angular_speed);
         
