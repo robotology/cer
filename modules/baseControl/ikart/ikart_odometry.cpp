@@ -34,12 +34,12 @@ bool iKart_Odometry::reset_odometry()
 void iKart_Odometry::printStats()
 {
     mutex.wait();
-    //fprintf (stdout,"Odometry Thread: Curr motor velocities: %+3.3f %+3.3f %+3.3f\n", velA, velB, velC);
-    fprintf (stdout,"* Odometry Thread:\n");
-    fprintf (stdout,"enc1:%+9.1f enc2:%+9.1f enc3:%+9.1f ******** env1:%+9.3f env2:%+9.3f env3:%+9.3f\n",
+    //yInfo (stdout,"Odometry Thread: Curr motor velocities: %+3.3f %+3.3f %+3.3f\n", velA, velB, velC);
+    yInfo ("* Odometry Thread:");
+    yInfo ("enc1:%+9.1f enc2:%+9.1f enc3:%+9.1f ******** env1:%+9.3f env2:%+9.3f env3:%+9.3f\n",
     enc[0]*57, enc[1]*57, enc[2]*57, encv[0]*57, encv[1]*57, encv[2]*57);
     
-    fprintf (stdout,"ivlx:%+9.3f ivly:%+9.3f                ******** ovlx:%+9.3f ovly:%+9.3f ovlt:%+9.3f ******** x: %+5.3f y: %+5.3f t: %+5.3f\n",
+    yInfo ("ivlx:%+9.3f ivly:%+9.3f                ******** ovlx:%+9.3f ovly:%+9.3f ovlt:%+9.3f ******** x: %+5.3f y: %+5.3f t: %+5.3f\n",
     base_vel_x, base_vel_y, odom_vel_x, odom_vel_y, base_vel_theta,  odom_x, odom_y,odom_theta );
     mutex.post();
 }
@@ -72,39 +72,28 @@ iKart_Odometry::iKart_Odometry(unsigned int _period, PolyDriver* _driver) : Odom
     enc.resize(3);
     encv.resize(3);
     localName = ctrl_options.find("local").asString();
-
-    string robot_type_s = ctrl_options.check("robot_type", Value("none"), "geometry of the robot").asString();
-
-    if (robot_type_s == "ikart_v1")
-    {
-        geom_r = 62.5/1000.0;     //m
-        g_angle = 0;
-    }
-    else if (robot_type_s == "ikart_v2")
-    {
-        geom_r = 76.15/1000.0;     //m
-        g_angle = 45;
-    }
 }
 
 bool iKart_Odometry::open(ResourceFinder &_rf, Property &_options)
 {
+    ctrl_options = _options;
+
     // open the control board driver
-    printf("\nOpening the motors interface...\n");
+    yInfo("Opening the motors interface...");
 
     Property control_board_options("(device remote_controlboard)");
     if (!control_board_driver)
     {
-        fprintf(stderr,"ERROR: control board driver not ready!\n");
-            return false;
+        yError("control board driver not ready!");
+        return false;
     }
     // open the interfaces for the control boards
     bool ok = true;
     ok = ok & control_board_driver->view(ienc);
     if(!ok)
     {
-        fprintf(stderr,"ERROR: one or more devices has not been viewed\nreturning...\n");
-        //return false;
+        yError("one or more devices has not been viewed");
+        return false;
     }
     // open control input ports
     port_odometry.open((localName+"/odometry:o").c_str());
@@ -118,6 +107,30 @@ bool iKart_Odometry::open(ResourceFinder &_rf, Property &_options)
     if (!Odometry::open(_rf, _options))
     {
         yError() << "Error in Odometry::open()"; return false;
+    }
+
+    //yDebug() <<ctrl_options.toString();
+    Bottle general_group = ctrl_options.findGroup("GENERAL");
+    if (general_group.isNull())
+    {
+        yError("iKart_Odometry::open Unable to find GENERAL group!");
+        return false;
+    }
+    string robot_type_s = general_group.check("robot_type", Value("none"), "geometry of the robot").asString();
+    if (robot_type_s == "ikart_V1")
+    {
+        geom_r = 62.5 / 1000.0;     //m
+        g_angle = 0;
+    }
+    else if (robot_type_s == "ikart_V2")
+    {
+        geom_r = 76.15 / 1000.0;     //m
+        g_angle = 45;
+    }
+    else
+    {
+        yError("iKart_Odometry::open Invalid robot type!");
+        return false;
     }
 
     return true;
