@@ -343,7 +343,7 @@ public:
         LockGuard lg(mutex);
         int cmd_0=cmd.get(0).asVocab();
 
-        if (cmd.size()>=3)
+        if (cmd.size()==3)
         {
             if (cmd_0==Vocab::encode("set"))
             {
@@ -367,7 +367,7 @@ public:
                 }
             }
         }
-        else if (cmd.size()>=2)
+        else if (cmd.size()==2)
         {
             if (cmd_0==Vocab::encode("get"))
             {
