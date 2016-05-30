@@ -360,6 +360,33 @@ public:
                     gen->setTs(Ts);
                     reply.addVocab(Vocab::encode("ack"));
                 }
+                else if (cmd_1==Vocab::encode("verbosity"))
+                {
+                    verbosity=cmd.get(2).asInt();
+                    reply.addVocab(Vocab::encode("ack"));
+                }
+            }
+        }
+        else if (cmd.size()>=2)
+        {
+            if (cmd_0==Vocab::encode("get"))
+            {
+                int cmd_1=cmd.get(1).asVocab();
+                if (cmd_1==Vocab::encode("T"))
+                {
+                    reply.addVocab(Vocab::encode("ack"));
+                    reply.addDouble(gen->getT());
+                }
+                else if (cmd_1==Vocab::encode("Ts"))
+                {
+                    reply.addVocab(Vocab::encode("ack"));
+                    reply.addDouble(Ts);
+                }
+                else if (cmd_1==Vocab::encode("verbosity"))
+                {
+                    reply.addVocab(Vocab::encode("ack"));
+                    reply.addInt(verbosity);
+                }
             }
         }
         else if (cmd_0==Vocab::encode("stop"))
