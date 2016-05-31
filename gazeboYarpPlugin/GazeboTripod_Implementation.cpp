@@ -490,7 +490,7 @@ bool GazeboTripodMotionControl::setControlModes(int *modes)
     // CONTROL LIMITS2 (inside comanOthers.cpp)
 bool GazeboTripodMotionControl::getLimits(int axis, double *min, double *max)
 {
-    std::cout << "Limits for joint " << axis << "are: min " << m_jointLimits[axis].min << ", max: " <<  m_jointLimits[axis].max << std::endl;;
+    yDebug() << "Limits for joint " << axis << "are: min " << m_jointLimits[axis].min << ", max: " <<  m_jointLimits[axis].max;
     if (axis < 0 || axis >= (int)m_numberOfJoints) return false;
     if (!min || !max) return false;
     *min = m_jointLimits[axis].min;
@@ -538,15 +538,17 @@ bool GazeboTripodMotionControl::setPosition(int j, double ref)
         {
             m_referenceElongations[j] = ref;
             tripod_client2Sim(m_referenceElongations, m_referencePositions);
+#if DISPLAY_POS_ENABLE
             yInfo() << "setpositions: elongations are " << m_referenceElongations.toString();
             yInfo() << "setpositions: positions are   " << m_referencePositions.toString();
+#endif
             return true;
         }
     }
     else
     {
-        std::cerr << "[WARN] GazeboTripodMotionControl: you tried to call setPosition" << std::endl;
-        std::cerr << "[WARN] for a joint that is not in POSITION_DIRECT control mode." << std::endl;
+        yWarning() << "GazeboTripodMotionControl: you tried to call setPosition";
+        yWarning() << "for a joint that is not in POSITION_DIRECT control mode.";
     }
     return false;
 }
@@ -558,7 +560,9 @@ bool GazeboTripodMotionControl::setPositions(const int n_joint, const int *joint
         m_referenceElongations[i] = refs[i];
     }
     tripod_client2Sim(m_referenceElongations, m_referencePositions);
+#if DISPLAY_POS_ENABLE
     yInfo() << "setpositions: elongations are " << m_referenceElongations.toString() << "\n\t positions are " << m_referencePositions.toString();
+#endif
     return true;
 }
 
@@ -568,8 +572,10 @@ bool GazeboTripodMotionControl::setPositions(const double *refs)
     {
         m_referenceElongations[i] = refs[i];
     }
-    tripod_client2Sim(m_referenceElongations, m_referencePositions);
+    tripod_client2Sim(m_referenceElongations, m_referencePositions)
+#if DISPLAY_POS_ENABLE
     yInfo() << "setpositions: elongations are " << m_referenceElongations.toString() << "\n\t positions are " << m_referencePositions.toString();
+#endif
     return true;
 }
 
