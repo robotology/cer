@@ -5,8 +5,8 @@
   <module>
     <name>yarpdev</name>
     <parameters>--device grabber --subdevice usbCamera --d /dev/video0 --width 1280 --height 480 --name /cer/cam/cameras --framerate 30</parameters>
-	<node>/cer-torso</node>
-	<tag>cameras</tag>
+    <node>/cer-torso</node>
+    <tag>cameras</tag>
   </module>
 
   <module>
