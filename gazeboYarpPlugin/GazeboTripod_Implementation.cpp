@@ -572,7 +572,7 @@ bool GazeboTripodMotionControl::setPositions(const double *refs)
     {
         m_referenceElongations[i] = refs[i];
     }
-    tripod_client2Sim(m_referenceElongations, m_referencePositions)
+    tripod_client2Sim(m_referenceElongations, m_referencePositions);
 #if DISPLAY_POS_ENABLE
     yInfo() << "setpositions: elongations are " << m_referenceElongations.toString() << "\n\t positions are " << m_referencePositions.toString();
 #endif
