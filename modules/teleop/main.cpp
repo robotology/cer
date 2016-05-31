@@ -163,14 +163,14 @@ public:
             Bottle &b=gazeboPort.prepare();
             b.clear();
             b.addString("setPose");
-            b.addString("frame2");
+            b.addString("frame22");
             b.addDouble(xd[0]);
             b.addDouble(xd[1]);
             b.addDouble(xd[2]);
             b.addDouble(rpy[0]);
             b.addDouble(rpy[1]);
             b.addDouble(rpy[2]);
-            b.addString("frame1::link");
+            b.addString("frame11::link");
             gazeboPort.write();
         }
     }
