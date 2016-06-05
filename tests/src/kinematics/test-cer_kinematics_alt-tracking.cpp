@@ -50,7 +50,9 @@ public:
     void sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha,double rx=0.0,double ry=0.0,double rz=0.0);
 
 protected:
-    LeftSideSolver mRobot;
+    KinR1 mRobot;
+
+    yarp::sig::Vector qsol;
 
     double finger[9];
 
@@ -64,7 +66,7 @@ protected:
 };
 
 
-RobotThread::RobotThread() : RateThread(int(PERIOD*1000.0)) //RateThread(int(PERIOD*1000.0))
+RobotThread::RobotThread() : RateThread(int(PERIOD*1000.0)),qsol(22) //RateThread(int(PERIOD*1000.0))
 {
     finger[0]=30.0;
     finger[1]=60.0;
@@ -95,6 +97,8 @@ bool RobotThread::threadInit()
 
     srand((unsigned)time(NULL));
 
+    mRobot.getConfig(qsol);
+
     return true;
 }
 
@@ -119,120 +123,72 @@ void RobotThread::threadRelease()
     portObjects.close();
 }
 
+/*
 void RobotThread::run()
 {
-    yarp::sig::Matrix T(4,4);
+    yarp::sig::Matrix Tl(4,4),Tr(4,4);
 
-    static double ti=0.0;
+    static double alfa=0.0;
+    
+    alfa+=PERIOD*0.1;
 
-    static double radius=0.0;
+    Tl(0,0)= 1.0; Tl(0,1)= 0.0; Tl(0,2)= 0.0; Tl(0,3)=0.5;
+    Tl(1,0)= 0.0; Tl(1,1)= 1.0; Tl(1,2)= 0.0; Tl(1,3)= 0.2+0.2*sin(2.0*M_PI*alfa);
+    Tl(2,0)= 0.0; Tl(2,1)= 0.0; Tl(2,2)= 1.0; Tl(2,3)= 0.8+0.2*cos(2.0*M_PI*alfa);
+    Tl(3,0)= 0.0; Tl(3,1)= 0.0; Tl(3,2)= 0.0; Tl(3,3)=1.0;
 
-    static double inc=0.02*PERIOD;
+    Tr(0,0)= 0.0; Tr(0,1)= 0.0; Tr(0,2)= 1.0; Tr(0,3)=0.4;
+    Tr(1,0)= 0.0; Tr(1,1)= 1.0; Tr(1,2)= 0.0; Tr(1,3)=-0.2+0.2*sin(3.0*M_PI*alfa);
+    Tr(2,0)=-1.0; Tr(2,1)= 0.0; Tr(2,2)= 0.0; Tr(2,3)= 0.5+0.2*cos(3.0*M_PI*alfa);
+    Tr(3,0)= 0.0; Tr(3,1)= 0.0; Tr(3,2)= 0.0; Tr(3,3)=1.0;
 
-    if (radius>0.75 || radius<0.0) inc=-inc;
+    sendTarget(std::string("targetL"),0,64,255,Tl(0,3),Tl(1,3),Tl(2,3),16.0,0.666);
+    sendTarget(std::string("targetR"),0,64,255,Tr(0,3),Tr(1,3),Tr(2,3),16.0,0.666);
 
-    radius+=inc;
+    yarp::sig::Vector qvel(22);
 
-    //std::cout << radius << "\n";
+    //mRobot.ikin_2hand_ctrl(Tl,Tr,qsol,qvel,0.02,0.02,0.1);
+    mRobot.ikin_left_ctrl(Tl,qsol,qvel,0.02,0.1);
 
-    static const double O2sqrt2=0.2*sqrt(2.0);
-    static const double O2sqrt3=0.2*sqrt(3.0);
+    for (int j=0; j<22; ++j) qsol(j)+=PERIOD*qvel(j);
+    
+    sendConfig(qsol);
 
-    T(0,0)= 1.0; T(0,1)= 0.0; T(0,2)= 0.0; T(0,3)=0.5;//radius*cos(DEG2RAD*alfa);
-    T(1,0)= 0.0; T(1,1)= 1.0; T(1,2)= 0.0; T(1,3)=0.2+radius*cos(O2sqrt2*2.0*M_PI*ti);//radius*sin(DEG2RAD*alfa);
-    T(2,0)= 0.0; T(2,1)= 0.0; T(2,2)= 1.0; T(2,3)=0.2+radius*sin(O2sqrt3*2.0*M_PI*ti);//0.7-0.63;
-    T(3,0)= 0.0; T(3,1)= 0.0; T(3,2)= 0.0; T(3,3)=1.0;
+    yarp::sig::Vector COM=mRobot.getCOM(); 
+    COM[2]=-0.160;
+    sendCOM(std::string("G"),192,192,0,COM,16.0,1.0);
+}
+*/
 
-    //T(0,0)= 0.0; T(0,1)= 0.0; T(0,2)= 1.0; T(0,3)= 0.2;
-    //T(1,0)= 0.0; T(1,1)= 1.0; T(1,2)= 0.0; T(1,3)=-0.6;
-    //T(2,0)=-1.0; T(2,1)= 0.0; T(2,2)= 0.0; T(2,3)=-0.1;
-    //T(3,0)= 0.0; T(3,1)= 0.0; T(3,2)= 0.0; T(3,3)= 1.0;
+void RobotThread::run()
+{
+    yarp::sig::Matrix Tl(4,4),Tr(4,4);
 
-    ti+=PERIOD;
+    static double alfa=0.0;
+    
+    alfa+=PERIOD*0.1;
 
-    sendTarget(std::string("target"),0,64,255,T(0,3),T(1,3),T(2,3),16.0,0.666);
+    Tl(0,0)= 1.0; Tl(0,1)= 0.0; Tl(0,2)= 0.0; Tl(0,3)=0.4;
+    Tl(1,0)= 0.0; Tl(1,1)= 1.0; Tl(1,2)= 0.0; Tl(1,3)= 0.2+0.2*sin(2.0*M_PI*alfa);
+    Tl(2,0)= 0.0; Tl(2,1)= 0.0; Tl(2,2)= 1.0; Tl(2,3)= 0.8+0.2*cos(2.0*M_PI*alfa);
+    Tl(3,0)= 0.0; Tl(3,1)= 0.0; Tl(3,2)= 0.0; Tl(3,3)=1.0;
 
-    yarp::sig::Vector qsol(22);
+    Tr(0,0)= 0.0; Tr(0,1)= 0.0; Tr(0,2)= 1.0; Tr(0,3)=0.2;
+    Tr(1,0)= 0.0; Tr(1,1)= 1.0; Tr(1,2)= 0.0; Tr(1,3)=-0.2+0.2*sin(3.0*M_PI*alfa);
+    Tr(2,0)=-1.0; Tr(2,1)= 0.0; Tr(2,2)= 0.0; Tr(2,3)= 0.5+0.2*cos(3.0*M_PI*alfa);
+    Tr(3,0)= 0.0; Tr(3,1)= 0.0; Tr(3,2)= 0.0; Tr(3,3)=1.0;
 
-    double timeA,timeB;
+    sendTarget(std::string("targetL"),0,64,255,Tl(0,3),Tl(1,3),Tl(2,3),16.0,0.666);
+    sendTarget(std::string("targetR"),0,64,255,Tr(0,3),Tr(1,3),Tr(2,3),16.0,0.666);
 
-    timeA=yarp::os::Time::now();
-
-    bool success=mRobot.ikin(T,qsol,0.01,0.1);
-
-    timeB=yarp::os::Time::now();
-
-    /*
-    qsol(0)=0.1030;
-    qsol(1)=0.0375;
-    qsol(2)=0.1295;
-
-    qsol(3)=-89.9824;
-    qsol(4)= 78.1897;
-    qsol(5)=  4.0859;
-    qsol(6)= 84.8451;
-    qsol(7)=  8.2799;
-    qsol(8)=-89.4481;
-
-    qsol( 9)=0.0225;
-    qsol(10)=0.0040;
-    qsol(11)=0.0244;
-    */
+    mRobot.ikin_2hand_solver(Tl,Tr,qsol,0.02,0.02,0.1);
+    //mRobot.ikin_left_solver(Tl,qsol,0.02,0.1);
 
     sendConfig(qsol);
 
-    static int N=0; ++N;
-
-    static unsigned long tot_time=0;
-
-    int elaps=int(1000.0*(timeB-timeA));
-
-    static int peak=0;
-
-    if (elaps>peak) peak=elaps;
-
-    tot_time+=elaps;
-
-    printf("elaps=%d  avg=%d   peak=%d\n",elaps,tot_time/N,peak);
-
-    //Vec3 COM=mRobot.getCOM();
-    //COM.z=-0.63;
-    //sendCOM(std::string("G"),192,192,0,COM,16.0,1.0);
-
-    //sendCOM(std::string("LUarm"),192,192,0,mRobot.G[3],30.0,0.5);
-    //sendCOM(std::string("LLarm"),192,192,0,mRobot.G[4],30.0,0.5);
-    //sendCOM(std::string("Lhand"),192,192,0,mRobot.G[5],30.0,0.5);
-
-    //sendCOM(std::string("base"),192,192,0,mRobot.G[0],30.0,0.5);
-    //sendCOM(std::string("body"),192,192,0,mRobot.G[1],30.0,0.5);
-    //sendCOM(std::string("head"),192,192,0,mRobot.G[2],30.0,0.5);
-
-    //sendCOM(std::string("RUarm"),192,192,0,mRobot.G[6],30.0,0.5);
-    //sendCOM(std::string("RLarm"),192,192,0,mRobot.G[7],30.0,0.5);
-    //sendCOM(std::string("Rhand"),192,192,0,mRobot.G[8],30.0,0.5);
-
-    /*
-    if (success)
-    {
-        printf("SUCCESS\n");
-        sendTarget(target_name,0,200,0,T(0,3),T(1,3),T(2,3),10.0,1.0);
-        if (dumper)
-        {
-            fprintf(dumper,"1 %.3f %.3f %.3f ",T(0,3),T(1,3),T(2,3));
-            //fprintf(dumper,"%.3f %.3f %.3f\n",COM.x,COM.y,COM.z);
-        }
-    }
-    else
-    {
-        printf("OUT_OF_REACH\n");
-        sendTarget(target_name,255,0,32,T(0,3),T(1,3),T(2,3),10.0,1.0);
-        if (dumper)
-        {
-            fprintf(dumper,"0 %.3f %.3f %.3f ",T(0,3),T(1,3),T(2,3));
-            //fprintf(dumper,"%.3f %.3f %.3f\n",COM.x,COM.y,COM.z);
-        }
-    }
-    */
+    yarp::sig::Vector COM=mRobot.getCOM(); 
+    COM[2]=-0.160;
+    sendCOM(std::string("G"),192,192,0,COM,16.0,1.0);
 }
 
 void RobotThread::sendConfig(yarp::sig::Vector &q)
@@ -267,9 +223,9 @@ void RobotThread::sendConfig(yarp::sig::Vector &q)
     {
         yarp::sig::Vector& enc=portEncTorso.prepare();
         enc.clear();
-        enc.push_back(410.0+1000.0*q(0));
-        enc.push_back(410.0+1000.0*q(1));
-        enc.push_back(410.0+1000.0*q(2));
+        enc.push_back(360.0+1000.0*q(0));
+        enc.push_back(360.0+1000.0*q(1));
+        enc.push_back(360.0+1000.0*q(2));
         enc.push_back(q(3));
         portEncTorso.write();
     }
@@ -443,3 +399,15 @@ int main(int argc, char *argv[])
 
     return CER.runModule(rf);
 }
+
+    //sendCOM(std::string("LUarm"),192,192,0,mRobot.G[3],30.0,0.5);
+    //sendCOM(std::string("LLarm"),192,192,0,mRobot.G[4],30.0,0.5);
+    //sendCOM(std::string("Lhand"),192,192,0,mRobot.G[5],30.0,0.5);
+
+    //sendCOM(std::string("base"),192,192,0,mRobot.G[0],30.0,0.5);
+    //sendCOM(std::string("body"),192,192,0,mRobot.G[1],30.0,0.5);
+    //sendCOM(std::string("head"),192,192,0,mRobot.G[2],30.0,0.5);
+
+    //sendCOM(std::string("RUarm"),192,192,0,mRobot.G[6],30.0,0.5);
+    //sendCOM(std::string("RLarm"),192,192,0,mRobot.G[7],30.0,0.5);
+    //sendCOM(std::string("Rhand"),192,192,0,mRobot.G[8],30.0,0.5);

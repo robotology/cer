@@ -126,7 +126,7 @@ public:
     {
         Vec3 G=Tparent*COMrel;
 
-        JOINTS(j)
+        for (int j=0; j<Jg.C; ++j)
         {
             Vec3 ZjxP_G=Voj[j]+(Zoj[j]%(G-Poj[j]));
 
@@ -139,7 +139,7 @@ public:
 
     void getJ(Matrix& J)
     {
-        JOINTS(j)
+        for (int j=0; j<J.C; ++j)
         {
             Vec3 ZjxPPj=Voj[j]+(Zoj[j]%(Toj.Pj()-Poj[j]));
             J(0,j)=ZjxPPj.x; J(1,j)=ZjxPPj.y; J(2,j)=ZjxPPj.z;
@@ -149,7 +149,7 @@ public:
 
     void getJrot(Matrix& J)
     {
-        JOINTS(j)
+        for (int j=0; j<J.C; ++j)
         {
             Vec3 ZjxPPj=Zoj[j]%(Toj.Pj()-Poj[j]);
             J(0,j)=ZjxPPj.x; J(1,j)=ZjxPPj.y; J(2,j)=ZjxPPj.z;
@@ -159,7 +159,7 @@ public:
 
     void getJpri(Matrix& J)
     {
-        JOINTS(j)
+        for (int j=0; j<J.C; ++j)
         {
             J(0,j)=Voj[j].x; J(1,j)=Voj[j].y; J(2,j)=Voj[j].z;
             J(3,j)=J(4,j)=J(5,j)=0.0;
@@ -173,9 +173,11 @@ public:
     Vec3 Voj[NJ];
     Vec3 COMrel;
 
+    double Mj;
+
 protected:
     int mN;
-    double Mj;
+    
     bool heavy;
 
     Component *mFrom;

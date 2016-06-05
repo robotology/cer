@@ -46,18 +46,23 @@ namespace kinematics_alt {
 
 enum { R = 0, L = 1 };
 
-class LeftSideSolverImpl
+class KinR1Impl
 {
 public:
 
-    LeftSideSolverImpl();
+    KinR1Impl();
 
-    virtual ~LeftSideSolverImpl(void)
+    virtual ~KinR1Impl(void)
     {
         if (mRoot) delete mRoot;
     }
 
-    Vec3 getCOM(){ return COM_valid; }
+    Vec3 getCOM(){ return COMbalanced; }
+
+    void getConfig(yarp::sig::Vector &qi)
+    {
+        for (int j=0; j<NJOINTS; ++j) qi(j)=q(j);
+    }
 
     void setPositionThreshold(double thr=DEFAULT_POS_THRESHOLD)
     {
@@ -92,16 +97,12 @@ public:
         return true;
     }
 
-    bool ikin(const yarp::sig::Matrix &Hd,
-              yarp::sig::Vector &qout,
-              double armElong=DEFAULT_ARM_EXTENSION,
-              double torsoElong=DEFAULT_TORSO_EXTENSION,
-              double timeoutSec=SOLVER_TIMEOUT)
+    void adjElongation(double armElongL,double armElongR,double torsoElong)
     {
         if (torsoElong!=mTorsoExt)
         {
-            double qa=torsoElong-0.5*mTorsoExc;
-            double qb=torsoElong+0.5*mTorsoExc;
+            double qa=torsoElong-mTorsoExc;
+            double qb=torsoElong+mTorsoExc;
 
             if (qa<MIN_TORSO_EXTENSION){ qa=MIN_TORSO_EXTENSION; qb+=MIN_TORSO_EXTENSION-qa; }
             if (qb>MAX_TORSO_EXTENSION){ qa+=MAX_TORSO_EXTENSION-qb; qb=MAX_TORSO_EXTENSION; }
@@ -113,10 +114,10 @@ public:
             qmax[0]=qmax[1]=qmax[2]=qb;
         }
 
-        if (armElong!=mArmExt[L])
+        if (armElongL!=mArmExt[L])
         {
-            double qa=armElong-0.5*mArmExc[L];
-            double qb=armElong+0.5*mArmExc[L];
+            double qa=armElongL-mArmExc[L];
+            double qb=armElongL+mArmExc[L];
 
             if (qa<MIN_ARM_EXTENSION){ qa=MIN_ARM_EXTENSION; qb+=MIN_ARM_EXTENSION-qa; }
             if (qb>MAX_ARM_EXTENSION){ qa+=MAX_ARM_EXTENSION-qb; qb=MAX_ARM_EXTENSION; }
@@ -128,134 +129,209 @@ public:
             qmax[9]=qmax[10]=qmax[11]=qb;
         }
 
+        if (armElongR!=mArmExt[R])
+        {
+            double qa=armElongR-mArmExc[R];
+            double qb=armElongR+mArmExc[R];
+
+            if (qa<MIN_ARM_EXTENSION){ qa=MIN_ARM_EXTENSION; qb+=MIN_ARM_EXTENSION-qa; }
+            if (qb>MAX_ARM_EXTENSION){ qa+=MAX_ARM_EXTENSION-qb; qb=MAX_ARM_EXTENSION; }
+
+            mArmExt[R]=0.5*(qa+qb);
+
+            qzero(17)=qzero(18)=qzero(19)=mArmExt[L];
+            qmin[17]=qmin[18]=qmin[19]=qa;
+            qmax[17]=qmax[18]=qmax[19]=qb;
+        }
+    }
+
+    bool ikin_left_solver(const yarp::sig::Matrix &Hd,
+              yarp::sig::Vector &qout,
+              double armElongL=DEFAULT_ARM_EXTENSION,
+              double armElongR=DEFAULT_ARM_EXTENSION,
+              double torsoElong=DEFAULT_TORSO_EXTENSION,
+              double timeoutSec=SOLVER_TIMEOUT)
+    {
+        adjElongation(armElongL,armElongR,torsoElong);
+
         QtargetL=Rotation(Vec3(Hd(0,0),Hd(1,0),Hd(2,0)),Vec3(Hd(0,1),Hd(1,1),Hd(2,1)),Vec3(Hd(0,2),Hd(1,2),Hd(2,2))).quaternion();
 
         XtargetL=Vec3(Hd(0,3),Hd(1,3),Hd(2,3));
 
-        q=q_valid=qzero;
-
-        int ret_code=IN_PROGRESS;
-
-        int steps=0;
+        q=qzero;
 
         int N=qout.length();
 
         if (N>NJOINTS) N=NJOINTS;
 
-        //leftHand2Target(XtargetL,QtargetL);
-        //for (int j=0; j<N; ++j) qout(j)=q(j);
+        double time_end=yarp::os::Time::now()+timeoutSec;
+
+        while (yarp::os::Time::now()<=time_end)
+        {
+            leftHand2Target(XtargetL,QtargetL,true);
+        }
+
+        calcPostureFromRoot(T_ROOT);
+        checkG();
+        
+        for (int j=0; j<N; ++j) qout(j)=qbalanced(j);
+
+        return true;
+    }
+
+    bool ikin_left_ctrl(const yarp::sig::Matrix &Hd,
+              yarp::sig::Vector &qin,
+              yarp::sig::Vector &qdotout,
+              double armElongL=DEFAULT_ARM_EXTENSION,
+              double armElongR=DEFAULT_ARM_EXTENSION,
+              double torsoElong=DEFAULT_TORSO_EXTENSION)
+    {
+        adjElongation(armElongL,armElongR,torsoElong);
+
+        QtargetL=Rotation(Vec3(Hd(0,0),Hd(1,0),Hd(2,0)),Vec3(Hd(0,1),Hd(1,1),Hd(2,1)),Vec3(Hd(0,2),Hd(1,2),Hd(2,2))).quaternion();
+
+        XtargetL=Vec3(Hd(0,3),Hd(1,3),Hd(2,3));
+
+        int N=qin.length();
+
+        if (N>NJOINTS) N=NJOINTS;
+
+        for (int j=0; j<N; ++j) q(j)=qin(j);
+
+        leftHand2Target(XtargetL,QtargetL,false);
+        
+        for (int j=0; j<N; ++j) qdotout(j)=qdot(j);
+
+        return true;
+    }
+
+    bool ikin_right_solver(const yarp::sig::Matrix &Hd,
+              yarp::sig::Vector &qout,
+              double armElongL=DEFAULT_ARM_EXTENSION,
+              double armElongR=DEFAULT_ARM_EXTENSION,
+              double torsoElong=DEFAULT_TORSO_EXTENSION,
+              double timeoutSec=SOLVER_TIMEOUT)
+    {
+        adjElongation(armElongL,armElongR,torsoElong);
+
+        QtargetL=Rotation(Vec3(Hd(0,0),Hd(1,0),Hd(2,0)),Vec3(Hd(0,1),Hd(1,1),Hd(2,1)),Vec3(Hd(0,2),Hd(1,2),Hd(2,2))).quaternion();
+
+        XtargetL=Vec3(Hd(0,3),Hd(1,3),Hd(2,3));
+
+        q=qzero;
+
+        int N=qout.length();
+
+        if (N>NJOINTS) N=NJOINTS;
 
         double time_end=yarp::os::Time::now()+timeoutSec;
 
         while (yarp::os::Time::now()<=time_end)
         {
-            ret_code=leftHand2Target(XtargetL,QtargetL);
+            rightHand2Target(XtargetL,QtargetL,true);
         }
+
+        calcPostureFromRoot(T_ROOT);
+        checkG();
         
-        if (ret_code==ON_TARGET)
-        {
-            for (int j=0; j<N; ++j) qout(j)=q(j);
-
-            return true;
-        }
-
-        if (ret_code==IN_PROGRESS)
-        {
-            for (int j=0; j<N; ++j) qout(j)=q(j);
-
-            return false;
-        }
-
-        return false;
-    }
-    /*
-    bool controller(yarp::sig::Vector &_qposin, yarp::sig::Vector &_Vstar, yarp::sig::Vector &_Wstar, yarp::sig::Vector &qvelout)
-    {
-        mRoot->calcPosture(q,T_ROOT);
-
-        mHand[L]->getJ(Jhand);
-
-        J=Jhand.sub(0,6,0,12);
-
-        Jv=J.sub(0,3,0,12);
-        Jw=J.sub(3,3,0,12);
-
-        ////////////////////////
-
-        for (int j=0; j<12; ++j)
-        {
-            double s=(q(j)-qzero(j))/((q(j)>qzero(j))?(qmax[j]-qzero(j)):(qmin[j]-qzero(j)));
-
-            if (s>1.0) s=1.0;
-
-            A2(j,j)=(1.0-s*s)*W2(j,j);
-
-            qz(j)=Zq[j]*(qzero(j)-q(j));
-        }
-
-        W2Jt=fast_mul_diag_full(W2,J.t());
-        qz-=W2Jt*((J*W2Jt).inv()*(J*qz));
-
-        ////////////////////////////////////////
-
-            A2Jvt=fast_mul_diag_full(A2,Jv.t());
-            (Jv*A2Jvt).base(lv,Rv);
-
-            Lvi(0,0)=1.0/lv(0);
-            Lvi(1,1)=1.0/lv(1);
-            Lvi(2,2)=1.0/lv(2);
-
-            Vrot=Lvi*Rv.t()*Vref;
-
-            static const double VLIM=10.0;
-
-            if (fabs(Vrot(0))>VLIM) Vrot(0)=(Vrot(0)>0.0?VLIM:-VLIM);
-            if (fabs(Vrot(1))>VLIM) Vrot(1)=(Vrot(1)>0.0?VLIM:-VLIM);
-            if (fabs(Vrot(2))>VLIM) Vrot(2)=(Vrot(2)>0.0?VLIM:-VLIM);
-
-            qv=A2Jvt*(Rv*Vrot);
-            Wref-=Jw*qv;
-
-            /////////////////////////////////////////////////////////
-
-            static const Matrix I=Matrix::id(12);
-
-            W2Jvt=fast_mul_diag_full(A2,Jv.t());
-
-            Nv=I-W2Jvt*(Jv*W2Jvt).inv()*Jv;
-
-            Kw=Jw*Nv;
-
-            /////////////////////////////////////////////////////////
-
-            A2Kwt=fast_mul_diag_full(A2,Kw.t());
-            (Jw*A2Kwt).base(lw,Rw);
-
-            Lwi(0,0)=1.0/lw(0);
-            Lwi(1,1)=1.0/lw(1);
-            Lwi(2,2)=1.0/lw(2);
-
-            Wrot=Lwi*Rw.t()*Wref;
-
-            static const double WLIM=2.0;
-
-            if (fabs(Wrot(0))>WLIM) Wrot(0)=(Wrot(0)>0.0?WLIM:-WLIM);
-            if (fabs(Wrot(1))>WLIM) Wrot(1)=(Wrot(1)>0.0?WLIM:-WLIM);
-            if (fabs(Wrot(2))>WLIM) Wrot(2)=(Wrot(2)>0.0?WLIM:-WLIM);
-
-            qv+=Nv*(A2Kwt*(Rw*Wrot));
-
-	    ////////////////////////////////////////
-
-        for (int j=0; j<12; ++j) qvelout(j)=qv(j)+qz(j);
-
-        limitJointSpeeds(q,qvelout);
-
-        for (int j=0; j<12; ++j) qvelout(j)*=Kq[j];
+        for (int j=0; j<N; ++j) qout(j)=qbalanced(j);
 
         return true;
     }
-    */
+
+    bool ikin_right_ctrl(const yarp::sig::Matrix &Hd,
+              yarp::sig::Vector &qin,
+              yarp::sig::Vector &qdotout,
+              double armElongL=DEFAULT_ARM_EXTENSION,
+              double armElongR=DEFAULT_ARM_EXTENSION,
+              double torsoElong=DEFAULT_TORSO_EXTENSION)
+    {
+        adjElongation(armElongL,armElongR,torsoElong);
+
+        QtargetL=Rotation(Vec3(Hd(0,0),Hd(1,0),Hd(2,0)),Vec3(Hd(0,1),Hd(1,1),Hd(2,1)),Vec3(Hd(0,2),Hd(1,2),Hd(2,2))).quaternion();
+
+        XtargetL=Vec3(Hd(0,3),Hd(1,3),Hd(2,3));
+
+        int N=qin.length();
+
+        if (N>NJOINTS) N=NJOINTS;
+
+        for (int j=0; j<N; ++j) q(j)=qin(j);
+
+        rightHand2Target(XtargetL,QtargetL,false);
+        
+        for (int j=0; j<N; ++j) qdotout(j)=qdot(j);
+
+        return true;
+    }
+
+
+    bool ikin_2hand_solver(const yarp::sig::Matrix &HdL,
+                           const yarp::sig::Matrix &HdR,
+                           yarp::sig::Vector &qout,
+                           double armElongL=DEFAULT_ARM_EXTENSION,
+                           double armElongR=DEFAULT_ARM_EXTENSION,
+                           double torsoElong=DEFAULT_TORSO_EXTENSION,
+                           double timeoutSec=SOLVER_TIMEOUT)
+    {
+        adjElongation(armElongL,armElongR,torsoElong);
+
+        QtargetL=Rotation(Vec3(HdL(0,0),HdL(1,0),HdL(2,0)),Vec3(HdL(0,1),HdL(1,1),HdL(2,1)),Vec3(HdL(0,2),HdL(1,2),HdL(2,2))).quaternion();
+        QtargetR=Rotation(Vec3(HdR(0,0),HdR(1,0),HdR(2,0)),Vec3(HdR(0,1),HdR(1,1),HdR(2,1)),Vec3(HdR(0,2),HdR(1,2),HdR(2,2))).quaternion();
+
+        XtargetL=Vec3(HdL(0,3),HdL(1,3),HdL(2,3));
+        XtargetR=Vec3(HdR(0,3),HdR(1,3),HdR(2,3));
+
+        q=qzero;
+
+        int N=qout.length();
+
+        if (N>NJOINTS) N=NJOINTS;
+
+        double time_end=yarp::os::Time::now()+timeoutSec;
+
+        while (yarp::os::Time::now()<=time_end)
+        {
+            bothHands2Targets(XtargetL,QtargetL,XtargetR,QtargetR,true);
+        }
+        
+        calcPostureFromRoot(T_ROOT);
+        checkG();
+
+        for (int j=0; j<N; ++j) qout(j)=qbalanced(j);
+
+        return true;
+    }
+
+    bool ikin_2hand_ctrl(const yarp::sig::Matrix &HdL,
+                         const yarp::sig::Matrix &HdR,
+                         yarp::sig::Vector &qin,
+                         yarp::sig::Vector &qdotout,
+                         double armElongL=DEFAULT_ARM_EXTENSION,
+                         double armElongR=DEFAULT_ARM_EXTENSION,
+                         double torsoElong=DEFAULT_TORSO_EXTENSION)
+    {
+        adjElongation(armElongL,armElongR,torsoElong);
+
+        QtargetL=Rotation(Vec3(HdL(0,0),HdL(1,0),HdL(2,0)),Vec3(HdL(0,1),HdL(1,1),HdL(2,1)),Vec3(HdL(0,2),HdL(1,2),HdL(2,2))).quaternion();
+        QtargetR=Rotation(Vec3(HdR(0,0),HdR(1,0),HdR(2,0)),Vec3(HdR(0,1),HdR(1,1),HdR(2,1)),Vec3(HdR(0,2),HdR(1,2),HdR(2,2))).quaternion();
+
+        XtargetL=Vec3(HdL(0,3),HdL(1,3),HdL(2,3));
+        XtargetR=Vec3(HdR(0,3),HdR(1,3),HdR(2,3));
+
+        int N=qin.length();
+
+        if (N>NJOINTS) N=NJOINTS;
+
+        for (int j=0; j<N; ++j) q(j)=qin(j);
+
+        bothHands2Targets(XtargetL,QtargetL,XtargetR,QtargetR,false);
+        
+        for (int j=0; j<N; ++j) qdotout(j)=qdot(j);
+
+        return true;
+    }
+
 protected:
 
     void calcPostureFrom(Component* pComp,Transform& Tref)
@@ -291,46 +367,41 @@ protected:
              
             if (ql(j)<=qmin[j])
             {
-                if (qd(j)<0.0) qd(j)=0.0;
+                if (qd(j)<0.0) qd(j)=qmin[j]-ql(j);
             }
             else if (ql(j)>=qmax[j])
             {
-                if (qd(j)>0.0) qd(j)=0.0;
+                if (qd(j)>0.0) qd(j)=qmax[j]-ql(j);
             }
         }
     }
 
-    int checkG();
+    void checkG();
 
-    int leftHand2Target(Vec3& Xstar,Quaternion& Qstar);
+    void leftHand2Target(Vec3& Xstar,Quaternion& Qstar,bool oneShot);
+    void rightHand2Target(Vec3& Xstar,Quaternion& Qstar,bool oneShot);
+    void bothHands2Targets(Vec3& XstarL,Quaternion& QstarL,Vec3& XstarR,Quaternion& QstarR,bool oneShot);
+
     int leftHandController(Vec3& Xstar,Quaternion& Qstar);
 
     Matrix q;
+    Matrix qdot;
     Matrix qzero;
-    Matrix q_valid;
     Vec3 COM;
-    Vec3 COM_valid;
+    Vec3 COMbalanced;
+
+    Matrix qbalanced;
 
     Matrix Jg;
+
     Vec3 Gforce;
 
-    Matrix W2;
-    Matrix Jhand;
-    Matrix J;
-    Matrix Jv;
-    Matrix Jw;
-    Matrix A2;
+    double W2[NJOINTS];
+    double B2[NJOINTS];
 
-    Matrix Vref,Wref;
-    Matrix qz,qv;
-    Matrix W2Jt;
-    Matrix lv,Rv,Lvi,A2Jvt;
-    Matrix Vrot;
-    Matrix W2Jvt;
-    Matrix Nv;
-    Matrix Kw;
-    Matrix lw,Rw,Lwi,A2Kwt;
-    Matrix Wrot;
+    double Lvi[6];
+    double Lwi[6];
+    double Lgi[2];
 
     Vec3 XtargetL,XtargetR;
     Quaternion QtargetL,QtargetR;
@@ -349,11 +420,9 @@ protected:
     Vec3 G[9];
 
     double qmin[NJOINTS],qmax[NJOINTS];
-    double qp_old[NJOINTS];
     double Kz[NJOINTS];
     double Ks[NJOINTS];
-    double Kq[NJOINTS];
-    double Zq[NJOINTS];
+    double Kc[NJOINTS];
 
     double Q[NJOINTS];
 
@@ -385,7 +454,7 @@ protected:
 
     Transform T_ROOT;
 
-    enum { IMPOSSIBLE=-2,FAILURE=-1,IN_PROGRESS=0,ON_TARGET=1,OUT_OF_LIMITS=2,OUT_OF_REACH=3,FALLEN=4,BALANCED=5,FRONTIER=6 };
+    enum { IMPOSSIBLE=-2,FAILURE=-1,IN_PROGRESS=0,ON_TARGET=1,OUT_OF_LIMITS=2,UNBALANCED=3,FALLEN=4,BALANCED=5,FRONTIER=6 };
 };
 
 }

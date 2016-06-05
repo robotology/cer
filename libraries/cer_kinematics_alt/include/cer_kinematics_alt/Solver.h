@@ -25,7 +25,7 @@
 #define SOLVER_TIMEOUT          0.0075 // [sec]
 #define DEFAULT_POS_THRESHOLD   0.01 // [m]
 
-#define DEFAULT_ARM_EXTENSION   0.01  // [m]
+#define DEFAULT_ARM_EXTENSION   0.02  // [m]
 #define DEFAULT_TORSO_EXTENSION 0.0   // [m]
 
 namespace cer {
@@ -64,22 +64,24 @@ enum
     HEAD             = NECK_YAW // alias
 };
 
-class LeftSideSolverImpl;
+class KinR1Impl;
 
 /**
  * Class to handle direct and inverse kinematics of the robot arm.
  *
  * @author Alessandro Scalzo
  */
-class LeftSideSolver
+class KinR1
 {
 public:
 
-    LeftSideSolver();
+    KinR1();
 
-    virtual ~LeftSideSolver();
+    virtual ~KinR1();
 
     yarp::sig::Vector getCOM();
+
+    void getConfig(yarp::sig::Vector& q);
 
     /**
      * Set the required precision for position reaching.
@@ -112,16 +114,38 @@ public:
      * @param timeoutSec the desired trajectory calculation time ([sec]).
      * @return true/false on success/failure.
      */
-    bool ikin(const yarp::sig::Matrix &Hd, 
-              yarp::sig::Vector &qout,
-              double armElong=DEFAULT_ARM_EXTENSION,
-              double torsoElong=DEFAULT_TORSO_EXTENSION,
-              double timeoutSec=SOLVER_TIMEOUT);
+    bool ikin_left_solver(const yarp::sig::Matrix &Hd, 
+                          yarp::sig::Vector &qout,
+                          double armElongL=DEFAULT_ARM_EXTENSION,
+                          double armElongR=DEFAULT_ARM_EXTENSION,
+                          double torsoElong=DEFAULT_TORSO_EXTENSION,
+                          double timeoutSec=SOLVER_TIMEOUT);
 
-    //bool controller(const yarp::sig::Vector &q, const yarp::sig::Vector &Vstar, const yarp::sig::Vector &Wstar, yarp::sig::Vector &qvelout);
+    bool ikin_left_ctrl(const yarp::sig::Matrix &HdL, 
+                        yarp::sig::Vector &qin,
+                        yarp::sig::Vector &qdotout,
+                        double armElongL=DEFAULT_ARM_EXTENSION,
+                        double armElongR=DEFAULT_ARM_EXTENSION,
+                        double torsoElong=DEFAULT_TORSO_EXTENSION);
+
+    bool ikin_2hand_solver(const yarp::sig::Matrix &HdL,
+                            const yarp::sig::Matrix &HdR, 
+                            yarp::sig::Vector &qout,
+                            double armElongL=DEFAULT_ARM_EXTENSION,
+                            double armElongR=DEFAULT_ARM_EXTENSION,
+                            double torsoElong=DEFAULT_TORSO_EXTENSION,
+                            double timeoutSec=SOLVER_TIMEOUT);
+
+    bool ikin_2hand_ctrl(const yarp::sig::Matrix &HdL,
+                          const yarp::sig::Matrix &HdR,
+                          yarp::sig::Vector &qin,
+                          yarp::sig::Vector &qdotout,
+                          double armElongL=DEFAULT_ARM_EXTENSION,
+                          double armElongR=DEFAULT_ARM_EXTENSION,
+                          double torsoElong=DEFAULT_TORSO_EXTENSION);
 
 protected:
-    LeftSideSolverImpl *solverImpl;
+    KinR1Impl *kinR1Impl;
 };
 
 }

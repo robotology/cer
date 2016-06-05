@@ -337,11 +337,11 @@ public:
         return result;
     }
 
-    Matrix inv(Matrix& W) const
+    Matrix inv(double* W) const
     {
         Matrix WT=t();
 
-        for (int i=0; i<W.R; ++i) for (int j=0; j<WT.C; ++j) WT(i,j)*=W(i,i);
+        for (int i=0; i<WT.R; ++i) for (int j=0; j<WT.C; ++j) WT(i,j)*=W[i];
 
         //Matrix WT=fast_mul_diag_full(W,t());
         //Matrix WT=W*t();
@@ -495,6 +495,65 @@ public:
         return s;
     }
 
+    Matrix eigen2() const
+    {
+        double A=0.5*(m[0][0]+m[1][1]);
+        double B=sqrt(A*A-m[0][0]*m[1][1]+m[0][1]*m[1][0]);
+
+        Matrix eig(2);
+        eig(0)=A+B;
+        eig(1)=A-B;
+
+        return eig;
+    }
+
+    void base2(Matrix& l,Matrix &B)
+    {
+        l=eigen2();
+
+        if (m[1][0]!=0.0)
+        {
+            B(0,0)=l(0)-m[1][1];
+            B(1,0)=     m[1][0];
+
+            double D=1.0/sqrt(B(0,0)*B(0,0)+B(1,0)*B(1,0));
+
+            B(0,0)*=D;
+            B(1,0)*=D;
+
+            B(0,1)=l(1)-m[1][1];
+            B(1,1)=     m[1][0];
+
+            D=1.0/sqrt(B(0,1)*B(0,1)+B(1,1)*B(1,1));
+
+            B(0,1)*=D;
+            B(1,1)*=D;
+        }
+        else if (m[0][1]!=0.0)
+        {
+            B(0,0)=     m[0][1];
+            B(1,0)=l(0)-m[0][0];     
+
+            double D=1.0/sqrt(B(0,0)*B(0,0)+B(1,0)*B(1,0));
+
+            B(0,0)*=D;
+            B(1,0)*=D;
+
+            B(0,1)=     m[0][1];
+            B(1,1)=l(1)-m[0][0];
+
+            D=1.0/sqrt(B(0,1)*B(0,1)+B(1,1)*B(1,1));
+
+            B(0,1)*=D;
+            B(1,1)*=D;
+        }
+        else
+        {
+            B(0,0)=1.0; B(0,1)=0.0;
+            B(1,0)=0.0; B(1,1)=1.0;
+        }
+    }
+
     Matrix eigen() const
     {
         #ifdef SAFE_MODE
@@ -597,7 +656,7 @@ public:
         return eig;
     }
 
-    void base(Matrix& l,Matrix &R)
+    void base(Matrix& l,Matrix &B)
     {
         l=eigen();
 
@@ -631,9 +690,85 @@ public:
         Ey[2]=Ez[0]*Ex[1]-Ez[1]*Ex[0];
         Ez[2]=Ex[0]*Ey[1]-Ex[1]*Ey[0];
 
-        R(0,0)=Ex[0]; R(0,1)=Ex[1]; R(0,2)=Ex[2];
-        R(1,0)=Ey[0]; R(1,1)=Ey[1]; R(1,2)=Ey[2];
-        R(2,0)=Ez[0]; R(2,1)=Ez[1]; R(2,2)=Ez[2];
+        B(0,0)=Ex[0]; B(0,1)=Ex[1]; B(0,2)=Ex[2];
+        B(1,0)=Ey[0]; B(1,1)=Ey[1]; B(1,2)=Ey[2];
+        B(2,0)=Ez[0]; B(2,1)=Ez[1]; B(2,2)=Ez[2];
+    }
+
+    void Jacobi(Matrix& L,Matrix& B)
+    {
+        Matrix Li(R),Lj(R);
+        Matrix Bi(R),Bj(R);
+
+        for (int i=0; i<R; ++i) 
+        {
+            for (int j=0; j<R; ++j)
+            {
+                B(i,j)=(i==j);
+                L(i,j)=m[i][j];
+            }
+        }
+
+        int ip,jp;
+        double absLij;
+
+        double max;
+
+        double Lii,Lij,Ljj;
+
+        double teta,c,s,c2,sc,s2;
+
+        for (int n=0; n<2*R; ++n)
+        {
+            max=0.0;
+
+            for (int i=0; i<R-1; ++i)
+            {
+                for (int j=i+1; j<R; ++j)
+                {
+                    absLij=fabs(L(i,j));
+                
+                    if (absLij>max) { max=absLij; ip=i; jp=j; }
+                }
+            }
+
+            Lii=L(ip,ip);
+            Lij=L(ip,jp);
+            Ljj=L(jp,jp);
+
+            for (int k=0; k<R; ++k)
+            {
+                Li(k)=L(ip,k);
+                Lj(k)=L(jp,k);
+                
+                Bi(k)=B(k,ip);
+                Bj(k)=B(k,jp);
+            }
+
+            teta=0.5*atan2(2.0*Lij,Ljj-Lii);
+            c=cos(teta);
+            s=sin(teta);
+            
+            c2=c*c;
+            sc=s*c;
+            s2=s*s;
+
+            L(ip,ip)=c2*Lii-2.0*sc*Lij+s2*Ljj;
+            L(jp,jp)=s2*Lii+2.0*sc*Lij+c2*Ljj;
+            L(ip,jp)=L(jp,ip)=(c2-s2)*Lij+sc*(Lii-Ljj);
+
+            for (int k=0; k<R; ++k)
+            {
+                if (k!=ip && k!=jp)
+                {
+                    L(ip,k)=L(k,ip)=c*Li(k)-s*Lj(k);
+                    L(jp,k)=L(k,jp)=s*Li(k)+c*Lj(k);
+                }
+
+                B(k,ip)=c*Bi(k)-s*Bj(k);
+                B(k,jp)=s*Bi(k)+c*Bj(k);
+            }
+        }
     }
 
     const int R,C;
@@ -659,29 +794,22 @@ inline Matrix operator *(double x,Matrix& M)
     return M*x;
 }
 
-inline Matrix fast_mul_diag_full(const Matrix& D,const Matrix& M)
+inline Matrix fast_mul_diag_full(double *D,const Matrix& M)
 {
-    #ifdef SAFE_MODE
-    if (D.R!=D.C || D.C!=M.R)
-    {
-        printf("Matrix::mul_diag_full incompatible dimension ERROR\n");
-        exit(-1);
-    }
-    #endif
-
     Matrix mul(M.R,M.C,false);
 
     for (int i=0; i<M.R; ++i)
     {
         for (int j=0; j<M.C; ++j)
         {
-            mul(i,j)=D(i,i)*M(i,j);
+            mul(i,j)=D[i]*M(i,j);
         }
     }
 
     return mul;
 }
 
+/*
 inline Matrix fast_mul_full_diag(const Matrix& M,const Matrix& D)
 {
     #ifdef SAFE_MODE
@@ -743,33 +871,7 @@ inline Matrix fast_mul_scalar_diag(double x,const Matrix& D)
 {
     return fast_mul_diag_scalar(D,x);
 }
-
-/*
-class DiagMatrix : public Matrix
-{
-public:
-    DiagMatrix(int dim) : Matrix(dim)
-    {
-        d=new double[dim];
-
-        for (int i=0; i<dim; ++i) d[i]=0;
-    }
-
-    virtual ~DiagMatrix()
-    {
-        if (d) delete [] d;
-    }
-
-    virtual void operator()()
-    {
-        printf("DiagMatrix\n");
-    }
-
-protected:
-    double *d;
-};
 */
-
 }
 }
 

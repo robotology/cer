@@ -21,21 +21,21 @@
 
 using namespace cer::kinematics_alt;
 
-LeftSideSolver::LeftSideSolver()
+KinR1::KinR1()
 {
-    solverImpl=new LeftSideSolverImpl();
+    kinR1Impl=new KinR1Impl();
 }
 
-LeftSideSolver::~LeftSideSolver()
+KinR1::~KinR1()
 {
-    delete solverImpl;
+    delete kinR1Impl;
 }
 
-yarp::sig::Vector LeftSideSolver::getCOM()
+yarp::sig::Vector KinR1::getCOM()
 {
     yarp::sig::Vector com(3);
     
-    Vec3 G=solverImpl->getCOM();
+    Vec3 G=kinR1Impl->getCOM();
     com(0)=G.x;
     com(1)=G.y;
     com(2)=G.z;
@@ -43,23 +43,37 @@ yarp::sig::Vector LeftSideSolver::getCOM()
     return com;
 }
 
-void LeftSideSolver::setPositionThreshold(double thr)
+void KinR1::getConfig(yarp::sig::Vector& q)
+{
+    kinR1Impl->getConfig(q);
+}
+
+void KinR1::setPositionThreshold(double thr)
 { 
-    solverImpl->setPositionThreshold(thr); 
+    kinR1Impl->setPositionThreshold(thr); 
 }
 
-bool LeftSideSolver::fkin(const yarp::sig::Vector &qin, yarp::sig::Matrix &H,int frame)
+bool KinR1::fkin(const yarp::sig::Vector &qin, yarp::sig::Matrix &H,int frame)
 {
-    return solverImpl->fkin(qin,H,frame);
+    return kinR1Impl->fkin(qin,H,frame);
 }
 
-bool LeftSideSolver::ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &qout,double armElong,double torsoElong,double timeoutSec)
+bool KinR1::ikin_left_solver(const yarp::sig::Matrix &Hd, yarp::sig::Vector &qout,double armElongL,double armElongR,double torsoElong,double timeoutSec)
 {
-    return solverImpl->ikin(Hd,qout,armElong,torsoElong,timeoutSec);
+    return kinR1Impl->ikin_left_solver(Hd,qout,armElongL,armElongR,torsoElong,timeoutSec);
 }
-/*
-bool LeftSideSolver::controller(yarp::sig::Vector &qposin, yarp::sig::Vector &Vstar, yarp::sig::Vector &Wstar, yarp::sig::Vector &qvelout)
+
+bool KinR1::ikin_left_ctrl(const yarp::sig::Matrix &Hd, yarp::sig::Vector &qin, yarp::sig::Vector &qdotout, double armElongL, double armElongR, double torsoElong)
 {
-    return solverImpl->controller(qposin, Vstar, Wstar, qvelout);
+    return kinR1Impl->ikin_left_ctrl(Hd,qin,qdotout,armElongL,armElongR,torsoElong);
 }
-*/
+
+bool KinR1::ikin_2hand_solver(const yarp::sig::Matrix &HdL, const yarp::sig::Matrix &HdR, yarp::sig::Vector &qout, double armElongL, double armElongR, double torsoElong, double timeoutSec)
+{
+    return kinR1Impl->ikin_2hand_solver(HdL,HdR,qout,armElongL,armElongR,torsoElong,timeoutSec);
+}
+
+bool KinR1::ikin_2hand_ctrl(const yarp::sig::Matrix &HdL, const yarp::sig::Matrix &HdR, yarp::sig::Vector &qin, yarp::sig::Vector &qdotout, double armElongL, double armElongR, double torsoElong)
+{
+    return kinR1Impl->ikin_2hand_ctrl(HdL,HdR,qin,qdotout,armElongL,armElongR,torsoElong);
+}
