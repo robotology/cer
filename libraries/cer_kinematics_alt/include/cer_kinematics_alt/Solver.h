@@ -128,6 +128,20 @@ public:
                         double armElongR=DEFAULT_ARM_EXTENSION,
                         double torsoElong=DEFAULT_TORSO_EXTENSION);
 
+    bool ikin_right_solver(const yarp::sig::Matrix &Hd, 
+                          yarp::sig::Vector &qout,
+                          double armElongL=DEFAULT_ARM_EXTENSION,
+                          double armElongR=DEFAULT_ARM_EXTENSION,
+                          double torsoElong=DEFAULT_TORSO_EXTENSION,
+                          double timeoutSec=SOLVER_TIMEOUT);
+
+    bool ikin_right_ctrl(const yarp::sig::Matrix &HdL, 
+                        yarp::sig::Vector &qin,
+                        yarp::sig::Vector &qdotout,
+                        double armElongL=DEFAULT_ARM_EXTENSION,
+                        double armElongR=DEFAULT_ARM_EXTENSION,
+                        double torsoElong=DEFAULT_TORSO_EXTENSION);
+
     bool ikin_2hand_solver(const yarp::sig::Matrix &HdL,
                             const yarp::sig::Matrix &HdR, 
                             yarp::sig::Vector &qout,

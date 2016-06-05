@@ -68,6 +68,16 @@ bool KinR1::ikin_left_ctrl(const yarp::sig::Matrix &Hd, yarp::sig::Vector &qin, 
     return kinR1Impl->ikin_left_ctrl(Hd,qin,qdotout,armElongL,armElongR,torsoElong);
 }
 
+bool KinR1::ikin_right_solver(const yarp::sig::Matrix &Hd, yarp::sig::Vector &qout,double armElongL,double armElongR,double torsoElong,double timeoutSec)
+{
+    return kinR1Impl->ikin_right_solver(Hd,qout,armElongL,armElongR,torsoElong,timeoutSec);
+}
+
+bool KinR1::ikin_right_ctrl(const yarp::sig::Matrix &Hd, yarp::sig::Vector &qin, yarp::sig::Vector &qdotout, double armElongL, double armElongR, double torsoElong)
+{
+    return kinR1Impl->ikin_right_ctrl(Hd,qin,qdotout,armElongL,armElongR,torsoElong);
+}
+
 bool KinR1::ikin_2hand_solver(const yarp::sig::Matrix &HdL, const yarp::sig::Matrix &HdR, yarp::sig::Vector &qout, double armElongL, double armElongR, double torsoElong, double timeoutSec)
 {
     return kinR1Impl->ikin_2hand_solver(HdL,HdR,qout,armElongL,armElongR,torsoElong,timeoutSec);

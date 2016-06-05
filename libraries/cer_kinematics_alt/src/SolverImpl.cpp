@@ -414,7 +414,7 @@ void KinR1Impl::leftHand2Target(Vec3& Xstar,Quaternion& Qstar,bool oneShot)
 
 void KinR1Impl::rightHand2Target(Vec3& Xstar,Quaternion& Qstar,bool oneShot)
 {
-    static const int NUSED=12;
+    static const int NUSED=20;
     static const int NCTRL=20;
 
     static Matrix Jhand(6,NCTRL);

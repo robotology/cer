@@ -148,7 +148,8 @@ void RobotThread::run()
     yarp::sig::Vector qvel(22);
 
     //mRobot.ikin_2hand_ctrl(Tl,Tr,qsol,qvel,0.02,0.02,0.1);
-    mRobot.ikin_left_ctrl(Tl,qsol,qvel,0.02,0.1);
+    //mRobot.ikin_left_ctrl(Tl,qsol,qvel,0.02,0.02,0.1);
+    mRobot.ikin_right_ctrl(Tr,qsol,qvel,0.02,0.02,0.1);
 
     for (int j=0; j<22; ++j) qsol(j)+=PERIOD*qvel(j);
     
@@ -159,6 +160,7 @@ void RobotThread::run()
     sendCOM(std::string("G"),192,192,0,COM,16.0,1.0);
 }
 */
+
 
 void RobotThread::run()
 {
@@ -173,7 +175,7 @@ void RobotThread::run()
     Tl(2,0)= 0.0; Tl(2,1)= 0.0; Tl(2,2)= 1.0; Tl(2,3)= 0.8+0.2*cos(2.0*M_PI*alfa);
     Tl(3,0)= 0.0; Tl(3,1)= 0.0; Tl(3,2)= 0.0; Tl(3,3)=1.0;
 
-    Tr(0,0)= 0.0; Tr(0,1)= 0.0; Tr(0,2)= 1.0; Tr(0,3)=0.2;
+    Tr(0,0)= 0.0; Tr(0,1)= 0.0; Tr(0,2)= 1.0; Tr(0,3)=0.4;
     Tr(1,0)= 0.0; Tr(1,1)= 1.0; Tr(1,2)= 0.0; Tr(1,3)=-0.2+0.2*sin(3.0*M_PI*alfa);
     Tr(2,0)=-1.0; Tr(2,1)= 0.0; Tr(2,2)= 0.0; Tr(2,3)= 0.5+0.2*cos(3.0*M_PI*alfa);
     Tr(3,0)= 0.0; Tr(3,1)= 0.0; Tr(3,2)= 0.0; Tr(3,3)=1.0;
@@ -182,7 +184,8 @@ void RobotThread::run()
     sendTarget(std::string("targetR"),0,64,255,Tr(0,3),Tr(1,3),Tr(2,3),16.0,0.666);
 
     mRobot.ikin_2hand_solver(Tl,Tr,qsol,0.02,0.02,0.1);
-    //mRobot.ikin_left_solver(Tl,qsol,0.02,0.1);
+    //mRobot.ikin_left_solver(Tl,qsol,0.02,0.02,0.1);
+    //mRobot.ikin_right_solver(Tr,qsol,0.02,0.02,0.1);
 
     sendConfig(qsol);
 
