@@ -16,18 +16,44 @@ tfModule::~tfModule()
 
 bool tfModule::configure(ResourceFinder &rf)
 {
+	
     Time::turboBoost();
-
+	Property	conf;
+	ConstString configFile;
     int         rate;
     Port        startport;
     Bottle      cmd, response;
-    string      localName;
+    string      localName, nodeName;
     double      start_time;
+	Bottle		rosConf;
+	bool		useSubscriber;
 
-    localName   = string(RPCPORTNAME);
-    start_time  = yarp::os::Time::now();
-    rate        = rf.check("rate", Value(20)).asInt(); //set the thread rate
-    rosNode     = new yarp::os::Node(ROSNODENAME);
+	configFile = rf.findFile("from");
+
+	if (configFile == "")
+	{
+		yError("Cannot find .ini configuration file. By default I'm searching for tfPublisher.ini");
+		return false;
+	}
+	else
+	{
+		conf.fromConfigFile(configFile.c_str());
+	}
+
+	rosConf = conf.findGroup("ROS");
+	yDebug() << rosConf.isNull() << rosConf.check("nodeName") << rosConf.check("useSubscriber");
+	if (rosConf.isNull() || !rosConf.check("nodeName") || !rosConf.check("useSubscriber"))
+	{
+		yError("wrong ros initialization parameter.. check your ini");
+		return false;
+	}
+
+	nodeName		= rosConf.find("nodeName").asString();
+	useSubscriber	= rosConf.find("useSubscriber").asBool();
+    localName		= string(RPCPORTNAME);
+    start_time		= yarp::os::Time::now();
+    rate			= rf.check("rate", Value(20)).asInt(); //set the thread rate
+    rosNode			= new yarp::os::Node(nodeName);
 
     yInfo("tfPublisher thread rate: %d ms.", rate);
 
@@ -39,14 +65,11 @@ bool tfModule::configure(ResourceFinder &rf)
         yError() << " Unable to publish data on " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
         return false;
     }
-
-    if (!rosSubscriberPort_tf.topic(ROSTOPICNAM))
+    if (useSubscriber && !rosSubscriberPort_tf.topic(ROSTOPICNAM))
     {
         yError() << " Unable to subscribe to " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
         return false;
     }
-
-
 
     return true;
 }

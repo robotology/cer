@@ -25,7 +25,6 @@
 #define PI          3.14159265359
 #define RPCPORTNAME "/tfpublisher"
 #define PERIOD      0.010
-#define ROSNODENAME "/tfNode"
 #define ROSTOPICNAM "/tf"
 #define TEXT( x )   to_string( x )
 #define TODEG( x )  x * ( 180 / PI )
