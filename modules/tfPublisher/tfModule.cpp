@@ -69,7 +69,6 @@ bool tfModule::configure(ResourceFinder &rf)
                 Bottle tfCmd, reply, tfPar;
                 tfPar = rosConf.findGroup(name); 
                 tfCmd.addString("create_fixed_frame");
-                tfCmd.addString(name);
                 tfCmd.append(tfPar);
                 createFixedFrameCmd(tfCmd, reply);
                 yInfo("%s",reply.get(0).asString().c_str());
