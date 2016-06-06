@@ -1,7 +1,6 @@
 
 #include "tfModule.h"
 #include <yarp/os/Nodes.h>
-#include <boost/concept_check.hpp>
 
 tfModule::tfModule()
 {
@@ -17,7 +16,6 @@ tfModule::~tfModule()
 
 bool tfModule::configure(ResourceFinder &rf)
 {
-	
     Time::turboBoost();
     ConstString configFile;
     int         rate;
@@ -61,7 +59,7 @@ bool tfModule::configure(ResourceFinder &rf)
     {
         Bottle  list;
         string  name;
-        uint    i;
+        int i;
         list = rosConf.findGroup("tfList");
         for(i = 0; i < list.size(); i++)
         {
@@ -74,7 +72,7 @@ bool tfModule::configure(ResourceFinder &rf)
                 tfCmd.addString(name);
                 tfCmd.append(tfPar);
                 createFixedFrameCmd(tfCmd, reply);
-                yInfo(reply.get(0).asString());
+                yInfo("%s",reply.get(0).asString());
             }
         }
     }
