@@ -46,7 +46,7 @@ public:
     virtual void onStop();
 
     void sendConfig(yarp::sig::Vector &q);
-    void sendCOM(std::string& name,int R,int G,int B,yarp::sig::Vector P,double size,double alpha);
+    void sendCOM(const std::string& name,int R,int G,int B,yarp::sig::Vector P,double size,double alpha);
     void sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha,double rx=0.0,double ry=0.0,double rz=0.0);
 
 protected:
@@ -262,7 +262,7 @@ void RobotThread::sendConfig(yarp::sig::Vector &q)
     }
 }
 
-void RobotThread::sendCOM(std::string& name,int R,int G,int B,yarp::sig::Vector P,double size,double alpha)
+void RobotThread::sendCOM(const std::string& name,int R,int G,int B,yarp::sig::Vector P,double size,double alpha)
 {
     yarp::os::Bottle& botR=portObjects.prepare();
     botR.clear();
