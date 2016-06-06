@@ -32,7 +32,8 @@ int main(int argc, char* argv[])
 {
     ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultContext("cer");
+    rf.setDefaultContext("tfPublisher");
+    rf.setDefaultConfigFile("tfPublisher.ini");
     rf.configure(argc,argv);
 
     if ( rf.check("help") )

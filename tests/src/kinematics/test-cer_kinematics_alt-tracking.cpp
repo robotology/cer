@@ -191,7 +191,8 @@ void RobotThread::run()
 
     yarp::sig::Vector COM=mRobot.getCOM(); 
     COM[2]=-0.160;
-    sendCOM(std::string("G"),192,192,0,COM,16.0,1.0);
+    std::string G = "G";
+    sendCOM(G,192,192,0,COM,16.0,1.0);
 }
 
 void RobotThread::sendConfig(yarp::sig::Vector &q)

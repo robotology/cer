@@ -1,6 +1,7 @@
 
 #include "tfModule.h"
 #include <yarp/os/Nodes.h>
+#include <boost/concept_check.hpp>
 
 tfModule::tfModule()
 {
@@ -18,42 +19,28 @@ bool tfModule::configure(ResourceFinder &rf)
 {
 	
     Time::turboBoost();
-	Property	conf;
-	ConstString configFile;
+    ConstString configFile;
     int         rate;
     Port        startport;
     Bottle      cmd, response;
     string      localName, nodeName;
     double      start_time;
-	Bottle		rosConf;
-	bool		useSubscriber;
+    Bottle      rosConf;
+    bool        useSubscriber;
 
-	configFile = rf.findFile("from");
+    rosConf = rf.findGroup("ROS");
+    if (rosConf.isNull() || !rosConf.check("nodeName") || !rosConf.check("useSubscriber"))
+    {
+            yError("wrong ros initialization parameter.. check your ini");
+            return false;
+    }
 
-	if (configFile == "")
-	{
-		yError("Cannot find .ini configuration file. By default I'm searching for tfPublisher.ini");
-		return false;
-	}
-	else
-	{
-		conf.fromConfigFile(configFile.c_str());
-	}
-
-	rosConf = conf.findGroup("ROS");
-	yDebug() << rosConf.isNull() << rosConf.check("nodeName") << rosConf.check("useSubscriber");
-	if (rosConf.isNull() || !rosConf.check("nodeName") || !rosConf.check("useSubscriber"))
-	{
-		yError("wrong ros initialization parameter.. check your ini");
-		return false;
-	}
-
-	nodeName		= rosConf.find("nodeName").asString();
-	useSubscriber	= rosConf.find("useSubscriber").asBool();
-    localName		= string(RPCPORTNAME);
-    start_time		= yarp::os::Time::now();
-    rate			= rf.check("rate", Value(20)).asInt(); //set the thread rate
-    rosNode			= new yarp::os::Node(nodeName);
+    nodeName            = rosConf.find("nodeName").asString();
+    useSubscriber       = rosConf.find("useSubscriber").asBool();
+    localName           = string(RPCPORTNAME);
+    start_time          = yarp::os::Time::now();
+    rate                = rf.check("rate", Value(20)).asInt(); //set the thread rate
+    rosNode             = new yarp::os::Node(nodeName);
 
     yInfo("tfPublisher thread rate: %d ms.", rate);
 
@@ -69,6 +56,27 @@ bool tfModule::configure(ResourceFinder &rf)
     {
         yError() << " Unable to subscribe to " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
         return false;
+    }
+    if(rosConf.check("tfList"))
+    {
+        Bottle  list;
+        string  name;
+        uint    i;
+        list = rosConf.findGroup("tfList");
+        for(i = 0; i < list.size(); i++)
+        {
+            name = list.get(i).asString();
+            if(rosConf.check(name))
+            {
+                Bottle tfCmd, reply, tfPar;
+                tfPar = rosConf.findGroup(name); 
+                tfCmd.addString("create_fixed_frame");
+                tfCmd.addString(name);
+                tfCmd.append(tfPar);
+                createFixedFrameCmd(tfCmd, reply);
+                yInfo(reply.get(0).asString());
+            }
+        }
     }
 
     return true;
@@ -137,6 +145,7 @@ bool tfModule::helpCmd( Bottle& reply )
     reply.addString("'get_frame' output specified frame's data  -  usage: get_frame <frameName> ");
     return true;
 }
+
 bool tfModule::createFixedFrameCmd(const Bottle& command, Bottle& reply)
 {
     tf        temp;
@@ -174,7 +183,7 @@ bool tfModule::createFixedFrameCmd(const Bottle& command, Bottle& reply)
         }
     }
 
-    reply.addString("ok");
+    reply.addString("frame "+temp.name+" succesfully created");
     tfVector.push_back(temp);
     return true;
 }
