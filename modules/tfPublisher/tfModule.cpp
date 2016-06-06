@@ -72,7 +72,7 @@ bool tfModule::configure(ResourceFinder &rf)
                 tfCmd.addString(name);
                 tfCmd.append(tfPar);
                 createFixedFrameCmd(tfCmd, reply);
-                yInfo("%s",reply.get(0).asString());
+                yInfo("%s",reply.get(0).asString().c_str());
             }
         }
     }
