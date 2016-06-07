@@ -69,25 +69,25 @@ int main()
     Input in;
     
     // input #0
-    in.torso_heave=0.1;
+    in.torso_heave=0.05;
     in.lower_arm_heave=0.01;
-    in.xd[0]=0.2; in.xd[1]=-0.4;     in.xd[2]=-0.1;
+    in.xd[0]=0.2; in.xd[1]=-0.4;     in.xd[2]=0.35;
     in.ud[0]=0.0; in.ud[1]=M_PI/2.0; in.ud[2]=0.0;
     in.calcHd();
     input.push_back(in);
 
     // input #1
-    in.torso_heave=0.1;
+    in.torso_heave=0.05;
     in.lower_arm_heave=0.01;
-    in.xd[0]=0.2; in.xd[1]=-0.6;     in.xd[2]=-0.1;
+    in.xd[0]=0.2; in.xd[1]=-0.6;     in.xd[2]=0.35;
     in.ud[0]=0.0; in.ud[1]=M_PI/2.0; in.ud[2]=0.0;
     in.calcHd();
     input.push_back(in);
 
     // input #2
-    in.torso_heave=0.1;
+    in.torso_heave=0.05;
     in.lower_arm_heave=0.0;
-    in.xd[0]=0.4; in.xd[1]=-0.2;     in.xd[2]=0.0;
+    in.xd[0]=0.4; in.xd[1]=-0.2;     in.xd[2]=0.25;
     in.ud[0]=0.0; in.ud[1]=M_PI/2.0; in.ud[2]=0.0;
     in.calcHd();
     input.push_back(in);
