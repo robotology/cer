@@ -121,7 +121,10 @@ int main()
 
         Vector q_1(12,0.0);
         double t0=Time::now();
-        solver_1.ikin_left_solver(input[i].Hd,q_1,input[i].lower_arm_heave,input[i].lower_arm_heave,input[i].torso_heave);
+        solver_1.ikin_left_solver(input[i].Hd,q_1,
+                                  input[i].lower_arm_heave,
+                                  input[i].lower_arm_heave,
+                                  input[i].torso_heave);
         double t1=Time::now();
 
         Matrix H_1;
