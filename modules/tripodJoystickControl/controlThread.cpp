@@ -16,6 +16,9 @@
 * Public License for more details
 */
 
+#include <sstream>
+#include <iomanip>
+
 #include "controlThread.h"
 
 void ControlThread::run()
@@ -95,9 +98,9 @@ void ControlThread::run()
 
 void ControlThread::printStats()
 {
-    char buff[255];
-    sprintf(buff, "elong: %+3.3f  pitch:%+3.3f  roll:%+3.3f ", elong, pitch, roll);
-    yDebug() << buff;
+    ostringstream stats;
+    stats<<setprecision(3)<<"elong: "<<elong<<" pitch: "<<pitch<<" roll: "<<roll;
+    yDebug()<<stats.str();
 }
 
 bool ControlThread::threadInit()
