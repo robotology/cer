@@ -557,7 +557,7 @@ bool GazeboTripodMotionControl::setPositions(const int n_joint, const int *joint
 {
     for (int i = 0; i < n_joint; i++)
     {
-        m_referenceElongations[i] = refs[i];
+        m_referenceElongations[joints[i]] = refs[i];
     }
     tripod_client2Sim(m_referenceElongations, m_referencePositions);
 #if DISPLAY_POS_ENABLE
