@@ -13,7 +13,7 @@
     <devices file="wrappers/rpLidar/laser_wrapper.xml" /> 
 
     <!-- ROS -->
-    <devices file="wrappers/motorControl/cer_ros_wrapper.xml" />
+    <devices file="wrappers/motorControl/cer_ros_wrapper_base_only.xml" />
 
     <!--  CALIBRATORS -->
     <devices file="calibrators/cer_base-calib.xml" />

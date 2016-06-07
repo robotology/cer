@@ -19,7 +19,7 @@
 <param name="calibrationType">                   3          3          3         3                     </param>
 <param name="calibration1">                      0          0          0         0                     </param>
 <param name="calibration2">                      0          0          0         0                     </param>
-<param name="calibration3">                      12868      57307      7055      33496                 </param>
+<param name="calibration3">                      12868      57307      7055      38942                 </param>
 <param name="calibration4">                      0          0          0         0                     </param>
 <param name="calibration5">                      0          0          0         0                     </param>
 <param name="calibrationZero">                   180        180        180       180                   </param>
