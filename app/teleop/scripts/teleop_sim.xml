@@ -1,5 +1,5 @@
 <application>
-<name>CER_TELEOP</name>
+<name>CER_TELEOP_SIM</name>
 
         <dependencies>
         </dependencies>
@@ -12,49 +12,52 @@
 
         <module>
                 <name>cer_teleop</name>
+                <prefix>sim</prefix>
                 <node>windows</node>
         </module>
 
         <module>
                 <name>cer_reaching-solver</name>
-                <parameters>--robot cer</parameters>
+                <parameters>--robot SIM_CER_ROBOT</parameters>
+                <prefix>sim</prefix>
                 <node>linux</node>
         </module>
 
         <module>
                 <name>cer_reaching-controller</name>
-                <parameters>--robot cer</parameters>
+                <parameters>--robot SIM_CER_ROBOT</parameters>
+                <prefix>sim</prefix>
                 <node>linux</node>
         </module>
 
 <!----- connections ------>
 
         <connection>
-                <from>/cer_reaching-controller/left/state:o</from>
-                <to>/cer_teleop/state:i</to>
+                <from>/sim/cer_reaching-controller/left/state:o</from>
+                <to>/sim/cer_teleop/state:i</to>
                 <protocol>tcp</protocol>
         </connection>
 
         <connection>
-                <from>/cer_reaching-controller/left/solver:rpc</from>
-                <to>/cer_reaching-solver/left/rpc</to>
+                <from>/sim/cer_reaching-controller/left/solver:rpc</from>
+                <to>/sim/cer_reaching-solver/left/rpc</to>
                 <protocol>tcp</protocol>
         </connection>
 
         <connection>
-                <from>/cer_teleop/target:o</from>
-                <to>/cer_reaching-controller/left/target:i</to>
+                <from>/sim/cer_teleop/target:o</from>
+                <to>/sim/cer_reaching-controller/left/target:i</to>
                 <protocol>tcp</protocol>
         </connection>
  
         <connection>
-                <from>/cer_teleop/cmd:rpc</from>
-                <to>/cer_reaching-controller/left/rpc</to>
+                <from>/sim/cer_teleop/cmd:rpc</from>
+                <to>/sim/cer_reaching-controller/left/rpc</to>
                 <protocol>tcp</protocol>
         </connection>
 
         <connection>
-                <from>/cer_teleop/gazebo:o</from>
+                <from>/sim/cer_teleop/gazebo:o</from>
                 <to>/world_input_port</to>
                 <protocol>tcp</protocol>
         </connection>
