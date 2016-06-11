@@ -29,24 +29,28 @@
 #define TEXT( x )   to_string( x )
 #define TODEG( x )  x * ( 180 / PI )
 #define TORAD( x )  (PI / 180) * x
+typedef yarp::os::Publisher<tf_tfMessage> tfPub;
+typedef yarp::os::Subscriber<tf_tfMessage> tfSub;
 
-using namespace std;
-using namespace yarp::os;
-using namespace yarp::sig;
+
 
 typedef geometry_msgs_TransformStamped tfStamped;
 
 class tfModule : public RFModule
 {
 protected:
-    Port                                 rpcPort, rosReaderPort;
-    std::vector<tf>                      tfVector;
-    yarp::os::Publisher<tf_tfMessage>    rosPublisherPort_tf;
-    yarp::os::Subscriber<tf_tfMessage>   rosSubscriberPort_tf;
-    int                                  rosMsgCounter;
-    double                               period;
-    yarp::os::Node*                      rosNode;
-    std::vector<tfStamped>               rosTf;
+    Port                    rpcPort, rosReaderPort;
+    std::vector<tf>         tfVector;
+    std::vector<tf>         extTfVector;
+    tfPub                   rosPublisherPort_tf;
+    tfSub                   rosSubscriberPort_tf;
+    int                     rosMsgCounter;
+    double                  period;
+    yarp::os::Node*         rosNode;
+    std::vector<tfStamped>  rosTf;
+    bool                    useSubscriber;
+    bool                    usePublisher;
+    void                    importTf();
 
 public:
                     tfModule();
@@ -55,6 +59,7 @@ public:
     bool            respond( const Bottle& command, Bottle& reply );
     bool            helpCmd( Bottle& reply );
     bool            createFixedFrameCmd(const Bottle& command, Bottle& reply );
+    bool            createFixedFrame( tf tf_frame );
     bool            deleteFixedFrameCmd(const Bottle& command, Bottle& reply );
     bool            listCmd( Bottle& reply );
     bool            getFrameCmd( const string& name, Bottle& reply );

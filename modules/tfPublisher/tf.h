@@ -21,10 +21,15 @@
 #include <iomanip>
 #include <string>
 
-using namespace std;
-using namespace yarp::os;
-using namespace yarp::sig;
-using namespace yarp::math;
+#define X_AX 0
+#define Y_AX 1
+#define Z_AX 2
+#define W_AX 3
+
+#define ROLL  0
+#define PITCH 1
+#define YAW   2
+#define STRNG std::string
 
 inline TickTime normalizeSecNSec(double yarpTimeStamp)
 {
@@ -48,9 +53,8 @@ inline TickTime normalizeSecNSec(double yarpTimeStamp)
     return ret;
 }
 
-class tf
-{
-public:
+struct tf
+{ 
     enum      tf_type_enum { fixed = 0, external = 1 } type;
     double    tX;
     double    tY;
@@ -59,16 +63,29 @@ public:
     double    rY;
     double    rZ;
     double    rW;
-    string    name;
-    string    parent_frame;
-    string    child_frame;
+    STRNG     name;
+    STRNG     parent_frame;
+    STRNG     child_frame;
 
-    yarp::os::BufferedPort<yarp::os::Bottle>* tfport;
+    //yarp::os::BufferedPort<yarp::os::Bottle>* tfport;
 
-           tf();
-           ~tf();
-    void   read();
-    void   transFromVec(double X, double Y, double Z);
-    void   rotFromRPY(double R, double P, double Y);
-    Vector getRPYRot() const;
+                       tf();
+                       tf
+                       (
+                            const STRNG& inName,
+                            const STRNG& parent,
+                            const STRNG& child,
+                            double       inTX,
+                            double       inTY,
+                            double       inTZ,
+                            double       inRX,
+                            double       inRY,
+                            double       inRZ,
+                            double       inRW
+                       );
+                       ~tf();
+    //void   read();
+    void               transFromVec(double X, double Y, double Z);
+    void               rotFromRPY(double R, double P, double Y);
+    yarp::sig::Vector  getRPYRot() const;
 };

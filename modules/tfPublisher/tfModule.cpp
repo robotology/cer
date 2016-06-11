@@ -1,6 +1,9 @@
 
 #include "tfModule.h"
 #include <yarp/os/Nodes.h>
+using namespace std;
+using namespace yarp::os;
+using namespace yarp::sig;
 
 tfModule::tfModule()
 {
@@ -24,10 +27,9 @@ bool tfModule::configure(ResourceFinder &rf)
     string      localName, nodeName;
     double      start_time;
     Bottle      rosConf;
-    bool        useSubscriber;
 
     rosConf = rf.findGroup("ROS");
-    if (rosConf.isNull() || !rosConf.check("nodeName") || !rosConf.check("useSubscriber"))
+    if (rosConf.isNull() || !rosConf.check("nodeName") || !rosConf.check("useSubscriber") || !rosConf.check("usePublisher"))
     {
             yError("wrong ros initialization parameter.. check your ini");
             return false;
@@ -45,7 +47,7 @@ bool tfModule::configure(ResourceFinder &rf)
     rpcPort.open((localName + "/rpc").c_str());
     attach(rpcPort);
 
-    if (!rosPublisherPort_tf.topic(ROSTOPICNAM))
+    if (usePublisher && !rosPublisherPort_tf.topic(ROSTOPICNAM))
     {
         yError() << " Unable to publish data on " << ROSTOPICNAM << " topic, check your yarp-ROS network configuration\n";
         return false;
@@ -61,7 +63,7 @@ bool tfModule::configure(ResourceFinder &rf)
         string  name;
         int i;
         list = rosConf.findGroup("tfList");
-        for(i = 0; i < list.size(); i++)
+        for(i = 1; i < list.size(); i++)//the 0 slot is for the group name
         {
             name = list.get(i).asString();
             if(rosConf.check(name))
@@ -125,6 +127,14 @@ bool tfModule::respond(const Bottle& command, Bottle& reply)
     {
         return getFrameCmd(command.get(1).asString(), reply);
     }
+    else if (request == "get_tf_chain")
+    {
+        if (!useSubscriber)
+        {
+            yError() << "Subscriber not active. activate it and restart";
+            return false;
+        }
+    }
     reply.addString("Unknown command.");
     return true;
 }
@@ -140,6 +150,8 @@ bool tfModule::helpCmd( Bottle& reply )
     reply.addString("'list' output all current frames name ");
     reply.addString("  ");
     reply.addString("'get_frame' output specified frame's data  -  usage: get_frame <frameName> ");
+    reply.addString("  ");
+    reply.addString("'get_tf_chain' output tf summatory between two link  -  usage: get_tf_chain <parent> <child> ");
     return true;
 }
 
@@ -167,7 +179,7 @@ bool tfModule::createFixedFrameCmd(const Bottle& command, Bottle& reply)
         if (tfVector[i].name == temp.name)
         {
             reply.addString("already exists!");
-            return true;
+            return false;
         }
 
         if (
@@ -176,7 +188,7 @@ bool tfModule::createFixedFrameCmd(const Bottle& command, Bottle& reply)
             )
         {
             reply.addString("tf with the same hierarchy already exists!");
-            return true;
+            return false;
         }
     }
 
@@ -184,6 +196,7 @@ bool tfModule::createFixedFrameCmd(const Bottle& command, Bottle& reply)
     tfVector.push_back(temp);
     return true;
 }
+
 bool tfModule::deleteFixedFrameCmd(const Bottle& command, Bottle& reply)
 {
     bool    ret;
@@ -199,7 +212,7 @@ bool tfModule::deleteFixedFrameCmd(const Bottle& command, Bottle& reply)
             break;
         default:
             reply.addString("invalid params");
-            return true;
+            return false;
     }
 
     if ( ret )
@@ -210,16 +223,16 @@ bool tfModule::deleteFixedFrameCmd(const Bottle& command, Bottle& reply)
     else
     {
         reply.addString("not found");
-        return true;
+        return false;
     }
 
 }
+
 bool tfModule::listCmd( Bottle& reply )
 {
     string  tfCount;
-    //char    buffer[100]; memset(buffer, 0, 100);
 
-    tfCount = to_string(tfVector.size());//itoa(tfVector.size(), buffer, 10);
+    tfCount = to_string(tfVector.size());
 
     reply.addString( "there are currently "+ tfCount + " frame/s" );
 
@@ -238,6 +251,7 @@ bool tfModule::listCmd( Bottle& reply )
 
     return true;
 }
+
 bool tfModule::getFrameCmd(const string& name, Bottle& reply)
 {
     for (size_t i = 0; i < tfVector.size(); i++)
@@ -338,6 +352,17 @@ bool tfModule::rosHasFrame( string parent, string child )
     return false;
 }
 
+void tfModule::importTf()
+{
+    for (size_t i = 0; i < rosTf.size(); i++)
+    {
+        if ()
+        {
+            return;
+        }
+    }
+}
+
 bool tfModule::updateModule()
 {
     tf_tfMessage*                     rosInData  = rosSubscriberPort_tf.read( false );
@@ -348,6 +373,14 @@ bool tfModule::updateModule()
     if( rosInData != 0 )
     {
         rosTf = rosInData->transforms;
+        importTf();
+    }
+    else
+    {
+        if (!extTfVector.empty())
+        {
+            extTfVector.clear();
+        }
     }
 
     tfVecSize = tfVector.size();
