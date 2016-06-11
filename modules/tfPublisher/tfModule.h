@@ -31,15 +31,15 @@
 #define TORAD( x )  (PI / 180) * x
 typedef yarp::os::Publisher<tf_tfMessage> tfPub;
 typedef yarp::os::Subscriber<tf_tfMessage> tfSub;
-
+#define YOS yarp::os
 
 
 typedef geometry_msgs_TransformStamped tfStamped;
 
-class tfModule : public RFModule
+class tfModule : public YOS::RFModule
 {
 protected:
-    Port                    rpcPort, rosReaderPort;
+	YOS::Port               rpcPort, rosReaderPort;
     std::vector<tf>         tfVector;
     std::vector<tf>         extTfVector;
     tfPub                   rosPublisherPort_tf;
@@ -55,18 +55,18 @@ protected:
 public:
                     tfModule();
                     ~tfModule();
-    virtual bool    configure( ResourceFinder& rf );
-    bool            respond( const Bottle& command, Bottle& reply );
-    bool            helpCmd( Bottle& reply );
-    bool            createFixedFrameCmd(const Bottle& command, Bottle& reply );
+    virtual bool    configure(YOS::ResourceFinder& rf );
+    bool            respond( const YOS::Bottle& command, YOS::Bottle& reply );
+    bool            helpCmd(YOS::Bottle& reply );
+    bool            createFixedFrameCmd(const YOS::Bottle& command, YOS::Bottle& reply );
     bool            createFixedFrame( tf tf_frame );
-    bool            deleteFixedFrameCmd(const Bottle& command, Bottle& reply );
-    bool            listCmd( Bottle& reply );
-    bool            getFrameCmd( const string& name, Bottle& reply );
-    void            replyFrameInfo( const tf& frame, Bottle& reply );
-    bool            deleteFrame( const string& name );
-    bool            deleteFrame( const string& parent, const string& child );
-    bool            rosHasFrame( string parent, string child );
+    bool            deleteFixedFrameCmd(const YOS::Bottle& command, YOS::Bottle& reply );
+    bool            listCmd(YOS::Bottle& reply );
+    bool            getFrameCmd( const std::string& name, YOS::Bottle& reply );
+    void            replyFrameInfo( const tf& frame, YOS::Bottle& reply );
+    bool            deleteFrame( const std::string& name );
+    bool            deleteFrame( const std::string& parent, const std::string& child );
+    bool            rosHasFrame( std::string parent, std::string child );
     virtual bool    close();
     virtual double  getPeriod();
     virtual bool    updateModule();

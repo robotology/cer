@@ -354,13 +354,10 @@ bool tfModule::rosHasFrame( string parent, string child )
 
 void tfModule::importTf()
 {
-    for (size_t i = 0; i < rosTf.size(); i++)
+    /*for (size_t i = 0; i < rosTf.size(); i++)
     {
-        if ()
-        {
-            return;
-        }
-    }
+        
+    }*/
 }
 
 bool tfModule::updateModule()
