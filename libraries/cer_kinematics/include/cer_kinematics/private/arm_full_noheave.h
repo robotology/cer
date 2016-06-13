@@ -288,20 +288,20 @@ public:
 
             x_dx[0]=x[0]+drho;
             tripod_fkin(1,x_dx,&d_fw);
-            values[0]=-2.0*e1*(d_fw.p[2]-d1.p[2])/drho;
-            values[3]=(d_fw.n[2]-d1.n[2])/drho;
+            values[0]=-2.0*e1*(d_fw.p[2]-din1.p[2])/drho;
+            values[3]=(d_fw.n[2]-din1.n[2])/drho;
             x_dx[0]=x[0];
 
             x_dx[1]=x[1]+drho;
             tripod_fkin(1,x_dx,&d_fw);
-            values[1]=-2.0*e1*(d_fw.p[2]-d1.p[2])/drho;
-            values[4]=(d_fw.n[2]-d1.n[2])/drho;
+            values[1]=-2.0*e1*(d_fw.p[2]-din1.p[2])/drho;
+            values[4]=(d_fw.n[2]-din1.n[2])/drho;
             x_dx[1]=x[1];
 
             x_dx[2]=x[2]+drho;
             tripod_fkin(1,x_dx,&d_fw);
-            values[2]=-2.0*e1*(d_fw.p[2]-d1.p[2])/drho;
-            values[5]=(d_fw.n[2]-d1.n[2])/drho;
+            values[2]=-2.0*e1*(d_fw.p[2]-din1.p[2])/drho;
+            values[5]=(d_fw.n[2]-din1.n[2])/drho;
             x_dx[2]=x[2];
 
             // g[2,3] (lower_arm)
@@ -309,20 +309,20 @@ public:
 
             x_dx[9]=x[9]+drho;
             tripod_fkin(2,x_dx,&d_fw);
-            values[6]=-2.0*e2*(d_fw.p[2]-d2.p[2])/drho;
-            values[9]=(d_fw.n[2]-d2.n[2])/drho;
+            values[6]=-2.0*e2*(d_fw.p[2]-din2.p[2])/drho;
+            values[9]=(d_fw.n[2]-din2.n[2])/drho;
             x_dx[9]=x[9];
 
             x_dx[10]=x[10]+drho;
             tripod_fkin(2,x_dx,&d_fw);
-            values[7]=-2.0*e2*(d_fw.p[2]-d2.p[2])/drho;
-            values[10]=(d_fw.n[2]-d2.n[2])/drho;
+            values[7]=-2.0*e2*(d_fw.p[2]-din2.p[2])/drho;
+            values[10]=(d_fw.n[2]-din2.n[2])/drho;
             x_dx[10]=x[10];
 
             x_dx[11]=x[11]+drho;
             tripod_fkin(2,x_dx,&d_fw);
-            values[8]=-2.0*e2*(d_fw.p[2]-d2.p[2])/drho;
-            values[11]=(d_fw.n[2]-d2.n[2])/drho;
+            values[8]=-2.0*e2*(d_fw.p[2]-din2.p[2])/drho;
+            values[11]=(d_fw.n[2]-din2.n[2])/drho;
             x_dx[11]=x[11];
 
             // g[4] (init)
