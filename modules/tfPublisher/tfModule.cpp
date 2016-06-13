@@ -183,6 +183,7 @@ bool tfModule::createFixedFrameCmd(const Bottle& command, Bottle& reply)
     else
     {
         reply.addString(log);
+        return false;
     }
 }
 
