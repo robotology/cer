@@ -66,6 +66,8 @@ struct tf
     STRNG     name;
     STRNG     parent_frame;
     STRNG     child_frame;
+    double    birth;
+    double    lifeTime;
 
     //yarp::os::BufferedPort<yarp::os::Bottle>* tfport;
 

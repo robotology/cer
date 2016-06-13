@@ -37,6 +37,7 @@ bool tfModule::configure(ResourceFinder &rf)
 
     nodeName            = rosConf.find("nodeName").asString();
     useSubscriber       = rosConf.find("useSubscriber").asBool();
+    usePublisher       = rosConf.find("usePublisher").asBool();
     localName           = string(RPCPORTNAME);
     start_time          = yarp::os::Time::now();
     rate                = rf.check("rate", Value(20)).asInt(); //set the thread rate
@@ -174,27 +175,47 @@ bool tfModule::createFixedFrameCmd(const Bottle& command, Bottle& reply)
     temp.transFromVec(x, y, z);
     temp.rotFromRPY(TORAD( roll ), TORAD( pitch ), TORAD( yaw ) );
 
-    for (size_t i = 0; i < tfVector.size(); i++)
+    if (insertFixedFrame(temp))
     {
-        if (tfVector[i].name == temp.name)
+        reply.addString("frame " + temp.name + " succesfully created");
+        return true;
+    }
+    else
+    {
+        reply.addString(log);
+    }
+}
+
+bool tfModule::insertFixedFrame(tf& tf_frame, bool external)
+{
+    vector<tf>& tfvec = external ? extTfVector : tfVector;
+    std::pair<TF_MAP_PAIR> mapitem;
+    for (size_t i = 0; i < tfvec.size(); i++)
+    {
+        if (tfvec[i].name == tf_frame.name)
         {
-            reply.addString("already exists!");
+            log = "already exists!";
             return false;
         }
 
         if (
-            tfVector[i].parent_frame == temp.parent_frame && tfVector[i].child_frame == temp.child_frame ||
-            tfVector[i].parent_frame == temp.child_frame && tfVector[i].child_frame == temp.parent_frame
+            tfvec[i].parent_frame == tf_frame.parent_frame && tfvec[i].child_frame == tf_frame.child_frame ||
+            tfvec[i].parent_frame == tf_frame.child_frame && tfvec[i].child_frame == tf_frame.parent_frame
             )
         {
-            reply.addString("tf with the same hierarchy already exists!");
+            log = "tf with the same hierarchy already exists!";
             return false;
         }
     }
 
-    reply.addString("frame "+temp.name+" succesfully created");
-    tfVector.push_back(temp);
+    tf_frame.birth    = clock.now();
+    tf_frame.lifeTime = DEFAULTTFLIFETIME;
+    tfvec.push_back(tf_frame);
+    mapitem.first  = tfvec.rbegin()->parent_frame + tfvec.rbegin()->child_frame;
+    mapitem.second = &tfvec[tfvec.size()-1];
+    tfMap.insert(mapitem);
     return true;
+
 }
 
 bool tfModule::deleteFixedFrameCmd(const Bottle& command, Bottle& reply)
@@ -298,16 +319,16 @@ bool tfModule::deleteFrame( const string& name )
     return ret;
 }
 
-bool tfModule::deleteFrame( const string& parent, const string& child )
+bool tfModule::deleteFrame( const string& parent, const string& child, bool external )
 {
     bool ret;
     ret  = false;
-
-    for (size_t i = 0; i < tfVector.size(); i++)
+    vector<tf>& tfvec = external ? extTfVector : tfVector;
+    for (size_t i = 0; i < tfvec.size(); i++)
     {
         if (
-            tfVector[i].parent_frame == parent && tfVector[i].child_frame == child ||
-            tfVector[i].parent_frame == child && tfVector[i].child_frame == parent
+            tfvec[i].parent_frame == parent && tfvec[i].child_frame == child ||
+            tfvec[i].parent_frame == child && tfvec[i].child_frame == parent
            )
         {
             tfVector.erase( tfVector.begin() + i );
@@ -354,10 +375,50 @@ bool tfModule::rosHasFrame( string parent, string child )
 
 void tfModule::importTf()
 {
-    /*for (size_t i = 0; i < rosTf.size(); i++)
+    for (size_t i = 0; i < rosTf.size(); i++)
     {
-        
-    }*/
+        string key;
+        key = rosTf[i].header.frame_id + rosTf[i].child_frame_id;
+        if (tfMap.count(key))
+        {
+            tf& currTf   = *tfMap.find(key)->second;
+            currTf.birth = clock.now();
+            currTf.tX    = rosTf[i].transform.translation.x;
+            currTf.tY    = rosTf[i].transform.translation.y;
+            currTf.tZ    = rosTf[i].transform.translation.z;
+            currTf.rX    = rosTf[i].transform.rotation.x;
+            currTf.rY    = rosTf[i].transform.rotation.y;
+            currTf.rZ    = rosTf[i].transform.rotation.z;
+            currTf.rW    = rosTf[i].transform.rotation.w;
+        }
+        else
+        {
+            tf newtf;
+            newtf.name          = ROSNAMEPREFIX + key;
+            newtf.parent_frame  = rosTf[i].header.frame_id;
+            newtf.child_frame   = rosTf[i].child_frame_id;
+            newtf.tX            = rosTf[i].transform.translation.x;
+            newtf.tY            = rosTf[i].transform.translation.y;
+            newtf.tZ            = rosTf[i].transform.translation.z;
+            newtf.rX            = rosTf[i].transform.rotation.x;
+            newtf.rY            = rosTf[i].transform.rotation.y;
+            newtf.rZ            = rosTf[i].transform.rotation.z;
+            newtf.rW            = rosTf[i].transform.rotation.w;
+            insertFixedFrame(newtf, true);
+        }
+
+        map<string, tf*>::iterator iter;
+        for (iter = tfMap.begin(); iter != tfMap.end(); iter++)
+        {
+            tf& currTf = *(iter->second);
+            double now = clock.now();
+            if (now - currTf.birth > currTf.lifeTime)
+            {
+                deleteFrame(currTf.parent_frame, currTf.child_frame, true);
+            }
+        }
+
+    }
 }
 
 bool tfModule::updateModule()

@@ -10,7 +10,7 @@ tf::tf()
 {
     //tfport  = 0;
     type    = fixed;
-    tX      = tY = tZ = rX = rY = rZ = rW = 0;
+    tX = tY = tZ = rX = rY = rZ = rW = lifeTime = birth = 0;
 }
 
 tf::tf
