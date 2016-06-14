@@ -90,53 +90,38 @@ class IKSolver : public RFModule
             p.torso.l_max=lim(0,1);
             p.torso.alpha_max=fabs(lim(1,1));
 
-            yInfo("limits of %s part: heave=[%g,%g] [m], alpha_max=%g [deg]",
-                  ("/"+robot+"/torso").c_str(),p.torso.l_min,
-                  p.torso.l_max,p.torso.alpha_max);
+            iKinChain *chain=p.upper_arm.asChain();
+            (*chain)[0].setMin((M_PI/180.0)*lim(3,0));
+            (*chain)[0].setMax((M_PI/180.0)*lim(3,1));
+
+            yInfo("limits of %s part: heave=[%g,%g] [m], [pitch,roll]=[%g,%g] [deg], yaw=[%g,%g] [deg]",
+                  ("/"+robot+"/torso").c_str(),p.torso.l_min,p.torso.l_max,
+                  -p.torso.alpha_max,p.torso.alpha_max,lim(3,0),lim(3,1));
         }
         else
             return false;
 
-        if (getBounds("/"+robot+"/torso_yaw","/cer_reaching-solver/"+arm_type+"/torso_yaw",lim))
+        if (getBounds("/"+robot+"/"+arm_type+"_arm","/cer_reaching-solver/"+arm_type+"/"+arm_type+"_arm",lim))
         {
-            iKinChain *chain=p.upper_arm.asChain();
-            (*chain)[0].setMin((M_PI/180.0)*lim(0,0));
-            (*chain)[0].setMax((M_PI/180.0)*lim(0,1));
-
-            yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                  ("/"+robot+"/torso_yaw").c_str(),0,
-                  (180.0/M_PI)*(*chain)[0].getMin(),
-                  (180.0/M_PI)*(*chain)[0].getMax());
-        }
-        else
-            return false;
-
-        if (getBounds("/"+robot+"/"+arm_type+"_upper_arm","/cer_reaching-solver/"+arm_type+"/"+arm_type+"_upper_arm",lim))
-        {
-            iKinChain *chain=p.upper_arm.asChain();
-            for (int i=0; i<lim.rows(); i++)
+            iKinChain *chain=p.upper_arm.asChain(); 
+            for (int i=0; i<5; i++)
             {
                 (*chain)[1+i].setMin((M_PI/180.0)*lim(i,0)); 
                 (*chain)[1+i].setMax((M_PI/180.0)*lim(i,1));
 
                 yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                      ("/"+robot+"/"+arm_type+"_upper_arm").c_str(),i,
+                      ("/"+robot+"/"+arm_type+"_arm").c_str(),i,
                       (180.0/M_PI)*(*chain)[1+i].getMin(),
                       (180.0/M_PI)*(*chain)[1+i].getMax());
             }
-        }
-        else
-            return false;
 
-        if (getBounds("/"+robot+"/"+arm_type+"_wrist","/cer_reaching-solver/"+arm_type+"/"+arm_type+"_wrist",lim))
-        {
-            p.lower_arm.l_min=lim(0,0);
-            p.lower_arm.l_max=lim(0,1);
-            p.lower_arm.alpha_max=fabs(lim(1,1));
+            p.lower_arm.l_min=lim(5,0);
+            p.lower_arm.l_max=lim(5,1);
+            p.lower_arm.alpha_max=fabs(lim(6,1));
 
-            yInfo("limits of %s part: heave=[%g,%g] [m], alpha_max=%g [deg]",
-                  ("/"+robot+"/"+arm_type+"_wrist").c_str(),p.lower_arm.l_min,
-                  p.lower_arm.l_max,p.lower_arm.alpha_max);
+            yInfo("limits of %s part: heave=[%g,%g] [m], [pitch,roll]=[%g,%g] [deg]",
+                  ("/"+robot+"/"+arm_type+"_wrist").c_str(),p.lower_arm.l_min,p.lower_arm.l_max,
+                  -p.lower_arm.alpha_max,p.lower_arm.alpha_max);
         }
         else
             return false;
