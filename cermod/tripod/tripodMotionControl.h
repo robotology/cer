@@ -458,6 +458,10 @@ public:
     virtual bool getAmpStatusRaw(int j, int *st);
     /////////////// END AMPLIFIER INTERFACE
 #endif
+
+    virtual bool getPWMLimitRaw (int axis, double* val);
+    virtual bool setPWMLimitRaw (int axis, const double val);
+
     // Limits
     bool setLimitsRaw(int axis, double min, double max);
     bool getLimitsRaw(int axis, double *min, double *max);

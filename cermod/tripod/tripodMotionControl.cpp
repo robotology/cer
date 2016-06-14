@@ -1658,8 +1658,18 @@ bool tripodMotionControl::getMotorEncoderTimedRaw(int m, double *encs, double *s
 }
 ///////////////////////// END Motor Encoder Interface
 
-#if 0
 ////// Amplifier interface
+bool tripodMotionControl::getPWMLimitRaw(int j, double* val)
+{
+    return _device.amp->getPWMLimit(j, val);
+}
+
+bool tripodMotionControl::setPWMLimitRaw(int j, const double val)
+{
+    return _device.amp->setPWMLimit(j, val);
+}
+
+#if 0
 
 bool tripodMotionControl::enableAmpRaw(int j)
 {
