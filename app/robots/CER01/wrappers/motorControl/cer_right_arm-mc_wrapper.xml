@@ -5,15 +5,13 @@
   <device name="cer_right_arm_mc_wrapper" type="controlboardwrapper2">
       <paramlist name="networks">
 	<!-- elem name hereafter are custom names that live only in this file, they are used in the attach phase -->
-	  <elem name="FirstSetOfJoints">  0  3  0  3 </elem>
-  	<elem name="SecondSetOfJoints"> 4  6  0  2 </elem>
-        <elem name="YawSetOfJoints"> 7  7  3  3 </elem>
-      <elem name="HandSetOfJoints"> 8  9  0  1 </elem>
-   <!--  <elem name="YawSetOfJoints"> 4  4  3  3 </elem>
-      <elem name="HandSetOfJoints"> 5  6  0  1 </elem>-->
+        <elem name="FirstSetOfJoints">  0  3  0  3 </elem>
+        <elem name="YawSetOfJoints">    4  4  3  3 </elem>
+  	<elem name="SecondSetOfJoints"> 5  7  0  2 </elem>
+        <elem name="HandSetOfJoints">   8  9  0  1 </elem>
       </paramlist>
 
-<param name="period"> 10 </param>
+      <param name="period"> 10 </param>
       <param name="name">   /cer/right_arm	</param>
       <param name="ports">  right_arm		</param>
       <param name="joints"> 10			</param>
@@ -21,10 +19,10 @@
       <action phase="startup" level="5" type="attach">
 	  <paramlist name="networks">
 	  <!-- The param value must match the device name in the corresponding emsX file -->
-	  <elem name="FirstSetOfJoints"> cer_right_upper_arm_mc</elem>
-        <elem name="SecondSetOfJoints">cer_right_wrist_tripod_mc</elem><!-- -->
-            <elem name="YawSetOfJoints">cer_right_lower_arm_mc</elem>
-	  <elem name="HandSetOfJoints"> cer_right_hand_mc </elem>
+	  <elem name="FirstSetOfJoints">  cer_right_upper_arm_mc</elem>
+          <elem name="SecondSetOfJoints"> cer_right_wrist_equivalent_mc</elem>
+          <elem name="YawSetOfJoints">    cer_right_lower_arm_mc</elem>
+	  <elem name="HandSetOfJoints">   cer_right_hand_mc </elem>
 	  </paramlist>
       </action>
 
