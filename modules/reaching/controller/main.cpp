@@ -43,17 +43,18 @@ using namespace cer::kinematics;
 /****************************************************************/
 class Controller : public RFModule, public PortReader
 {
-    PolyDriver drivers[4];
-    IControlMode2    *imod[4];
-    IEncodersTimed   *ienc[4];
-    IPositionControl *ipos[4];
-    IPositionDirect  *iposd[4];
-
+    PolyDriver         drivers[4];
+    VectorOf<int>      jointsIndexes[4];
+    IControlMode2*     imod[4];
+    IEncodersTimed*    ienc[4];
+    IPositionControl2* ipos[4];
+    IPositionDirect*   iposd[4];
+    
     VectorOf<int> posDirectMode;
     VectorOf<int> curMode;
 
     ArmSolver solver;
-    minJerkTrajGen *gen;
+    minJerkTrajGen* gen;
     
     BufferedPort<Vector> statePort;
     Port targetPort;
@@ -62,6 +63,7 @@ class Controller : public RFModule, public PortReader
     Stamp txInfo;
 
     Mutex mutex;
+    string orientation_type;
     int verbosity;
     bool controlling;
     double Ts;
@@ -117,10 +119,24 @@ class Controller : public RFModule, public PortReader
         Vector encs(12,0.0);
         Vector stamps(encs.length());
 
-        ienc[0]->getEncodersTimed(&encs[0],&stamps[0]);
-        ienc[1]->getEncodersTimed(&encs[3],&stamps[3]);
-        ienc[2]->getEncodersTimed(&encs[4],&stamps[4]);
-        ienc[3]->getEncodersTimed(&encs[9],&stamps[9]);
+        Vector encs_=encs;
+        Vector stamps_=stamps;
+
+        ienc[0]->getEncodersTimed(&encs_[0],&stamps_[0]);
+        encs.setSubvector(0,encs_.subVector(0,2));
+        stamps.setSubvector(0,stamps_.subVector(0,2));
+
+        ienc[1]->getEncodersTimed(&encs_[0],&stamps_[0]);
+        encs[3]=encs_[0];
+        stamps[3]=stamps_[0];
+
+        ienc[2]->getEncodersTimed(&encs_[0],&stamps_[0]);
+        encs.setSubvector(4,encs_.subVector(0,4));
+        stamps.setSubvector(4,stamps_.subVector(0,4));
+
+        ienc[3]->getEncodersTimed(&encs_[0],&stamps_[0]);
+        encs.setSubvector(9,encs_.subVector(0,2));
+        stamps.setSubvector(9,stamps_.subVector(0,2));
 
         if (timeStamp!=NULL)
             *timeStamp=findMax(stamps);
@@ -131,10 +147,10 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     void getCurrentMode()
     {
-        imod[0]->getControlModes(&curMode[0]);
-        imod[1]->getControlModes(&curMode[3]);
-        imod[2]->getControlModes(&curMode[4]);
-        imod[3]->getControlModes(&curMode[9]);
+        imod[0]->getControlModes(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&curMode[0]);
+        imod[1]->getControlModes(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&curMode[3]);
+        imod[2]->getControlModes(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&curMode[4]);
+        imod[3]->getControlModes(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&curMode[9]);
     }
 
     /****************************************************************/
@@ -142,30 +158,36 @@ class Controller : public RFModule, public PortReader
     {
         for (size_t i=0; i<3; i++)
         {
-            if (curMode[i]!=posDirectMode[0])
+            if (curMode[i]!=posDirectMode[i])
             {
-                imod[0]->setControlModes(posDirectMode.getFirst()); 
+                imod[0]->setControlModes(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&posDirectMode[0]);
                 break;
             }
         }
 
-        if (curMode[3]!=posDirectMode[0])
-            imod[1]->setControlModes(posDirectMode.getFirst()); 
+        for (size_t i=3; i<4; i++)
+        {
+            if (curMode[i]!=posDirectMode[i])
+            {
+                imod[1]->setControlModes(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&posDirectMode[3]);
+                break;
+            }
+        }
 
         for (size_t i=4; i<9; i++)
         {
-            if (curMode[i]!=posDirectMode[0])
+            if (curMode[i]!=posDirectMode[i])
             {
-                imod[2]->setControlModes(posDirectMode.getFirst()); 
+                imod[2]->setControlModes(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&posDirectMode[4]);
                 break;
             }
         }
 
         for (size_t i=9; i<curMode.size(); i++)
         {
-            if (curMode[i]!=posDirectMode[0])
+            if (curMode[i]!=posDirectMode[i])
             {
-                imod[3]->setControlModes(posDirectMode.getFirst()); 
+                imod[3]->setControlModes(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&posDirectMode[9]);
                 break;
             }
         }
@@ -182,6 +204,7 @@ public:
     {
         string robot=rf.check("robot",Value("cer")).asString().c_str();
         string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
+        orientation_type=rf.check("orientation-type",Value("axis-angle")).asString().c_str();
         verbosity=rf.check("verbosity",Value(0)).asInt();
         double T=rf.check("T",Value(2.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
@@ -201,22 +224,22 @@ public:
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/torso_yaw").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso_yaw").c_str());
+        option.put("remote",("/"+robot+"/torso").c_str());
+        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso").c_str());
         if (!drivers[1].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/torso_yaw").c_str());
+            yError("Unable to connect to %s",("/"+robot+"/torso").c_str());
             close();
             return false;
         }
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/"+arm_type+"_upper_arm").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_upper_arm").c_str());
+        option.put("remote",("/"+robot+"/"+arm_type+"_arm").c_str());
+        option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_arm").c_str());
         if (!drivers[2].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_upper_arm").c_str());
+            yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_arm").c_str());
             close();
             return false;
         }
@@ -240,6 +263,27 @@ public:
             drivers[i].view(iposd[i]);
         }
 
+        // torso_tripod
+        jointsIndexes[0].push_back(0);
+        jointsIndexes[0].push_back(1);
+        jointsIndexes[0].push_back(2);
+
+        // torso (yaw)
+        jointsIndexes[1].push_back(3);
+
+        // arm
+        jointsIndexes[2].push_back(0);
+        jointsIndexes[2].push_back(1);
+        jointsIndexes[2].push_back(2);
+        jointsIndexes[2].push_back(3);
+        jointsIndexes[2].push_back(4);
+        jointsIndexes[2].push_back(5);
+
+        // wrist_tripod
+        jointsIndexes[3].push_back(0);
+        jointsIndexes[3].push_back(1);
+        jointsIndexes[3].push_back(2);
+
         statePort.open(("/cer_reaching-controller/"+arm_type+"/state:o").c_str());
         solverPort.open(("/cer_reaching-controller/"+arm_type+"/solver:rpc").c_str());
 
@@ -248,6 +292,10 @@ public:
 
         rpcPort.open(("/cer_reaching-controller/"+arm_type+"/rpc").c_str());
         attach(rpcPort);
+
+        transform(orientation_type.begin(),orientation_type.end(),
+                  orientation_type.begin(),::tolower);
+        yInfo("Orientation Type is \"%s\"",orientation_type.c_str());
         
         qd=getEncoders();
         for (size_t i=0; i<qd.length(); i++)
@@ -308,8 +356,16 @@ public:
 
         Vector &pose=statePort.prepare();
         pose=Hee.getCol(3).subVector(0,2);
-        Vector oee=dcm2axis(Hee);
-        oee*=oee[3]; oee.pop_back();
+
+        Vector oee;
+        if (orientation_type=="rpy")
+            oee=dcm2rpy(Hee);
+        else
+        {
+            oee=dcm2axis(Hee);
+            oee*=oee[3]; oee.pop_back();
+        }
+
         pose=cat(pose,oee);
 
         if (timeStamp>=0.0)
@@ -323,12 +379,12 @@ public:
         if (controlling)
         {
             gen->computeNextValues(qd); 
-            const Vector &ref=gen->getPos();
+            Vector ref=gen->getPos();
 
-            iposd[0]->setPositions(&ref[0]);
-            iposd[1]->setPositions(&ref[3]);
-            iposd[2]->setPositions(&ref[4]);
-            iposd[3]->setPositions(&ref[9]);
+            iposd[0]->setPositions(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&ref[0]);
+            iposd[1]->setPositions(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&ref[3]);
+            iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
+            iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
 
             if (verbosity>1)
                 yInfo("Commanding new set-points: %s",qd.toString(3,3).c_str());
@@ -393,7 +449,7 @@ public:
         {
             controlling=false;
             for (int i=0; i<4; i++)
-                ipos[i]->stop();
+                ipos[i]->stop(jointsIndexes[i].size(),jointsIndexes[i].getFirst());
             reply.addVocab(Vocab::encode("ack"));
         }
 
