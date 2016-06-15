@@ -4,15 +4,16 @@
 <robot name="CER01" build="1" portprefix="cer">
     <params file="hardware/electronics/pc104.xml" />
 
-    <!-- TORSO ALL -->
+    <!-- TORSO -->
     <devices file="hardware/motorControl/cer_torso-ems15-mc.xml" />
-    <devices file="wrappers/motorControl/cer_torso-mc_wrapper.xml" />
+    <devices file="wrappers/motorControl/cer_torso_tripod-mc_wrapper.xml" />
 
-    <!-- TRIPOD LIB -->
-    <devices file="hardware/motorControl/cer_torso_tripod-mc.xml" />
-    <devices file="hardware/motorControl/cer_left_wrist_tripod-mc.xml" />
+     <!-- TRIPODS EQUIVALENTS-->
+    <devices file="hardware/motorControl/cer_torso_equivalent-mc.xml" />
+    <devices file="wrappers/motorControl/cer_torso-mc_wrapper.xml" />
 
     <!--  CALIBRATORS -->
     <devices file="calibrators/cer_torso-calib.xml" />
+
 </robot> 
 
