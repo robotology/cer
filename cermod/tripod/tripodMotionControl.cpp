@@ -78,6 +78,7 @@ void HW_deviceHelper::detach()
 
 bool HW_deviceHelper::attach(PolyDriver* subdevice)
 {
+    yTrace() << "HW_deviceHelper::attach";
     if (subdevice == NULL)
     {
         yError() << "tripodMotionControl helper: device passed to attach function is NULL";
@@ -366,6 +367,7 @@ tripodMotionControl::tripodMotionControl() :
     ImplementMotorEncoders(this),
     ImplementControlLimits2(this),
     ImplementPositionDirect(this),
+    ImplementAmplifierControl<tripodMotionControl,IAmplifierControl>(this),
 //     ImplementOpenLoopControl(this),
     ImplementInteractionMode(this),
 //     ImplementMotor(this),
@@ -402,6 +404,7 @@ tripodMotionControl::~tripodMotionControl()
 
 bool tripodMotionControl::open(yarp::os::Searchable &config)
 {
+    yTrace() << "tripodMotionControl::open";
     Bottle &general = config.findGroup("GENERAL");
     if(general.isNull())
     {
@@ -457,6 +460,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
 //     ImplementPidControl<tripodMotionControl, IPidControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementControlMode2::initialize(_njoints, _axisMap);
 //     ImplementVelocityControl<tripodMotionControl, IVelocityControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+    ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementVelocityControl2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
 //
     ImplementControlLimits2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
@@ -506,13 +510,17 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
             ret = _device.attach(_polyDriverDevice);
 
             if(!ret && !remoteCB_config.check("debug"))
-                return false;
+            {
+                 yError() << "tripodMotionControl: error while attachig polyDriverDevice";
+                 return false;
+	    }
 
             initKinematics();
             useRemoteCB = true;
        }
    }
-    return true;
+   yTrace() << "tripodMotionControl::open complete";
+   return true;
 }
 
 bool tripodMotionControl::initKinematics()
@@ -793,6 +801,7 @@ bool tripodMotionControl::close()
 //     ImplementVelocityControl<tripodMotionControl, IVelocityControl>::uninitialize();
     ImplementVelocityControl2::uninitialize();
 //     ImplementPidControl<tripodMotionControl, IPidControl>::uninitialize();
+    ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>::uninitialize();
     ImplementControlCalibration2<tripodMotionControl, IControlCalibration2>::uninitialize();
     ImplementControlLimits2::uninitialize();
     ImplementPositionDirect::uninitialize();
@@ -1669,8 +1678,6 @@ bool tripodMotionControl::setPWMLimitRaw(int j, const double val)
     return _device.amp->setPWMLimit(j, val);
 }
 
-#if 0
-
 bool tripodMotionControl::enableAmpRaw(int j)
 {
     return DEPRECATED("enableAmpRaw");
@@ -1686,8 +1693,6 @@ bool tripodMotionControl::getCurrentRaw(int j, double *value)
     return NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
 
-
-// Iamplifier control -- not in the list of interfaces implemented by this device right now
 bool tripodMotionControl::getCurrentsRaw(double *vals)
 {
     bool ret = true;
@@ -1712,7 +1717,11 @@ bool tripodMotionControl::getAmpStatusRaw(int *sts)
 {
     return NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
-#endif
+
+bool tripodMotionControl::getAmpStatusRaw(int j, int *st)
+{
+    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+}
 
 // Limit interface
 bool tripodMotionControl::setLimitsRaw(int j, double min, double max)

@@ -206,6 +206,8 @@ class cer::dev::tripodMotionControl:    public DeviceDriver,
                                         public ImplementControlMode2,
                                         public IControlLimits2Raw,
                                         public ImplementControlLimits2,
+                                        public IAmplifierControlRaw,
+                                        public ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>,
 //                                         public IImpedanceControlRaw,
 //                                         public ImplementPidControl<tripodMotionControl, IPidControl>,
 //                                         public ImplementVelocityControl<tripodMotionControl, IVelocityControl>,
@@ -447,7 +449,12 @@ public:
     virtual bool getCurrentPidRaw(int j, Pid *pid);
     virtual bool getTorqueControlFilterType(int j, int& type);
 
+
+#endif
+
     ////// Amplifier interface
+    virtual bool getPWMLimitRaw (int axis, double* val);
+    virtual bool setPWMLimitRaw (int axis, const double val);
     virtual bool enableAmpRaw(int j);
     virtual bool disableAmpRaw(int j);
     virtual bool getCurrentsRaw(double *vals);
@@ -457,10 +464,6 @@ public:
     virtual bool getAmpStatusRaw(int *st);
     virtual bool getAmpStatusRaw(int j, int *st);
     /////////////// END AMPLIFIER INTERFACE
-#endif
-
-    virtual bool getPWMLimitRaw (int axis, double* val);
-    virtual bool setPWMLimitRaw (int axis, const double val);
 
     // Limits
     bool setLimitsRaw(int axis, double min, double max);
