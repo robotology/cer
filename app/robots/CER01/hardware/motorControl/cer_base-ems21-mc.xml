@@ -2,7 +2,7 @@
 <!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
 
 <devices robot="CER01" build="1">
-  <device name="cer_base_mc" type="embObjMotionControl">
+  <device name="cer_mobile_base_mc" type="embObjMotionControl">
       <params file="general.xml" />
       <params file="hardware/electronics/cer_base-ems21-eln.xml" />
       <params file="hardware/mechanicals/cer_base-ems21-mec.xml" />

@@ -2,12 +2,12 @@
 <!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
 
 <devices robot="CER01" build="1">
-	<device name="base_calibrator" type="parametricCalibratorEth">
+	<device name="mobile_base_calibrator" type="parametricCalibratorEth">
         <params file="general.xml" />
                 
 		<group name="GENERAL">
 		    <param name="joints">  4  </param> <!-- the number of joints of the robot part -->
-		    <param name="deviceName"> Base_Calibrator </param>
+		    <param name="deviceName"> Mobile_Base_Calibrator </param>
 		</group>
 
 <group name="HOME">
@@ -34,11 +34,11 @@
 		<param name="CALIB_ORDER">(0 1 2 3) </param>
 
 		<action phase="startup" level="10" type="calibrate">
-		    <param name="target">cer_base_mc_wrapper</param>
+		    <param name="target">cer_mobile_base_mc_wrapper</param>
 		</action>
 
 		<action phase="interrupt1" level="1" type="park">
-		    <param name="target">cer_base_mc_wrapper</param>
+		    <param name="target">cer_mobile_base_mc_wrapper</param>
 		</action>
 
 		<action phase="interrupt3" level="1" type="abort" />
