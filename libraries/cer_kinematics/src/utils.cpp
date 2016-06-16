@@ -105,7 +105,7 @@ TripodParameters::TripodParameters(const double r_, const double l_min_,
 
 /****************************************************************/
 ArmParameters::ArmParameters(const string &type) :
-               torso(0.09,0.0,0.165,30.0),
+               torso(0.09,0.0,0.17,30.0),
                upper_arm(UpperArm(type)),
                lower_arm(0.018,0.0,0.13,30.0)
 {
