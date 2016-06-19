@@ -226,7 +226,7 @@ void iKart_Odometry::compute()
     base_vel_lin   = sqrt(odom_vel_x*odom_vel_x + odom_vel_y*odom_vel_y);
     
     odom_vel_x      = odom_cart_vels[0];
-    odom_vel_y      = odom_cart_vels[1];
+    odom_vel_y      = -odom_cart_vels[1];
     odom_vel_theta  = odom_cart_vels[2];
   
     //these are not currently used
