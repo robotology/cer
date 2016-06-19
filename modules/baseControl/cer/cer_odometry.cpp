@@ -74,7 +74,6 @@ CER_Odometry::CER_Odometry(unsigned int _period, PolyDriver* _driver) : Odometry
     encw_estimator = new iCub::ctrl::AWLinEstimator(1, 1.0);
     enc.resize(2);
     encv.resize(2);
-    localName = ctrl_options.find("local").asString();
     rosNode = NULL;
     rosMsgCounter=0;
 }
@@ -82,6 +81,7 @@ CER_Odometry::CER_Odometry(unsigned int _period, PolyDriver* _driver) : Odometry
 bool CER_Odometry::open(ResourceFinder &_rf, Property& _options)
 {
     ctrl_options = _options;
+    localName = ctrl_options.find("local").asString();
 
     // open the control board driver
     yInfo("Opening the motors interface...");

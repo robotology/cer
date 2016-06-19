@@ -71,12 +71,12 @@ iKart_Odometry::iKart_Odometry(unsigned int _period, PolyDriver* _driver) : Odom
     encvel_estimator =new iCub::ctrl::AWLinEstimator(3,1.0);
     enc.resize(3);
     encv.resize(3);
-    localName = ctrl_options.find("local").asString();
 }
 
 bool iKart_Odometry::open(ResourceFinder &_rf, Property &_options)
 {
     ctrl_options = _options;
+    localName = ctrl_options.find("local").asString();
 
     // open the control board driver
     yInfo("Opening the motors interface...");
