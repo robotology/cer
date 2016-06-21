@@ -208,12 +208,13 @@ bool SolverParameters::setMode(const string &mode)
             {
                 full_pose=true;
                 tol=0.1;
-                constr_tol=1e-6;
+                constr_tol=1e-5;
             }
             else if (submode=="xyz_pose")
             {
                 full_pose=false;
-                tol=constr_tol=1e-6;
+                tol=1e-5;
+                constr_tol=1e-4;
             }
             if (submode=="heave")
                 configuration=configuration::heave;
