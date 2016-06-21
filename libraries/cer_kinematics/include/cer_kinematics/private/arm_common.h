@@ -21,7 +21,7 @@ class ArmCommonNLP : public Ipopt::TNLP
 {
 protected:
     ArmSolver &slv;
-    const TripodParametersExtended torso;    
+    const TripodParametersExtended torso;
     const TripodParametersExtended lower_arm;
     iKinLimb &upper_arm;
 
@@ -288,29 +288,6 @@ public:
         lambda=this->lambda;
     }
 
-    /************************************************************************/
-    virtual void computeQuantities(const Ipopt::Number *x, const bool new_x)
-    {        
-        if (new_x)
-        {
-            for (size_t i=0; i<this->x.length(); i++)
-                this->x[i]=x[i];
-
-            for (size_t i=0; i<q.length(); i++)
-                q[i]=x[3+i];
-
-            d1=tripod_fkin(1,x,&din1);
-            d2=tripod_fkin(2,x,&din2);
-            H=upper_arm.getH(q);
-            T=d1.T*H*d2.T*TN;
-
-            upper_arm.setH0(d1.T*H0); upper_arm.setHN(HN*d2.T*TN);
-            H_=upper_arm.getH(q);
-            J_=upper_arm.GeoJacobian();
-            upper_arm.setH0(H0); upper_arm.setHN(HN);
-        }
-    }
-
     /****************************************************************/
     bool get_starting_point(Ipopt::Index n, bool init_x, Ipopt::Number *x,
                             bool init_z, Ipopt::Number *z_L, Ipopt::Number *z_U,
@@ -342,6 +319,29 @@ public:
         return true;
     }
 
+    /************************************************************************/
+    virtual void computeQuantities(const Ipopt::Number *x, const bool new_x)
+    {        
+        if (new_x)
+        {
+            for (size_t i=0; i<this->x.length(); i++)
+                this->x[i]=x[i];
+
+            for (size_t i=0; i<q.length(); i++)
+                q[i]=x[3+i];
+
+            d1=tripod_fkin(1,x,&din1);
+            d2=tripod_fkin(2,x,&din2);
+            H=upper_arm.getH(q);
+            T=d1.T*H*d2.T*TN;
+
+            upper_arm.setH0(d1.T*H0); upper_arm.setHN(HN*d2.T*TN);
+            H_=upper_arm.getH(q);
+            J_=upper_arm.GeoJacobian();
+            upper_arm.setH0(H0); upper_arm.setHN(HN);
+        }
+    }
+
     /****************************************************************/
     bool eval_h(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                 Ipopt::Number obj_factor, Ipopt::Index m, const Ipopt::Number *lambda,
@@ -351,7 +351,7 @@ public:
         return true;
     }
     
-    /************************************************************************/
+    /****************************************************************/
     bool intermediate_callback(Ipopt::AlgorithmMode mode, Ipopt::Index iter,
                                Ipopt::Number obj_value, Ipopt::Number inf_pr,
                                Ipopt::Number inf_du, Ipopt::Number mu,

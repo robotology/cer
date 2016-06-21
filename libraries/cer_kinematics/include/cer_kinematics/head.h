@@ -37,18 +37,31 @@ class HeadSolver : public Solver
 {
 protected:
     HeadParameters headParameters;
+    SolverParameters slvParameters;
     TripodSolver torso;
+    yarp::sig::Vector q0;
+
+    friend class HeadNLP;
 
 public:
     /**
      * Constructor.
      * 
-     * @param headParams head parameters. 
+     * @param headParams head parameters.
+     * @param slvParams  solver parameters. 
      * @param verb       integers greater than 0 enable successive 
      *                   levels of verbosity (default=0).
      */
     HeadSolver(const HeadParameters &headParams=HeadParameters(),
+               const SolverParameters &slvParams=SolverParameters(),
                const int verb=0);
+
+    /**
+     * Specify new verbosity level.
+     * 
+     * @param verb   the verbosity level.
+     */
+    virtual void setVerbosity(const int verb);
 
     /**
      * Define parameters of the head.
@@ -68,11 +81,24 @@ public:
     }
 
     /**
-     * Specify new verbosity level.
+     * Define parameters of the solver.
      * 
-     * @param verb   the verbosity level.
+     * @param params solver parameters.
      */
-    virtual void setVerbosity(const int verb);
+    virtual void setSolverParameters(const SolverParameters &params)
+    {
+        slvParameters=params;
+    }
+
+    /**
+     * Retrieve parameters of the solver.
+     * 
+     * @return solver parameters.
+     */
+    virtual const SolverParameters& getSolverParameters() const
+    {
+        return slvParameters;
+    }
 
     /**
      * Specify the initial DOFs values.
@@ -87,7 +113,10 @@ public:
      * 
      * @return the initial DOFs values ([m]-[deg]).
      */
-    virtual yarp::sig::Vector getInitialGuess() const;
+    virtual yarp::sig::Vector getInitialGuess() const
+    {
+        return q0;
+    }
 
     /**
      * Forward Kinematics Law.
@@ -106,13 +135,13 @@ public:
     /**
      * Inverse Kinematics Law.
      *  
-     * @param q0     the current DOFs configuration ([m]-[deg]) 
-     * @param xd     the desired 3D fixation point ([m]).
-     * @param q      the solved head DOFs ([deg]).
+     * @param xd        the desired 3D fixation point ([m]).
+     * @param q         the solved head DOFs ([deg]). 
+     * @param exit_code pointer to solver's exit codes.  
      * @return true/false on success/failure.
      */
-    virtual bool ikin(const yarp::sig::Vector &q0, const yarp::sig::Vector &xd,
-                      yarp::sig::Vector &q);
+    virtual bool ikin(const yarp::sig::Vector &xd, yarp::sig::Vector &q,
+                      int *exit_code=NULL);
 
     /**
      * Destructor.

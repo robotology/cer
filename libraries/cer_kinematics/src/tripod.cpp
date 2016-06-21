@@ -118,7 +118,7 @@ protected:
 
 public:
     /****************************************************************/
-    TripodNLP(TripodSolver &slv_) : slv(slv_), params(slv.parameters)
+    TripodNLP(TripodSolver &slv_) : slv(slv_), params(slv_.parameters)
     {
         zd=(params.l_max+params.l_min)/2.0;
         ud.resize(3,0.0);
@@ -192,6 +192,17 @@ public:
         return true;
     }
 
+    /****************************************************************/
+    bool get_starting_point(Ipopt::Index n, bool init_x, Ipopt::Number *x,
+                            bool init_z, Ipopt::Number *z_L, Ipopt::Number *z_U,
+                            Ipopt::Index m, bool init_lambda, Ipopt::Number *lambda)
+    {
+        for (Ipopt::Index i=0; i<n; i++)
+            x[i]=rho0[i];
+
+        return true;
+    }
+
     /************************************************************************/
     virtual void computeQuantities(const Ipopt::Number *x, const bool new_x)
     {        
@@ -202,17 +213,6 @@ public:
 
             d=fkin(x,&din);
         }
-    }
-
-    /****************************************************************/
-    bool get_starting_point(Ipopt::Index n, bool init_x, Ipopt::Number *x,
-                            bool init_z, Ipopt::Number *z_L, Ipopt::Number *z_U,
-                            Ipopt::Index m, bool init_lambda, Ipopt::Number *lambda)
-    {
-        for (Ipopt::Index i=0; i<n; i++)
-            x[i]=rho0[i];
-
-        return true;
     }
 
     /****************************************************************/
@@ -341,7 +341,7 @@ public:
         return true;
     }
 
-    /************************************************************************/
+    /****************************************************************/
     bool intermediate_callback(Ipopt::AlgorithmMode mode, Ipopt::Index iter,
                                Ipopt::Number obj_value, Ipopt::Number inf_pr,
                                Ipopt::Number inf_du, Ipopt::Number mu,
