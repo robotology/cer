@@ -22,8 +22,6 @@
 
 #include <yarp/os/Log.h>
 #include <yarp/os/Time.h>
-#include <yarp/sig/Vector.h>
-#include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
 
 #include <iCub/ctrl/math.h>

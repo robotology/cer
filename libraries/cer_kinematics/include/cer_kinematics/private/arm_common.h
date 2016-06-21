@@ -217,19 +217,16 @@ public:
             return fkin(x);
 
         TripodState d1=tripod_fkin(1,x);
+        TripodState d2=tripod_fkin(2,x);
+        upper_arm.setAng(CTRL_DEG2RAD*x.subVector(3,8));
+
         Matrix T=d1.T;
 
         if (frame>=3)
-        {
-            upper_arm.setAng(CTRL_DEG2RAD*x.subVector(3,8));
             T*=upper_arm.getH(std::min(frame-3,(int)upper_arm.getDOF()-1));
-        }
         
         if (frame>=9)
-        {
-            TripodState d2=tripod_fkin(2,x);
             T*=d2.T;
-        }
 
         return T;
     }

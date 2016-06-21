@@ -137,9 +137,10 @@ public:
     /**
      * Inverse Kinematics Law.
      * 
-     * @param Hd     the desired 4-by-4 homogeneous matrix 
-     *               representing the end-effector frame ([m]).
-     * @param q      the solved DOFs ([m]-[deg]-[m]).
+     * @param Hd        the desired 4-by-4 homogeneous matrix 
+     *                  representing the end-effector frame ([m]).
+     * @param q         the solved DOFs ([m]-[deg]-[m]). 
+     * @param exit_code pointer to solver's exit codes. 
      * @return true/false on success/failure.
      */
     virtual bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &q,

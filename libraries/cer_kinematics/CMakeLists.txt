@@ -14,10 +14,12 @@ set(headers_private include/${PROJECT_NAME}/private/helpers.h
                     include/${PROJECT_NAME}/private/arm_xyz_notorso.h)
 set(headers         include/${PROJECT_NAME}/utils.h
                     include/${PROJECT_NAME}/tripod.h
-                    include/${PROJECT_NAME}/arm.h)
+                    include/${PROJECT_NAME}/arm.h
+                    include/${PROJECT_NAME}/head.h)
 set(sources         src/utils.cpp
                     src/tripod.cpp
-                    src/arm.cpp)
+                    src/arm.cpp
+                    src/head.cpp)
 
 source_group("Header Files" FILES ${headers_private} ${headers})
 source_group("Source Files" FILES ${sources})

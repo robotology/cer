@@ -112,6 +112,34 @@ struct ArmParameters
     ArmParameters(const std::string &type="left");
 };
 
+
+/**
+ * Structure used to initialize a robot head.
+ * 
+ * @author Ugo Pattacini
+ */
+struct HeadParameters
+{
+    /**
+     * the tripod mechanism for the torso.
+     */
+    TripodParameters torso;
+
+    /**
+     * the serial chain for the upper_arm.
+     */
+    iCub::iKin::iKinLimb head;
+
+    /**
+     * Constructor. 
+     *  
+     * @param type  a string ["left"|"center"|"right"] accounting 
+     *              for the end frame type.
+     */
+    HeadParameters(const std::string &type="center");
+};
+
+
 namespace configuration {
     enum {
         no_heave,
