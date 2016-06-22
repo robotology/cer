@@ -244,11 +244,8 @@ void ControlThread::run()
     }
     else if (base_control_type == BASE_CONTROL_VELOCITY_NO_PID)
     {
-        const double max_wheels_vel = 200;
-        exec_linear_speed = input_linear_speed / 100.0 *  max_wheels_vel * exec_pwm_gain;
-        exec_angular_speed = input_angular_speed / 100.0 * max_wheels_vel * exec_pwm_gain;
-        //exec_linear_speed = input_linear_speed / 100.0 *  this->motor_handler->get_max_linear_vel() * exec_pwm_gain;
-        //exec_angular_speed = input_angular_speed / 100.0 * this->motor_handler->get_max_angular_vel() * exec_pwm_gain;
+        exec_linear_speed = input_linear_speed / 100.0 *  max_motor_vel * exec_pwm_gain;
+        exec_angular_speed = input_angular_speed / 100.0 * max_motor_vel * exec_pwm_gain;
 
 //#define PRINT_CURRENT_VEL
 #ifdef  PRINT_CURRENT_VEL
@@ -329,11 +326,17 @@ bool ControlThread::threadInit()
         return false;
     }
     yarp::os::Bottle& general_options = ctrl_options.findGroup("GENERAL");
-
+    if (general_options.check("control_mode") == false) { yError() << "Missing 'control_mode' param"; return false; }
+    if (general_options.check("input_filter_enabled") == false) { yError() << "Missing 'input_filter_enabled' param"; return false; }
+    if (general_options.check("linear_angular_ratio") == false) { yError() << "Missing 'linear_angular_ratio' param"; return false; }
+    if (general_options.check("max_motor_pwm") == false) { yError() << "Missing 'max_motor_pwm' param"; return false; }
+    if (general_options.check("max_motor_vel") == false) { yError() << "Missing 'max_motor_vel' param"; return false; }
+    if (general_options.check("robot_type") == false) { yError() << "Missing 'robot_type' param"; return false; }
     string control_type = general_options.check("control_mode", Value("none"), "type of control for the wheels").asString().c_str();
     input_filter_enabled = general_options.check("input_filter_enabled", Value(0), "input filter frequency (1/2/4/8Hz, 0 = disabled)").asInt();
     lin_ang_ratio = general_options.check("linear_angular_ratio", Value(0.7), "ratio (<1.0) between the maximum linear speed and the maximum angular speed.").asDouble();
     max_motor_pwm = general_options.check("max_motor_pwm", Value(0), "max_motor_pwm").asDouble();
+    max_motor_vel = general_options.check("max_motor_vel", Value(0), "max_motor_vel").asDouble();
     string robot_type_s = general_options.check("robot_type", Value("none"), "geometry of the robot").asString();
 
     // open the control board driver

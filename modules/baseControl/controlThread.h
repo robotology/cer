@@ -97,6 +97,7 @@ private:
     int                 input_filter_enabled;
     bool                debug_enabled;
     double              max_motor_pwm;
+    double              max_motor_vel;
 
 protected:
     ResourceFinder            &rf;
