@@ -284,7 +284,8 @@ bool HeadSolver::fkin(const Vector &q, Matrix &H, const int frame)
     headParameters.head.setAng(CTRL_DEG2RAD*q.subVector(3,5));
 
     double n=norm(u);
-    u/=n; u.push_back(n);
+    u/=n>0.0?n:1.0;
+    u.push_back(n);
     H=axis2dcm(u);
     H.setSubcol(p,0,3);
 

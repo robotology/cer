@@ -167,7 +167,7 @@ public:
 
         Vector ud=xd.subVector(3,5);
         double n=norm(ud);
-        ud=(1.0/n)*ud;
+        ud/=(n>0.0?n:1.0);
         ud.push_back(n);
         Matrix Hd=axis2dcm(ud);
         Hd(0,3)=xd[0];

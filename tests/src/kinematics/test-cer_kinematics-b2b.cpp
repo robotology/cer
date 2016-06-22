@@ -53,7 +53,7 @@ struct Input
     void calcHd()
     {
         double n=norm(ud);
-        Vector ud_=(1.0/n)*ud;
+        Vector ud_=ud/(n>0.0?n:1.0);
         ud_.push_back(n);
         Hd=axis2dcm(ud_);
         Hd.setSubcol(xd,0,3);

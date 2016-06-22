@@ -353,7 +353,7 @@ public:
         if (slv.callback!=NULL)
         {
             double n=norm(ud);
-            Vector ud_=(1.0/n)*ud;
+            Vector ud_=ud/(n>0.0?n:1.0);
             ud_.push_back(n);
             Matrix Hd=axis2dcm(ud_);
             Hd(2,3)=zd;
@@ -444,10 +444,9 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
     // that's why we rather rely on d.u for computing
     // pitch and roll
     Vector u=d.u;
-    double nrm=norm(u);
-    if (nrm>0.0)
-        u/=nrm;
-    u.push_back(nrm);
+    double n=norm(u);
+    u/=n>0.0?n:1.0;
+    u.push_back(n);
 
     Vector rpy=dcm2rpy(axis2dcm(u));
     hpr.resize(3);
