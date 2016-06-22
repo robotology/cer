@@ -67,18 +67,11 @@ int main(int argc, char *argv[])
     solver.setVerbosity(verbosity);
 
     Vector q;
-    if (solver.ikin(xd,q))
-    {
-        cout<<"head="<<type<<endl;
-        cout<<"xd=("<<xd.toString(3,3)<<")"<<endl;
-        cout<<"q=("<<q.toString(3,3)<<")"<<endl;
-        cout<<endl;
-    }
-    else
-    {
-        cerr<<"something unexpected went wrong :("<<endl;
-        return 4;
-    }
+    solver.ikin(xd,q);
+    cout<<"head="<<type<<endl;
+    cout<<"xd=("<<xd.toString(3,3)<<")"<<endl;
+    cout<<"q=("<<q.toString(3,3)<<")"<<endl;
+    cout<<endl;
 
     return 0;
 }
