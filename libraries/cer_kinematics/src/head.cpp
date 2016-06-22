@@ -231,10 +231,11 @@ HeadSolver::HeadSolver(const HeadParameters &headParams,
                        slvParameters(slvParams),
                        torso(headParams.torso,verb)
 {
+    q0.resize(3+headParameters.head.getDOF(),0.0);
     slvParameters.tol=1e-3;
     slvParameters.constr_tol=1e-3;
     slvParameters.max_iter=100;
-    slvParameters.max_cpu_time=0.02;
+    slvParameters.max_cpu_time=0.05;
 }
 
 
