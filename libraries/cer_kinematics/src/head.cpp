@@ -75,10 +75,9 @@ public:
             this->q0[i]=std::max(params.torso.l_min,std::min(params.torso.l_max,q0[i]));
         
         iKinChain &chain=*params.head.asChain();
-        size_t dof=chain.getDOF();
-        size_t l2=std::min(dof,len-3);
+        size_t l2=std::min(chain.getDOF(),len-3);
         for (size_t i=0; i<l2; i++)
-            this->q0[dof+i]=std::max(chain[i].getMin(),std::min(chain[i].getMax(),CTRL_DEG2RAD*q0[dof+i]));
+            this->q0[3+i]=std::max(chain[i].getMin(),std::min(chain[i].getMax(),CTRL_DEG2RAD*q0[3+i]));
 
         slv.fkin(this->q0,H0,2);
     }
