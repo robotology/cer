@@ -71,12 +71,19 @@ int main(int argc, char *argv[])
     }
 
     Solver *solver;
+    Vector q;
+
     if (kinematics=="arm")
+    {
         solver=new ArmSolver(ArmParameters(type));
+        q.resize(12,0.0);
+    }
     else
+    {
         solver=new HeadSolver(HeadParameters(type));
-    
-    Vector q(12,0.0);
+        q.resize(6,0.0);
+    }
+        
     if (Bottle *b=rf.find("q").asList())
     {
         size_t len=std::min(q.length(),(size_t)b->size());
