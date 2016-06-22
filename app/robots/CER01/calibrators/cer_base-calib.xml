@@ -13,6 +13,7 @@
 <group name="HOME">
 <param name="positionHome">                       0.00            0.00        0.00      0.00          </param>
 <param name="velocityHome">                       10.00           10.00       10.00     10.00         </param>
+<param name="disableHomeAndPark">                 1               1           1         1             </param>   
 </group>
 
 <group name="CALIBRATION">
@@ -29,6 +30,7 @@
 <param name="startupMaxPwm">                      5000            5000        20000     20000         </param>
 <param name="startupPosThreshold">                2               2           2         2             </param>
 <param name="calibrationTimeout">                 1.0             1.0         1.0       1.0           </param>
+<param name="startupDisablePosCheck">             1               1           1         1             </param>
 </group>
 
 		<param name="CALIB_ORDER">(0 1 2 3) </param>
