@@ -76,11 +76,11 @@ public:
         
         iKinChain &chain=*params.head.asChain();
         size_t dof=chain.getDOF();
-        size_t l2=std::min(dof,len-3);        
+        size_t l2=std::min(dof,len-3);
         for (size_t i=0; i<l2; i++)
             this->q0[dof+i]=std::max(chain[i].getMin(),std::min(chain[i].getMax(),CTRL_DEG2RAD*q0[dof+i]));
 
-        slv.fkin(this->q0,H0,3);
+        slv.fkin(this->q0,H0,2);
     }
 
     /****************************************************************/
