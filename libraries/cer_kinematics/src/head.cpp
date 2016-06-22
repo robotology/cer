@@ -280,15 +280,8 @@ bool HeadSolver::fkin(const Vector &q, Matrix &H, const int frame)
         return false;
     }
 
-    Vector p,u;
-    torso.fkin(q,p,u);
+    torso.fkin(q.subVector(0,2),H);
     headParameters.head.setAng(CTRL_DEG2RAD*q.subVector(3,5));
-
-    double n=norm(u);
-    u/=n>0.0?n:1.0;
-    u.push_back(n);
-    H=axis2dcm(u);
-    H.setSubcol(p,0,3);
 
     int frame_=(frame<0)?L-1:frame;
     if (frame_>=3)
