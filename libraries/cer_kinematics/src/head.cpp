@@ -137,18 +137,19 @@ public:
     {        
         if (new_x)
         {
-            params.head.setAng(1,x[0]);
-            params.head.setAng(2,x[1]);
-            Hxd=H0*params.head.getH();
+            iKinChain &chain=*params.head.asChain();
+            chain.setAng(1,x[0]);
+            chain.setAng(2,x[1]);
+            Hxd=H0*chain.getH();
             Hxd(0,3)-=xd[0];
             Hxd(1,3)-=xd[1];
             Hxd(2,3)-=xd[2];
             Hxd(3,3)=0.0;
-            mod=iCub::ctrl::norm(Hxd,3);
-            cosAng=iCub::ctrl::dot(Hxd,2,Hxd,3)/mod;
+            mod=norm(Hxd,3);
+            cosAng=dot(Hxd,2,Hxd,3)/mod;
 
-            GeoJacobP=params.head.GeoJacobian();
-            AnaJacobZ=params.head.AnaJacobian(2);
+            GeoJacobP=chain.GeoJacobian();
+            AnaJacobZ=chain.AnaJacobian(2);
         }
     }
 
