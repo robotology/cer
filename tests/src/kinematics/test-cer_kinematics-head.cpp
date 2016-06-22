@@ -22,7 +22,6 @@
 
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
-#include <cer_kinematics/arm.h>
 #include <cer_kinematics/head.h>
 
 using namespace std;
@@ -40,65 +39,39 @@ int main(int argc, char *argv[])
     if (rf.check("help"))
     {
         cout<<"Options:"<<endl;
-        cout<<"--kinematics arm|head"<<endl;
         cout<<"--type left|center|right"<<endl;
-        cout<<"--q \"(0.0 1.0 ... 11.0)\"|\"(0.0 1.0 ... 5.0)\""<<endl;
+        cout<<"--verbosity <int>"<<endl;
+        cout<<"--xd \"(0.0 1.0 2.0)\""<<endl;        
         return 0;
     }
 
-    string kinematics=rf.check("kinematics",Value("arm")).asString();
-    string type=rf.check("type",Value("left")).asString();
-    
-    transform(kinematics.begin(),kinematics.end(),kinematics.begin(),::tolower);
-    transform(type.begin(),type.end(),type.begin(),::tolower);
-
-    if ((kinematics!="arm") && (kinematics!="head"))
-    {
-        cerr<<"unrecognized kinematics \""<<kinematics<<"\""<<endl;
-        return 1;
-    }
+    string type=rf.check("type",Value("center")).asString();
+    int verbosity=rf.check("verbosity",Value(0)).asInt();
 
     if ((type!="left") && (type!="center") && (type!="right"))
     {
         cerr<<"unrecognized type \""<<type<<"\""<<endl;
-        return 2;
+        return 1;
     }
 
-    if ((kinematics=="arm") && (type=="center"))
+    Vector xd(3,0.0);
+    if (Bottle *b=rf.find("xd").asList())
     {
-        cerr<<"\"center\" type is not allowed for arm"<<endl;
-        return 3;
-    }
-
-    Solver *solver;
-    Vector q;
-
-    if (kinematics=="arm")
-    {
-        ArmParameters armp(type);
-        solver=new ArmSolver(armp);
-        q.resize(12,0.0);
-    }
-    else
-    {
-        HeadParameters headp(type);
-        solver=new HeadSolver(headp);
-        q.resize(6,0.0);
-    }
-        
-    if (Bottle *b=rf.find("q").asList())
-    {
-        size_t len=std::min(q.length(),(size_t)b->size());
+        size_t len=std::min(xd.length(),(size_t)b->size());
         for (size_t i=0; i<len; i++)
-            q[i]=b->get(i).asDouble();
+            xd[i]=b->get(i).asDouble();
     }
 
-    Matrix H;
-    if (solver->fkin(q,H))
+    HeadParameters headp(type);
+    HeadSolver solver(headp);
+    solver.setVerbosity(verbosity);
+
+    Vector q;
+    if (solver.ikin(xd,q))
     {
-        cout<<kinematics<<"="<<type<<endl;
+        cout<<"head="<<type<<endl;
+        cout<<"xd=("<<xd.toString(3,3)<<")"<<endl;
         cout<<"q=("<<q.toString(3,3)<<")"<<endl;
-        cout<<"H="<<H.toString(3,3)<<endl;
         cout<<endl;
     }
     else
@@ -107,7 +80,6 @@ int main(int argc, char *argv[])
         return 4;
     }
 
-    delete solver;
     return 0;
 }
 
