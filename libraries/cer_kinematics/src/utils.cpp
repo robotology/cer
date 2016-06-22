@@ -53,11 +53,34 @@ bool stepModeParser(string &mode, string &submode)
 
 
 /****************************************************************/
-class UpperArm : public iKinLimb
+struct CER_TORSO : public TripodParameters
+{
+    /****************************************************************/
+    CER_TORSO() : TripodParameters(0.09,0.0,0.17,30.0)
+    {
+        Vector rot(4,0.0);
+        rot[2]=1.0; rot[3]=M_PI;
+        T0=axis2dcm(rot);
+        T0(0,3)=0.044;
+        T0(2,3)=0.470;
+    }
+};
+
+
+/****************************************************************/
+struct CER_LOWER_ARM : public TripodParameters
+{
+    /****************************************************************/
+    CER_LOWER_ARM() : TripodParameters(0.018,0.0,0.13,30.0) { }
+};
+
+
+/****************************************************************/
+class CER_UPPER_ARM : public iKinLimb
 {
 public:
     /****************************************************************/
-    UpperArm(const string &type_) : iKinLimb(type_)
+    CER_UPPER_ARM(const string &type_) : iKinLimb(type_)
     {
         transform(type.begin(),type.end(),type.begin(),::tolower);
         if ((type!="left") && (type!="right"))
@@ -93,11 +116,11 @@ protected:
 
 
 /****************************************************************/
-class Head : public iKinLimb
+class CER_HEAD : public iKinLimb
 {
 public:
     /****************************************************************/
-    Head(const string &type_) : iKinLimb(type_)
+    CER_HEAD(const string &type_) : iKinLimb(type_)
     {
         transform(type.begin(),type.end(),type.begin(),::tolower);
         if ((type!="right") && (type!="center") && (type!="left"))
@@ -126,29 +149,6 @@ protected:
     }
 };
 
-
-/****************************************************************/
-struct CER_TORSO : public TripodParameters
-{
-    /****************************************************************/
-    CER_TORSO() : TripodParameters(0.09,0.0,0.17,30.0)
-    {
-        Vector rot(4,0.0);
-        rot[2]=1.0; rot[3]=M_PI;
-        T0=axis2dcm(rot);
-        T0(0,3)=0.044;
-        T0(2,3)=0.470;
-    }
-};
-
-
-/****************************************************************/
-struct CER_LOWER_ARM : public TripodParameters
-{
-    /****************************************************************/
-    CER_LOWER_ARM() : TripodParameters(0.018,0.0,0.13,30.0) { }
-};
-
 }
 
 }
@@ -168,7 +168,7 @@ TripodParameters::TripodParameters(const double r_, const double l_min_,
 /****************************************************************/
 ArmParameters::ArmParameters(const string &type) :
                torso(CER_TORSO()),
-               upper_arm(UpperArm(type)),
+               upper_arm(CER_UPPER_ARM(type)),
                lower_arm(CER_LOWER_ARM())
 {
     TN=zeros(4,4);
@@ -188,7 +188,7 @@ ArmParameters::ArmParameters(const string &type) :
 
 /****************************************************************/
 HeadParameters::HeadParameters(const string &type) : 
-                torso(CER_TORSO()), head(Head(type))
+                torso(CER_TORSO()), head(CER_HEAD(type))
 {
 }
 
