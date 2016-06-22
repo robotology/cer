@@ -134,8 +134,8 @@ public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        string robot=rf.check("robot",Value("cer")).asString().c_str();
-        string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
+        string robot=rf.check("robot",Value("cer")).asString();
+        string arm_type=rf.check("arm-type",Value("left")).asString();
         bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
         int verbosity=rf.check("verbosity",Value(0)).asInt();
 
@@ -185,14 +185,37 @@ public:
         SolverParameters p=solver.getSolverParameters();
         reply.addVocab(Vocab::encode("nack"));
 
-        if (cmd.check("mode"))
+        if (cmd.check("parameters"))
         {
-            string mode=cmd.find("mode").asString().c_str();
-            p.setMode(mode);
-            solver.setSolverParameters(p);
+            if (Bottle *parameters=cmd.find("parameters").asList())
+            {
+                bool ack=false;
+                if (parameters->check("mode"))
+                {
+                    string mode=parameters->find("mode").asString();
+                    p.setMode(mode);
+                    ack=true;
+                }
 
-            reply.clear();
-            reply.addVocab(Vocab::encode("ack"));
+                if (parameters->check("tol"))
+                {
+                    p.tol=parameters->find("tol").asDouble();
+                    ack=true;
+                }
+
+                if (parameters->check("constr_tol"))
+                {
+                    p.constr_tol=parameters->find("constr_tol").asDouble();
+                    ack=true;
+                }
+
+                if (ack)
+                {
+                    solver.setSolverParameters(p);
+                    reply.clear();
+                    reply.addVocab(Vocab::encode("ack"));
+                }
+            }
         }
 
         if (Bottle *payLoad=cmd.find("q").asList())

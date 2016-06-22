@@ -144,9 +144,15 @@ public:
 
         Bottle target;
         target.addList().read(payLoad);
+        
+        Bottle params;
+        Bottle &payLoad=params.addList();
+        Bottle &mode=payLoad.addList();
+        mode.addString("mode");
+        mode.addString(no_torso?"full_pose+no_torso":"full_pose+no_heave");
 
         Property &prop=robotTargetPort.prepare(); prop.clear();
-        prop.put("mode",no_torso?"full_pose+no_torso":"full_pose+no_heave");
+        prop.put("parameters",params.get(0));
         prop.put("target",target.get(0));
         robotTargetPort.write();
 

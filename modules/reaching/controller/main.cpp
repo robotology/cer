@@ -86,21 +86,24 @@ class Controller : public RFModule, public PortReader
 
             if (reply.get(0).asVocab()==Vocab::encode("ack"))
             {
-                if (Bottle *payLoad=reply.get(1).asList())
+                if (reply.size()>1)
                 {
-                    LockGuard lg(mutex);
-                    // process only if we didn't receive
-                    // a stop request in the meanwhile
-                    if (controlling==latch_controlling)
-                    {                        
-                        for (size_t i=0; i<qd.length(); i++)
-                            qd[i]=payLoad->get(i).asDouble();
+                    if (Bottle *payLoad=reply.get(1).asList())
+                    {
+                        LockGuard lg(mutex);
+                        // process only if we didn't receive
+                        // a stop request in the meanwhile
+                        if (controlling==latch_controlling)
+                        {                        
+                            for (size_t i=0; i<qd.length(); i++)
+                                qd[i]=payLoad->get(i).asDouble();
 
-                        if (!controlling)
-                            gen->init(getEncoders());
+                            if (!controlling)
+                                gen->init(getEncoders());
 
-                        setPositionDirectMode();
-                        controlling=true;
+                            setPositionDirectMode();
+                            controlling=true;
+                        }
                     }
                 }
             }
@@ -202,9 +205,9 @@ public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        string robot=rf.check("robot",Value("cer")).asString().c_str();
-        string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
-        orientation_type=rf.check("orientation-type",Value("axis-angle")).asString().c_str();
+        string robot=rf.check("robot",Value("cer")).asString();
+        string arm_type=rf.check("arm-type",Value("left")).asString();
+        orientation_type=rf.check("orientation-type",Value("axis-angle")).asString();
         verbosity=rf.check("verbosity",Value(0)).asInt();
         double T=rf.check("T",Value(2.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
