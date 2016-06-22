@@ -69,8 +69,8 @@ struct TripodParameters
      * @param alpha_max the maximum permitted bending angle ([deg]). 
      * @param T0_       the 4-by-4 root-to-tripod matrix. 
      */
-    TripodParameters(const double r_=0.09, const double l_min_=0.0,
-                     const double l_max_=0.17, const double alpha_max_=30.0,
+    TripodParameters(const double r_=0.1, const double l_min_=0.0,
+                     const double l_max_=0.2, const double alpha_max_=30.0,
                      const yarp::sig::Matrix T0_=yarp::math::eye(4,4));
 };
 
