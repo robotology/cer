@@ -460,6 +460,23 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
 
 
 /****************************************************************/
+bool TripodSolver::fkin(const Vector &q, Matrix &H, const int frame)
+{
+    if (q.length()<3)
+    {
+        yError("mis-sized elongation vector!");
+        return false;
+    }
+
+    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
+    TripodState d=nlp->fkin(q);
+    H=d.T;
+
+    return true;
+}
+
+
+/****************************************************************/
 bool TripodSolver::ikin(const double zd, const Vector &ud,
                         Vector &lll, int *exit_code)
 {
@@ -556,5 +573,22 @@ bool TripodSolver::ikin(const Vector &hpr, Vector &lll,
     ud.pop_back();
 
     return ikin(hpr[0],ud,lll,exit_code);
+}
+
+
+/****************************************************************/
+bool TripodSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
+{
+    if ((Hd.rows()!=4) || (Hd.cols()!=4))
+    {
+        yError("mis-sized desired end-effector frame!");
+        return false;
+    }
+
+    Vector ud=dcm2axis(Hd);
+    ud=ud[3]*ud;
+    ud.pop_back();
+
+    return ikin(Hd(2,3),ud,q,exit_code);
 }
 

@@ -413,6 +413,32 @@ public:
     }
 
     /**
+     * Forward Kinematics Law.
+     * 
+     * @param q      the DOFs value.
+     * @param H      the 4-by-4 homogeneous matrix of the specified 
+     *               frame ([m]).
+     * @param frame  specify the DOF number whose frame is returned. 
+     *               Thus, frame is in [0...nDOF-1]; negative
+     *               numbers account for the end-effector frame.
+     * @return true/false on success/failure.
+     */
+    virtual bool fkin(const yarp::sig::Vector &q, yarp::sig::Matrix &H,
+                      const int frame=-1)=0;
+
+    /**
+     * Inverse Kinematics Law.
+     * 
+     * @param Hd        the desired 4-by-4 homogeneous matrix 
+     *                  representing the end-effector frame ([m]).
+     * @param q         the solved DOFs. 
+     * @param exit_code pointer to solver's exit codes. 
+     * @return true/false on success/failure.
+     */
+    virtual bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &q,
+                      int *exit_code=NULL)=0;
+
+    /**
      * Destructor.
      */
     virtual ~Solver() { }

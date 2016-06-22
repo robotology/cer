@@ -23,6 +23,7 @@
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
 #include <cer_kinematics/arm.h>
+#include <cer_kinematics/head.h>
 
 using namespace std;
 using namespace yarp::os;
@@ -39,14 +40,41 @@ int main(int argc, char *argv[])
     if (rf.check("help"))
     {
         cout<<"Options:"<<endl;
-        cout<<"--arm-type left|right"<<endl;
+        cout<<"--kinematics arm|head"<<endl;
+        cout<<"--type left|center|right"<<endl;
         cout<<"--q \"(0.0 1.0 ... 11.0)\""<<endl;
         return 0;
     }
 
-    string arm_type=rf.check("arm-type",Value("left")).asString();
-    ArmParameters armp(arm_type);
-    ArmSolver solver(armp);
+    string kinematics=rf.check("kinematics",Value("arm")).asString();
+    string type=rf.check("type",Value("left")).asString();
+    
+    transform(kinematics.begin(),kinematics.end(),kinematics.begin(),::tolower);
+    transform(type.begin(),type.end(),type.begin(),::tolower);
+
+    if ((kinematics!="arm") && (kinematics!="head"))
+    {
+        cerr<<"unrecognized kinematics \""<<kinematics<<"\""<<endl;
+        return 1;
+    }
+
+    if ((type!="left") && (type!="center") && (type!="right"))
+    {
+        cerr<<"unrecognized type \""<<type<<"\""<<endl;
+        return 2;
+    }
+
+    if ((kinematics=="arm") && (type=="center"))
+    {
+        cerr<<"\"center\" type is not allowed for arm"<<endl;
+        return 3;
+    }
+
+    Solver *solver;
+    if (kinematics=="arm")
+        solver=new ArmSolver(ArmParameters(type));
+    else
+        solver=new HeadSolver(HeadParameters(type));
     
     Vector q(12,0.0);
     if (Bottle *b=rf.find("q").asList())
@@ -57,12 +85,20 @@ int main(int argc, char *argv[])
     }
 
     Matrix H;
-    solver.fkin(q,H);
-    cout<<"arm="<<arm_type<<endl;
-    cout<<"q=("<<q.toString(3,3)<<")"<<endl;
-    cout<<"H="<<H.toString(3,3)<<endl;
-    cout<<endl;
+    if (solver->fkin(q,H))
+    {
+        cout<<kinematics<<"="<<type<<endl;
+        cout<<"q=("<<q.toString(3,3)<<")"<<endl;
+        cout<<"H="<<H.toString(3,3)<<endl;
+        cout<<endl;
+    }
+    else
+    {
+        cerr<<"something unexpected went wrong :("<<endl;
+        return 4;
+    }
 
+    delete solver;
     return 0;
 }
 

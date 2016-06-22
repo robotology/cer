@@ -144,6 +144,18 @@ public:
                       int *exit_code=NULL);
 
     /**
+     * Inverse Kinematics Law.
+     * 
+     * @param Hd        the desired 4-by-4 homogeneous matrix 
+     *                  representing the end-effector frame ([m]).
+     * @param q         the solved head DOFs ([deg]). 
+     * @param exit_code pointer to solver's exit codes. 
+     * @return true/false on success/failure.
+     */
+    virtual bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &q,
+                      int *exit_code=NULL);
+
+    /**
      * Destructor.
      */
     virtual ~HeadSolver() { }

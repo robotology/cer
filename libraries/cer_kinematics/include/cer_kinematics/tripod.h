@@ -113,6 +113,18 @@ public:
                       yarp::sig::Vector &hpr);
 
     /**
+     * Forward Kinematics Law.
+     * 
+     * @param q      the three elongations ([m]).
+     * @param H      the 4-by-4 homogeneous matrix of the platform 
+     *               ([m]).
+     * @param frame  not used.
+     * @return true/false on success/failure.
+     */
+    virtual bool fkin(const yarp::sig::Vector &q, yarp::sig::Matrix &H,
+                      const int frame=-1);
+
+    /**
      * Inverse Kinematics Law with desired heave and orientation 
      * (axis*angles). 
      * 
@@ -135,6 +147,18 @@ public:
      */
     virtual bool ikin(const yarp::sig::Vector &hpr,
                       yarp::sig::Vector &lll,
+                      int *exit_code=NULL);
+
+    /**
+     * Inverse Kinematics Law.
+     * 
+     * @param Hd        the desired 4-by-4 homogeneous matrix 
+     *                  representing the platform frame ([m]).
+     * @param q         the solved elongations ([m]). 
+     * @param exit_code pointer to solver's exit codes. 
+     * @return true/false on success/failure.
+     */
+    virtual bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &q,
                       int *exit_code=NULL);
 
     /**

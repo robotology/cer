@@ -370,3 +370,16 @@ bool HeadSolver::ikin(const Vector &xd, Vector &q, int *exit_code)
     return true;
 }
 
+
+/****************************************************************/
+bool HeadSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
+{
+    if ((Hd.rows()!=4) || (Hd.cols()!=4))
+    {
+        yError("mis-sized desired end-effector frame!");
+        return false;
+    }
+
+    return ikin(Hd.getCol(3).subVector(0,2),q,exit_code);
+}
+
