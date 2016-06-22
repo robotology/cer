@@ -112,6 +112,34 @@ struct ArmParameters
     ArmParameters(const std::string &type="left");
 };
 
+
+/**
+ * Structure used to initialize a robot head.
+ * 
+ * @author Ugo Pattacini
+ */
+struct HeadParameters
+{
+    /**
+     * the tripod mechanism for the torso.
+     */
+    TripodParameters torso;
+
+    /**
+     * the serial chain for the upper_arm.
+     */
+    iCub::iKin::iKinLimb head;
+
+    /**
+     * Constructor. 
+     *  
+     * @param type  a string ["left"|"center"|"right"] accounting 
+     *              for the end frame type.
+     */
+    HeadParameters(const std::string &type="center");
+};
+
+
 namespace configuration {
     enum {
         no_heave,
@@ -243,7 +271,7 @@ struct SolverParameters
                      const double weight_postural_torso_yaw_=0.0,
                      const double weight_postural_upper_arm_=0.0,
                      const double weight_postural_lower_arm_=0.0,
-                     const double tol_=0.1, const double constr_tol_=1e-6,
+                     const double tol_=0.1, const double constr_tol_=1e-5,
                      const int max_iter_=std::numeric_limits<int>::max(),
                      const double max_cpu_time_=1.0,
                      const bool use_central_difference_=false,

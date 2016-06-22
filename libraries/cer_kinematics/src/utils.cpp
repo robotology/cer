@@ -16,7 +16,10 @@
 */
 
 #include <cmath>
+#include <algorithm>
+
 #include <iCub/ctrl/math.h>
+
 #include <cer_kinematics/utils.h>
 
 using namespace std;
@@ -56,7 +59,8 @@ public:
     /****************************************************************/
     UpperArm(const string &type_) : iKinLimb(type_)
     {
-        if ((type!="right") && (type!="left"))
+        transform(type.begin(),type.end(),type.begin(),::tolower);
+        if ((type!="left") && (type!="right"))
             type="left";
 
         allocate(type);
@@ -87,6 +91,64 @@ protected:
     }
 };
 
+
+/****************************************************************/
+class Head : public iKinLimb
+{
+public:
+    /****************************************************************/
+    Head(const string &type_) : iKinLimb(type_)
+    {
+        transform(type.begin(),type.end(),type.begin(),::tolower);
+        if ((type!="right") && (type!="center") && (type!="left"))
+            type="center";
+
+        allocate(type);
+    }
+
+protected:
+    /****************************************************************/
+    void allocate(const string &type)
+    {        
+        pushLink(new iKinLink( -0.094,     0.4,-90.0*CTRL_DEG2RAD,180.0*CTRL_DEG2RAD,-60.0*CTRL_DEG2RAD,60.0*CTRL_DEG2RAD)); 
+        pushLink(new iKinLink( -0.016,     0.0, 90.0*CTRL_DEG2RAD, 10.0*CTRL_DEG2RAD,-30.0*CTRL_DEG2RAD,50.0*CTRL_DEG2RAD)); 
+        pushLink(new iKinLink(-0.0325,0.089491,-80.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD,-80.0*CTRL_DEG2RAD,80.0*CTRL_DEG2RAD)); 
+
+        unsigned int lastLink=getN()-1;
+        if (type=="right")
+            (*this)[lastLink].setA(-(*this)[lastLink].getA());
+        else if (type=="center")
+            (*this)[lastLink].setA(0.0);
+
+        Matrix HN=eye(4,4);
+        HN(2,3)=0.061378;
+        setHN(HN);
+    }
+};
+
+
+/****************************************************************/
+struct CER_TORSO : public TripodParameters
+{
+    /****************************************************************/
+    CER_TORSO() : TripodParameters(0.09,0.0,0.17,30.0)
+    {
+        Vector rot(4,0.0);
+        rot[2]=1.0; rot[3]=M_PI;
+        T0=axis2dcm(rot);
+        T0(0,3)=0.044;
+        T0(2,3)=0.470;
+    }
+};
+
+
+/****************************************************************/
+struct CER_LOWER_ARM : public TripodParameters
+{
+    /****************************************************************/
+    CER_LOWER_ARM() : TripodParameters(0.018,0.0,0.13,30.0) { }
+};
+
 }
 
 }
@@ -105,16 +167,10 @@ TripodParameters::TripodParameters(const double r_, const double l_min_,
 
 /****************************************************************/
 ArmParameters::ArmParameters(const string &type) :
-               torso(0.09,0.0,0.17,30.0),
+               torso(CER_TORSO()),
                upper_arm(UpperArm(type)),
-               lower_arm(0.018,0.0,0.13,30.0)
+               lower_arm(CER_LOWER_ARM())
 {
-    Vector rot(4,0.0);
-    rot[2]=1.0; rot[3]=M_PI;
-    torso.T0=axis2dcm(rot);
-    torso.T0(0,3)=0.044;
-    torso.T0(2,3)=0.470;
-
     TN=zeros(4,4);
     TN(0,0)=0.258819; TN(0,2)=-0.965926; TN(0,3)=0.0269172;
     TN(1,1)=1.0;
@@ -127,6 +183,13 @@ ArmParameters::ArmParameters(const string &type) :
         TN(2,0)=TN(0,2);
         TN(2,2)=-TN(0,0);
     }
+}
+
+
+/****************************************************************/
+HeadParameters::HeadParameters(const string &type) : 
+                torso(CER_TORSO()), head(Head(type))
+{
 }
 
 
@@ -145,12 +208,13 @@ bool SolverParameters::setMode(const string &mode)
             {
                 full_pose=true;
                 tol=0.1;
-                constr_tol=1e-6;
+                constr_tol=1e-5;
             }
             else if (submode=="xyz_pose")
             {
                 full_pose=false;
-                tol=constr_tol=1e-6;
+                tol=1e-5;
+                constr_tol=1e-4;
             }
             if (submode=="heave")
                 configuration=configuration::heave;
