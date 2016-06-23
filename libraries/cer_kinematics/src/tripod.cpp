@@ -439,16 +439,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(lll);
     
-    // note that d.T x-axis and y-axis are
-    // still oriented according to the tripod convention;
-    // that's why we rather rely on d.u for computing
-    // pitch and roll
-    Vector u=d.u;
-    double n=norm(u);
-    u/=n>0.0?n:1.0;
-    u.push_back(n);
-
-    Vector rpy=dcm2rpy(axis2dcm(u));
+    Vector rpy=dcm2rpy(d.T);
     hpr.resize(3);
     hpr[0]=d.p[2];
     hpr[1]=CTRL_RAD2DEG*rpy[1];
