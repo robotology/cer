@@ -48,7 +48,7 @@ protected:
     HeadSolver &slv;
     HeadParameters &params;
     
-    Matrix H0,Hxd;
+    Matrix H0,T,Hxd;
     Matrix GeoJacobP,AnaJacobZ;
     Vector xd,q0,q;
     double mod,cosAng;
@@ -58,6 +58,7 @@ public:
     /****************************************************************/
     HeadNLP(HeadSolver &slv_) : slv(slv_), params(slv_.headParameters)
     {
+        H0=params.head.getH0();
         xd.resize(3,0.0);
         q0.resize(3+params.head.getDOF(),0.0);
         set_q0(q0);
@@ -80,7 +81,7 @@ public:
         for (size_t i=0; i<l2; i++)
             this->q0[3+i]=std::max(chain[i].getMin(),std::min(chain[i].getMax(),CTRL_DEG2RAD*q0[3+i]));
 
-        slv.fkin(this->q0,H0,2);
+        slv.fkin(this->q0,T,2);
     }
 
     /****************************************************************/
@@ -140,7 +141,7 @@ public:
             iKinChain &chain=*params.head.asChain();
             chain.setAng(1,x[0]);
             chain.setAng(2,x[1]);
-            Hxd=H0*chain.getH();
+            Hxd=T*chain.getH();
             Hxd(0,3)-=xd[0];
             Hxd(1,3)-=xd[1];
             Hxd(2,3)-=xd[2];
@@ -148,8 +149,10 @@ public:
             mod=norm(Hxd,3);
             cosAng=dot(Hxd,2,Hxd,3)/mod;
 
+            chain.setH0(T);
             GeoJacobP=chain.GeoJacobian();
             AnaJacobZ=chain.AnaJacobian(2);
+            chain.setH0(H0);
         }
     }
 
