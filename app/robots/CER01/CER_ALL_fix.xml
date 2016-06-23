@@ -57,7 +57,7 @@
     <devices file="wrappers/FT/cer_right_arm-FT_wrapper.xml" />
 
     <!--  ROS -->
-<!--    <devices file="wrappers/motorControl/cer_ros_wrapper_fix.xml" /> -->
+    <devices file="wrappers/motorControl/cer_ros_wrapper_fix.xml" />
 
     <!--  CALIBRATORS -->
     <devices file="calibrators/cer_base-calib.xml" /> 

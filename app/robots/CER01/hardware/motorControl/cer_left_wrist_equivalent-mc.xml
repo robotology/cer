@@ -5,7 +5,7 @@
   <device name="cer_left_wrist_equivalent_mc" type="tripodMotionControl">
       <params file="general.xml" />
 
-      <param name="AxisNames">  "left_wrist_heave_eq" "left_wrist_pitch_eq" "left_wrist_roll_eq"  </param>
+      <param name="AxisNames">  "l_wrist_heave_eq_joint" "l_wrist_pitch_eq_joint" "l_wrist_roll_eq_joint"  </param>
 
     <group name="GENERAL">
       <param name="Joints">      3       </param>

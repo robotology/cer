@@ -5,7 +5,7 @@
     <group name="GENERAL">
         <param name="MotioncontrolVersion">  2 </param>
         <param name="Joints">                4  </param> 
-        <param name="AxisName">              "l_wrist_tripod_0" "l_wrist_tripod_1" "l_wrist_tripod_2" "l_wrist_prosupination"  </param>
+        <param name="AxisName">              "l_wrist_tripod_0" "l_wrist_tripod_1" "l_wrist_tripod_2" "l_wrist_pronosupination_joint"  </param>
         <param name="AxisMap">               0                  1                  2                  3                        </param>
         <param name="AxisType">              "prismatic"        "prismatic"        "prismatic"        "revolute"               </param>
         <param name="HasHallSensor">         0                  0                  0                  0                        </param>

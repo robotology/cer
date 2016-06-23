@@ -5,7 +5,7 @@
     <group name="GENERAL">
         <param name="MotioncontrolVersion">  2 </param>
         <param name="Joints">                4  </param> 
-        <param name="AxisName">              "torso_tripod_0" "torso_tripod_1" "torso_tripod_2" "torso_yaw" </param>
+        <param name="AxisName">              "torso_tripod_0" "torso_tripod_1" "torso_tripod_2" "torso_yaw_joint" </param>
         <param name="AxisMap">               0            1            2             3             </param>
         <param name="AxisType">              "prismatic"  "prismatic"  "prismatic"  "revolute"     </param>
         <param name="HasHallSensor">         0            0            0             1             </param>
