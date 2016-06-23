@@ -21,6 +21,7 @@
 
 #include <yarp/os/Log.h>
 #include <yarp/os/Time.h>
+#include <yarp/os/LockGuard.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
@@ -470,6 +471,7 @@ bool TripodSolver::fkin(const Vector &q, Matrix &H, const int frame)
 bool TripodSolver::ikin(const double zd, const Vector &ud,
                         Vector &lll, int *exit_code)
 {
+    LockGuard lg(makeThreadSafe);
     if (ud.length()<3)
     {
         yError("mis-sized orientation vector!");

@@ -20,6 +20,7 @@
 
 #include <limits>
 #include <string>
+#include <yarp/os/Mutex.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
 #include <iCub/iKin/iKinFwd.h>
@@ -344,6 +345,7 @@ public:
 class Solver
 {
 protected:
+    static yarp::os::Mutex makeThreadSafe;
     SolverIterateCallback *callback;
     int verbosity;
 

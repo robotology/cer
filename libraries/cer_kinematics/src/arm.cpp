@@ -22,6 +22,7 @@
 
 #include <yarp/os/Log.h>
 #include <yarp/os/Time.h>
+#include <yarp/os/LockGuard.h>
 #include <yarp/math/Math.h>
 
 #include <iCub/ctrl/math.h>
@@ -114,6 +115,7 @@ bool ArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
 /****************************************************************/
 bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 {
+    LockGuard lg(makeThreadSafe);
     if ((Hd.rows()!=4) || (Hd.cols()!=4))
     {
         yError("mis-sized desired end-effector frame!");

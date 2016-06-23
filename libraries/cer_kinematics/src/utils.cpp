@@ -32,6 +32,8 @@ using namespace cer::kinematics;
 namespace cer {
 namespace kinematics {
 
+yarp::os::Mutex Solver::makeThreadSafe;
+
 /****************************************************************/
 bool stepModeParser(string &mode, string &submode)
 {
