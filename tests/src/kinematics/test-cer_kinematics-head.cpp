@@ -41,7 +41,8 @@ int main(int argc, char *argv[])
         cout<<"Options:"<<endl;
         cout<<"--type left|center|right"<<endl;
         cout<<"--verbosity <int>"<<endl;
-        cout<<"--xd \"(0.0 1.0 2.0)\""<<endl;        
+        cout<<"--xd \"(0.0 1.0 2.0)\""<<endl;
+        cout<<"--q \"(0.0 1.0 2.0)\""<<endl;
         return 0;
     }
 
@@ -62,11 +63,19 @@ int main(int argc, char *argv[])
             xd[i]=b->get(i).asDouble();
     }
 
+    Vector q(6,0.0);
+    if (Bottle *b=rf.find("q").asList())
+    {
+        size_t len=std::min(q.length(),(size_t)b->size());
+        for (size_t i=0; i<len; i++)
+            q[i]=b->get(i).asDouble();
+    }
+
     HeadParameters headp(type);
     HeadSolver solver(headp);
     solver.setVerbosity(verbosity);
+    solver.setInitialGuess(q);
 
-    Vector q;
     solver.ikin(xd,q);
     cout<<"head="<<type<<endl;
     cout<<"xd=("<<xd.toString(3,3)<<")"<<endl;
