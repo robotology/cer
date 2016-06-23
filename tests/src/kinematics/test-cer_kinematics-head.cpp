@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
         cout<<"--type left|center|right"<<endl;
         cout<<"--verbosity <int>"<<endl;
         cout<<"--xd \"(0.0 1.0 2.0)\""<<endl;
-        cout<<"--q \"(0.0 1.0 2.0)\""<<endl;
+        cout<<"--q \"(0.0 1.0 ... 5.0)\""<<endl;
         return 0;
     }
 
