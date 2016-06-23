@@ -97,8 +97,8 @@ int main(int argc, char *argv[])
     if (solver->fkin(q,H))
     {
         cout<<kinematics<<"="<<type<<endl;
-        cout<<"q=("<<q.toString(3,3)<<")"<<endl;
-        cout<<"H="<<H.toString(3,3)<<endl;
+        cout<<"q=("<<q.toString(5,5)<<")"<<endl;
+        cout<<"H="<<H.toString(5,5)<<endl;
         cout<<endl;
     }
     else
