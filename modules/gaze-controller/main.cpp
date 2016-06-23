@@ -25,7 +25,8 @@
 #include <yarp/math/Math.h>
 
 #include <iCub/ctrl/minJerkCtrl.h>
-#include <cer_kinematics/arm.h>
+#include <iCub/iKin/iKinFwd.h>
+#include <cer_kinematics/head.h>
 
 #define MIN_TS  0.01    // [s]
 
@@ -35,33 +36,31 @@ using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::ctrl;
+using namespace iCub::iKin;
 using namespace cer::kinematics;
 
 
 /****************************************************************/
 class Controller : public RFModule, public PortReader
 {
-    PolyDriver         drivers[4];
-    VectorOf<int>      jointsIndexes[4];
-    IControlMode2*     imod[4];
-    IEncodersTimed*    ienc[4];
-    IPositionControl2* ipos[4];
-    IPositionDirect*   iposd[4];
-    
+    PolyDriver         drivers[3];
+    IEncodersTimed*    ienc[3];
+    IControlMode2*     imod;
+    IPositionControl2* ipos;
+    IPositionDirect*   iposd;
+
     VectorOf<int> posDirectMode;
     VectorOf<int> curMode;
 
-    ArmSolver solver;
+    HeadSolver solver;
     minJerkTrajGen* gen;
     
-    BufferedPort<Vector> statePort;
+    BufferedPort<Property> statePort;
     Port targetPort;
-    RpcServer rpcPort;    
-    RpcClient solverPort;
+    RpcServer rpcPort;
     Stamp txInfo;
 
     Mutex mutex;
-    string orientation_type;
     int verbosity;
     bool controlling;
     double Ts;
@@ -70,46 +69,61 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     bool read(ConnectionReader &connection)
     {
-        Bottle target,reply;
+        Bottle target;
         target.read(connection);
 
         if (verbosity>0)
-            yInfo("Sending request to solver: %s",target.toString().c_str());
+            yInfo("Received target request: %s",target.toString().c_str());
 
+        bool ok=false;
         bool latch_controlling=controlling;
-        if (solverPort.write(target,reply))
+        if (target.size()>1)
         {
-            if (verbosity>0)
-                yInfo("Received reply from solver: %s",reply.toString().c_str());
-
-            if (reply.get(0).asVocab()==Vocab::encode("ack"))
+            int target_type=target.get(0).asVocab();
+            Bottle *target_loc=target.get(1).asList();
+            if (target_loc!=NULL)
             {
-                if (reply.size()>1)
+                string frame;
+                Vector x(3);
+
+                if (target_type==Vocab::encode("cartesian"))
                 {
-                    if (Bottle *payLoad=reply.get(1).asList())
+                    if (target_loc->size()>=4)
                     {
-                        LockGuard lg(mutex);
-                        // process only if we didn't receive
-                        // a stop request in the meanwhile
-                        if (controlling==latch_controlling)
-                        {                        
-                            for (size_t i=0; i<qd.length(); i++)
-                                qd[i]=payLoad->get(i).asDouble();
+                        frame=target_loc->get(0).asString();
+                        x[0]=target_loc->get(1).asDouble();
+                        x[1]=target_loc->get(2).asDouble();
+                        x[2]=target_loc->get(3).asDouble();
+                        ok=true;
+                    }
+                }
 
-                            if (!controlling)
-                                gen->init(getEncoders());
+                if (ok)
+                {
+                    LockGuard lg(mutex);
+                    // process only if we didn't receive
+                    // a stop request in the meanwhile
+                    if (controlling==latch_controlling)
+                    {
+                        HeadParameters p(frame);
+                        solver.setHeadParameters(p);
 
-                            setPositionDirectMode();
-                            controlling=true;
-                        }
+                        Vector q=getEncoders();
+                        solver.setInitialGuess(q);
+                        solver.ikin(x,qd);
+
+                        if (!controlling)
+                            gen->init(q.subVector(4,5));
+
+                        setPositionDirectMode();
+                        controlling=true;
                     }
                 }
             }
-            else
-                yError("Malformed target type!");
         }
-        else
-            yError("Unable to communicate with the solver");
+
+        if (!ok)
+            yError("Malformed target type!"); 
 
         return true;
     }
@@ -117,7 +131,7 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     Vector getEncoders(double *timeStamp=NULL)
     {
-        Vector encs(12,0.0);
+        Vector encs(6,0.0);
         Vector stamps(encs.length());
 
         Vector encs_=encs;
@@ -135,10 +149,6 @@ class Controller : public RFModule, public PortReader
         encs.setSubvector(4,encs_.subVector(0,4));
         stamps.setSubvector(4,stamps_.subVector(0,4));
 
-        ienc[3]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(9,encs_.subVector(0,2));
-        stamps.setSubvector(9,stamps_.subVector(0,2));
-
         if (timeStamp!=NULL)
             *timeStamp=findMax(stamps);
 
@@ -148,50 +158,82 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     void getCurrentMode()
     {
-        imod[0]->getControlModes(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&curMode[0]);
-        imod[1]->getControlModes(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&curMode[3]);
-        imod[2]->getControlModes(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&curMode[4]);
-        imod[3]->getControlModes(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&curMode[9]);
+        imod->getControlModes(&curMode[0]);
     }
 
     /****************************************************************/
     void setPositionDirectMode()
     {
-        for (size_t i=0; i<3; i++)
+        imod->setControlModes(&posDirectMode[0]);
+    }
+
+    /****************************************************************/
+    void getBounds(PolyDriver &driver, Matrix &lim) const
+    {
+        IEncoders      *ienc;
+        IControlLimits *ilim;
+
+        driver.view(ienc);
+        driver.view(ilim);
+
+        int nAxes;
+        ienc->getAxes(&nAxes);
+
+        lim.resize(nAxes,2);
+        for (int i=0; i<nAxes; i++)
+            ilim->getLimits(i,&lim(i,0),&lim(i,1));
+    }
+
+    /****************************************************************/
+    void alignJointsBounds()
+    {
+        HeadParameters p=solver.getHeadParameters();
+        iKinChain &chain=*p.head.asChain();
+        Matrix lim;
+        Value part;
+
+        getBounds(drivers[1],lim);
+        p.torso.l_min=lim(0,0);
+        p.torso.l_max=lim(0,1);
+        p.torso.alpha_max=fabs(lim(1,1));
+
+        chain[0].setMin((M_PI/180.0)*lim(3,0));
+        chain[0].setMax((M_PI/180.0)*lim(3,1));
+
+        part=drivers[1].getValue("remote");
+        yInfo("limits of %s part: heave=[%g,%g] [m], [pitch,roll]=[%g,%g] [deg], yaw=[%g,%g] [deg]",
+              part.asString().c_str(),p.torso.l_min,p.torso.l_max,-p.torso.alpha_max,p.torso.alpha_max,lim(3,0),lim(3,1));
+
+        getBounds(drivers[2],lim);
+        for (int i=0; i<2; i++)
         {
-            if (curMode[i]!=posDirectMode[i])
-            {
-                imod[0]->setControlModes(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&posDirectMode[0]);
-                break;
-            }
+            chain[1+i].setMin((M_PI/180.0)*lim(i,0));
+            chain[1+i].setMax((M_PI/180.0)*lim(i,1));
+
+            part=drivers[2].getValue("remote");
+            yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
+                  part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
+                  (180.0/M_PI)*chain[1+i].getMax());
         }
 
-        for (size_t i=3; i<4; i++)
-        {
-            if (curMode[i]!=posDirectMode[i])
-            {
-                imod[1]->setControlModes(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&posDirectMode[3]);
-                break;
-            }
-        }
+        solver.setHeadParameters(p);
+    }
 
-        for (size_t i=4; i<9; i++)
-        {
-            if (curMode[i]!=posDirectMode[i])
-            {
-                imod[2]->setControlModes(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&posDirectMode[4]);
-                break;
-            }
-        }
+    /****************************************************************/
+    void addState(const Vector &q, Property &state,const string &frame)
+    {
+        HeadParameters p(frame);
+        solver.setHeadParameters(p);
 
-        for (size_t i=9; i<curMode.size(); i++)
-        {
-            if (curMode[i]!=posDirectMode[i])
-            {
-                imod[3]->setControlModes(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&posDirectMode[9]);
-                break;
-            }
-        }
+        Matrix Hee; solver.fkin(q,Hee);
+
+        Vector pose=Hee.getCol(3).subVector(0,2);
+        Vector oee; oee=dcm2axis(Hee);
+        oee*=oee[3]; oee.pop_back();
+        pose=cat(pose,oee);
+
+        Bottle val; val.addList().read(pose);
+        state.put(frame,val.get(0));
     }
 
 public:
@@ -204,10 +246,9 @@ public:
     bool configure(ResourceFinder &rf)
     {
         string robot=rf.check("robot",Value("cer")).asString();
-        string arm_type=rf.check("arm-type",Value("left")).asString();
-        orientation_type=rf.check("orientation-type",Value("axis-angle")).asString();
+        bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
         verbosity=rf.check("verbosity",Value(0)).asInt();
-        double T=rf.check("T",Value(2.0)).asDouble();
+        double T=rf.check("T",Value(1.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
 
@@ -215,7 +256,7 @@ public:
 
         option.put("device","remote_controlboard");
         option.put("remote",("/"+robot+"/torso_tripod").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso_tripod").c_str()); 
+        option.put("local","/cer_gaze-controller/torso_tripod"); 
         if (!drivers[0].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/torso_tripod").c_str());
@@ -226,7 +267,7 @@ public:
         option.clear();
         option.put("device","remote_controlboard");
         option.put("remote",("/"+robot+"/torso").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso").c_str());
+        option.put("local","/cer_gaze-controller/torso");
         if (!drivers[1].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/torso").c_str());
@@ -236,79 +277,43 @@ public:
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/"+arm_type+"_arm").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_arm").c_str());
+        option.put("remote",("/"+robot+"/head").c_str());
+        option.put("local","/cer_gaze-controller/head");
         if (!drivers[2].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_arm").c_str());
+            yError("Unable to connect to %s",("/"+robot+"/head").c_str());
             close();
             return false;
         }
 
-        option.clear();
-        option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_wrist_tripod").c_str());
-        if (!drivers[3].open(option))
-        {
-            yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
-            close();
-            return false;
-        }
+        drivers[0].view(ienc[0]);
+        drivers[1].view(ienc[1]);
+        drivers[2].view(ienc[2]);
+        drivers[2].view(imod);
+        drivers[2].view(ipos);
+        drivers[2].view(iposd);
 
-        for (int i=0; i<4; i++)
-        {
-            drivers[i].view(imod[i]);
-            drivers[i].view(ienc[i]);
-            drivers[i].view(ipos[i]);
-            drivers[i].view(iposd[i]);
-        }
-
-        // torso_tripod
-        jointsIndexes[0].push_back(0);
-        jointsIndexes[0].push_back(1);
-        jointsIndexes[0].push_back(2);
-
-        // torso (yaw)
-        jointsIndexes[1].push_back(3);
-
-        // arm
-        jointsIndexes[2].push_back(0);
-        jointsIndexes[2].push_back(1);
-        jointsIndexes[2].push_back(2);
-        jointsIndexes[2].push_back(3);
-        jointsIndexes[2].push_back(4);
-        jointsIndexes[2].push_back(5);
-
-        // wrist_tripod
-        jointsIndexes[3].push_back(0);
-        jointsIndexes[3].push_back(1);
-        jointsIndexes[3].push_back(2);
-
-        statePort.open(("/cer_reaching-controller/"+arm_type+"/state:o").c_str());
-        solverPort.open(("/cer_reaching-controller/"+arm_type+"/solver:rpc").c_str());
-
-        targetPort.open(("/cer_reaching-controller/"+arm_type+"/target:i").c_str());
+        statePort.open("/cer_gaze-controller/state:o");
+        targetPort.open("/cer_gaze-controller/target:i");
         targetPort.setReader(*this);
 
-        rpcPort.open(("/cer_reaching-controller/"+arm_type+"/rpc").c_str());
+        rpcPort.open("/cer_gaze-controller/rpc");
         attach(rpcPort);
 
-        transform(orientation_type.begin(),orientation_type.end(),
-                  orientation_type.begin(),::tolower);
-        yInfo("Orientation Type is \"%s\"",orientation_type.c_str());
-        
-        qd=getEncoders();
-        for (size_t i=0; i<qd.length(); i++)
+        int nAxes;
+        ienc[2]->getAxes(&nAxes);
+        for (int i=0; i<nAxes; i++)
             posDirectMode.push_back(VOCAB_CM_POSITION_DIRECT);
         curMode=posDirectMode;
 
+        Vector q=getEncoders();
+        qd=q.subVector(4,5);
+
         getCurrentMode();
         setPositionDirectMode();
-        
-        ArmParameters arm(arm_type);
-        arm.upper_arm.setAllConstraints(false);
-        solver.setArmParameters(arm);
+
+        if (get_bounds)
+            alignJointsBounds();
 
         gen=new minJerkTrajGen(qd,Ts,T);
         controlling=false;
@@ -325,13 +330,10 @@ public:
         if (!statePort.isClosed())
             statePort.close();
 
-        if (!solverPort.asPort().isOpen())
-            solverPort.close();
-
         if (!rpcPort.asPort().isOpen())
             rpcPort.close(); 
         
-        for (int i=0; i<4; i++)
+        for (int i=0; i<3; i++)
             if (drivers[i].isValid())
                 drivers[i].close(); 
 
@@ -351,24 +353,17 @@ public:
         LockGuard lg(mutex);
         getCurrentMode();
 
-        Matrix Hee;
         double timeStamp;
-        solver.fkin(getEncoders(&timeStamp),Hee);
+        Vector q=getEncoders(&timeStamp);
 
-        Vector &pose=statePort.prepare();
-        pose=Hee.getCol(3).subVector(0,2);
+        Property &state=statePort.prepare();
+        state.clear();
 
-        Vector oee;
-        if (orientation_type=="rpy")
-            oee=dcm2rpy(Hee);
-        else
-        {
-            oee=dcm2axis(Hee);
-            oee*=oee[3]; oee.pop_back();
-        }
-
-        pose=cat(pose,oee);
-
+        addState(q,state,"left");
+        addState(q,state,"center");
+        addState(q,state,"left");
+        addState(q,state,"depth");
+     
         if (timeStamp>=0.0)
             txInfo.update(timeStamp);
         else
@@ -379,13 +374,8 @@ public:
 
         if (controlling)
         {
-            gen->computeNextValues(qd); 
-            Vector ref=gen->getPos();
-
-            iposd[0]->setPositions(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&ref[0]);
-            iposd[1]->setPositions(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&ref[3]);
-            iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
-            iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
+            gen->computeNextValues(qd);
+            iposd->setPositions(gen->getPos().data());
 
             if (verbosity>1)
                 yInfo("Commanding new set-points: %s",qd.toString(3,3).c_str());
@@ -449,8 +439,7 @@ public:
         else if (cmd_0==Vocab::encode("stop"))
         {
             controlling=false;
-            for (int i=0; i<4; i++)
-                ipos[i]->stop(jointsIndexes[i].size(),jointsIndexes[i].getFirst());
+            ipos->stop();
             reply.addVocab(Vocab::encode("ack"));
         }
 

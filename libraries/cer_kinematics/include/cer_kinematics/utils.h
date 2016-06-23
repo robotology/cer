@@ -134,8 +134,8 @@ struct HeadParameters
     /**
      * Constructor. 
      *  
-     * @param type  a string ["left"|"center"|"right"] accounting 
-     *              for the end frame type.
+     * @param type  a string ["left"|"center"|"right"|"depth"] 
+     *              accounting for the end frame type.
      */
     HeadParameters(const std::string &type="center");
 };

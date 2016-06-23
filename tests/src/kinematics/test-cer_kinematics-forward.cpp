@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     {
         cout<<"Options:"<<endl;
         cout<<"--kinematics arm|head"<<endl;
-        cout<<"--type left|center|right"<<endl;
+        cout<<"--type left|center|right|depth"<<endl;
         cout<<"--q \"(0.0 1.0 ... 11.0)\"|\"(0.0 1.0 ... 5.0)\""<<endl;
         return 0;
     }
@@ -58,15 +58,16 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if ((type!="left") && (type!="center") && (type!="right"))
+    if ((type!="left") && (type!="center") &&
+        (type!="right") && (type!="depth"))
     {
         cerr<<"unrecognized type \""<<type<<"\""<<endl;
         return 2;
     }
 
-    if ((kinematics=="arm") && (type=="center"))
+    if ((kinematics=="arm") && ((type=="center") || (type=="depth")))
     {
-        cerr<<"\"center\" type is not allowed for arm"<<endl;
+        cerr<<"\""<<type<<"\" type is not allowed for arm"<<endl;
         return 3;
     }
 

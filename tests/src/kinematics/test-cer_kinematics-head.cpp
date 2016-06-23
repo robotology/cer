@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     if (rf.check("help"))
     {
         cout<<"Options:"<<endl;
-        cout<<"--type left|center|right"<<endl;
+        cout<<"--type left|center|right|depth"<<endl;
         cout<<"--verbosity <int>"<<endl;
         cout<<"--xd \"(0.0 1.0 2.0)\""<<endl;
         cout<<"--q0 \"(0.0 1.0 ... 5.0)\""<<endl;
@@ -49,7 +49,8 @@ int main(int argc, char *argv[])
     string type=rf.check("type",Value("center")).asString();
     int verbosity=rf.check("verbosity",Value(0)).asInt();
 
-    if ((type!="left") && (type!="center") && (type!="right"))
+    if ((type!="left") && (type!="center") &&
+        (type!="right") && (type!="depth"))
     {
         cerr<<"unrecognized type \""<<type<<"\""<<endl;
         return 1;

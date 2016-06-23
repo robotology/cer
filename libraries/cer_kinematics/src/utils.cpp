@@ -125,7 +125,8 @@ public:
     CER_HEAD(const string &type_) : iKinLimb(type_)
     {
         transform(type.begin(),type.end(),type.begin(),::tolower);
-        if ((type!="right") && (type!="center") && (type!="left"))
+        if ((type!="right") && (type!="center") &&
+            (type!="left") && (type!="depth"))
             type="center";
 
         allocate(type);
@@ -134,7 +135,7 @@ public:
 protected:
     /****************************************************************/
     void allocate(const string &type)
-    {        
+    {
         pushLink(new iKinLink( -0.094,     0.4,-90.0*CTRL_DEG2RAD,180.0*CTRL_DEG2RAD,-60.0*CTRL_DEG2RAD,60.0*CTRL_DEG2RAD)); 
         pushLink(new iKinLink( -0.016,     0.0, 90.0*CTRL_DEG2RAD, 10.0*CTRL_DEG2RAD,-30.0*CTRL_DEG2RAD,50.0*CTRL_DEG2RAD)); 
         pushLink(new iKinLink(-0.0325,0.089491,-80.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD,-80.0*CTRL_DEG2RAD,80.0*CTRL_DEG2RAD)); 
@@ -144,9 +145,17 @@ protected:
             (*this)[lastLink].setA(-(*this)[lastLink].getA());
         else if (type=="center")
             (*this)[lastLink].setA(0.0);
+        else if (type=="depth")
+        {
+            (*this)[lastLink].setA(0.0);
+            (*this)[lastLink].setD(0.202711);
+        }
 
         Matrix HN=eye(4,4);
-        HN(2,3)=0.061378;
+        if (type=="depth")
+            HN(2,3)=0.062117;
+        else
+            HN(2,3)=0.061378;
         setHN(HN);
     }
 };

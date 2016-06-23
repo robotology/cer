@@ -15,7 +15,6 @@
  * Public License for more details
 */
 
-#include <cmath>
 #include <algorithm>
 #include <string>
 
@@ -56,7 +55,7 @@ class Controller : public RFModule, public PortReader
     
     BufferedPort<Vector> statePort;
     Port targetPort;
-    RpcServer rpcPort;    
+    RpcServer rpcPort;
     RpcClient solverPort;
     Stamp txInfo;
 
@@ -92,7 +91,7 @@ class Controller : public RFModule, public PortReader
                         // process only if we didn't receive
                         // a stop request in the meanwhile
                         if (controlling==latch_controlling)
-                        {                        
+                        {
                             for (size_t i=0; i<qd.length(); i++)
                                 qd[i]=payLoad->get(i).asDouble();
 
