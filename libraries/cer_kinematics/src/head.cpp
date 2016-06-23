@@ -75,9 +75,8 @@ public:
         for (size_t i=0; i<l1; i++)
             this->q0[i]=std::max(params.torso.l_min,std::min(params.torso.l_max,q0[i]));
         
-        len-=3;
         iKinChain &chain=*params.head.asChain();
-        size_t l2=std::min(chain.getDOF(),len);
+        size_t l2=std::min((size_t)chain.getDOF(),len-3);
         for (size_t i=0; i<l2; i++)
             this->q0[3+i]=std::max(chain[i].getMin(),std::min(chain[i].getMax(),CTRL_DEG2RAD*q0[3+i]));
 
