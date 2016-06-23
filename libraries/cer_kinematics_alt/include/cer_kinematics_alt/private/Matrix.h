@@ -380,7 +380,9 @@ public:
 
             if (pivot==-1)
             {
-                printf("Matrix::inv() singular inversion ERROR at row %d\n",r);
+                printf("Matrix::inv(%d,%d) singular inversion ERROR at row %d\n",R,C,r);
+				dump();
+
                 I.clear();
                 return I;
             }

@@ -359,7 +359,7 @@ void KinR1Impl::leftHand2Target(Vec3& Xstar,Quaternion& Qstar,bool oneShot)
         B2Jvt=fast_mul_diag_full(B2,Jv.t());
         (Jv*B2Jvt).base(lv,Rv);
 
-        for (int k=0; k<3; ++k) Lvi[k]=1.0/lv(k);
+		for (int k = 0; k < 3; ++k) Lvi[k] = 1.0 / lv(k);// / (0.000001 + lv(k)*lv(k));
         
         Vrot=fast_mul_diag_full(Lvi,Rv.t()*Vref);
 
@@ -381,7 +381,7 @@ void KinR1Impl::leftHand2Target(Vec3& Xstar,Quaternion& Qstar,bool oneShot)
         B2Kwt=fast_mul_diag_full(B2,Kw.t());
         (Jw*B2Kwt).base(lw,Rw);
 
-        for (int k=0; k<3; ++k) Lwi[k]=1.0/lw(k);
+		for (int k = 0; k < 3; ++k) Lwi[k] = 1.0 / lw(k); // / (0.000001 + lw(k)*lw(k));
 
         Wrot=fast_mul_diag_full(Lwi,Rw.t()*Wref);
 
