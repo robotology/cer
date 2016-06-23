@@ -48,7 +48,8 @@ protected:
     HeadSolver &slv;
     HeadParameters &params;
     
-    Matrix H0,Hxd,GeoJacobP,AnaJacobZ;
+    Matrix H0,Hxd;
+    Matrix GeoJacobP,AnaJacobZ;
     Vector xd,q0,q;
     double mod,cosAng;
     double e_ang;
