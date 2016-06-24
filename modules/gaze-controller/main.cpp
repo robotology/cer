@@ -119,8 +119,7 @@ class Controller : public RFModule, public PortReader
 
                         if (!controlling)
                             gen->init(q.subVector(4,5));
-
-                        setPositionDirectMode();
+                        
                         controlling=true;
                         if (verbosity>0)
                             yInfo("Going to: %s",qd.toString(3,3).c_str());
@@ -171,7 +170,14 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     void setPositionDirectMode()
     {
-        imod->setControlModes(&posDirectMode[0]);
+        for (size_t i=0; i<curMode.size(); i++)
+        {
+            if (curMode[i]!=posDirectMode[i])
+            {
+                imod->setControlModes(&posDirectMode[0]);
+                break;
+            }
+        }        
     }
 
     /****************************************************************/
@@ -373,6 +379,7 @@ public:
     {
         LockGuard lg(mutex);
         getCurrentMode();
+        setPositionDirectMode();
 
         double timeStamp;
         Vector q=getEncoders(&timeStamp);

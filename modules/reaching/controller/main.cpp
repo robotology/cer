@@ -114,8 +114,7 @@ class Controller : public RFModule, public PortReader
 
                             if (!controlling)
                                 gen->init(getEncoders());
-
-                            setPositionDirectMode();
+                            
                             controlling=true;
                             if (verbosity>0)
                                 yInfo("Going to: %s",qd.toString(3,3).c_str());
@@ -400,6 +399,7 @@ public:
     {
         LockGuard lg(mutex);
         getCurrentMode();
+        setPositionDirectMode();
 
         Matrix Hee;
         double timeStamp;
