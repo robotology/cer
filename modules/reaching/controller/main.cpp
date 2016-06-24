@@ -15,8 +15,8 @@
  * Public License for more details
 */
 
-#include <algorithm>
 #include <string>
+#include <algorithm>
 
 #include <yarp/os/all.h>
 #include <yarp/dev/all.h>
