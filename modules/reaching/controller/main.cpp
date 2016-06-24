@@ -242,7 +242,7 @@ public:
         string arm_type=rf.check("arm-type",Value("left")).asString();
         orientation_type=rf.check("orientation-type",Value("axis-angle")).asString();
         verbosity=rf.check("verbosity",Value(0)).asInt();
-        stop_threshold_revolute=rf.check("stop-threshold-revolute",Value(0.1)).asDouble();
+        stop_threshold_revolute=rf.check("stop-threshold-revolute",Value(0.01)).asDouble();
         stop_threshold_prismatic=rf.check("stop-threshold-prismatic",Value(0.0001)).asDouble();
         double T=rf.check("T",Value(2.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
