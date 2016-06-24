@@ -142,8 +142,8 @@ class Controller : public RFModule, public PortReader
         stamps.setSubvector(0,stamps_.subVector(0,2));
 
         ienc[1]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs[3]=encs_[0];
-        stamps[3]=stamps_[0];
+        encs[3]=encs_[3];
+        stamps[3]=stamps_[3];
 
         ienc[2]->getEncodersTimed(&encs_[0],&stamps_[0]);
         encs.setSubvector(4,encs_.subVector(0,4));
