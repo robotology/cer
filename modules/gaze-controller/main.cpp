@@ -64,6 +64,7 @@ class Controller : public RFModule, public PortReader
     int verbosity;
     bool closing;
     bool controlling;
+    double stop_threshold;
     double Ts;
     Vector qd;    
 
@@ -146,8 +147,8 @@ class Controller : public RFModule, public PortReader
         stamps.setSubvector(0,stamps_.subVector(0,2));
 
         ienc[1]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs[3]=encs_[0];
-        stamps[3]=stamps_[0];
+        encs[3]=encs_[3];
+        stamps[3]=stamps_[3];
 
         ienc[2]->getEncodersTimed(&encs_[0],&stamps_[0]);
         encs.setSubvector(4,encs_.subVector(0,4));
@@ -259,6 +260,7 @@ public:
         string robot=rf.check("robot",Value("cer")).asString();
         bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
         verbosity=rf.check("verbosity",Value(0)).asInt();
+        stop_threshold=rf.check("stop-threshold",Value(0.1)).asDouble();
         double T=rf.check("T",Value(1.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
@@ -391,10 +393,21 @@ public:
         if (controlling)
         {
             gen->computeNextValues(qd);
-            iposd->setPositions(gen->getPos().data());
+            Vector ref=gen->getPos();
 
-            if (verbosity>1)
-                yInfo("Commanding new set-points: %s",qd.toString(3,3).c_str());
+            if (norm(qd-ref)>stop_threshold)
+            {
+                if (verbosity>1)
+                    yInfo("Commanding new set-points: %s",ref.toString(3,3).c_str());
+
+                iposd->setPositions(ref.data());
+            }
+            else
+            {
+                controlling=false;
+                if (verbosity>1)
+                    yInfo("Just stopped sending set-points");
+            }
         }
 
         return true;

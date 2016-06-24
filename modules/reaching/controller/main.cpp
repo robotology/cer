@@ -63,7 +63,8 @@ class Controller : public RFModule, public PortReader
     string orientation_type;
     int verbosity;
     bool closing;
-    bool controlling;    
+    bool controlling;
+    double stop_threshold;
     double Ts;
     Vector qd;    
 
@@ -229,6 +230,7 @@ public:
         string arm_type=rf.check("arm-type",Value("left")).asString();
         orientation_type=rf.check("orientation-type",Value("axis-angle")).asString();
         verbosity=rf.check("verbosity",Value(0)).asInt();
+        stop_threshold=rf.check("stop-threshold",Value(0.1)).asDouble();
         double T=rf.check("T",Value(2.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
@@ -410,16 +412,25 @@ public:
 
         if (controlling)
         {
-            gen->computeNextValues(qd); 
+            gen->computeNextValues(qd);
             Vector ref=gen->getPos();
 
-            iposd[0]->setPositions(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&ref[0]);
-            iposd[1]->setPositions(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&ref[3]);
-            iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
-            iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
+            if (norm(qd-ref)>stop_threshold)
+            {
+                if (verbosity>1)
+                    yInfo("Commanding new set-points: %s",ref.toString(3,3).c_str());
 
-            if (verbosity>1)
-                yInfo("Commanding new set-points: %s",qd.toString(3,3).c_str());
+                iposd[0]->setPositions(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&ref[0]);
+                iposd[1]->setPositions(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&ref[3]);
+                iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
+                iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
+            }
+            else
+            {
+                controlling=false;
+                if (verbosity>1)
+                    yInfo("Just stopped sending set-points");
+            }
         }
 
         return true;
