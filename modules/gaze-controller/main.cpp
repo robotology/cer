@@ -294,6 +294,7 @@ public:
         option.put("device","remote_controlboard");
         option.put("remote",("/"+robot+"/head").c_str());
         option.put("local","/cer_gaze-controller/head");
+        option.put("writeStrict","on");
         if (!drivers[2].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/head").c_str());

@@ -252,7 +252,8 @@ public:
 
         option.put("device","remote_controlboard");
         option.put("remote",("/"+robot+"/torso_tripod").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso_tripod").c_str()); 
+        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso_tripod").c_str());
+        option.put("writeStrict","on");
         if (!drivers[0].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/torso_tripod").c_str());
@@ -264,6 +265,7 @@ public:
         option.put("device","remote_controlboard");
         option.put("remote",("/"+robot+"/torso").c_str());
         option.put("local",("/cer_reaching-controller/"+arm_type+"/torso").c_str());
+        option.put("writeStrict","on");
         if (!drivers[1].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/torso").c_str());
@@ -275,6 +277,7 @@ public:
         option.put("device","remote_controlboard");
         option.put("remote",("/"+robot+"/"+arm_type+"_arm").c_str());
         option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_arm").c_str());
+        option.put("writeStrict","on");
         if (!drivers[2].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_arm").c_str());
@@ -286,6 +289,7 @@ public:
         option.put("device","remote_controlboard");
         option.put("remote",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
         option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_wrist_tripod").c_str());
+        option.put("writeStrict","on");
         if (!drivers[3].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
