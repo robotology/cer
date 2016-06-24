@@ -64,7 +64,8 @@ class Controller : public RFModule, public PortReader
     int verbosity;
     bool closing;
     bool controlling;
-    double stop_threshold;
+    double stop_threshold_revolute;
+    double stop_threshold_prismatic;
     double Ts;
     Vector qd;    
 
@@ -219,6 +220,15 @@ class Controller : public RFModule, public PortReader
         controlling=false;
     }
 
+    /****************************************************************/
+    bool dist(const Vector &e)
+    {
+        Vector e_revolute=e.subVector(3,8);
+        Vector e_prismatic=cat(e.subVector(0,2),e.subVector(9,11));
+        return (norm(e_revolute)<stop_threshold_revolute) &&
+               (norm(e_prismatic)<stop_threshold_prismatic);
+    }
+
 public:
     /****************************************************************/
     Controller() : gen(NULL)
@@ -232,7 +242,8 @@ public:
         string arm_type=rf.check("arm-type",Value("left")).asString();
         orientation_type=rf.check("orientation-type",Value("axis-angle")).asString();
         verbosity=rf.check("verbosity",Value(0)).asInt();
-        stop_threshold=rf.check("stop-threshold",Value(0.1)).asDouble();
+        stop_threshold_revolute=rf.check("stop-threshold-revolute",Value(0.1)).asDouble();
+        stop_threshold_prismatic=rf.check("stop-threshold-prismatic",Value(0.0001)).asDouble();
         double T=rf.check("T",Value(2.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
@@ -425,7 +436,7 @@ public:
             iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
             iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
 
-            if (norm(qd-ref)<stop_threshold)
+            if (dist(qd-ref))
             {
                 controlling=false;
                 if (verbosity>0)
