@@ -224,8 +224,6 @@ public:
             for (int i=0; i<len; i++)
                 q[i]=payLoad->get(i).asDouble();
 
-            solver.setInitialGuess(q);
-
             reply.clear();
             reply.addVocab(Vocab::encode("ack"));
         }

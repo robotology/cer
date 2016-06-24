@@ -70,15 +70,26 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     bool read(ConnectionReader &connection)
     {
-        Bottle target,reply;
+        Property target;
         target.read(connection);
 
         if (closing)
             return true;
 
         if (verbosity>0)
-            yInfo("Sending request to solver: %s",target.toString().c_str());
+            yInfo("Received target request: %s",target.toString().c_str());
 
+        if (!target.check("q"))
+        {
+            Bottle q;
+            q.addList().read(getEncoders());
+            target.put("q",q.get(0));
+        }
+
+        if (verbosity>0)
+            yInfo("Forwarding request to solver: %s",target.toString().c_str());
+
+        Bottle reply;
         bool latch_controlling=controlling;
         if (solverPort.write(target,reply))
         {
