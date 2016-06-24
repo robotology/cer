@@ -80,10 +80,10 @@ class Controller : public RFModule, public PortReader
             yInfo("Received target request: %s",target.toString().c_str());
 
         if (!target.check("q"))
-        {
-            Bottle q;
-            q.addList().read(getEncoders());
-            target.put("q",q.get(0));
+        {            
+            Vector q=getEncoders();
+            Bottle b; b.addList().read(q);
+            target.put("q",b.get(0));
         }
 
         if (verbosity>0)
