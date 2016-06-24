@@ -109,6 +109,7 @@ protected:
     //estimated cartesian pos in the fixed odometry reference frame
     double              odom_x;
     double              odom_y;
+    double              odom_z;
     double              odom_theta;
 
 protected:

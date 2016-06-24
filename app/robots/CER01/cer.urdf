@@ -31,7 +31,7 @@
   </joint>
   <link name="base_laser"/>
   <joint name="base_laser_fixed_joint" type="fixed">
-    <origin xyz="0.07 0 0.031" rpy="0 0 0"/>
+    <origin xyz="0.07 0 0.031" rpy="0 0 -1.57"/>
     <parent link="mobile_base_body_link"/>
     <child link="base_laser"/>
     <dynamics damping="0.1"/>

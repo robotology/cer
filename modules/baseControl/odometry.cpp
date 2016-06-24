@@ -52,6 +52,7 @@ Odometry::Odometry(unsigned int _period, PolyDriver* _driver)
     control_board_driver= _driver;
     odom_x=0;
     odom_y=0;
+    odom_z=0;
     odom_theta=0;
 
     odom_vel_x=0;
@@ -273,7 +274,7 @@ void Odometry::broadcast()
         transform.transform.rotation.w = cosYaw;
         transform.transform.translation.x = odom_x;
         transform.transform.translation.y = odom_y;
-        transform.transform.translation.z = 0;
+        transform.transform.translation.z = odom_z;
         if (rosData.transforms.size() == 0)
         {
             rosData.transforms.push_back(transform);

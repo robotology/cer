@@ -69,6 +69,7 @@ CER_Odometry::CER_Odometry(unsigned int _period, PolyDriver* _driver) : Odometry
     traveled_distance=0;
     traveled_angle=0;
     geom_r = 320.0 / 2 / 1000.0;     //m  320 diametro
+    odom_z = geom_r;                    
     geom_L = 338 /1000.0;            //m  338 distanza centro ruota
     encvel_estimator =new iCub::ctrl::AWLinEstimator(2,1.0);
     encw_estimator = new iCub::ctrl::AWLinEstimator(1, 1.0);
