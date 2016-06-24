@@ -295,7 +295,12 @@ public:
 
         transform(orientation_type.begin(),orientation_type.end(),
                   orientation_type.begin(),::tolower);
-        yInfo("Orientation Type is \"%s\"",orientation_type.c_str());
+        if ((orientation_type!="axis-angle") && (orientation_type!="rpy"))
+        {
+            yWarning("Unrecognized Orientation Type \"%s\"",orientation_type.c_str());
+            orientation_type="axis-angle";
+        }
+        yInfo("Orientation Type is \"%s\"",orientation_type.c_str()); 
         
         qd=getEncoders();
         for (size_t i=0; i<qd.length(); i++)
