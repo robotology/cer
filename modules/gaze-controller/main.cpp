@@ -62,6 +62,7 @@ class Controller : public RFModule, public PortReader
 
     Mutex mutex;
     int verbosity;
+    bool closing;
     bool controlling;
     double Ts;
     Vector qd;    
@@ -71,6 +72,9 @@ class Controller : public RFModule, public PortReader
     {
         Bottle target;
         target.read(connection);
+
+        if (closing)
+            return true;
 
         if (verbosity>0)
             yInfo("Received target request: %s",target.toString().c_str());
@@ -165,6 +169,13 @@ class Controller : public RFModule, public PortReader
     void setPositionDirectMode()
     {
         imod->setControlModes(&posDirectMode[0]);
+    }
+
+    /****************************************************************/
+    void stopControl()
+    {        
+        ipos->stop();
+        controlling=false;
     }
 
     /****************************************************************/
@@ -316,7 +327,7 @@ public:
             alignJointsBounds();
 
         gen=new minJerkTrajGen(qd,Ts,T);
-        controlling=false;
+        closing=controlling=false;
 
         return true;
     }
@@ -324,6 +335,11 @@ public:
     /****************************************************************/
     bool close()
     {
+        closing=true;
+
+        if (controlling)
+            stopControl();
+
         if (targetPort.isOpen())
             targetPort.close(); 
 
@@ -438,8 +454,7 @@ public:
         }
         else if (cmd_0==Vocab::encode("stop"))
         {
-            controlling=false;
-            ipos->stop();
+            stopControl();
             reply.addVocab(Vocab::encode("ack"));
         }
 

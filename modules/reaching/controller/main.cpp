@@ -208,6 +208,14 @@ class Controller : public RFModule, public PortReader
         }
     }
 
+    /****************************************************************/
+    void stopControl()
+    {        
+        for (int i=0; i<4; i++)
+            ipos[i]->stop(jointsIndexes[i].size(),jointsIndexes[i].getFirst());
+        controlling=false;
+    }
+
 public:
     /****************************************************************/
     Controller() : gen(NULL)
@@ -339,6 +347,9 @@ public:
     {
         closing=true;
 
+        if (controlling)
+            stopControl();
+
         if (targetPort.isOpen())
             targetPort.close(); 
 
@@ -349,8 +360,8 @@ public:
             solverPort.close();
 
         if (!rpcPort.asPort().isOpen())
-            rpcPort.close(); 
-        
+            rpcPort.close();
+                
         for (int i=0; i<4; i++)
             if (drivers[i].isValid())
                 drivers[i].close(); 
@@ -468,9 +479,7 @@ public:
         }
         else if (cmd_0==Vocab::encode("stop"))
         {
-            controlling=false;
-            for (int i=0; i<4; i++)
-                ipos[i]->stop(jointsIndexes[i].size(),jointsIndexes[i].getFirst());
+            stopControl();
             reply.addVocab(Vocab::encode("ack"));
         }
 
