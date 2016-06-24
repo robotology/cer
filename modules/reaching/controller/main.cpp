@@ -277,7 +277,6 @@ public:
         jointsIndexes[2].push_back(2);
         jointsIndexes[2].push_back(3);
         jointsIndexes[2].push_back(4);
-        jointsIndexes[2].push_back(5);
 
         // wrist_tripod
         jointsIndexes[3].push_back(0);
