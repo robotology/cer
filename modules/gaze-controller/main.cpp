@@ -122,6 +122,8 @@ class Controller : public RFModule, public PortReader
 
                         setPositionDirectMode();
                         controlling=true;
+                        if (verbosity>0)
+                            yInfo("Going to: %s",qd.toString(3,3).c_str());
                     }
                 }
             }
@@ -395,18 +397,16 @@ public:
             gen->computeNextValues(qd);
             Vector ref=gen->getPos();
 
-            if (norm(qd-ref)>stop_threshold)
-            {
-                if (verbosity>1)
-                    yInfo("Commanding new set-points: %s",ref.toString(3,3).c_str());
+            if (verbosity>1)
+                yInfo("Commanding new set-points: %s",ref.toString(3,3).c_str());
 
-                iposd->setPositions(ref.data());
-            }
-            else
+            iposd->setPositions(ref.data());
+
+            if (norm(qd-ref)<stop_threshold)
             {
                 controlling=false;
-                if (verbosity>1)
-                    yInfo("Just stopped sending set-points");
+                if (verbosity>0)
+                    yInfo("Just stopped at: %s",ref.toString(3,3).c_str());
             }
         }
 

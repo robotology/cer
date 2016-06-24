@@ -116,6 +116,8 @@ class Controller : public RFModule, public PortReader
 
                             setPositionDirectMode();
                             controlling=true;
+                            if (verbosity>0)
+                                yInfo("Going to: %s",qd.toString(3,3).c_str());
                         }
                     }
                 }
@@ -415,21 +417,19 @@ public:
             gen->computeNextValues(qd);
             Vector ref=gen->getPos();
 
-            if (norm(qd-ref)>stop_threshold)
-            {
-                if (verbosity>1)
-                    yInfo("Commanding new set-points: %s",ref.toString(3,3).c_str());
+            if (verbosity>1)
+                yInfo("Commanding new set-points: %s",ref.toString(3,3).c_str());
 
-                iposd[0]->setPositions(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&ref[0]);
-                iposd[1]->setPositions(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&ref[3]);
-                iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
-                iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
-            }
-            else
+            iposd[0]->setPositions(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&ref[0]);
+            iposd[1]->setPositions(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&ref[3]);
+            iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
+            iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
+
+            if (norm(qd-ref)<stop_threshold)
             {
                 controlling=false;
-                if (verbosity>1)
-                    yInfo("Just stopped sending set-points");
+                if (verbosity>0)
+                    yInfo("Just stopped at: %s",ref.toString(3,3).c_str());
             }
         }
 
