@@ -84,16 +84,16 @@ class Controller : public RFModule, public PortReader
             if (target_loc!=NULL)
             {
                 string frame;
-                Vector x(3);
+                Vector xd(3);
 
                 if (target_type==Vocab::encode("cartesian"))
                 {
                     if (target_loc->size()>=4)
                     {
                         frame=target_loc->get(0).asString();
-                        x[0]=target_loc->get(1).asDouble();
-                        x[1]=target_loc->get(2).asDouble();
-                        x[2]=target_loc->get(3).asDouble();
+                        xd[0]=target_loc->get(1).asDouble();
+                        xd[1]=target_loc->get(2).asDouble();
+                        xd[2]=target_loc->get(3).asDouble();
                         ok=true;
                     }
                 }
@@ -110,7 +110,7 @@ class Controller : public RFModule, public PortReader
 
                         Vector q=getEncoders();
                         solver.setInitialGuess(q);
-                        solver.ikin(x,qd);
+                        solver.ikin(xd,qd);
 
                         if (!controlling)
                             gen->init(q.subVector(4,5));
