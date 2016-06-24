@@ -62,7 +62,8 @@ class Controller : public RFModule, public PortReader
     Mutex mutex;
     string orientation_type;
     int verbosity;
-    bool controlling;
+    bool closing;
+    bool controlling;    
     double Ts;
     Vector qd;    
 
@@ -71,6 +72,9 @@ class Controller : public RFModule, public PortReader
     {
         Bottle target,reply;
         target.read(connection);
+
+        if (closing)
+            return true;
 
         if (verbosity>0)
             yInfo("Sending request to solver: %s",target.toString().c_str());
@@ -314,7 +318,7 @@ public:
         solver.setArmParameters(arm);
 
         gen=new minJerkTrajGen(qd,Ts,T);
-        controlling=false;
+        closing=controlling=false;        
 
         return true;
     }
@@ -322,6 +326,8 @@ public:
     /****************************************************************/
     bool close()
     {
+        closing=true;
+
         if (targetPort.isOpen())
             targetPort.close(); 
 
