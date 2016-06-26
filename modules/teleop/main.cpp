@@ -365,8 +365,9 @@ public:
             bool b1=(buttons[1]!=0.0);
 
             reachingHandler(b0,pos,rpy);
-            yInfo("reaching=%s; torso=%s; b0:%d b1:%d",
-                  stateStr[s].c_str(),no_torso?"off":"on",b0,b1);
+            yInfo("reaching=%s; pose=%s; torso=%s; b0:%d b1:%d",
+                  stateStr[s].c_str(),control_pose.c_str(),
+                  no_torso?"off":"on",b0,b1);
         }
         else
             yError("No robot connected!");
