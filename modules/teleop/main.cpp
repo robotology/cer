@@ -186,8 +186,7 @@ public:
         Bottle &bLoad=params.addList();
         Bottle &mode=bLoad.addList();
         mode.addString("mode");
-        mode.addString(no_torso?(control_pose+"+no_torso").c_str():
-                                (control_pose+"+no_heave").c_str());
+        mode.addString(control_pose+(no_torso?"+no_torso":"+no_heave"));
         
         Property &prop=robotTargetPort.prepare(); prop.clear();
         prop.put("parameters",params.get(0));
