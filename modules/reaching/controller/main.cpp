@@ -172,7 +172,17 @@ class Controller : public RFModule, public PortReader
     }
 
     /****************************************************************/
-    void setPositionDirectMode()
+    bool areJointsHealthy()
+    {
+        for (size_t i=0; i<curMode.size(); i++)
+            if ((curMode[i]==VOCAB_CM_HW_FAULT) ||
+                (curMode[i]==VOCAB_CM_IDLE))
+                return false;
+        return true;
+    }
+
+    /****************************************************************/
+    bool setPositionDirectMode()
     {
         for (size_t i=0; i<3; i++)
         {
@@ -209,6 +219,8 @@ class Controller : public RFModule, public PortReader
                 break;
             }
         }
+
+        return true;
     }
 
     /****************************************************************/
@@ -348,7 +360,6 @@ public:
         curMode=posDirectMode;
 
         getCurrentMode();
-        setPositionDirectMode();
         
         ArmParameters arm(arm_type);
         arm.upper_arm.setAllConstraints(false);
@@ -398,8 +409,7 @@ public:
     bool updateModule()
     {
         LockGuard lg(mutex);
-        getCurrentMode();
-        setPositionDirectMode();
+        getCurrentMode();        
 
         Matrix Hee;
         double timeStamp;
@@ -435,16 +445,25 @@ public:
             if (verbosity>1)
                 yInfo("Commanding new set-points: %s",ref.toString(3,3).c_str());
 
-            iposd[0]->setPositions(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&ref[0]);
-            iposd[1]->setPositions(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&ref[3]);
-            iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
-            iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
+            if (areJointsHealthy())
+            {
+                setPositionDirectMode(); 
+                iposd[0]->setPositions(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&ref[0]);
+                iposd[1]->setPositions(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&ref[3]);
+                iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
+                iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
 
-            if (dist(qd-ref))
+                if (dist(qd-ref))
+                {
+                    controlling=false;
+                    if (verbosity>0)
+                        yInfo("Just stopped at: %s",ref.toString(3,3).c_str());
+                }
+            }
+            else
             {
                 controlling=false;
-                if (verbosity>0)
-                    yInfo("Just stopped at: %s",ref.toString(3,3).c_str());
+                yWarning("Detected joints in HW_FAULT and/or IDLE => stopping control");
             }
         }
 

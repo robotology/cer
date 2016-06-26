@@ -270,6 +270,16 @@ class Controller : public RFModule, public PortReader
     }
 
     /****************************************************************/
+    bool areJointsHealthy()
+    {
+        for (size_t i=0; i<curMode.size(); i++)
+            if ((curMode[i]==VOCAB_CM_HW_FAULT) ||
+                (curMode[i]==VOCAB_CM_IDLE))
+                return false;
+        return true;
+    }
+
+    /****************************************************************/
     void setPositionDirectMode()
     {
         for (size_t i=0; i<curMode.size(); i++)
@@ -465,7 +475,6 @@ public:
         qd=q.subVector(4,5);
 
         getCurrentMode();
-        setPositionDirectMode();
 
         if (get_bounds)
             alignJointsBounds();
@@ -526,8 +535,7 @@ public:
     bool updateModule()
     {
         LockGuard lg(mutex);
-        getCurrentMode();
-        setPositionDirectMode();
+        getCurrentMode();        
 
         double timeStamp;
         Vector q=getEncoders(&timeStamp);
@@ -549,13 +557,22 @@ public:
             if (verbosity>1)
                 yInfo("Commanding new set-points: %s",ref.toString(3,3).c_str());
 
-            iposd->setPositions(ref.data());
+            if (areJointsHealthy())
+            {
+                setPositionDirectMode(); 
+                iposd->setPositions(ref.data());
 
-            if (norm(qd-ref)<stop_threshold)
+                if (norm(qd-ref)<stop_threshold)
+                {
+                    controlling=false;
+                    if (verbosity>0)
+                        yInfo("Just stopped at: %s",ref.toString(3,3).c_str());
+                }
+            }
+            else
             {
                 controlling=false;
-                if (verbosity>0)
-                    yInfo("Just stopped at: %s",ref.toString(3,3).c_str());
+                yWarning("Detected joints in HW_FAULT and/or IDLE => stopping control");
             }
         }
 
