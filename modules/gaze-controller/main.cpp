@@ -102,7 +102,7 @@ class Controller : public RFModule, public PortReader
 
         string type=request.check("type",Value("cartesian")).asString();
         Bottle *target=request.find("target").asList();
-        if ((type!="cartesian") || (type!="image"))
+        if ((type!="cartesian") || (type!="angular") || (type!="image"))
             yError("Unrecognized target type \"%s\"!",type.c_str());
         else if (target==NULL)
             yError("Missing \"target\" option!");
@@ -180,6 +180,8 @@ class Controller : public RFModule, public PortReader
                     yError("Provided too few image coordinates!");
             }
         }
+        else
+            yError("Reached a point in the code we shouldn't have reached :(");
 
         if (doControl)
         {
