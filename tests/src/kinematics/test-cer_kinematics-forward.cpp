@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     {
         cout<<"Options:"<<endl;
         cout<<"--kinematics arm|head"<<endl;
-        cout<<"--type left|center|right|depth"<<endl;
+        cout<<"--type "<<types_helper<<endl;
         cout<<"--q \"(0.0 1.0 ... 11.0)\"|\"(0.0 1.0 ... 5.0)\""<<endl;
         return 0;
     }

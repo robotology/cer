@@ -123,10 +123,10 @@ class CER_HEAD : public iKinLimb
 public:
     /****************************************************************/
     CER_HEAD(const string &type_) : iKinLimb(type_)
-    {
+    {        
         transform(type.begin(),type.end(),type.begin(),::tolower);
-        if ((type!="right") && (type!="center") &&
-            (type!="left") && (type!="depth"))
+        set<string> types=HeadParameters::getTypes();
+        if (types.find(type)==types.end())
             type="center";
 
         allocate(type);
