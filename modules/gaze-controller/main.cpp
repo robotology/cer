@@ -115,6 +115,8 @@ class Controller : public RFModule, public PortReader
                     xd[0]=location->get(0).asDouble();
                     xd[1]=location->get(1).asDouble();
                     xd[2]=location->get(2).asDouble();
+
+                    q=getEncoders();
                     doControl=true;
                 }
                 else
@@ -147,6 +149,8 @@ class Controller : public RFModule, public PortReader
 
                         xd=Hee*xc;
                         xd.pop_back();
+
+                        doControl=true;
                     }
                     else
                         yError("Provided too few pixel coordinates!");
@@ -157,9 +161,6 @@ class Controller : public RFModule, public PortReader
         if (doControl)
         {
             LockGuard lg(mutex);
-
-            if (q.length()==0)
-                q=getEncoders(); 
             solver[control_frame].setInitialGuess(q);
             solver[control_frame].ikin(xd,qd);
 
