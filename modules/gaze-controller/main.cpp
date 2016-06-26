@@ -129,7 +129,7 @@ class Controller : public RFModule, public PortReader
                 if ((it==controlFrames.end()) || (image=="center"))
                     yError("Unrecognized image type \"%s\"!",image.c_str());
                 else if (intrinsincs.find(image)==intrinsincs.end())
-                    yError("Frame \"%s\" does not have intrinsics configured!",image.c_str());
+                    yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
                 else 
                 {                    
                     if (location->size()>=3)
