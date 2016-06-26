@@ -435,8 +435,8 @@ public:
             alignJointsBounds();
 
         ResourceFinder rf_cameras;
-        rf_cameras.setDefaultContext("cameraCalibration");
-        rf_cameras.setDefaultConfigFile("cer.ini");
+        rf_cameras.setDefaultContext(rf.check("camera-context",Value("cameraCalibration")).asString().c_str());
+        rf_cameras.setDefaultConfigFile(rf.check("camera-from",Value("cer.ini")).asString().c_str());
         rf_cameras.configure(0,NULL);
         getIntrinsics(rf_cameras);
 
