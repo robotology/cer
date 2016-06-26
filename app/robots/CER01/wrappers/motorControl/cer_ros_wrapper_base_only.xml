@@ -22,7 +22,7 @@
       <action phase="startup" level="5" type="attach">
         <paramlist name="networks">
 
-         <elem name="base">            cer_mobile_base_mc </elem>
+         <elem name="base">            cer_mobile_base_mc_wrapper </elem>
    
          </paramlist>
       </action>

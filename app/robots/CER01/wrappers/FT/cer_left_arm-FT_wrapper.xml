@@ -17,7 +17,7 @@
          <param name ="useROS"> true </param>
          <param name ="ROS_nodeName"> /cer-left_arm_FT </param>
          <param name ="ROS_topicName"> /left_arm_FT </param>
-         <param name ="frame_id"> /l_clavicle  </param>
+         <param name ="frame_id"> /l_clavicle_link  </param>
          <param name ="ROS_msgType"> geometry_msgs/WrenchedStamped </param>
       </group>
 

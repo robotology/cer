@@ -6,8 +6,7 @@
 
       <param name="period"> 10 </param>
       <param name="name">   /cer/all_joints </param>
-    <!--  <param name="joints"> 24 </param>-->
-      <param name="joints"> 22 </param>
+      <param name="joints"> 24 </param>
 
       
       <paramlist name="networks">
@@ -19,6 +18,7 @@
         <elem name="left_arm">        14 21  0  7 </elem>  <!-- 8 -->
 <!--        <elem name="right_hand">  22 23  0  1 </elem>  <!-- 2 -->-->
 <!--        <elem name="left_hand">   23 24  0  1 </elem>  <!-- 2 -->-->
+        <elem name="base">            22 23  0  1 </elem>  <!-- 2 -->
 
       </paramlist>
 
@@ -33,6 +33,7 @@
    
          <elem name="head">        cer_head_mc_wrapper    </elem>     
          <elem name="torso">       cer_torso_mc_wrapper   </elem>
+         <elem name="base">            cer_mobile_base_mc_wrapper </elem>
 
          <elem name="right_arm">       cer_right_arm_mc_wrapper </elem>
          <!-- <elem name="right_hand">      cer_right_hand_mc </elem>-->
