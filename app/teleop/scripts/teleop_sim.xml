@@ -12,7 +12,7 @@
 
         <module>
                 <name>cer_teleop</name>
-                <parameters>--arm-type left</parameters>
+                <parameters>--arm-type left --enable_gazebo</parameters>
                 <prefix>sim</prefix>
                 <node>windows</node>
         </module>
