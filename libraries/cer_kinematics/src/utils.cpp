@@ -230,7 +230,7 @@ bool SolverParameters::setMode(const string &mode)
             if (submode=="full_pose")
             {
                 full_pose=true;
-                tol=0.1;
+                tol=1e-2;
                 constr_tol=1e-5;
             }
             else if (submode=="xyz_pose")

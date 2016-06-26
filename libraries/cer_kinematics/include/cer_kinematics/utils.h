@@ -281,7 +281,7 @@ struct SolverParameters
                      const double weight_postural_torso_yaw_=0.0,
                      const double weight_postural_upper_arm_=0.0,
                      const double weight_postural_lower_arm_=0.0,
-                     const double tol_=0.1, const double constr_tol_=1e-5,
+                     const double tol_=1e-2, const double constr_tol_=1e-5,
                      const int max_iter_=std::numeric_limits<int>::max(),
                      const double max_cpu_time_=1.0,
                      const bool use_central_difference_=false,
