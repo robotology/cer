@@ -12,20 +12,21 @@
 
         <module>
                 <name>cer_teleop</name>
+                <parameters>--part left</parameters>
                 <prefix>sim</prefix>
                 <node>windows</node>
         </module>
 
         <module>
                 <name>cer_reaching-solver</name>
-                <parameters>--robot SIM_CER_ROBOT</parameters>
+                <parameters>--robot SIM_CER_ROBOT --verbosity 1</parameters>
                 <prefix>sim</prefix>
                 <node>linux</node>
         </module>
 
         <module>
                 <name>cer_reaching-controller</name>
-                <parameters>--robot SIM_CER_ROBOT</parameters>
+                <parameters>--robot SIM_CER_ROBOT --verbosity 1</parameters>
                 <prefix>sim</prefix>
                 <node>linux</node>
         </module>

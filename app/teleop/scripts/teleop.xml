@@ -12,18 +12,19 @@
 
         <module>
                 <name>cer_teleop</name>
+                <parameters>--part left</parameters>
                 <node>windows</node>
         </module>
 
         <module>
                 <name>cer_reaching-solver</name>
-                <parameters>--robot cer</parameters>
+                <parameters>--robot cer --verbosity 1</parameters>
                 <node>linux</node>
         </module>
 
         <module>
                 <name>cer_reaching-controller</name>
-                <parameters>--robot cer</parameters>
+                <parameters>--robot cer --verbosity 1</parameters>
                 <node>linux</node>
         </module>
 
