@@ -45,6 +45,7 @@ protected:
 
     string arm_type;
     string control_pose;
+    bool torsoCannotChange;
 
     enum {
         idle,
@@ -72,6 +73,7 @@ public:
         string geomagic=rf.check("geomagic",Value("geomagic")).asString();
         arm_type=rf.check("arm-type",Value("right")).asString();
         control_pose=rf.check("control-pose",Value("full_pose")).asString();
+        torsoCannotChange=rf.check("no-torso");
 
         transform(arm_type.begin(),arm_type.end(),arm_type.begin(),::tolower);
         if ((arm_type!="left") && (arm_type!="right"))
@@ -322,7 +324,10 @@ public:
         else
         {
             if (s==triggered)
-                no_torso=!no_torso;
+            {
+                if (!torsoCannotChange)
+                    no_torso=!no_torso; 
+            }
 
             if (c!=0)
             {
