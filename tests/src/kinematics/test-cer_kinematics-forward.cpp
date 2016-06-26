@@ -16,6 +16,7 @@
 */
 
 #include <string>
+#include <set>
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
