@@ -16,7 +16,8 @@
 #include <yarp/dev/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
-
+#include <yarp/os/Publisher.h>
+#include "ros_messages/visualization_msgs_Marker.h"
 #include <hapticdevice/IHapticDevice.h>
 
 using namespace std;
@@ -38,6 +39,10 @@ protected:
     BufferedPort<Property> robotTargetPort;
     BufferedPort<Vector>   robotStatePort;
     RpcClient              robotCmdPort;
+    bool                   enable_rviz;
+    bool                   enable_gazebo;
+    yarp::os::Publisher    <visualization_msgs_Marker>  rosPublisherPort;
+    yarp::os::Node*        rosNode;
 
     string arm_type;
 
@@ -60,6 +65,11 @@ public:
     /**********************************************************/
     bool configure(ResourceFinder &rf)
     {
+        igeo = 0;
+        rosNode = 0;
+        enable_rviz = rf.check("enable_rviz");
+        enable_gazebo = rf.check("enable_gazebo");
+
         string name=rf.check("name",Value("cer_teleop")).asString();
         string geomagic=rf.check("geomagic",Value("geomagic")).asString();
         arm_type=rf.check("arm-type",Value("right")).asString();
@@ -98,6 +108,18 @@ public:
         robotStatePort.open(("/"+name+"/state:i").c_str());
         robotCmdPort.open(("/"+name+"/cmd:rpc").c_str());
 
+        if (enable_rviz)
+        {
+            if (rosNode == 0)
+            {
+                rosNode = new yarp::os::Node("/cer_teleop");
+            }
+            if (!rosPublisherPort.topic("/cer_teleop_marker"))
+            {
+                yError() << " Unable to publish data on " << "/cer_teleop_marker" << " topic, check your yarp-ROS network configuration\n";
+                return false;
+            }
+        }
         return true;
     }
 
@@ -111,6 +133,11 @@ public:
         robotTargetPort.close();
         robotStatePort.close();
         robotCmdPort.close();
+        if (rosNode)
+        {
+            delete rosNode;
+            rosNode = 0;
+        }
 
         return true;
     }
@@ -157,6 +184,48 @@ public:
 
         yInfo("going to (%s) (%s)",
               xd.toString(3,3).c_str(),od_.toString(3,3).c_str());
+    }
+
+    /**********************************************************/
+    void updateRVIZ(const Vector &xd, const Vector &od)
+    {
+        double yarpTimeStamp = yarp::os::Time::now();
+        uint64_t time;
+        uint64_t nsec_part;
+        uint64_t sec_part;
+        TickTime ret;
+        time = (uint64_t)(yarpTimeStamp * 1000000000UL);
+        nsec_part = (time % 1000000000UL);
+        sec_part = (time / 1000000000UL);
+        if (sec_part > std::numeric_limits<unsigned int>::max())
+        {
+            yWarning() << "Timestamp exceeded the 64 bit representation, resetting it to 0";
+            sec_part = 0;
+        }
+
+        visualization_msgs_Marker& marker = rosPublisherPort.prepare();
+        marker.header.frame_id = "mobile_base_body_link";
+        marker.header.stamp.sec = (yarp::os::NetUint32) sec_part;
+        marker.header.stamp.nsec = (yarp::os::NetUint32) nsec_part;
+        marker.ns = "cer-teleop_namespace";
+        marker.id = 0;
+        marker.type = visualization_msgs_Marker::SPHERE;
+        marker.action = visualization_msgs_Marker::ADD;
+        marker.pose.position.x = xd[0];
+        marker.pose.position.y = xd[1];
+        marker.pose.position.z = xd[2];
+        marker.pose.orientation.x = 0.0;
+        marker.pose.orientation.y = 0.0;
+        marker.pose.orientation.z = 0.0;
+        marker.pose.orientation.w = 1.0;
+        marker.scale.x = 1;
+        marker.scale.y = 0.1;
+        marker.scale.z = 0.1;
+        marker.color.a = 1.0;
+        marker.color.r = 0.0;
+        marker.color.g = 1.0;
+        marker.color.b = 0.0;
+        rosPublisherPort.write();
     }
 
     /**********************************************************/
@@ -235,7 +304,8 @@ public:
 
                 Vector od=dcm2axis(Rd);
                 goToPose(xd,od);
-                updateGazebo(xd,od);
+                if (enable_gazebo) updateGazebo(xd, od);
+                if (enable_rviz) updateRVIZ(xd, od);
             }
         }
         else
@@ -246,7 +316,8 @@ public:
             if (c!=0)
             {
                 stopControl();
-                updateGazebo(cur_x,cur_o);
+                if (enable_gazebo) updateGazebo(cur_x, cur_o);
+                if (enable_rviz) updateRVIZ(cur_x, cur_o);
             }
 
             s=idle;
