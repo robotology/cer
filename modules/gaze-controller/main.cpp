@@ -203,12 +203,12 @@ class Controller : public RFModule, public PortReader
     {
         for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
         {
-            const string &frame=*it;
-            if (frame!="center")
+            const string &camera=*it;
+            if (camera!="center")
             {
-                yInfo("#### Retrieving intrinsics for \"%s\" control frame",frame.c_str());
+                yInfo("#### Retrieving intrinsics for \"%s\" camera",camera.c_str());
 
-                string groupName=frame;
+                string groupName=camera;
                 transform(groupName.begin(),groupName.end(),groupName.begin(),::toupper);
                 groupName="CAMERA_CALIBRATION_"+groupName;
 
@@ -226,14 +226,13 @@ class Controller : public RFModule, public PortReader
                         K(1,2)=group.find("cy").asDouble();
                         
                         yInfo("%s",K.toString(3,3).c_str());
-                        intrinsincs[frame]=pinv(K.transposed()).transposed(); 
+                        intrinsincs[camera]=pinv(K.transposed()).transposed(); 
                         ok=true;
                     }
                 }
 
                 if (!ok)
-                    yWarning("Intrinsics for \"%s\" control frame not configured!",
-                             frame.c_str());
+                    yWarning("Intrinsics for \"%s\" camera not configured!",camera.c_str());
             }
         }
     }
