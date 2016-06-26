@@ -270,7 +270,8 @@ public:
                 cur_x=pose->subVector(0,2);
                 cur_o=pose->subVector(3,5);
                 double n=norm(cur_o);
-                cur_o/=n; cur_o.push_back(n);
+                cur_o/=(n>0.0?n:1.0);
+                cur_o.push_back(n);
             }
 
             Vector buttons,pos,rpy;
