@@ -326,8 +326,9 @@ class Controller : public RFModule, public PortReader
     }
 
     /****************************************************************/
-    void addState(const Vector &q, Property &state)
+    void fillState(const Vector &q, Property &state)
     {
+        state.clear();
         for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
         {
             const string &frame=*it;
@@ -495,17 +496,13 @@ public:
 
         double timeStamp;
         Vector q=getEncoders(&timeStamp);
-
-        Property &state=statePort.prepare();
-        state.clear();
-        
-        addState(q,state);
      
         if (timeStamp>=0.0)
             txInfo.update(timeStamp);
         else
             txInfo.update();
 
+        fillState(q,statePort.prepare());
         statePort.setEnvelope(txInfo);
         statePort.write();
 
