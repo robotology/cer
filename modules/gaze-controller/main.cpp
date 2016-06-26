@@ -68,7 +68,7 @@ class Controller : public RFModule, public PortReader
     int verbosity;
     bool closing;
     bool controlling;
-    set<string> controlFrames;
+    set<string> avFrames;
     string control_frame;
     double stop_threshold;
     double Ts;
@@ -89,8 +89,8 @@ class Controller : public RFModule, public PortReader
         if (request.check("control"))
         {
             string control_frame_=request.find("control").asString();
-            const set<string>::iterator it=controlFrames.find(control_frame_);
-            if (it==controlFrames.end())
+            const set<string>::iterator it=avFrames.find(control_frame_);
+            if (it==avFrames.end())
                 yError("Unrecognized control frame type \"%s\"!",control_frame_.c_str());                
             else
                 control_frame=control_frame_;
@@ -123,8 +123,8 @@ class Controller : public RFModule, public PortReader
         else if (type=="image")
         {
             string image=request.check("image",Value("left")).asString();
-            const set<string>::iterator it=controlFrames.find(image);
-            if ((it==controlFrames.end()) || (image=="center"))
+            const set<string>::iterator it=avFrames.find(image);
+            if ((it==avFrames.end()) || (image=="center"))
                 yError("Unrecognized image type \"%s\"!",image.c_str());
             else if (intrinsincs.find(image)==intrinsincs.end())
                 yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
@@ -175,8 +175,7 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     void getIntrinsics(ResourceFinder &rf)
     {
-        for (set<string>::iterator it=controlFrames.begin();
-             it!=controlFrames.end(); it++)
+        for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
         {
             const string &frame=*it;
             if (frame!="center")
@@ -329,8 +328,7 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     void addState(const Vector &q, Property &state)
     {
-        for (set<string>::iterator it=controlFrames.begin();
-             it!=controlFrames.end(); it++)
+        for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
         {
             const string &frame=*it;
 
@@ -351,9 +349,8 @@ public:
     /****************************************************************/
     Controller() : gen(NULL)
     {
-        controlFrames=HeadParameters::getTypes();
-        for (set<string>::iterator it=controlFrames.begin();
-             it!=controlFrames.end(); it++)
+        avFrames=HeadParameters::getTypes();
+        for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
         {
             const string &frame=*it;
             HeadParameters p(frame);

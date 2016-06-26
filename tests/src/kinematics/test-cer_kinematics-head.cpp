@@ -37,11 +37,10 @@ int main(int argc, char *argv[])
     ResourceFinder rf;
     rf.configure(argc,argv);
 
-    set<string> controlFrames=HeadParameters::getTypes();
+    set<string> avFrames=HeadParameters::getTypes();
 
     string types_helper("");
-    for (set<string>::iterator it=controlFrames.begin();
-         it!=controlFrames.end(); it++)
+    for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
         types_helper+=*it+"|";
     types_helper.erase(types_helper.end()-1);
 
@@ -58,7 +57,7 @@ int main(int argc, char *argv[])
     string type=rf.check("type",Value("center")).asString();
     int verbosity=rf.check("verbosity",Value(0)).asInt();
 
-    if (controlFrames.find(type)==controlFrames.end())
+    if (avFrames.find(type)==avFrames.end())
     {
         cerr<<"unrecognized type \""<<type<<"\""<<endl;
         return 1;
