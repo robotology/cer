@@ -7,8 +7,9 @@
  *
  */
 
-#include <cmath>
 #include <string>
+#include <cmath>
+#include <limits>
 #include <algorithm>
 #include <map>
 
@@ -33,6 +34,9 @@ using namespace hapticdevice;
 class TeleOp: public RFModule
 {
 protected:
+    Publisher<visualization_msgs_Marker> rosPublisherPort;
+    Node *rosNode;
+
     PolyDriver     drvGeomagic;
     IHapticDevice *igeo;
     
@@ -40,11 +44,11 @@ protected:
     BufferedPort<Property> robotTargetPort;
     BufferedPort<Vector>   robotStatePort;
     RpcClient              robotCmdPort;
-    yarp::os::Publisher    <visualization_msgs_Marker>  rosPublisherPort;
-    yarp::os::Node*        rosNode;
 
     string arm_type;
     string control_pose;
+    double torso_heave;
+    double wrist_heave;
     bool torsoCannotChange;
 
     enum {
@@ -66,13 +70,11 @@ public:
     /**********************************************************/
     bool configure(ResourceFinder &rf)
     {
-        igeo = 0;
-        rosNode = 0;
-
-        string name=rf.check("name",Value("cer_teleop")).asString();
         string geomagic=rf.check("geomagic",Value("geomagic")).asString();
         arm_type=rf.check("arm-type",Value("right")).asString();
         control_pose=rf.check("control-pose",Value("full_pose")).asString();
+        torso_heave=rf.check("torso-heave",Value(0.1)).asDouble();
+        wrist_heave=rf.check("wrist-heave",Value(0.05)).asDouble();
         torsoCannotChange=rf.check("no-torso");
 
         transform(arm_type.begin(),arm_type.end(),arm_type.begin(),::tolower);
@@ -89,11 +91,22 @@ public:
             control_pose="full_pose";
         }
 
+        rosNode=new yarp::os::Node("/cer_teleop");
+        if (!rosPublisherPort.topic("/cer_teleop_marker"))
+        {
+            yError("Unable to publish data on /cer_teleop_marker topic");
+            yWarning("Check your yarp-ROS network configuration");
+            return false;
+        }
+
         Property optGeo("(device hapticdeviceclient)");
         optGeo.put("remote",("/"+geomagic).c_str());
-        optGeo.put("local",("/"+name+"/geomagic").c_str());
+        optGeo.put("local","/cer_teleop/geomagic");
         if (!drvGeomagic.open(optGeo))
+        {
+            delete rosNode;
             return false;
+        }
         drvGeomagic.view(igeo);
 
         s=idle; c=0;
@@ -118,21 +131,11 @@ public:
         x0.resize(3,0.0);
         o0.resize(4,0.0);
 
-        gazeboPort.open(("/"+name+"/gazebo:o").c_str());
-        robotTargetPort.open(("/"+name+"/target:o").c_str());
-        robotStatePort.open(("/"+name+"/state:i").c_str());
-        robotCmdPort.open(("/"+name+"/cmd:rpc").c_str());
+        gazeboPort.open("/cer_teleop/gazebo:o");
+        robotTargetPort.open("/cer_teleop/target:o");
+        robotStatePort.open("/cer_teleop/state:i");
+        robotCmdPort.open("/cer_teleop/cmd:rpc");
 
-        if (rosNode == 0)
-        {
-            rosNode = new yarp::os::Node("/cer_teleop");
-        }
-        if (!rosPublisherPort.topic("/cer_teleop_marker"))
-        {
-            yError("Unable to publish data on /cer_teleop_marker topic");
-            yError("Check your yarp-ROS network configuration");
-            return false;
-        }
         return true;
     }
 
@@ -146,12 +149,8 @@ public:
         robotTargetPort.close();
         robotStatePort.close();
         robotCmdPort.close();
-        if (rosNode)
-        {
-            delete rosNode;
-            rosNode = 0;
-        }
 
+        delete rosNode;
         return true;
     }
 
@@ -176,8 +175,8 @@ public:
         od_*=od_[3]; od_.pop_back();
         
         Vector payLoad;
-        payLoad.push_back(0.1);
-        payLoad.push_back(0.05);
+        payLoad.push_back(torso_heave);
+        payLoad.push_back(wrist_heave);
         payLoad=cat(payLoad,xd);
         payLoad=cat(payLoad,od_);
 

@@ -6,7 +6,9 @@ find_package(hapticdevice QUIET)
 if(hapticdevice_FOUND)
     project(cer_teleop)
     message(STATUS "hapticdevice library found => ${PROJECT_NAME} will be built")
-    include_directories(${YARP_INCLUDE_DIRS} ${hapticdevice_INCLUDE_DIRS} ros_messages)
+    include_directories(${YARP_INCLUDE_DIRS}
+                        ${hapticdevice_INCLUDE_DIRS}
+                        ${PROJECT_SOURCE_DIR}/ros_messages)
     add_definitions(-D_USE_MATH_DEFINES)
     add_executable(${PROJECT_NAME} main.cpp)
     target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
