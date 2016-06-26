@@ -132,7 +132,7 @@ class Controller : public RFModule, public PortReader
 
                 Matrix Hee;
                 Vector q0(6,0.0);
-                solver.begin()->second.fkin(q0,Hee);
+                solver[control_frame].fkin(q0,Hee);
 
                 Vector xc(4,0.0);
                 xc[2]=xc[3]=1.0;
@@ -353,7 +353,6 @@ class Controller : public RFModule, public PortReader
     void fillState(const Vector &q, Property &state)
     {
         state.clear();
-        bool doAng=true;
         for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
         {
             const string &frame=*it;
@@ -369,7 +368,7 @@ class Controller : public RFModule, public PortReader
             Bottle val; val.addList().read(pose);
             state.put(frame,val.get(0));
 
-            if (doAng)
+            if (frame==control_frame)
             {
                 Vector ang(2);
                 Vector z=Hee.getCol(3).subVector(0,2);                
@@ -378,7 +377,6 @@ class Controller : public RFModule, public PortReader
 
                 Bottle val; val.addList().read(ang);
                 state.put("angular",val.get(0));
-                doAng=false;
             }
         }
     }
