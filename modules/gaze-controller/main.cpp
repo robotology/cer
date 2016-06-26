@@ -102,7 +102,7 @@ class Controller : public RFModule, public PortReader
 
         string type=request.check("type",Value("cartesian")).asString();
         Bottle *target=request.find("target").asList();
-        if ((type!="cartesian") || (type!="pixel"))
+        if ((type!="cartesian") || (type!="image"))
             yError("Unrecognized target type \"%s\"!",type.c_str());
         else if (target==NULL)
             yError("Missing \"target\" option!");
@@ -120,7 +120,7 @@ class Controller : public RFModule, public PortReader
             else
                 yError("Provided too few Cartesian coordinates!");
         }
-        else if (type=="pixel")
+        else if (type=="image")
         {
             string image=request.check("image",Value("left")).asString();
             const set<string>::iterator it=controlFrames.find(image);
@@ -151,7 +151,7 @@ class Controller : public RFModule, public PortReader
                     doControl=true;
                 }
                 else
-                    yError("Provided too few pixel coordinates!");
+                    yError("Provided too few image coordinates!");
             }
         }
 
