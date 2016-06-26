@@ -25,6 +25,7 @@
 #include <yarp/dev/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
+#include <yarp/math/SVD.h>
 
 #include <iCub/ctrl/minJerkCtrl.h>
 #include <iCub/iKin/iKinFwd.h>
@@ -55,6 +56,7 @@ class Controller : public RFModule, public PortReader
     VectorOf<int> curMode;
 
     map<string,HeadSolver> solver;
+    map<string,Matrix> intrinsincs;
     minJerkTrajGen* gen;
     
     BufferedPort<Property> statePort;
@@ -94,9 +96,9 @@ class Controller : public RFModule, public PortReader
                 control_frame=control_frame_;
         }
 
-        bool doControl=false;
-        bool latch_controlling=controlling;
+        bool doControl=false;        
         Vector xd(3);
+        Vector q;
 
         if (request.check("target"))
         {
@@ -122,15 +124,29 @@ class Controller : public RFModule, public PortReader
             {
                 string image=request.check("image",Value("left")).asString();
                 const set<string>::iterator it=controlFrames.find(image);
-                if (it==controlFrames.end())
+                if ((it==controlFrames.end()) || (image=="center"))
                     yError("Unrecognized image type \"%s\"!",image.c_str());
-                else
-                {
-                    Vector pixel(2);
-                    if (location->size()>=2)
+                else if (intrinsincs.find(image)==intrinsincs.end())
+                    yError("Frame \"%s\" does not have intrinsics configured!",image.c_str());
+                else 
+                {                    
+                    if (location->size()>=3)
                     {
-                        pixel[0]=location->get(0).asDouble();
-                        pixel[1]=location->get(1).asDouble();
+                        Vector p(3);
+                        p[0]=location->get(0).asDouble();
+                        p[1]=location->get(1).asDouble();
+                        p[2]=location->get(2).asDouble();
+                        p[0]*=p[2]; p[1]*=p[2];
+
+                        Matrix Hee;
+                        q=getEncoders();
+                        solver[image].fkin(q,Hee);
+
+                        Vector xc=intrinsincs[image]*p;
+                        xc[3]=1.0;
+
+                        xd=Hee*xc;
+                        xd.pop_back();
                     }
                     else
                         yError("Provided too few pixel coordinates!");
@@ -141,24 +157,62 @@ class Controller : public RFModule, public PortReader
         if (doControl)
         {
             LockGuard lg(mutex);
-            // process only if we didn't receive
-            // a stop request in the meanwhile
-            if (controlling==latch_controlling)
-            {
-                Vector q=getEncoders();
-                solver[control_frame].setInitialGuess(q);
-                solver[control_frame].ikin(xd,qd);
 
-                if (!controlling)
-                    gen->init(q.subVector(4,5));
-                
-                controlling=true;
-                if (verbosity>0)
-                    yInfo("Going to: %s",qd.toString(3,3).c_str());
-            }
+            if (q.length()==0)
+                q=getEncoders(); 
+            solver[control_frame].setInitialGuess(q);
+            solver[control_frame].ikin(xd,qd);
+
+            if (!controlling)
+                gen->init(q.subVector(4,5));
+            
+            controlling=true;
+            if (verbosity>0)
+                yInfo("Going to: %s",qd.toString(3,3).c_str());
         }
 
         return true;
+    }
+
+    /****************************************************************/
+    void getIntrinsics(ResourceFinder &rf)
+    {
+        for (set<string>::iterator it=controlFrames.begin();
+             it!=controlFrames.end(); it++)
+        {
+            const string &frame=*it;
+            if (frame!="center")
+            {
+                yInfo("#### Retrieving intrinsics for \"%s\" control frame",frame.c_str());
+
+                string groupName=frame;
+                transform(groupName.begin(),groupName.end(),groupName.begin(),::toupper);
+                groupName="CAMERA_CALIBRATION_"+groupName;
+
+                bool ok=false;
+                Bottle &group=rf.findGroup(groupName);
+                if (!group.isNull())
+                {
+                    if (group.check("fx") && group.check("fy") &&
+                        group.check("cx") && group.check("cy"))
+                    {
+                        Matrix K=eye(3,4);
+                        K(0,0)=group.find("fx").asDouble();
+                        K(1,1)=group.find("fy").asDouble();
+                        K(0,2)=group.find("cx").asDouble();
+                        K(1,2)=group.find("cy").asDouble();
+                        
+                        yInfo("%s",K.toString(3,3).c_str());
+                        intrinsincs[frame]=pinv(K.transposed()).transposed(); 
+                        ok=true;
+                    }
+                }
+
+                if (!ok)
+                    yWarning("Intrinsics for \"%s\" control frame not configured!",
+                             frame.c_str());
+            }
+        }
     }
 
     /****************************************************************/
@@ -383,6 +437,12 @@ public:
 
         if (get_bounds)
             alignJointsBounds();
+
+        ResourceFinder rf_cameras;
+        rf_cameras.setDefaultContext("cameraCalibration");
+        rf_cameras.setDefaultConfigFile("cer.ini");
+        rf_cameras.configure(0,NULL);
+        getIntrinsics(rf_cameras);
 
         gen=new minJerkTrajGen(qd,Ts,T);
         closing=controlling=false;
