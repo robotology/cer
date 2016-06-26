@@ -120,6 +120,32 @@ class Controller : public RFModule, public PortReader
             else
                 yError("Provided too few Cartesian coordinates!");
         }
+        else if (type=="angular")
+        {
+            if (target->size()>=2)
+            {
+                Vector azi(4,0.0); azi[2]=1.0;
+                azi[3]=CTRL_DEG2RAD*target->get(0).asDouble();
+
+                Vector ele(4,0.0); ele[1]=-1.0;
+                ele[3]=CTRL_DEG2RAD*target->get(1).asDouble();
+
+                Matrix Hee;
+                Vector q0(6,0.0);
+                solver.begin()->second.fkin(q0,Hee);
+
+                Vector xc(4,0.0);
+                xc[2]=xc[3]=1.0;
+
+                xd=axis2dcm(azi)*axis2dcm(ele)*Hee*xc;
+                xd.pop_back();
+
+                q=getEncoders();
+                doControl=true;
+            }
+            else
+                yError("Provided too few angular coordinates!");
+        }
         else if (type=="image")
         {
             string image=request.check("image",Value("left")).asString();
@@ -329,6 +355,7 @@ class Controller : public RFModule, public PortReader
     void fillState(const Vector &q, Property &state)
     {
         state.clear();
+        bool doAng=true;
         for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
         {
             const string &frame=*it;
@@ -343,6 +370,18 @@ class Controller : public RFModule, public PortReader
 
             Bottle val; val.addList().read(pose);
             state.put(frame,val.get(0));
+
+            if (doAng)
+            {
+                Vector ang(2);
+                Vector z=Hee.getCol(3).subVector(0,2);                
+                ang[0]=CTRL_RAD2DEG*atan2(z[1],z[0]);
+                ang[1]=CTRL_RAD2DEG*atan2(z[2],z[0]);
+
+                Bottle val; val.addList().read(ang);
+                state.put("angular",val.get(0));
+                doAng=false;
+            }
         }
     }
 
