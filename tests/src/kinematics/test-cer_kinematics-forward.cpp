@@ -105,7 +105,12 @@ int main(int argc, char *argv[])
     Matrix H;
     if (solver->fkin(q,H))
     {
-        cout<<kinematics<<"="<<type<<endl;
+        cout<<kinematics<<"=";
+        if (kinematics=="arm")
+            cout<<dynamic_cast<ArmSolver*>(solver)->getArmParameters().upper_arm.getType();
+        else
+            cout<<dynamic_cast<HeadSolver*>(solver)->getHeadParameters().head.getType();
+        cout<<endl;
         cout<<"q=("<<q.toString(5,5)<<")"<<endl;
         cout<<"H="<<H.toString(5,5)<<endl;
         cout<<endl;

@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 
     Vector q;
     solver.ikin(xd,q);
-    cout<<"head="<<type<<endl;
+    cout<<"head="<<solver.getHeadParameters().head.getType()<<endl; 
     cout<<"q0=("<<q0.toString(3,3)<<")"<<endl;
     cout<<"xd=("<<xd.toString(3,3)<<")"<<endl;
     cout<<"q=("<<q.toString(3,3)<<")"<<endl;
