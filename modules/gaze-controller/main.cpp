@@ -16,6 +16,8 @@
 */
 
 #include <string>
+#include <set>
+#include <map>
 #include <cmath>
 #include <algorithm>
 
@@ -52,7 +54,7 @@ class Controller : public RFModule, public PortReader
     VectorOf<int> posDirectMode;
     VectorOf<int> curMode;
 
-    HeadSolver solver;
+    map<string,HeadSolver> solver;
     minJerkTrajGen* gen;
     
     BufferedPort<Property> statePort;
@@ -64,6 +66,8 @@ class Controller : public RFModule, public PortReader
     int verbosity;
     bool closing;
     bool controlling;
+    set<string> controlFrames;
+    string control_frame;
     double stop_threshold;
     double Ts;
     Vector qd;    
@@ -71,65 +75,70 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     bool read(ConnectionReader &connection)
     {
-        Bottle target;
-        target.read(connection);
+        Property request;
+        request.read(connection);
 
         if (closing)
             return true;
 
         if (verbosity>0)
-            yInfo("Received target request: %s",target.toString().c_str());
+            yInfo("Received target request: %s",request.toString().c_str());
 
-        bool ok=false;
-        bool latch_controlling=controlling;
-        if (target.size()>1)
+        if (request.check("control"))
         {
-            int target_type=target.get(0).asVocab();
-            Bottle *target_loc=target.get(1).asList();
-            if (target_loc!=NULL)
+            string control_frame_=request.find("control").asString();
+            const set<string>::iterator it=controlFrames.find(control_frame_);
+            if (it!=controlFrames.end())
+                control_frame=control_frame_;
+            else
+                yError("Unrecognized control frame type \"%s\"!",control_frame_.c_str());
+        }
+
+        bool doControl=false;
+        bool latch_controlling=controlling;
+        Vector xd(3);
+
+        if (request.check("target"))
+        {
+            string type=request.check("type",Value("cartesian")).asString();
+            Bottle *location=request.find("location").asList();
+            if ((type!="cartesian") || (type!="image"))
+                yError("Unrecognized target type \"%s\"!",type.c_str());
+            else if (location==NULL)
+                yError("Missing \"location\"!");
+            else if (type=="cartesian")
             {
-                string frame;
-                Vector xd(3);
-
-                if (target_type==Vocab::encode("cartesian"))
+                if (location->size()>=3)
                 {
-                    if (target_loc->size()>=4)
-                    {
-                        frame=target_loc->get(0).asString();
-                        xd[0]=target_loc->get(1).asDouble();
-                        xd[1]=target_loc->get(2).asDouble();
-                        xd[2]=target_loc->get(3).asDouble();
-                        ok=true;
-                    }
+                    xd[0]=location->get(0).asDouble();
+                    xd[1]=location->get(1).asDouble();
+                    xd[2]=location->get(2).asDouble();
+                    doControl=true;
                 }
-
-                if (ok)
-                {
-                    LockGuard lg(mutex);
-                    // process only if we didn't receive
-                    // a stop request in the meanwhile
-                    if (controlling==latch_controlling)
-                    {
-                        HeadParameters p(frame);
-                        solver.setHeadParameters(p);
-
-                        Vector q=getEncoders();
-                        solver.setInitialGuess(q);
-                        solver.ikin(xd,qd);
-
-                        if (!controlling)
-                            gen->init(q.subVector(4,5));
-                        
-                        controlling=true;
-                        if (verbosity>0)
-                            yInfo("Going to: %s",qd.toString(3,3).c_str());
-                    }
-                }
+                else
+                    yError("Provided too few Cartesian coordinates!");
             }
         }
 
-        if (!ok)
-            yError("Malformed target type!"); 
+        if (doControl)
+        {
+            LockGuard lg(mutex);
+            // process only if we didn't receive
+            // a stop request in the meanwhile
+            if (controlling==latch_controlling)
+            {
+                Vector q=getEncoders();
+                solver[control_frame].setInitialGuess(q);
+                solver[control_frame].ikin(xd,qd);
+
+                if (!controlling)
+                    gen->init(q.subVector(4,5));
+                
+                controlling=true;
+                if (verbosity>0)
+                    yInfo("Going to: %s",qd.toString(3,3).c_str());
+            }
+        }
 
         return true;
     }
@@ -207,59 +216,79 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     void alignJointsBounds()
     {
-        HeadParameters p=solver.getHeadParameters();
-        iKinChain &chain=*p.head.asChain();
-        Matrix lim;
-        Value part;
-
-        getBounds(drivers[1],lim);
-        p.torso.l_min=lim(0,0);
-        p.torso.l_max=lim(0,1);
-        p.torso.alpha_max=fabs(lim(1,1));
-
-        chain[0].setMin((M_PI/180.0)*lim(3,0));
-        chain[0].setMax((M_PI/180.0)*lim(3,1));
-
-        part=drivers[1].getValue("remote");
-        yInfo("limits of %s part: heave=[%g,%g] [m], [pitch,roll]=[%g,%g] [deg], yaw=[%g,%g] [deg]",
-              part.asString().c_str(),p.torso.l_min,p.torso.l_max,-p.torso.alpha_max,p.torso.alpha_max,lim(3,0),lim(3,1));
-
-        getBounds(drivers[2],lim);
-        for (int i=0; i<2; i++)
+        for (map<string,HeadSolver>::iterator it=solver.begin();
+             it!=solver.end(); it++)
         {
-            chain[1+i].setMin((M_PI/180.0)*lim(i,0));
-            chain[1+i].setMax((M_PI/180.0)*lim(i,1));
+            HeadSolver &s=it->second;
+            yInfo("##### control frame \"%s\"",it->first);
 
-            part=drivers[2].getValue("remote");
-            yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                  part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
-                  (180.0/M_PI)*chain[1+i].getMax());
+            HeadParameters p=s.getHeadParameters();
+            iKinChain &chain=*p.head.asChain();
+            Matrix lim;
+            Value part;
+
+            getBounds(drivers[1],lim);
+            p.torso.l_min=lim(0,0);
+            p.torso.l_max=lim(0,1);
+            p.torso.alpha_max=fabs(lim(1,1));
+
+            chain[0].setMin((M_PI/180.0)*lim(3,0));
+            chain[0].setMax((M_PI/180.0)*lim(3,1));
+
+            part=drivers[1].getValue("remote");
+            yInfo("limits of %s part: heave=[%g,%g] [m], [pitch,roll]=[%g,%g] [deg], yaw=[%g,%g] [deg]",
+                  part.asString().c_str(),p.torso.l_min,p.torso.l_max,-p.torso.alpha_max,p.torso.alpha_max,lim(3,0),lim(3,1));
+
+            getBounds(drivers[2],lim);
+            for (int i=0; i<2; i++)
+            {
+                chain[1+i].setMin((M_PI/180.0)*lim(i,0));
+                chain[1+i].setMax((M_PI/180.0)*lim(i,1));
+
+                part=drivers[2].getValue("remote");
+                yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
+                      part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
+                      (180.0/M_PI)*chain[1+i].getMax());
+            }
+
+            s.setHeadParameters(p);
         }
-
-        solver.setHeadParameters(p);
     }
 
     /****************************************************************/
-    void addState(const Vector &q, Property &state,const string &frame)
+    void addState(const Vector &q, Property &state)
     {
-        HeadParameters p(frame);
-        solver.setHeadParameters(p);
+        for (set<string>::iterator it=controlFrames.begin();
+             it!=controlFrames.end(); it++)
+        {
+            const string &frame=*it;
 
-        Matrix Hee; solver.fkin(q,Hee);
+            Matrix Hee;
+            solver[frame].fkin(q,Hee);
 
-        Vector pose=Hee.getCol(3).subVector(0,2);
-        Vector oee; oee=dcm2axis(Hee);
-        oee*=oee[3]; oee.pop_back();
-        pose=cat(pose,oee);
+            Vector pose=Hee.getCol(3).subVector(0,2);
+            Vector oee; oee=dcm2axis(Hee);
+            oee*=oee[3]; oee.pop_back();
+            pose=cat(pose,oee);
 
-        Bottle val; val.addList().read(pose);
-        state.put(frame,val.get(0));
+            Bottle val; val.addList().read(pose);
+            state.put(frame,val.get(0));
+        }
     }
 
 public:
     /****************************************************************/
     Controller() : gen(NULL)
     {
+        controlFrames=HeadParameters::getTypes();
+        for (set<string>::iterator it=controlFrames.begin();
+             it!=controlFrames.end(); it++)
+        {
+            const string &frame=*it;
+            HeadParameters p(frame);
+            solver[frame].setHeadParameters(p);
+        }
+        control_frame="center"; 
     }
 
     /****************************************************************/
@@ -386,11 +415,8 @@ public:
 
         Property &state=statePort.prepare();
         state.clear();
-
-        addState(q,state,"left");
-        addState(q,state,"center");
-        addState(q,state,"left");
-        addState(q,state,"depth");
+        
+        addState(q,state);
      
         if (timeStamp>=0.0)
             txInfo.update(timeStamp);

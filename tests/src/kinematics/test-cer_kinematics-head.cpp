@@ -16,6 +16,7 @@
 */
 
 #include <string>
+#include <set>
 #include <iostream>
 #include <iomanip>
 #include <algorithm>
@@ -36,10 +37,18 @@ int main(int argc, char *argv[])
     ResourceFinder rf;
     rf.configure(argc,argv);
 
+    set<string> controlFrames=HeadParameters::getTypes();
+
+    string types_helper("");
+    for (set<string>::iterator it=controlFrames.begin();
+         it!=controlFrames.end(); it++)
+        types_helper+=*it+"|";
+    types_helper.erase(types_helper.end()-1);
+
     if (rf.check("help"))
     {
         cout<<"Options:"<<endl;
-        cout<<"--type left|center|right|depth"<<endl;
+        cout<<"--type "<<types_helper<<endl;
         cout<<"--verbosity <int>"<<endl;
         cout<<"--xd \"(0.0 1.0 2.0)\""<<endl;
         cout<<"--q0 \"(0.0 1.0 ... 5.0)\""<<endl;
@@ -49,8 +58,7 @@ int main(int argc, char *argv[])
     string type=rf.check("type",Value("center")).asString();
     int verbosity=rf.check("verbosity",Value(0)).asInt();
 
-    if ((type!="left") && (type!="center") &&
-        (type!="right") && (type!="depth"))
+    if (controlFrames.find(type)==controlFrames.end())
     {
         cerr<<"unrecognized type \""<<type<<"\""<<endl;
         return 1;

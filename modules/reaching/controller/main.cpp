@@ -82,7 +82,7 @@ class Controller : public RFModule, public PortReader
             yInfo("Received target request: %s",target.toString().c_str());
 
         if (!target.check("q"))
-        {            
+        {
             Vector q=getEncoders();
             Bottle b; b.addList().read(q);
             target.put("q",b.get(0));

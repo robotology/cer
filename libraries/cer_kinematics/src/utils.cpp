@@ -205,6 +205,18 @@ HeadParameters::HeadParameters(const string &type) :
 
 
 /****************************************************************/
+set<string> HeadParameters::getTypes()
+{
+    set<string> types;
+    types.insert("left");
+    types.insert("center");
+    types.insert("right");
+    types.insert("depth");
+    return types;
+}
+
+
+/****************************************************************/
 bool SolverParameters::setMode(const string &mode)
 {
     string mode_=mode;

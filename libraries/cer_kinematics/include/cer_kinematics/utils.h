@@ -20,6 +20,8 @@
 
 #include <limits>
 #include <string>
+#include <set>
+
 #include <yarp/os/Mutex.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
@@ -138,6 +140,13 @@ struct HeadParameters
      *              accounting for the end frame type.
      */
     HeadParameters(const std::string &type="center");
+
+    /**
+     * Returns the allowed types. 
+     *  
+     * @return allowed types. 
+     */
+    static std::set<std::string> getTypes();
 };
 
 

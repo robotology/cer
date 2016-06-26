@@ -37,6 +37,14 @@ int main(int argc, char *argv[])
     ResourceFinder rf;
     rf.configure(argc,argv);
 
+    set<string> controlFrames=HeadParameters::getTypes();
+
+    string types_helper("");
+    for (set<string>::iterator it=controlFrames.begin();
+         it!=controlFrames.end(); it++)
+        types_helper+=*it+"|";
+    types_helper.erase(types_helper.end()-1);
+
     if (rf.check("help"))
     {
         cout<<"Options:"<<endl;
@@ -58,8 +66,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if ((type!="left") && (type!="center") &&
-        (type!="right") && (type!="depth"))
+    if (controlFrames.find(type)==controlFrames.end())
     {
         cerr<<"unrecognized type \""<<type<<"\""<<endl;
         return 2;
