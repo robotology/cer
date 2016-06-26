@@ -86,9 +86,9 @@ class Controller : public RFModule, public PortReader
         if (verbosity>0)
             yInfo("Received target request: %s",request.toString().c_str());
 
-        if (request.check("control"))
+        if (request.check("control-frame"))
         {
-            string control_frame_=request.find("control").asString();
+            string control_frame_=request.find("control-frame").asString();
             const set<string>::iterator it=avFrames.find(control_frame_);
             if (it==avFrames.end())
                 yError("Unrecognized control frame type \"%s\"!",control_frame_.c_str());                
@@ -100,19 +100,19 @@ class Controller : public RFModule, public PortReader
         Vector xd(3);
         Vector q;
 
-        string type=request.check("type",Value("cartesian")).asString();
-        Bottle *target=request.find("target").asList();
-        if ((type!="cartesian") || (type!="angular") || (type!="image"))
-            yError("Unrecognized target type \"%s\"!",type.c_str());
-        else if (target==NULL)
-            yError("Missing \"target\" option!");
-        else if (type=="cartesian")
+        string target_type=request.check("target-type",Value("cartesian")).asString();
+        Bottle *target_location=request.find("target-location").asList();
+        if ((target_type!="cartesian") || (target_type!="angular") || (target_type!="image"))
+            yError("Unrecognized target type \"%s\"!",target_type.c_str());
+        else if (target_location==NULL)
+            yError("Missing \"target-location\" option!");
+        else if (target_type=="cartesian")
         {
-            if (target->size()>=3)
+            if (target_location->size()>=3)
             {
-                xd[0]=target->get(0).asDouble();
-                xd[1]=target->get(1).asDouble();
-                xd[2]=target->get(2).asDouble();
+                xd[0]=target_location->get(0).asDouble();
+                xd[1]=target_location->get(1).asDouble();
+                xd[2]=target_location->get(2).asDouble();
 
                 q=getEncoders();
                 doControl=true;
@@ -120,15 +120,15 @@ class Controller : public RFModule, public PortReader
             else
                 yError("Provided too few Cartesian coordinates!");
         }
-        else if (type=="angular")
+        else if (target_type=="angular")
         {
-            if (target->size()>=2)
+            if (target_location->size()>=2)
             {
                 Vector azi(4,0.0); azi[2]=1.0;
-                azi[3]=CTRL_DEG2RAD*target->get(0).asDouble();
+                azi[3]=CTRL_DEG2RAD*target_location->get(0).asDouble();
 
                 Vector ele(4,0.0); ele[1]=-1.0;
-                ele[3]=CTRL_DEG2RAD*target->get(1).asDouble();
+                ele[3]=CTRL_DEG2RAD*target_location->get(1).asDouble();
 
                 Matrix Hee;
                 Vector q0(6,0.0);
@@ -146,7 +146,7 @@ class Controller : public RFModule, public PortReader
             else
                 yError("Provided too few angular coordinates!");
         }
-        else if (type=="image")
+        else if (target_type=="image")
         {
             string image=request.check("image",Value("left")).asString();
             if (avFrames.find(image)==avFrames.end())
@@ -155,14 +155,14 @@ class Controller : public RFModule, public PortReader
                 yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
             else 
             {                    
-                if (target->size()>=2)
+                if (target_location->size()>=2)
                 {
                     Vector p(3,1.0);
-                    if (target->size()>=3)
-                        p[2]=target->get(2).asDouble();
+                    if (target_location->size()>=3)
+                        p[2]=target_location->get(2).asDouble();
 
-                    p[0]=p[2]*target->get(0).asDouble(); 
-                    p[1]=p[2]*target->get(1).asDouble();
+                    p[0]=p[2]*target_location->get(0).asDouble(); 
+                    p[1]=p[2]*target_location->get(1).asDouble();
                     
                     Matrix Hee;
                     q=getEncoders();
