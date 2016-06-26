@@ -19,7 +19,7 @@
 
 #include <hapticdevice/IHapticDevice.h>
 
-#include <ros_messages/visualization_msgs_Marker.h>
+#include "ros_messages/visualization_msgs_Marker.h"
 
 using namespace std;
 using namespace yarp::os;
