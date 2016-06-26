@@ -219,6 +219,7 @@ public:
                 H0(2,3)=x0[2];
 
                 xd=H0*xd;
+                xd.pop_back();
 
                 Vector drpy(3);
                 drpy[0]=rpy[0]-rpy0[0];
