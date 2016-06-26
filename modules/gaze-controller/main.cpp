@@ -88,10 +88,10 @@ class Controller : public RFModule, public PortReader
         {
             string control_frame_=request.find("control").asString();
             const set<string>::iterator it=controlFrames.find(control_frame_);
-            if (it!=controlFrames.end())
-                control_frame=control_frame_;
+            if (it==controlFrames.end())
+                yError("Unrecognized control frame type \"%s\"!",control_frame_.c_str());                
             else
-                yError("Unrecognized control frame type \"%s\"!",control_frame_.c_str());
+                control_frame=control_frame_;
         }
 
         bool doControl=false;
@@ -102,7 +102,7 @@ class Controller : public RFModule, public PortReader
         {
             string type=request.check("type",Value("cartesian")).asString();
             Bottle *location=request.find("location").asList();
-            if ((type!="cartesian") || (type!="image"))
+            if ((type!="cartesian") || (type!="pixel"))
                 yError("Unrecognized target type \"%s\"!",type.c_str());
             else if (location==NULL)
                 yError("Missing \"location\"!");
@@ -117,6 +117,24 @@ class Controller : public RFModule, public PortReader
                 }
                 else
                     yError("Provided too few Cartesian coordinates!");
+            }
+            else if (type=="pixel")
+            {
+                string image=request.check("image",Value("left")).asString();
+                const set<string>::iterator it=controlFrames.find(image);
+                if (it==controlFrames.end())
+                    yError("Unrecognized image type \"%s\"!",image.c_str());
+                else
+                {
+                    Vector pixel(2);
+                    if (location->size()>=2)
+                    {
+                        pixel[0]=location->get(0).asDouble();
+                        pixel[1]=location->get(1).asDouble();
+                    }
+                    else
+                        yError("Provided too few pixel coordinates!");
+                }
             }
         }
 
