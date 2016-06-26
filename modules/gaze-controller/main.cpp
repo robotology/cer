@@ -149,7 +149,7 @@ class Controller : public RFModule, public PortReader
         else if (type=="image")
         {
             string image=request.check("image",Value("left")).asString();
-            if ((avFrames.find(image)==avFrames.end()) || (image=="center"))
+            if (avFrames.find(image)==avFrames.end())
                 yError("Unrecognized image type \"%s\"!",image.c_str());
             else if (intrinsincs.find(image)==intrinsincs.end())
                 yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
@@ -204,36 +204,33 @@ class Controller : public RFModule, public PortReader
         for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
         {
             const string &camera=*it;
-            if (camera!="center")
+            yInfo("#### Retrieving intrinsics for \"%s\" camera",camera.c_str());
+
+            string groupName=camera;
+            transform(groupName.begin(),groupName.end(),groupName.begin(),::toupper);
+            groupName="CAMERA_CALIBRATION_"+groupName;
+
+            bool ok=false;
+            Bottle &group=rf.findGroup(groupName);
+            if (!group.isNull())
             {
-                yInfo("#### Retrieving intrinsics for \"%s\" camera",camera.c_str());
-
-                string groupName=camera;
-                transform(groupName.begin(),groupName.end(),groupName.begin(),::toupper);
-                groupName="CAMERA_CALIBRATION_"+groupName;
-
-                bool ok=false;
-                Bottle &group=rf.findGroup(groupName);
-                if (!group.isNull())
+                if (group.check("fx") && group.check("fy") &&
+                    group.check("cx") && group.check("cy"))
                 {
-                    if (group.check("fx") && group.check("fy") &&
-                        group.check("cx") && group.check("cy"))
-                    {
-                        Matrix K=eye(3,4);
-                        K(0,0)=group.find("fx").asDouble();
-                        K(1,1)=group.find("fy").asDouble();
-                        K(0,2)=group.find("cx").asDouble();
-                        K(1,2)=group.find("cy").asDouble();
-                        
-                        yInfo("%s",K.toString(3,3).c_str());
-                        intrinsincs[camera]=pinv(K.transposed()).transposed(); 
-                        ok=true;
-                    }
+                    Matrix K=eye(3,4);
+                    K(0,0)=group.find("fx").asDouble();
+                    K(1,1)=group.find("fy").asDouble();
+                    K(0,2)=group.find("cx").asDouble();
+                    K(1,2)=group.find("cy").asDouble();
+                    
+                    yInfo("%s",K.toString(3,3).c_str());
+                    intrinsincs[camera]=pinv(K.transposed()).transposed(); 
+                    ok=true;
                 }
-
-                if (!ok)
-                    yWarning("Intrinsics for \"%s\" camera not configured!",camera.c_str());
             }
+
+            if (!ok)
+                yWarning("Intrinsics for \"%s\" camera not configured!",camera.c_str());
         }
     }
 
