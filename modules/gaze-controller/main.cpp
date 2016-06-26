@@ -434,9 +434,18 @@ public:
         if (get_bounds)
             alignJointsBounds();
 
+        string cameras_context="cameraCalibration";
+        string cameras_file="cer.ini";
+        Bottle &camerasGroup=rf.findGroup("cameras");
+        if (!camerasGroup.isNull())
+        {
+            cameras_context=camerasGroup.check("context",Value(cameras_context)).asString();
+            cameras_file=camerasGroup.check("file",Value(cameras_file)).asString();
+        }
+
         ResourceFinder rf_cameras;
-        rf_cameras.setDefaultContext(rf.check("camera-context",Value("cameraCalibration")).asString().c_str());
-        rf_cameras.setDefaultConfigFile(rf.check("camera-from",Value("cer.ini")).asString().c_str());
+        rf_cameras.setDefaultContext(cameras_context.c_str());
+        rf_cameras.setDefaultConfigFile(cameras_file.c_str());
         rf_cameras.configure(0,NULL);
         getIntrinsics(rf_cameras);
 
