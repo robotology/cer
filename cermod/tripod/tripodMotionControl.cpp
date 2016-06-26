@@ -1330,6 +1330,15 @@ bool tripodMotionControl::positionMoveRaw(const int n_joint, const int *joints, 
 {
     bool ret = true;
 
+    if(n_joint == 0)
+        return true;
+
+    if(n_joint > _njoints)
+    {
+        yError() << "Too much joints for device TripodMotionControl. Asking to move " << n_joint << " joints";
+        return false;
+    }
+
     _mutex.wait();
     for(int i=0, index=0; i< n_joint; i++, index++)
     {
@@ -1365,6 +1374,15 @@ bool tripodMotionControl::positionMoveRaw(const int n_joint, const int *joints, 
 bool tripodMotionControl::relativeMoveRaw(const int n_joint, const int *joints, const double *deltas)
 {
     bool ret = true;
+
+    if(n_joint == 0)
+        return true;
+
+    if(n_joint > _njoints)
+    {
+        yError() << "Too much joints for device TripodMotionControl. Asking to move " << n_joint << " joints";
+        return false;
+    }
 
     _mutex.wait();
     for(int i=0, index=0; i< n_joint; i++, index++)
@@ -1927,6 +1945,9 @@ bool tripodMotionControl::setPositionDirectModeRaw()
 
 bool tripodMotionControl::setPositionRaw(int j, double ref)
 {
+    if( (j <0) || (j>3) )
+        return false;
+
     // calling IK library before propagate the command to HW
     _mutex.wait();
     _userRef_positions[j] = ref;
@@ -1953,6 +1974,15 @@ bool tripodMotionControl::setPositionRaw(int j, double ref)
 
 bool tripodMotionControl::setPositionsRaw(const int n_joint, const int *joints, double *refs)
 {
+    if(n_joint == 0)
+        return true;
+
+    if(n_joint > _njoints)
+    {
+        yError() << "Too much joints for device TripodMotionControl. Asking to move " << n_joint << " joints";
+        return false;
+    }
+
     // calling IK library before propagate the command to HW
     _mutex.wait();
     for(int i=0; i<n_joint; i++)
