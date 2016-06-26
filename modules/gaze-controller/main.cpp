@@ -100,61 +100,58 @@ class Controller : public RFModule, public PortReader
         Vector xd(3);
         Vector q;
 
-        if (request.check("target"))
+        string type=request.check("type",Value("cartesian")).asString();
+        Bottle *target=request.find("target").asList();
+        if ((type!="cartesian") || (type!="pixel"))
+            yError("Unrecognized target type \"%s\"!",type.c_str());
+        else if (target==NULL)
+            yError("Missing \"target\" option!");
+        else if (type=="cartesian")
         {
-            string type=request.check("type",Value("cartesian")).asString();
-            Bottle *location=request.find("location").asList();
-            if ((type!="cartesian") || (type!="pixel"))
-                yError("Unrecognized target type \"%s\"!",type.c_str());
-            else if (location==NULL)
-                yError("Missing \"location\"!");
-            else if (type=="cartesian")
+            if (target->size()>=3)
             {
-                if (location->size()>=3)
-                {
-                    xd[0]=location->get(0).asDouble();
-                    xd[1]=location->get(1).asDouble();
-                    xd[2]=location->get(2).asDouble();
+                xd[0]=target->get(0).asDouble();
+                xd[1]=target->get(1).asDouble();
+                xd[2]=target->get(2).asDouble();
 
+                q=getEncoders();
+                doControl=true;
+            }
+            else
+                yError("Provided too few Cartesian coordinates!");
+        }
+        else if (type=="pixel")
+        {
+            string image=request.check("image",Value("left")).asString();
+            const set<string>::iterator it=controlFrames.find(image);
+            if ((it==controlFrames.end()) || (image=="center"))
+                yError("Unrecognized image type \"%s\"!",image.c_str());
+            else if (intrinsincs.find(image)==intrinsincs.end())
+                yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
+            else 
+            {                    
+                if (target->size()>=3)
+                {
+                    Vector p(3);
+                    p[0]=target->get(0).asDouble();
+                    p[1]=target->get(1).asDouble();
+                    p[2]=target->get(2).asDouble();
+                    p[0]*=p[2]; p[1]*=p[2];
+
+                    Matrix Hee;
                     q=getEncoders();
+                    solver[image].fkin(q,Hee);
+
+                    Vector xc=intrinsincs[image]*p;
+                    xc[3]=1.0;
+
+                    xd=Hee*xc;
+                    xd.pop_back();
+
                     doControl=true;
                 }
                 else
-                    yError("Provided too few Cartesian coordinates!");
-            }
-            else if (type=="pixel")
-            {
-                string image=request.check("image",Value("left")).asString();
-                const set<string>::iterator it=controlFrames.find(image);
-                if ((it==controlFrames.end()) || (image=="center"))
-                    yError("Unrecognized image type \"%s\"!",image.c_str());
-                else if (intrinsincs.find(image)==intrinsincs.end())
-                    yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
-                else 
-                {                    
-                    if (location->size()>=3)
-                    {
-                        Vector p(3);
-                        p[0]=location->get(0).asDouble();
-                        p[1]=location->get(1).asDouble();
-                        p[2]=location->get(2).asDouble();
-                        p[0]*=p[2]; p[1]*=p[2];
-
-                        Matrix Hee;
-                        q=getEncoders();
-                        solver[image].fkin(q,Hee);
-
-                        Vector xc=intrinsincs[image]*p;
-                        xc[3]=1.0;
-
-                        xd=Hee*xc;
-                        xd.pop_back();
-
-                        doControl=true;
-                    }
-                    else
-                        yError("Provided too few pixel coordinates!");
-                }
+                    yError("Provided too few pixel coordinates!");
             }
         }
 
