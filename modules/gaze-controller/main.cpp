@@ -288,9 +288,10 @@ class Controller : public RFModule, public PortReader
     {
         for (map<string,HeadSolver>::iterator it=solver.begin();
              it!=solver.end(); it++)
-        {
+        {            
+            yInfo("##### Aligning joints bounds for control frame \"%s\"",
+                  it->first.c_str());
             HeadSolver &s=it->second;
-            yInfo("##### control frame \"%s\"",it->first);
 
             HeadParameters p=s.getHeadParameters();
             iKinChain &chain=*p.head.asChain();
