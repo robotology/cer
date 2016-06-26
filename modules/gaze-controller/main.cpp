@@ -123,8 +123,7 @@ class Controller : public RFModule, public PortReader
         else if (type=="image")
         {
             string image=request.check("image",Value("left")).asString();
-            const set<string>::iterator it=avFrames.find(image);
-            if ((it==avFrames.end()) || (image=="center"))
+            if ((avFrames.find(image)==avFrames.end()) || (image=="center"))
                 yError("Unrecognized image type \"%s\"!",image.c_str());
             else if (intrinsincs.find(image)==intrinsincs.end())
                 yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
