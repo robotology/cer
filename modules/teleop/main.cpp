@@ -39,8 +39,6 @@ protected:
     BufferedPort<Property> robotTargetPort;
     BufferedPort<Vector>   robotStatePort;
     RpcClient              robotCmdPort;
-    bool                   enable_rviz;
-    bool                   enable_gazebo;
     yarp::os::Publisher    <visualization_msgs_Marker>  rosPublisherPort;
     yarp::os::Node*        rosNode;
 
@@ -67,8 +65,6 @@ public:
     {
         igeo = 0;
         rosNode = 0;
-        enable_rviz = rf.check("enable_rviz");
-        enable_gazebo = rf.check("enable_gazebo");
 
         string name=rf.check("name",Value("cer_teleop")).asString();
         string geomagic=rf.check("geomagic",Value("geomagic")).asString();
@@ -108,17 +104,14 @@ public:
         robotStatePort.open(("/"+name+"/state:i").c_str());
         robotCmdPort.open(("/"+name+"/cmd:rpc").c_str());
 
-        if (enable_rviz)
+        if (rosNode == 0)
         {
-            if (rosNode == 0)
-            {
-                rosNode = new yarp::os::Node("/cer_teleop");
-            }
-            if (!rosPublisherPort.topic("/cer_teleop_marker"))
-            {
-                yError() << " Unable to publish data on " << "/cer_teleop_marker" << " topic, check your yarp-ROS network configuration\n";
-                return false;
-            }
+            rosNode = new yarp::os::Node("/cer_teleop");
+        }
+        if (!rosPublisherPort.topic("/cer_teleop_marker"))
+        {
+            yError() << " Unable to publish data on " << "/cer_teleop_marker" << " topic, check your yarp-ROS network configuration\n";
+            return false;
         }
         return true;
     }
@@ -175,7 +168,8 @@ public:
         Bottle &bLoad=params.addList();
         Bottle &mode=bLoad.addList();
         mode.addString("mode");
-        mode.addString(no_torso?"full_pose+no_torso":"full_pose+no_heave");
+        //mode.addString(no_torso?"full_pose+no_torso":"full_pose+no_heave");
+        mode.addString("xyz_pose+no_torso");    // FIXME DEBUG
 
         Property &prop=robotTargetPort.prepare(); prop.clear();
         prop.put("parameters",params.get(0));
@@ -218,10 +212,10 @@ public:
         marker.pose.orientation.y = 0.0;
         marker.pose.orientation.z = 0.0;
         marker.pose.orientation.w = 1.0;
-        marker.scale.x = 1;
+        marker.scale.x = 0.1;
         marker.scale.y = 0.1;
         marker.scale.z = 0.1;
-        marker.color.a = 1.0;
+        marker.color.a = 0.5;
         marker.color.r = 0.0;
         marker.color.g = 1.0;
         marker.color.b = 0.0;
@@ -304,8 +298,8 @@ public:
 
                 Vector od=dcm2axis(Rd);
                 goToPose(xd,od);
-                if (enable_gazebo) updateGazebo(xd, od);
-                if (enable_rviz) updateRVIZ(xd, od);
+                updateGazebo(xd,od);
+                updateRVIZ(xd,od);
             }
         }
         else
@@ -316,8 +310,8 @@ public:
             if (c!=0)
             {
                 stopControl();
-                if (enable_gazebo) updateGazebo(cur_x, cur_o);
-                if (enable_rviz) updateRVIZ(cur_x, cur_o);
+                updateGazebo(cur_x,cur_o);
+                updateRVIZ(cur_x,cur_o);
             }
 
             s=idle;
