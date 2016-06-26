@@ -129,14 +129,15 @@ class Controller : public RFModule, public PortReader
                 yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
             else 
             {                    
-                if (target->size()>=3)
+                if (target->size()>=2)
                 {
-                    Vector p(3);
-                    p[0]=target->get(0).asDouble();
-                    p[1]=target->get(1).asDouble();
-                    p[2]=target->get(2).asDouble();
-                    p[0]*=p[2]; p[1]*=p[2];
+                    Vector p(3,1.0);
+                    if (target->size()>=3)
+                        p[2]=target->get(2).asDouble();
 
+                    p[0]=p[2]*target->get(0).asDouble(); 
+                    p[1]=p[2]*target->get(1).asDouble();
+                    
                     Matrix Hee;
                     q=getEncoders();
                     solver[image].fkin(q,Hee);
