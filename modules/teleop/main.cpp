@@ -16,9 +16,10 @@
 #include <yarp/dev/all.h>
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
-#include <yarp/os/Publisher.h>
-#include "ros_messages/visualization_msgs_Marker.h"
+
 #include <hapticdevice/IHapticDevice.h>
+
+#include <ros_messages/visualization_msgs_Marker.h>
 
 using namespace std;
 using namespace yarp::os;
@@ -43,6 +44,7 @@ protected:
     yarp::os::Node*        rosNode;
 
     string arm_type;
+    string control_pose;
 
     enum {
         idle,
@@ -69,6 +71,21 @@ public:
         string name=rf.check("name",Value("cer_teleop")).asString();
         string geomagic=rf.check("geomagic",Value("geomagic")).asString();
         arm_type=rf.check("arm-type",Value("right")).asString();
+        control_pose=rf.check("control-pose",Value("full_pose")).asString();
+
+        transform(arm_type.begin(),arm_type.end(),arm_type.begin(),::tolower);
+        if ((arm_type!="left") && (arm_type!="right"))
+        {
+            yWarning("Unrecognized arm-type \"%s\"",arm_type.c_str());
+            arm_type="right";
+        }
+
+        transform(control_pose.begin(),control_pose.end(),control_pose.begin(),::tolower);
+        if ((control_pose!="full_pose") && (control_pose!="xyz_pose"))
+        {
+            yWarning("Unrecognized control-pose \"%s\"",control_pose.c_str());
+            control_pose="full_pose";
+        }
 
         Property optGeo("(device hapticdeviceclient)");
         optGeo.put("remote",("/"+geomagic).c_str());
@@ -110,7 +127,8 @@ public:
         }
         if (!rosPublisherPort.topic("/cer_teleop_marker"))
         {
-            yError() << " Unable to publish data on " << "/cer_teleop_marker" << " topic, check your yarp-ROS network configuration\n";
+            yError("Unable to publish data on /cer_teleop_marker topic");
+            yError("Check your yarp-ROS network configuration");
             return false;
         }
         return true;
@@ -168,9 +186,9 @@ public:
         Bottle &bLoad=params.addList();
         Bottle &mode=bLoad.addList();
         mode.addString("mode");
-        //mode.addString(no_torso?"full_pose+no_torso":"full_pose+no_heave");
-        mode.addString("xyz_pose+no_torso");    // FIXME DEBUG
-
+        mode.addString(no_torso?(control_pose+"+no_torso").c_str():
+                                (control_pose+"+no_heave").c_str());
+        
         Property &prop=robotTargetPort.prepare(); prop.clear();
         prop.put("parameters",params.get(0));
         prop.put("target",target.get(0));
@@ -212,9 +230,9 @@ public:
         marker.pose.orientation.y = 0.0;
         marker.pose.orientation.z = 0.0;
         marker.pose.orientation.w = 1.0;
-        marker.scale.x = 0.1;
-        marker.scale.y = 0.1;
-        marker.scale.z = 0.1;
+        marker.scale.x = 0.05;
+        marker.scale.y = 0.05;
+        marker.scale.z = 0.05;
         marker.color.a = 0.5;
         marker.color.r = 0.0;
         marker.color.g = 1.0;
