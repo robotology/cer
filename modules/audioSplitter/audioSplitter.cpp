@@ -25,7 +25,7 @@
 #define IOCTL_SAMPLERATE _IOW(MAGIC_NUM, 1, int )
 #define IOCTL_SETBURST   _IOWR(MAGIC_NUM, 38, int )
 
-int delete_fifo(char *path)
+int delete_fifo(const char *path)
 {
     struct stat tmp;
     if (stat(path, &tmp) == 0)
@@ -48,7 +48,7 @@ int handle_kill(int sig)
     exit(0);
 }
 
-int create_fifo(char *path)
+int create_fifo(const char *path)
 {
     struct stat tmp;
     if (stat(path, &tmp) == 0)
@@ -67,7 +67,7 @@ int create_fifo(char *path)
     return 0;
 }
 
-int open_fifo(char *path)
+int open_fifo(const char *path)
 {
     return open(path, O_WRONLY | O_NONBLOCK);
 }

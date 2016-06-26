@@ -176,7 +176,7 @@ public:
         return S;
     }
 
-    void print(char* head="",char* tail="") const
+    void print(const char* head="",const char* tail="") const
     {
         printf("%s x=%f y=%f z=%f %s\n",head,x,y,z,tail);
     }

@@ -61,19 +61,26 @@ public:
 		return mNumJoints[part];
 	}
 
-	void modePosition(int part)
+	void modeSelectionHelper(const int part, const int modeType)
 	{
-		pPosCtrl[part]->setPositionMode();
+		yarp::sig::VectorOf<int> modes;
+		modes.resize(getNumOfJoints(part),modeType);
+		pCmdCtrlMode[part]->setControlModes(modes.getFirst());
 	}
 
-	void modeDirect(int part)
+	void modePosition(const int part)
 	{
-		pDirCtrl[part]->setPositionDirectMode();
+	    modeSelectionHelper(part,VOCAB_CM_POSITION);
 	}
 
-	void modeVelocity(int part)
+	void modeDirect(const int part)
 	{
-		pVelCtrl[part]->setVelocityMode();
+	    modeSelectionHelper(part,VOCAB_CM_POSITION_DIRECT);
+	}
+
+	void modeVelocity(const int part)
+	{
+	    modeSelectionHelper(part,VOCAB_CM_VELOCITY);
 	}
 
 	static const char *R1PartName[NUM_R1_PARTS];
@@ -91,7 +98,7 @@ protected:
 	yarp::dev::IVelocityControl  *pVelCtrl[NUM_R1_PARTS];
 	yarp::dev::IPositionDirect   *pDirCtrl[NUM_R1_PARTS];
 
-	yarp::dev::IControlMode      *pCmdCtrlMode[NUM_R1_PARTS];
+	yarp::dev::IControlMode2     *pCmdCtrlMode[NUM_R1_PARTS];
 
 	std::string mRobotName;
 };
@@ -159,7 +166,7 @@ bool R1Driver::open()
 			pPosCtrl[part]->setRefAccelerations(ref_acc[part]);
 			pVelCtrl[part]->setRefAccelerations(ref_acc[part]);
 
-			pPosCtrl[part]->setPositionMode();
+			modePosition(part);
 		}
 		else
 		{
@@ -174,7 +181,7 @@ void R1Driver::close()
 {
 	for (int part = TORSO; part<NUM_R1_PARTS; ++part)
 	{
-		if (pPosCtrl[part]) pPosCtrl[part]->setPositionMode();
+		if (pPosCtrl[part]) modePosition(part);
 	}
 }
 

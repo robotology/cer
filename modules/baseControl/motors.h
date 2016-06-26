@@ -79,11 +79,11 @@ public:
     virtual bool set_control_idle() = 0;
 
     bool open(ResourceFinder &_rf, Property &_options);
+    virtual void close();
     virtual void execute_none() = 0;
     virtual void execute_openloop(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;
     virtual void execute_speed(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;
     virtual void decouple(double appl_linear_speed, double appl_desired_direction, double appl_angular_speed) = 0;
-    virtual void close() = 0;
     virtual bool check_motors_on() = 0;
     virtual void updateControlMode() = 0;
     virtual void printStats() = 0;

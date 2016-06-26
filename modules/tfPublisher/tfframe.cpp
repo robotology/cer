@@ -20,7 +20,7 @@ bool TfFrame::addChild(TfFrame& frame)
     frame.setParent(*this);
     return true;
 }
-bool TfFrame::setName(char* newName)
+bool TfFrame::setName(const char* newName)
 {
     if (!newName)
     {

@@ -23,7 +23,7 @@ public:
     void                  setParentTf(const std::string& tf)   { tfToParent = tf;       };
     void                  setParent(TfFrame& frame)            { parent     = &frame;   };
     void                  setName(const std::string& newName)  { name       = newName;  };
-    bool                  setName(char* newName);
+    bool                  setName(const char* newName);
     bool                  addChild(TfFrame& frame);
 
 };
