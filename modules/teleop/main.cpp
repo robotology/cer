@@ -39,7 +39,7 @@ protected:
     BufferedPort<Vector>   robotStatePort;
     RpcClient              robotCmdPort;
 
-    string part;
+    string arm_type;
 
     enum {
         idle,
@@ -60,9 +60,9 @@ public:
     /**********************************************************/
     bool configure(ResourceFinder &rf)
     {
-        string name=rf.check("name",Value("cer_teleop")).asString().c_str();
-        string geomagic=rf.check("geomagic",Value("geomagic")).asString().c_str();
-        part=rf.check("part",Value("right")).asString().c_str();
+        string name=rf.check("name",Value("cer_teleop")).asString();
+        string geomagic=rf.check("geomagic",Value("geomagic")).asString();
+        arm_type=rf.check("arm-type",Value("right")).asString();
 
         Property optGeo("(device hapticdeviceclient)");
         optGeo.put("remote",("/"+geomagic).c_str());
@@ -227,8 +227,8 @@ public:
 
                 Vector ax(4,0.0),ay(4,0.0),az(4,0.0);
                 ax[0]=1.0; ax[3]=drpy[2];
-                ay[1]=1.0; ay[3]=drpy[1]*((part=="right")?-1.0:1.0);
-                az[2]=1.0; az[3]=drpy[0]*((part=="right")?-1.0:1.0);
+                ay[1]=1.0; ay[3]=drpy[1]*((arm_type=="right")?-1.0:1.0);
+                az[2]=1.0; az[3]=drpy[0]*((arm_type=="right")?-1.0:1.0);
 
                 Matrix Rd=axis2dcm(o0)*axis2dcm(ax)*axis2dcm(ay)*axis2dcm(az);
 
