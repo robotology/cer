@@ -462,8 +462,8 @@ public:
             }
             else
             {
-                controlling=false;
                 yWarning("Detected joints in HW_FAULT and/or IDLE => stopping control");
+                stopControl();                
             }
         }
 
