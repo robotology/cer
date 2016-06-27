@@ -39,6 +39,8 @@ int main(int argc, char *argv[])
     rf.configure(argc,argv);
 
     set<string> avFrames=HeadParameters::getTypes();
+    // remove those going along with arm too
+    avFrames.erase("left"); avFrames.erase("right");
 
     string types_helper("");
     for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
@@ -49,7 +51,7 @@ int main(int argc, char *argv[])
     {
         cout<<"Options:"<<endl;
         cout<<"--kinematics arm|head"<<endl;
-        cout<<"--type "<<types_helper<<endl;
+        cout<<"--type left|right|"<<types_helper<<endl;
         cout<<"--q \"(0.0 1.0 ... 11.0)\"|\"(0.0 1.0 ... 5.0)\""<<endl;
         return 0;
     }
@@ -66,7 +68,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (avFrames.find(type)==avFrames.end())
+    if ((avFrames.find(type)==avFrames.end()) &&
+        (type!="left") && (type!="right"))
     {
         cerr<<"unrecognized type \""<<type<<"\""<<endl;
         return 2;
