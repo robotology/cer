@@ -11,7 +11,7 @@
       <param name="period"> 10 </param>
       <param name="name">   /cer/left_hand	</param>
       <param name="ports">  left_hand		</param>
-      <param name="joints"> 2			</param>
+      <param name="joints"> 2	     		</param>
 
       <action phase="startup" level="5" type="attach">
 	  <paramlist name="networks">

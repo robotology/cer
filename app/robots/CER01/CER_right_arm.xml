@@ -7,7 +7,7 @@
     <!-- RIGHT ARM -->
     <devices file="hardware/motorControl/cer_right_upper_arm-ems19-mc.xml" />
     <devices file="hardware/motorControl/cer_right_lower_arm-mcp20-mc.xml" />
-    <devices file="wrappers/motorControl/cer_right_arm-mc_wrapper.xml" />
+    <devices file="wrappers/motorControl/cer_right_arm_no_hand-mc_wrapper.xml" />
     <devices file="wrappers/motorControl/cer_right_wrist_tripod-mc_wrapper.xml" />
     
      <!-- TRIPODS EQUIVALENTS-->
