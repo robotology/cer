@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
         return 2;
     }
 
-    if ((kinematics=="arm") && ((type=="center") || (type=="depth")))
+    if ((kinematics=="arm") && (type!="left") && (type!="right"))
     {
         cerr<<"\""<<type<<"\" type is not allowed for arm"<<endl;
         return 3;
