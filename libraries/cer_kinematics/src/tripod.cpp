@@ -439,8 +439,13 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
 
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(lll);
-    
-    Vector rpy=dcm2rpy(d.T);
+
+    Vector u=d.u;
+    double n=norm(u);
+    u/=(n>0.0?n:1.0);
+    u.push_back(n);
+
+    Vector rpy=dcm2rpy(axis2dcm(u));
     hpr.resize(3);
     hpr[0]=d.p[2];
     hpr[1]=CTRL_RAD2DEG*rpy[1];
