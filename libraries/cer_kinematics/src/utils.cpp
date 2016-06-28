@@ -143,7 +143,7 @@ protected:
         unsigned int lastLink=getN()-1;
         if (type=="right")
             (*this)[lastLink].setA(-(*this)[lastLink].getA());
-        else if (type=="center")
+        else if (type=="cyclopic")
             (*this)[lastLink].setA(0.0);
         else if (type=="gaze")
         {
@@ -216,7 +216,7 @@ set<string> HeadParameters::getTypes()
 {
     set<string> types;
     types.insert("left");
-    types.insert("center");
+    types.insert("cyclopic");
     types.insert("right");
     types.insert("gaze");
     types.insert("depth");    
