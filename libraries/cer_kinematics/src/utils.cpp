@@ -127,7 +127,7 @@ public:
         transform(type.begin(),type.end(),type.begin(),::tolower);
         set<string> types=HeadParameters::getTypes();
         if (types.find(type)==types.end())
-            type="center";
+            type="gaze";
 
         allocate(type);
     }
@@ -145,6 +145,11 @@ protected:
             (*this)[lastLink].setA(-(*this)[lastLink].getA());
         else if (type=="center")
             (*this)[lastLink].setA(0.0);
+        else if (type=="gaze")
+        {
+            (*this)[lastLink].setA(0.0);
+            (*this)[lastLink].setD(0.143908);
+        }
         else if (type=="depth")
         {
             (*this)[lastLink].setA(0.0);
@@ -154,6 +159,8 @@ protected:
         Matrix HN=eye(4,4);
         if (type=="depth")
             HN(2,3)=0.062117;
+        else if (type=="gaze")
+            HN(2,3)=0.051929;
         else
             HN(2,3)=0.061378;
         setHN(HN);
@@ -212,6 +219,7 @@ set<string> HeadParameters::getTypes()
     types.insert("center");
     types.insert("right");
     types.insert("depth");
+    types.insert("gaze");
     return types;
 }
 

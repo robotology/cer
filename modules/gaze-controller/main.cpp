@@ -402,7 +402,7 @@ public:
             HeadParameters p(frame);
             solver[frame].setHeadParameters(p);
         }
-        control_frame="center"; 
+        control_frame="gaze"; 
     }
 
     /****************************************************************/

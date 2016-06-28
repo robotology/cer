@@ -136,10 +136,11 @@ struct HeadParameters
     /**
      * Constructor. 
      *  
-     * @param type  a string ["left"|"center"|"right"|"depth"] 
+     * @param type  a string 
+     *              ["left"|"center"|"right"|"gaze"|"depth"]
      *              accounting for the end frame type.
      */
-    HeadParameters(const std::string &type="center");
+    HeadParameters(const std::string &type="gaze");
 
     /**
      * Returns the allowed types. 
