@@ -218,8 +218,8 @@ set<string> HeadParameters::getTypes()
     types.insert("left");
     types.insert("center");
     types.insert("right");
-    types.insert("depth");
     types.insert("gaze");
+    types.insert("depth");    
     return types;
 }
 
