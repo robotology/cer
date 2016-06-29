@@ -39,6 +39,13 @@ protected:
 
     PolyDriver     drvGeomagic;
     IHapticDevice *igeo;
+
+    PolyDriver         drvHand;
+    IControlMode2     *imod;
+    IPositionControl2 *ipos;
+    IVelocityControl2 *ivel;
+    VectorOf<int>      modes;
+    Vector             vels;
     
     BufferedPort<Bottle>   gazeboPort;
     BufferedPort<Property> robotTargetPort;
@@ -57,7 +64,8 @@ protected:
         running
     };
 
-    int s,c;
+    int s0,s1;
+    int c0,c1;
     bool no_torso;
     map<int,string> stateStr;
 
@@ -70,6 +78,7 @@ public:
     /**********************************************************/
     bool configure(ResourceFinder &rf)
     {
+        string robot=rf.check("robot",Value("cer")).asString();
         string geomagic=rf.check("geomagic",Value("geomagic")).asString();
         arm_type=rf.check("arm-type",Value("right")).asString();
         control_pose=rf.check("control-pose",Value("full_pose")).asString();
@@ -109,7 +118,45 @@ public:
         }
         drvGeomagic.view(igeo);
 
-        s=idle; c=0;
+        Property optHand("(device remote_controlboard)");
+        optHand.put("remote",("/"+robot+"/"+arm_type+"_hand").c_str());
+        optHand.put("local",("/cer_teleop/"+arm_type+"_hand").c_str());
+        if (!drvHand.open(optHand))
+        {
+            drvGeomagic.close();
+            delete rosNode;
+            return false;
+        }
+        drvHand.view(imod);
+        drvHand.view(ipos);
+        drvHand.view(ivel);
+
+        int nAxes;
+        ipos->getAxes(&nAxes);
+
+        Vector accs,poss;
+        for (int i=0; i<nAxes; i++)
+        {
+            modes.push_back(VOCAB_CM_POSITION);
+            accs.push_back(1e9);
+            vels.push_back(50.0);
+            poss.push_back(0.0);
+        }
+        
+        imod->setControlModes(modes.getFirst());
+        ipos->setRefAccelerations(accs.data());
+        ipos->setRefSpeeds(vels.data());
+        ipos->positionMove(poss.data());
+
+        modes.clear(); vels.clear();
+        for (int i=0; i<nAxes; i++)
+        {
+            modes.push_back(VOCAB_CM_VELOCITY);
+            vels.push_back(40.0);
+        }
+
+        s0=s1=idle;
+        c0=c1=0;
         no_torso=true;
         
         stateStr[idle]="idle";
@@ -145,6 +192,14 @@ public:
         igeo->setTransformation(eye(4,4));
         drvGeomagic.close();
 
+        stopReaching();
+
+        ivel->stop();
+        for (size_t i=0; i<modes.size(); i++)
+            modes[i]=VOCAB_CM_POSITION;
+        imod->setControlModes(modes.getFirst());
+        drvHand.close();
+
         gazeboPort.close();
         robotTargetPort.close();
         robotStatePort.close();
@@ -155,7 +210,7 @@ public:
     }
 
     /**********************************************************/
-    void stopControl()
+    void stopReaching()
     {
         Bottle cmd,reply;
         cmd.addVocab(Vocab::encode("stop"));
@@ -267,11 +322,11 @@ public:
     {
         if (b)
         {
-            if (s==idle)
-                s=triggered;
-            else if (s==triggered)
+            if (s0==idle)
+                s0=triggered;
+            else if (s0==triggered)
             {
-                if (++c*getPeriod()>0.5)
+                if (++c0*getPeriod()>0.5)
                 {
                     pos0[0]=pos[0];
                     pos0[1]=pos[1];
@@ -283,7 +338,7 @@ public:
 
                     x0=cur_x;
                     o0=cur_o;
-                    s=running;
+                    s0=running;
                 }
             }
             else
@@ -309,8 +364,8 @@ public:
 
                 Vector ax(4,0.0),ay(4,0.0),az(4,0.0);
                 ax[0]=1.0; ax[3]=drpy[2];
-                ay[1]=1.0; ay[3]=drpy[1]*((arm_type=="right")?-1.0:1.0);
-                az[2]=1.0; az[3]=drpy[0]*((arm_type=="right")?-1.0:1.0);
+                ay[1]=1.0; ay[3]=drpy[1]*((arm_type=="right")?1.0:-1.0);
+                az[2]=1.0; az[3]=drpy[0]*((arm_type=="right")?1.0:-1.0);
 
                 Matrix Rd=axis2dcm(o0)*axis2dcm(ax)*axis2dcm(ay)*axis2dcm(az);
 
@@ -322,21 +377,52 @@ public:
         }
         else
         {
-            if (s==triggered)
+            if (s0==triggered)
             {
                 if (!torsoCannotChange)
                     no_torso=!no_torso; 
             }
 
-            if (c!=0)
+            if (c0!=0)
             {
-                stopControl();
+                stopReaching();
                 updateGazebo(cur_x,cur_o);
                 updateRVIZ(cur_x,cur_o);
             }
 
-            s=idle;
-            c=0;
+            s0=idle;
+            c0=0;
+        }
+    }
+
+    /**********************************************************/
+    void handHandler(const bool b)
+    {
+        if (b)
+        {
+            if (s1==idle)
+                s1=triggered;
+            else if (s1==triggered)
+            {
+                if (++c1*getPeriod()>0.5)
+                {
+                    imod->setControlModes(modes.getFirst());
+                    s1=running;
+                }
+            }
+            else
+                ivel->velocityMove(vels.data());
+        }
+        else
+        {
+            if (s1==triggered)
+                vels=-1.0*vels;
+
+            if (c1!=0)
+                ivel->stop();
+
+            s1=idle;
+            c1=0;
         }
     }
 
@@ -369,9 +455,11 @@ public:
             bool b1=(buttons[1]!=0.0);
 
             reachingHandler(b0,pos,rpy);
-            yInfo("reaching=%s; pose=%s; torso=%s; b0:%d b1:%d",
-                  stateStr[s].c_str(),control_pose.c_str(),
-                  no_torso?"off":"on",b0,b1);
+            handHandler(b1);
+
+            yInfo("[reaching=%s; pose=%s; torso=%s;] [hand=%s; movement=%s;] b0:%d b1:%d",
+                  stateStr[s0].c_str(),control_pose.c_str(),no_torso?"off":"on",
+                  stateStr[s1].c_str(),vels[0]>0.0?"closing":"opening",b0,b1);
         }
         else
             yError("No robot connected!");
