@@ -63,9 +63,9 @@ public:
         Time::turboBoost();
 
         // get params from the RF
-        ctrlName = rf.check("local", Value("tripodJoystickControl")).asString();
+        ctrlName = rf.check("local", Value("torsoJoystickControl")).asString();
         robotName = rf.check("robot", Value("cer")).asString();
-        partName = rf.check("part", Value("tripod")).asString();
+        partName = rf.check("part", Value("torso")).asString();
 
         remoteName = slash + robotName + slash + partName;
         localName = slash + ctrlName;
@@ -74,9 +74,9 @@ public:
         Property ctrl_options;
 
         ConstString configFile = rf.findFile("from");
-        if (configFile == "") //--from tripodJoystickCtrl.ini
+        if (configFile == "") //--from torsoJoystickControl.ini
         {
-            yWarning("Cannot find .ini configuration file. By default I'm searching for tripodJoystickCtrl.ini");
+            yWarning("Cannot find .ini configuration file. By default I'm searching for torsoJoystickControl.ini");
             //return false;
         }
         else
@@ -90,7 +90,7 @@ public:
         //check for robotInterface availablity
         yInfo("Checking for robotInterface availability");
         Port startport;
-        startport.open("/tripodJoystickCtrl/robotInterfaceCheck:rpc");
+        startport.open("/torsoJoystickControl/robotInterfaceCheck:rpc");
 
 
         Bottle cmd; cmd.addString("is_ready");
@@ -112,7 +112,7 @@ public:
             {
                 if (not_yet_connected)
                 {
-                    bool rc = yarp::os::Network::connect(localName + "/tripodJoystickCtrl/robotInterfaceCheck:rpc", "/" + robotName + "/robotInterface");
+                    bool rc = yarp::os::Network::connect(localName + "/torsoJoystickControl/robotInterfaceCheck:rpc", "/" + robotName + "/robotInterface");
                     if (rc == false)
                     {
                         yWarning("Problems trying to connect to RobotInterface %d", rc_count++);
@@ -170,33 +170,6 @@ public:
         {
             delete control_thr;
             return false;
-        }
-
-        //try to connect to joystickCtrl output
-        if (rf.check("joystick_connect"))
-        {
-            int joystick_trials = 0; 
-            do
-            {
-                yarp::os::Time::delay(1.0);
-                if (yarp::os::Network::connect("/joystickCtrl:o","/tripodJoystickCtrl/joystick:i"))
-                    {
-                        yInfo("Joystick has been automatically connected");
-                        break;
-                    }
-                else
-                    {
-                        yWarning("Unable to find the joystick port, retrying (%d/5)...",joystick_trials);
-                        joystick_trials++;
-                    }
-
-                if (joystick_trials>=5)
-                    {
-                        yError("Unable to find the joystick port, giving up");
-                        break;
-                    }
-            }
-            while (1);
         }
 
         //check for debug mode

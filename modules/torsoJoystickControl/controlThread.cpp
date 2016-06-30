@@ -30,13 +30,11 @@ void ControlThread::run()
     Bottle *b = this->port_joystick_control.read(false);
     if (b)
     {
-        double val0 = b->get(5).asDouble();
-        double val1 = b->get(8).asDouble();
-        double val2 = b->get(7).asDouble();
+        double val0 = b->get(8).asDouble(); 
+        double val1 = b->get(7).asDouble(); 
+        double val2 = b->get(5).asDouble(); //elong
         
-        if (fabs(val0) < 20) return;
-        if (fabs(val1) < 20) return;
-        if (fabs(val2) < 20) return;
+        if (fabs(val0) < 20 && fabs(val1) < 20 && fabs(val2) < 20) return;
 
         if (val0 > 100) val0 = 100;
         if (val0 < -100) val0 = -100;
@@ -50,11 +48,17 @@ void ControlThread::run()
         elong = elong + val2 / 200000.0;
         if (elong > max_elong) elong = max_elong;
         if (elong < min_elong) elong = min_elong;
-        if (pitch > max_alpha) pitch = max_alpha;
-        if (pitch < max_alpha) pitch = -max_alpha;
-        if (roll > max_alpha)  roll = max_alpha;
-        if (roll < max_alpha)  roll = -max_alpha;
+        if (pitch > max_alpha)  pitch = max_alpha;
+        if (pitch < -max_alpha) pitch = -max_alpha;
+        if (roll > max_alpha)   roll = max_alpha;
+        if (roll < -max_alpha)  roll = -max_alpha;
+        yDebug() <<" done";
     }
+    else 
+    {
+		//yDebug() <<" empty";
+		return;
+	}
 
     double enc_elong = enc_init_elong+elong;
     double enc_pitch = enc_init_pitch + pitch;
@@ -76,7 +80,7 @@ void ControlThread::run()
     }
     if (motors_enabled) iDir->setPosition(0, enc_elong);
     else {
-        yDebug() << enc_elong;
+        yDebug() << "command elong:" << enc_elong;
     }
     //-----------
 
@@ -92,7 +96,7 @@ void ControlThread::run()
     }
     if (motors_enabled) iDir->setPosition(1, enc_roll);
     else {
-        yDebug() << enc_roll;
+        yDebug() << "command roll:" << enc_roll;
     }
     //-----------
 
@@ -108,7 +112,7 @@ void ControlThread::run()
     }
     if (motors_enabled) iDir->setPosition(2, enc_pitch);
     else {
-        yDebug() << enc_pitch;
+        yDebug() << "command pitch:" << enc_pitch;
     }
 
 }
@@ -123,8 +127,35 @@ void ControlThread::printStats()
 bool ControlThread::threadInit()
 {
     //open the joystick port
-    port_joystick_control.open("/tripodJoystickCtrl/joystick:i");
+    port_joystick_control.open("/torsoJoystickControl/joystick:i");
 
+        //try to connect to joystickCtrl output
+        if (rf.check("joystick_connect"))
+        {
+            int joystick_trials = 0; 
+            do
+            {
+                yarp::os::Time::delay(1.0);
+                if (yarp::os::Network::connect("/joystickCtrl:o","/torsoJoystickControl/joystick:i"))
+                    {
+                        yInfo("Joystick has been automatically connected");
+                        break;
+                    }
+                else
+                    {
+                        yWarning("Unable to find the joystick port, retrying (%d/5)...",joystick_trials);
+                        joystick_trials++;
+                    }
+
+                if (joystick_trials>=5)
+                    {
+                        yError("Unable to find the joystick port, giving up");
+                        break;
+                    }
+            }
+            while (1);
+        }
+        
     // open the control board driver
     yInfo("Opening the motors interface...\n");
     int trials = 0;
