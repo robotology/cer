@@ -300,6 +300,7 @@ public:
         marker.color.b = 0.0;
         markerarray.markers.push_back(marker);
         
+        /*
         //x
         marker.id = 2;
         marker.pose.orientation.x = q[3];
@@ -341,6 +342,7 @@ public:
         marker.color.g = 0.0;
         marker.color.b = 1.0;
         markerarray.markers.push_back(marker);
+        */
         rosPublisherPort.write();
     }
 
