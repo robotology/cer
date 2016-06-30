@@ -83,8 +83,8 @@ public:
         string geomagic=rf.check("geomagic",Value("geomagic")).asString();
         arm_type=rf.check("arm-type",Value("right")).asString();
         control_pose=rf.check("control-pose",Value("full_pose")).asString();
-        torso_heave=rf.check("torso-heave",Value(0.1)).asDouble();
-        wrist_heave=rf.check("wrist-heave",Value(0.05)).asDouble();
+        torso_heave=rf.check("torso-heave",Value(0.07)).asDouble();
+        wrist_heave=rf.check("wrist-heave",Value(0.02)).asDouble();
         torsoCannotChange=rf.check("no-torso");
 
         transform(arm_type.begin(),arm_type.end(),arm_type.begin(),::tolower);
