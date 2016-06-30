@@ -57,6 +57,7 @@ protected:
     string control_pose;
     double torso_heave;
     double wrist_heave;
+    double translation_gain;
     bool torsoCannotChange;
 
     enum {
@@ -85,6 +86,7 @@ public:
         control_pose=rf.check("control-pose",Value("full_pose")).asString();
         torso_heave=rf.check("torso-heave",Value(0.07)).asDouble();
         wrist_heave=rf.check("wrist-heave",Value(0.02)).asDouble();
+        translation_gain=rf.check("translation-gain",Value(1.5)).asDouble();;
         torsoCannotChange=rf.check("no-torso");
 
         transform(arm_type.begin(),arm_type.end(),arm_type.begin(),::tolower);
@@ -395,9 +397,9 @@ public:
             else
             {
                 Vector xd(4,0.0);
-                xd[0]=pos[0]-pos0[0];
-                xd[1]=pos[1]-pos0[1];
-                xd[2]=pos[2]-pos0[2];
+                xd[0]=translation_gain*(pos[0]-pos0[0]);
+                xd[1]=translation_gain*(pos[1]-pos0[1]);
+                xd[2]=translation_gain*(pos[2]-pos0[2]);
                 xd[3]=1.0;
 
                 Matrix H0=eye(4,4);
