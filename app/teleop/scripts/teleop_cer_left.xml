@@ -16,7 +16,7 @@
                 <dependencies>
                     <port timeout="5.0">/geomagic/state:o</port>
                 </dependencies>
-                <node>linux</node>
+                <node>windows</node>
         </module>
 
         <module>
