@@ -12,8 +12,8 @@
 
         <module>
                 <name>cer_teleop</name>
-                <parameters>--arm-type right</parameters>
-                <node>windows</node>
+                <parameters>--arm-type right --no-torso</parameters>
+                <node>linux</node>
         </module>
 
         <module>
@@ -24,7 +24,7 @@
 
         <module>
                 <name>cer_reaching-controller</name>
-                <parameters>--robot cer --arm-type right --verbosity 1</parameters>
+                <parameters>--robot cer --arm-type right --verbosity 1 --T 1.0</parameters>
                 <node>linux</node>
         </module>
 
