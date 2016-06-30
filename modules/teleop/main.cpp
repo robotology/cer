@@ -278,12 +278,12 @@ public:
         marker.header.stamp.sec = (yarp::os::NetUint32) sec_part;
         marker.header.stamp.nsec = (yarp::os::NetUint32) nsec_part;
         marker.ns = "cer-teleop_namespace";
-        marker.id = 0;
         marker.type = visualization_msgs_Marker::SPHERE;
         marker.action = visualization_msgs_Marker::ADD;
 
         //center
         Vector q = dcm2quat(axis2dcm(od));
+        marker.id = 1;
         marker.pose.position.x = xd[0];
         marker.pose.position.y = xd[1];
         marker.pose.position.z = xd[2];
@@ -301,10 +301,11 @@ public:
         markerarray.markers.push_back(marker);
         
         //x
-        marker.pose.orientation.x = q[0];
-        marker.pose.orientation.y = q[1];
-        marker.pose.orientation.z = q[2];
-        marker.pose.orientation.w = q[3];
+        marker.id = 2;
+        marker.pose.orientation.x = q[3];
+        marker.pose.orientation.y = q[0];
+        marker.pose.orientation.z = q[1];
+        marker.pose.orientation.w = q[2];
         marker.scale.x = 0.5;
         marker.scale.y = 0.05;
         marker.scale.z = 0.05;
@@ -314,10 +315,11 @@ public:
         markerarray.markers.push_back(marker);
 
         //y
-        marker.pose.orientation.x = q[0];
-        marker.pose.orientation.y = q[1];
-        marker.pose.orientation.z = q[2];
-        marker.pose.orientation.w = q[3];
+        marker.id = 3;        
+        marker.pose.orientation.x = q[3];
+        marker.pose.orientation.y = q[0];
+        marker.pose.orientation.z = q[1];
+        marker.pose.orientation.w = q[2];
         marker.scale.x = 0.05;
         marker.scale.y = 0.5;
         marker.scale.z = 0.05;
@@ -327,10 +329,11 @@ public:
         markerarray.markers.push_back(marker);
 
         //z
-        marker.pose.orientation.x = q[0];
-        marker.pose.orientation.y = q[1];
-        marker.pose.orientation.z = q[2];
-        marker.pose.orientation.w = q[3];
+        marker.id = 4;        
+        marker.pose.orientation.x = q[3];
+        marker.pose.orientation.y = q[0];
+        marker.pose.orientation.z = q[1];
+        marker.pose.orientation.w = q[2];
         marker.scale.x = 0.05;
         marker.scale.y = 0.05;
         marker.scale.z = 0.5;
