@@ -21,6 +21,7 @@
 #include <hapticdevice/IHapticDevice.h>
 
 #include "ros_messages/visualization_msgs_Marker.h"
+#include "ros_messages/visualization_msgs_MarkerArray.h"
 
 using namespace std;
 using namespace yarp::os;
@@ -34,7 +35,7 @@ using namespace hapticdevice;
 class TeleOp: public RFModule
 {
 protected:
-    Publisher<visualization_msgs_Marker> rosPublisherPort;
+    Publisher<visualization_msgs_MarkerArray> rosPublisherPort;
     Node *rosNode;
 
     PolyDriver     drvGeomagic;
@@ -270,7 +271,9 @@ public:
             sec_part = 0;
         }
 
-        visualization_msgs_Marker& marker = rosPublisherPort.prepare();
+        visualization_msgs_MarkerArray& markerarray = rosPublisherPort.prepare();
+        markerarray.markers.clear();
+        visualization_msgs_Marker marker;
         marker.header.frame_id = "mobile_base_body_link";
         marker.header.stamp.sec = (yarp::os::NetUint32) sec_part;
         marker.header.stamp.nsec = (yarp::os::NetUint32) nsec_part;
@@ -278,6 +281,9 @@ public:
         marker.id = 0;
         marker.type = visualization_msgs_Marker::SPHERE;
         marker.action = visualization_msgs_Marker::ADD;
+
+        //center
+        Vector q = dcm2quat(axis2dcm(od));
         marker.pose.position.x = xd[0];
         marker.pose.position.y = xd[1];
         marker.pose.position.z = xd[2];
@@ -292,6 +298,46 @@ public:
         marker.color.r = 0.0;
         marker.color.g = 1.0;
         marker.color.b = 0.0;
+        markerarray.markers.push_back(marker);
+        
+        //x
+        marker.pose.orientation.x = q[0];
+        marker.pose.orientation.y = q[1];
+        marker.pose.orientation.z = q[2];
+        marker.pose.orientation.w = q[3];
+        marker.scale.x = 0.5;
+        marker.scale.y = 0.05;
+        marker.scale.z = 0.05;
+        marker.color.r = 1.0;
+        marker.color.g = 0.0;
+        marker.color.b = 0.0;
+        markerarray.markers.push_back(marker);
+
+        //y
+        marker.pose.orientation.x = q[0];
+        marker.pose.orientation.y = q[1];
+        marker.pose.orientation.z = q[2];
+        marker.pose.orientation.w = q[3];
+        marker.scale.x = 0.05;
+        marker.scale.y = 0.5;
+        marker.scale.z = 0.05;
+        marker.color.r = 0.0;
+        marker.color.g = 1.0;
+        marker.color.b = 0.0;
+        markerarray.markers.push_back(marker);
+
+        //z
+        marker.pose.orientation.x = q[0];
+        marker.pose.orientation.y = q[1];
+        marker.pose.orientation.z = q[2];
+        marker.pose.orientation.w = q[3];
+        marker.scale.x = 0.05;
+        marker.scale.y = 0.05;
+        marker.scale.z = 0.5;
+        marker.color.r = 0.0;
+        marker.color.g = 0.0;
+        marker.color.b = 1.0;
+        markerarray.markers.push_back(marker);
         rosPublisherPort.write();
     }
 
