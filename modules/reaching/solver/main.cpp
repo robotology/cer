@@ -139,10 +139,6 @@ public:
         bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
         int verbosity=rf.check("verbosity",Value(0)).asInt();
 
-        if (get_bounds)
-            if (!alignJointsBounds(robot,arm_type))
-                return false;
-
         SolverParameters p=solver.getSolverParameters();
         p.setMode("full_pose");
         p.torso_heave=0.0;
@@ -152,6 +148,10 @@ public:
         solver.setArmParameters(ArmParameters(arm_type));
         solver.setSolverParameters(p);
         solver.setVerbosity(verbosity);
+
+        if (get_bounds)
+            if (!alignJointsBounds(robot,arm_type))
+                return false;
 
         q.resize(3+solver.getArmParameters().upper_arm.getDOF()+3,0.0);
         rpcPort.open(("/cer_reaching-solver/"+arm_type+"/rpc").c_str());
