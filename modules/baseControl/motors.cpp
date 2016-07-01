@@ -48,6 +48,10 @@ void  MotorControl::apply_motor_filter(int i)
     {
         F[i] = control_filters::lp_filter_8Hz(F[i], i);
     }
+    else if (motors_filter_enabled == 10)
+    {
+        F[i] = control_filters::lp_filter_0_5Hz(F[i], i);
+    }
 }
 
 bool MotorControl::open(ResourceFinder &_rf, Property &_options)
