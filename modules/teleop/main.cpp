@@ -414,10 +414,7 @@ public:
                 Matrix Rd=axis2dcm(o0)*axis2dcm(ax)*axis2dcm(ay)*axis2dcm(az);
 
                 Vector od=dcm2axis(Rd);
-                if (isOrientationFixed)
-                    goToPose(xd,fixedOrientation);
-                else
-                    goToPose(xd,od);
+                goToPose(xd,isOrientationFixed?fixedOrientation:od);
                 updateGazebo(xd,od);
                 updateRVIZ(xd,od);
             }
@@ -427,8 +424,7 @@ public:
             if (s0==triggered)
             {
                 isOrientationFixed=!isOrientationFixed;
-                if (isOrientationFixed)
-                    fixedOrientation=cur_o;
+                fixedOrientation=cur_o;
             }
 
             if (c0!=0)
