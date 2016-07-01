@@ -42,17 +42,45 @@ void ControlThread::run()
         if (val1 < -100) val1 = -100;
         if (val2 > 100) val2 = 100;
         if (val2 < -100) val2 = -100;
-
-        pitch = pitch + val0 / 1000;
-        roll  = roll  + val1 / 1000;
-        elong = elong + val2 / 200000.0;
-        if (elong > max_elong) elong = max_elong;
-        if (elong < min_elong) elong = min_elong;
-        if (pitch > max_alpha)  pitch = max_alpha;
-        if (pitch < -max_alpha) pitch = -max_alpha;
-        if (roll > max_alpha)   roll = max_alpha;
-        if (roll < -max_alpha)  roll = -max_alpha;
-        yDebug() <<" done";
+        val0=val0/10000;
+        val1=val1/10000;
+        val2=val2/5000;
+    
+        double vel1= val2 + val0          + 0;
+        double vel2= val2 - val0/2      + val1/1.732050808;
+        double vel3= val2 - val0/2      - val1/1.732050808;
+    
+        //yDebug() << vel1 <<vel2 << vel3;
+    
+        double vels[3];
+        vels[0]=vel1;
+        vels[1]=vel2;
+        vels[2]=vel3;
+        int mods[3];
+        
+        if (motors_enabled)
+        {
+		  if (1)
+		  {	
+	          iCmd -> getControlModes(mods);
+              if (mods[0] != VOCAB_CM_VELOCITY)
+              {
+	    		  iCmd->setControlMode(0,VOCAB_CM_VELOCITY);
+	    		  yarp::os::Time::delay(0.005);
+	    	  }
+	    	  if (mods[1] != VOCAB_CM_VELOCITY)
+              {
+	    		  iCmd->setControlMode(1,VOCAB_CM_VELOCITY);
+	    		  yarp::os::Time::delay(0.005);
+	    	  }
+	    	  if (mods[2] != VOCAB_CM_VELOCITY)
+              {
+	    		  iCmd->setControlMode(2,VOCAB_CM_VELOCITY);
+	    		  yarp::os::Time::delay(0.005);
+	    	  }
+	      }		  
+          iVel -> velocityMove(vels);
+        }    
     }
     else 
     {
@@ -60,68 +88,13 @@ void ControlThread::run()
 		return;
 	}
 
-    double enc_elong = enc_init_elong+elong;
-    double enc_pitch = enc_init_pitch + pitch;
-    double enc_roll = enc_init_roll + roll;
-
-
-
-    //-----------
-
-    if (enc_elong < min_elong)
-    {
-        enc_elong = min_elong;
-        yDebug() << "Out of limits elong" << enc_elong;
-    }
-    if (enc_elong > max_elong)
-    {
-        enc_elong = max_elong;
-        yDebug() << "Out of limits elong" << enc_elong;
-    }
-    if (motors_enabled) iDir->setPosition(0, enc_elong);
-    else {
-        yDebug() << "command elong:" << enc_elong;
-    }
-    //-----------
-
-    if (enc_roll < -max_alpha)
-    {
-        enc_roll = -max_alpha;
-        yDebug() << "Out of limits roll" << enc_roll;
-    }
-    if (enc_roll > max_alpha)
-    {
-        enc_roll = max_alpha;
-        yDebug() << "Out of limits roll" << enc_roll;
-    }
-    if (motors_enabled) iDir->setPosition(1, enc_roll);
-    else {
-        yDebug() << "command roll:" << enc_roll;
-    }
-    //-----------
-
-    if (enc_pitch < -max_alpha)
-    {
-        enc_pitch = -max_alpha;
-        yDebug() << "Out of limits pitch" << enc_pitch;
-    }
-    if (enc_pitch > max_alpha)
-    {
-        enc_pitch = max_alpha;
-        yDebug() << "Out of limits pitch" << enc_pitch;
-    }
-    if (motors_enabled) iDir->setPosition(2, enc_pitch);
-    else {
-        yDebug() << "command pitch:" << enc_pitch;
-    }
-
 }
 
 void ControlThread::printStats()
 {
-    ostringstream stats;
-    stats<<setprecision(3)<<"elong: "<<elong<<" pitch: "<<pitch<<" roll: "<<roll;
-    yDebug()<<stats.str();
+   // ostringstream stats;
+   // stats<<setprecision(3)<<"elong: "<<elong<<" pitch: "<<pitch<<" roll: "<<roll;
+   // yDebug()<<stats.str();
 }
 
 bool ControlThread::threadInit()
@@ -200,16 +173,23 @@ bool ControlThread::threadInit()
     } while (true);
 
     control_board_driver->view(iDir);
+    control_board_driver->view(iVel);
     control_board_driver->view(iEnc);
-    if (iDir == 0 || iEnc == 0)
+    control_board_driver->view(iPos);
+    control_board_driver->view(iCmd);
+    if (iDir == 0 || iEnc == 0 || iVel == 0 || iCmd == 0)
     {
         yError() << "Failed to open interfaces";
         return false;
     }
 
+    yarp::os::Time::delay(1.0);
     iEnc->getEncoder(0, &enc_init_elong);
     iEnc->getEncoder(1, &enc_init_roll);
     iEnc->getEncoder(2, &enc_init_pitch);
+    iVel ->setRefAcceleration (0,10000000);
+    iVel ->setRefAcceleration (1,10000000);
+    iVel ->setRefAcceleration (2,10000000);
 
     yDebug() << "Initial vals" << enc_init_elong << enc_init_roll << enc_init_pitch;
     return true;
@@ -230,6 +210,7 @@ ctrl_options(options)
     control_board_driver = 0;
     thread_timeout_counter = 0;
     iDir = 0;
+    iPos = 0;
     iEnc = 0;
     thread_period = _period;
 

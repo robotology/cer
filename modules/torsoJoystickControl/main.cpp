@@ -65,7 +65,7 @@ public:
         // get params from the RF
         ctrlName = rf.check("local", Value("torsoJoystickControl")).asString();
         robotName = rf.check("robot", Value("cer")).asString();
-        partName = rf.check("part", Value("torso")).asString();
+        partName = rf.check("part", Value("torso_tripod")).asString();
 
         remoteName = slash + robotName + slash + partName;
         localName = slash + ctrlName;
@@ -161,7 +161,7 @@ public:
         }
 
         //set the thread rate
-        int rate = rf.check("rate",Value(20)).asInt();
+        int rate = rf.check("rate",Value(10)).asInt();
         yInfo("baseCtrl thread rate: %d ms.",rate);
 
         //start the control thread

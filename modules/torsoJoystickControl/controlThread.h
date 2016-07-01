@@ -66,8 +66,11 @@ protected:
     string                    remoteName;
     string                    localName;
 
+    IPositionControl*         iPos;
+    IVelocityControl*         iVel;
     IPositionDirect*          iDir;
     IEncoders*                iEnc;
+    IControlMode2*            iCmd;
     
     double                    elong;
     double                    pitch;
