@@ -9,14 +9,14 @@
 
     <group name="LIMITS">
     <!--    <param name="jntPosMax">                  85            70         85        95        </param>   no covers -->
-        <param name="jntPosMax">                      55            70         85        95        </param>
-        <param name="jntPosMin">                     -25           -5         -85        5         </param>
+        <param name="jntPosMax">                      55            65         85        95        </param>
+        <param name="jntPosMin">                     -25            11        -85        5         </param>
         <param name="rotorPosMin">                    0             0          0         0         </param> 
         <param name="rotorPosMax">                    0             0          0         0         </param>
         <param name="motorOverloadCurrents">          5000          5000       5000      5000      </param>
         <param name="motorNominalCurrents">           2500          2500       2500      2500      </param>
         <param name="motorPeakCurrents">              5000          5000       5000      5000      </param>
-        <param name="jntVelMax">                      25000         25000      25000     25000     </param>
+        <param name="jntVelMax">                      50            50         50        50        </param>
         <param name="motorPwmLimit">                  32000         32000      32000     32000     </param>    
     </group>
 

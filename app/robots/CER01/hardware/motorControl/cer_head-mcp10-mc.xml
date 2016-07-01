@@ -24,9 +24,9 @@
     <group name="POSITION_CONTROL">
 	<param name="controlLaw">    joint_pid_v1            </param> 
         <param name="controlUnits">  machine_units           </param> 
-        <param name="kp">              -4           4        </param>       
+        <param name="kp">              -3           3        </param>       
         <param name="kd">              -0           0        </param>       
-        <param name="ki">             -40          50        </param>       
+        <param name="ki">             -30          30        </param>       
         <param name="limOutput">      500         500        </param>      
         <param name="maxOutput">     3000        3000        </param>          
         <param name="maxInt">        3000        3000        </param>       

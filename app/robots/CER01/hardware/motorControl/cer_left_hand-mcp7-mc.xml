@@ -28,7 +28,7 @@
         <param name="kd">               0           0        </param>       
         <param name="ki">             -50          50        </param>         
         <param name="limOutput">     2500        2500        </param>      
-        <param name="maxOutput">     1500        1500        </param>          
+        <param name="maxOutput">     2500        2500        </param>          
         <param name="maxInt">         500         500        </param>       
         <param name="shift">            0           0        </param>       
         <param name="ko">               0           0        </param>       
