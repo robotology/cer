@@ -12,7 +12,7 @@
 
         <module>
                 <name>cer_teleop</name>
-                <parameters>--arm-type left --no-torso</parameters>
+                <parameters>--arm-type left</parameters>
                 <dependencies>
                     <port timeout="5.0">/geomagic/state:o</port>
                 </dependencies>

@@ -54,11 +54,10 @@ protected:
     RpcClient              robotCmdPort;
 
     string arm_type;
-    string control_pose;
     double torso_heave;
     double wrist_heave;
     double gain;
-    bool torsoCannotChange;
+    bool isOrientationFixed;
 
     enum {
         idle,
@@ -68,13 +67,13 @@ protected:
 
     int s0,s1;
     int c0,c1;
-    bool no_torso;
     map<int,string> stateStr;
 
     Matrix Tsim;
     Vector cur_x,cur_o;
     Vector pos0,rpy0;
     Vector x0,o0;
+    Vector fixedOrientation;
 
 public:
     /**********************************************************/
@@ -83,24 +82,15 @@ public:
         string robot=rf.check("robot",Value("cer")).asString();
         string geomagic=rf.check("geomagic",Value("geomagic")).asString();
         arm_type=rf.check("arm-type",Value("right")).asString();
-        control_pose=rf.check("control-pose",Value("full_pose")).asString();
         torso_heave=rf.check("torso-heave",Value(0.07)).asDouble();
         wrist_heave=rf.check("wrist-heave",Value(0.02)).asDouble();
         gain=rf.check("gain",Value(1.5)).asDouble();;
-        torsoCannotChange=rf.check("no-torso");
 
         transform(arm_type.begin(),arm_type.end(),arm_type.begin(),::tolower);
         if ((arm_type!="left") && (arm_type!="right"))
         {
             yWarning("Unrecognized arm-type \"%s\"",arm_type.c_str());
             arm_type="right";
-        }
-
-        transform(control_pose.begin(),control_pose.end(),control_pose.begin(),::tolower);
-        if ((control_pose!="full_pose") && (control_pose!="xyz_pose"))
-        {
-            yWarning("Unrecognized control-pose \"%s\"",control_pose.c_str());
-            control_pose="full_pose";
         }
 
         rosNode=new yarp::os::Node("/cer_teleop");
@@ -160,7 +150,7 @@ public:
 
         s0=s1=idle;
         c0=c1=0;
-        no_torso=true;
+        isOrientationFixed=false;
         
         stateStr[idle]="idle";
         stateStr[triggered]="triggered";
@@ -176,10 +166,11 @@ public:
         pos0.resize(3,0.0);
         rpy0.resize(3,0.0);
         cur_x.resize(3,0.0);
-        cur_o.resize(3,0.0);
+        cur_o.resize(4,0.0);
 
         x0.resize(3,0.0);
         o0.resize(4,0.0);
+        fixedOrientation.resize(4,0.0);
 
         gazeboPort.open("/cer_teleop/gazebo:o");
         robotTargetPort.open("/cer_teleop/target:o");
@@ -245,7 +236,7 @@ public:
         Bottle &bLoad=params.addList();
         Bottle &mode=bLoad.addList();
         mode.addString("mode");
-        mode.addString(control_pose+(no_torso?"+no_torso":"+no_heave"));
+        mode.addString("full_pose+no_torso");
         
         Property &prop=robotTargetPort.prepare(); prop.clear();
         prop.put("parameters",params.get(0));
@@ -423,7 +414,10 @@ public:
                 Matrix Rd=axis2dcm(o0)*axis2dcm(ax)*axis2dcm(ay)*axis2dcm(az);
 
                 Vector od=dcm2axis(Rd);
-                goToPose(xd,od);
+                if (isOrientationFixed)
+                    goToPose(xd,fixedOrientation);
+                else
+                    goToPose(xd,od);
                 updateGazebo(xd,od);
                 updateRVIZ(xd,od);
             }
@@ -432,8 +426,9 @@ public:
         {
             if (s0==triggered)
             {
-                if (!torsoCannotChange)
-                    no_torso=!no_torso; 
+                isOrientationFixed=!isOrientationFixed;
+                if (isOrientationFixed)
+                    fixedOrientation=cur_o;
             }
 
             if (c0!=0)
@@ -510,8 +505,8 @@ public:
             reachingHandler(b0,pos,rpy);
             handHandler(b1);
 
-            yInfo("[reaching=%s; pose=%s; torso=%s;] [hand=%s; movement=%s;] b0:%d b1:%d",
-                  stateStr[s0].c_str(),control_pose.c_str(),no_torso?"off":"on",
+            yInfo("[reaching=%s; pose=%s;] [hand=%s; movement=%s;] b0:%d b1:%d",
+                  stateStr[s0].c_str(),isOrientationFixed?"fixed-orientation":"full_pose",
                   stateStr[s1].c_str(),vels[0]>0.0?"closing":"opening",b0,b1);
         }
         else
@@ -538,5 +533,4 @@ int main(int argc,char *argv[])
     TeleOp teleop;
     return teleop.runModule(rf);
 }
-
 
