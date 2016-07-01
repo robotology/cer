@@ -425,6 +425,10 @@ public:
             {
                 isOrientationFixed=!isOrientationFixed;
                 fixedOrientation=cur_o;
+
+                yInfo("pose=%s; movement=%s;",
+                      isOrientationFixed?"fixed-orientation":"full_pose",
+                      vels[0]>0.0?"closing":"opening");
             }
 
             if (c0!=0)
@@ -460,7 +464,13 @@ public:
         else
         {
             if (s1==triggered)
+            {
                 vels=-1.0*vels;
+
+                yInfo("pose=%s; movement=%s;",
+                      isOrientationFixed?"fixed-orientation":"full_pose",
+                      vels[0]>0.0?"closing":"opening");
+            }
 
             if (c1!=0)
                 ivel->stop();
@@ -500,10 +510,6 @@ public:
 
             reachingHandler(b0,pos,rpy);
             handHandler(b1);
-
-            yInfo("[reaching=%s; pose=%s;] [hand=%s; movement=%s;] b0:%d b1:%d",
-                  stateStr[s0].c_str(),isOrientationFixed?"fixed-orientation":"full_pose",
-                  stateStr[s1].c_str(),vels[0]>0.0?"closing":"opening",b0,b1);
         }
         else
             yError("No robot connected!");
