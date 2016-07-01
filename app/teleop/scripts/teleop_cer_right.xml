@@ -23,13 +23,13 @@
         <module>
                 <name>cer_reaching-solver</name>
                 <parameters>--robot cer --arm-type right --verbosity 1</parameters>
-                <node>linux</node>
+                <node>cer-base</node>
         </module>
 
         <module>
                 <name>cer_reaching-controller</name>
                 <parameters>--robot cer --arm-type right --verbosity 1 --T 1.0</parameters>
-                <node>linux</node>
+                <node>cer-base</node>
         </module>
 
 <!----- connections ------>
