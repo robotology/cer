@@ -242,9 +242,6 @@ public:
         prop.put("parameters",params.get(0));
         prop.put("target",target.get(0));
         robotTargetPort.write();
-
-        yInfo("going to (%s) (%s)",
-              xd.toString(3,3).c_str(),od_.toString(3,3).c_str());
     }
 
     /**********************************************************/
