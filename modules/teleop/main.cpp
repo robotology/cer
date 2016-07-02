@@ -426,7 +426,7 @@ public:
                 isOrientationFixed=!isOrientationFixed;
                 fixedOrientation=cur_o;
 
-                yInfo("pose=%s; movement=%s;",
+                yInfo("pose=%s; hand=%s;",
                       isOrientationFixed?"fixed-orientation":"full_pose",
                       vels[0]>0.0?"closing":"opening");
             }
@@ -467,7 +467,7 @@ public:
             {
                 vels=-1.0*vels;
 
-                yInfo("pose=%s; movement=%s;",
+                yInfo("pose=%s; hand=%s;",
                       isOrientationFixed?"fixed-orientation":"full_pose",
                       vels[0]>0.0?"closing":"opening");
             }
