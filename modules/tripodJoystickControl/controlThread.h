@@ -66,8 +66,11 @@ protected:
     string                    remoteName;
     string                    localName;
 
+    IPositionControl*         iPos;
+    IVelocityControl*         iVel;
     IPositionDirect*          iDir;
     IEncoders*                iEnc;
+    IControlMode2*            iCmd;
     
     double                    elong;
     double                    pitch;
@@ -76,6 +79,19 @@ protected:
     double                    max_elong;
     double                    min_elong;
     double                    max_alpha;
+
+    double                    enc_init_elong;
+    double                    enc_init_pitch;
+    double                    enc_init_roll;
+
+    int                       joystick_channel_0;
+    int                       joystick_channel_1;
+    int                       joystick_channel_2;
+
+    double                    gain_0;
+    double                    gain_1;
+    double                    gain_2;
+
 
 public:
     bool                      motors_enabled;

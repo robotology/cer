@@ -30,84 +30,105 @@ void ControlThread::run()
     Bottle *b = this->port_joystick_control.read(false);
     if (b)
     {
-        double val0 = b->get(1).asDouble();
-        double val1 = b->get(2).asDouble();
-        double val2 = b->get(3).asDouble();
+        double val0 = b->get(joystick_channel_0).asDouble(); 
+        double val1 = b->get(joystick_channel_1).asDouble();
+        double val2 = b->get(joystick_channel_2).asDouble(); //elong
+        
+        if (fabs(val0) < 20 && fabs(val1) < 20 && fabs(val2) < 20) return;
+
+        if (val0 > 100) val0 = 100;
+        if (val0 < -100) val0 = -100;
         if (val1 > 100) val1 = 100;
         if (val1 < -100) val1 = -100;
         if (val2 > 100) val2 = 100;
         if (val2 < -100) val2 = -100;
-        pitch = val1/100.0*25.0 * sin(val0 / 180.0 * 3.14);
-        roll  = val1/100.0*25.0 * cos(val0 / 180.0 * 3.14);
-        elong = elong + val2 / 200000.0;
-        if (elong > max_elong) elong = max_elong;
-        if (elong < min_elong) elong = min_elong;
-    }
-
-    double enc_elong = 0;
-    double enc_roll = 0;
-    double enc_pitch = 0;
-
-    iEnc->getEncoder(0, &enc_elong);
-    iEnc->getEncoder(0, &enc_roll);
-    iEnc->getEncoder(0, &enc_pitch);
-
-    //-----------
-
-    if (elong < min_elong)
-    {
-        elong = min_elong;
-        yDebug() << "Out of limits elong" << elong;
-    }
-    if (elong > max_elong)
-    {
-        elong = max_elong;
-        yDebug() << "Out of limits elong" << elong;
-    }
-    if (motors_enabled) iDir->setPosition(0, elong);
+        val0=val0*gain_0;
+        val1=val1*gain_1;
+        val2=val2*gain_2;
     
-    //-----------
-
-    if (pitch < -max_alpha)
-    {
-        pitch = -max_alpha;
-        yDebug() << "Out of limits elong" << pitch;
+        double vel1= val2 + val0        + 0;
+        double vel2= val2 - val0/2      + val1/1.732050808;
+        double vel3= val2 - val0/2      - val1/1.732050808;
+    
+        //yDebug() << vel1 <<vel2 << vel3;
+    
+        double vels[3];
+        vels[0]=vel1;
+        vels[1]=vel2;
+        vels[2]=vel3;
+        int mods[3];
+        
+        if (motors_enabled)
+        {
+          if (1)
+          {    
+              iCmd -> getControlModes(mods);
+              if (mods[0] != VOCAB_CM_VELOCITY)
+              {
+                  iCmd->setControlMode(0,VOCAB_CM_VELOCITY);
+                  yarp::os::Time::delay(0.005);
+              }
+              if (mods[1] != VOCAB_CM_VELOCITY)
+              {
+                  iCmd->setControlMode(1,VOCAB_CM_VELOCITY);
+                  yarp::os::Time::delay(0.005);
+              }
+              if (mods[2] != VOCAB_CM_VELOCITY)
+              {
+                  iCmd->setControlMode(2,VOCAB_CM_VELOCITY);
+                  yarp::os::Time::delay(0.005);
+              }
+          }          
+          iVel -> velocityMove(vels);
+        }    
     }
-    if (pitch > max_alpha)
+    else 
     {
-        pitch = max_alpha;
-        yDebug() << "Out of limits elong" << pitch;
+        //yDebug() <<" empty";
+        return;
     }
-    if (motors_enabled) iDir->setPosition(1, pitch);
-
-    //-----------
-
-    if (roll < -max_alpha)
-    {
-        roll = -max_alpha;
-        yDebug() << "Out of limits elong" << roll;
-    }
-    if (roll > max_alpha)
-    {
-        roll = max_alpha;
-        yDebug() << "Out of limits elong" << roll;
-    }
-    if (motors_enabled) iDir->setPosition(2, roll);
 
 }
 
 void ControlThread::printStats()
 {
-    ostringstream stats;
-    stats<<setprecision(3)<<"elong: "<<elong<<" pitch: "<<pitch<<" roll: "<<roll;
-    yDebug()<<stats.str();
+   // ostringstream stats;
+   // stats<<setprecision(3)<<"elong: "<<elong<<" pitch: "<<pitch<<" roll: "<<roll;
+   // yDebug()<<stats.str();
 }
 
 bool ControlThread::threadInit()
 {
     //open the joystick port
-    port_joystick_control.open("/tripodJoystickCtrl/joystick:i");
+    port_joystick_control.open(localName + "/joystick:i");
 
+        //try to connect to joystickCtrl output
+        if (rf.check("joystick_connect"))
+        {
+            int joystick_trials = 0; 
+            do
+            {
+                yarp::os::Time::delay(1.0);
+                if (yarp::os::Network::connect("/joystickCtrl:o", localName+"/joystick:i"))
+                    {
+                        yInfo("Joystick has been automatically connected");
+                        break;
+                    }
+                else
+                    {
+                        yWarning("Unable to find the joystick port, retrying (%d/5)...",joystick_trials);
+                        joystick_trials++;
+                    }
+
+                if (joystick_trials>=5)
+                    {
+                        yError("Unable to find the joystick port, giving up");
+                        break;
+                    }
+            }
+            while (1);
+        }
+        
     // open the control board driver
     yInfo("Opening the motors interface...\n");
     int trials = 0;
@@ -152,12 +173,25 @@ bool ControlThread::threadInit()
     } while (true);
 
     control_board_driver->view(iDir);
+    control_board_driver->view(iVel);
     control_board_driver->view(iEnc);
-    if (iDir == 0 || iEnc == 0)
+    control_board_driver->view(iPos);
+    control_board_driver->view(iCmd);
+    if (iDir == 0 || iEnc == 0 || iVel == 0 || iCmd == 0)
     {
         yError() << "Failed to open interfaces";
         return false;
     }
+
+    yarp::os::Time::delay(1.0);
+    iEnc->getEncoder(0, &enc_init_elong);
+    iEnc->getEncoder(1, &enc_init_roll);
+    iEnc->getEncoder(2, &enc_init_pitch);
+    iVel ->setRefAcceleration (0,10000000);
+    iVel ->setRefAcceleration (1,10000000);
+    iVel ->setRefAcceleration (2,10000000);
+
+    yDebug() << "Initial vals" << enc_init_elong << enc_init_roll << enc_init_pitch;
     return true;
 }
 
@@ -176,6 +210,7 @@ ctrl_options(options)
     control_board_driver = 0;
     thread_timeout_counter = 0;
     iDir = 0;
+    iPos = 0;
     iEnc = 0;
     thread_period = _period;
 
@@ -185,7 +220,13 @@ ctrl_options(options)
 
     max_elong = rf.check("max_elong", Value(0.2)).asDouble();
     min_elong = rf.check("min_elong", Value(0.0)).asDouble();
-    max_alpha = rf.check("max_alpha", Value(25)).asDouble();
+    max_alpha = rf.check("max_alpha", Value(15)).asDouble();
+    joystick_channel_0 = rf.check("joystick_channel_0", Value(8)).asInt();
+    joystick_channel_1 = rf.check("joystick_channel_1", Value(7)).asInt();
+    joystick_channel_2 = rf.check("joystick_channel_2", Value(5)).asInt();
+    gain_0 = rf.check("gain_0", Value(0.0001)).asInt();
+    gain_1 = rf.check("gain_1", Value(0.0001)).asInt();
+    gain_2 = rf.check("gain_2", Value(0.0002)).asInt();
 
     if (rf.check("no_motors"))
     {
