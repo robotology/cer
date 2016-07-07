@@ -17,18 +17,18 @@
 
 
 /****************************************************************/
-class ArmFullNoTorsoNLP_ForwardDiff : public ArmCommonNLP
+class ArmFullNoTorsoHeaveNLP_ForwardDiff : public ArmCommonNLP
 {
 public:
     /****************************************************************/
-    ArmFullNoTorsoNLP_ForwardDiff(ArmSolver &slv_) : ArmCommonNLP(slv_)
+    ArmFullNoTorsoHeaveNLP_ForwardDiff(ArmSolver &slv_) : ArmCommonNLP(slv_)
     {
     }
 
     /****************************************************************/
     string get_mode() const
     {
-        return "full_pose+no_torso+forward_diff";
+        return "full_pose+no_torso_heave+forward_diff";
     }
 
     /****************************************************************/
@@ -36,8 +36,8 @@ public:
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
         n=x0.length();
-        m=2+1;
-        nnz_jac_g=6+(n-4);
+        m=1+1;
+        nnz_jac_g=3+(n-4);
         nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
 
@@ -56,7 +56,7 @@ public:
 
         offs+=3;
         x_l[offs+0]=x_u[offs+0]=x0[offs+0];
-        iKinChain *chain=upper_arm.asChain();        
+        iKinChain *chain=upper_arm.asChain();
         for (size_t i=1; i<upper_arm.getDOF(); i++)
         {
             x_l[offs+i]=(*chain)[i].getMin();
@@ -70,18 +70,16 @@ public:
             x_u[offs+i]=lower_arm.l_max;
         }
 
-        g_l[0]=g_u[0]=0.0;
-        g_l[1]=lower_arm.cos_alpha_max; g_u[1]=1.0;
-
-        g_l[2]=g_u[2]=0.0;
+        g_l[0]=lower_arm.cos_alpha_max; g_u[0]=1.0;
+        g_l[1]=g_u[1]=0.0;
 
         latch_idx.clear();
         latch_gl.clear();
         latch_gu.clear();
 
-        latch_idx.push_back(1);
-        latch_gl.push_back(g_l[1]);
-        latch_gu.push_back(g_u[1]);
+        latch_idx.push_back(0);
+        latch_gl.push_back(g_l[0]);
+        latch_gu.push_back(g_u[0]);
 
         return true;
     }
@@ -181,11 +179,8 @@ public:
     {
         computeQuantities(x,new_x);
 
-        double e2=hd2-din2.p[2];
-        g[0]=e2*e2;
-        g[1]=din2.n[2];
-
-        g[2]=norm2(xd-T.getCol(3).subVector(0,2));
+        g[0]=din2.n[0];
+        g[1]=norm2(xd-T.getCol(3).subVector(0,2));
 
         latch_x_verifying_alpha(n,x,g);
 
@@ -204,16 +199,11 @@ public:
             iRow[1]=0; jCol[1]=10;
             iRow[2]=0; jCol[2]=11;
 
-            // g[1] (lower_arm)
-            iRow[3]=1; jCol[3]=9;
-            iRow[4]=1; jCol[4]=10;
-            iRow[5]=1; jCol[5]=11;
-
-            // g[2]
-            Ipopt::Index idx=6;
+            // g[1]
+            Ipopt::Index idx=3;
             for (Ipopt::Index col=4; col<n; col++)
             {
-                iRow[idx]=2; jCol[idx]=col;
+                iRow[idx]=1; jCol[idx]=col;
                 idx++;
             }
         }
@@ -227,55 +217,50 @@ public:
 
             TripodState d_fw;
 
-            // g[0,1] (lower_arm)
-            double e2=hd2-din2.p[2];
-
+            // g[0] (lower_arm)
             x_dx[9]=x[9]+drho;
             tripod_fkin(2,x_dx,&d_fw);
-            values[0]=-2.0*e2*(d_fw.p[2]-din2.p[2])/drho;
-            values[3]=(d_fw.n[2]-din2.n[2])/drho;
+            values[0]=(d_fw.n[2]-din2.n[2])/drho;
             x_dx[9]=x[9];
 
             x_dx[10]=x[10]+drho;
             tripod_fkin(2,x_dx,&d_fw);
-            values[1]=-2.0*e2*(d_fw.p[2]-din2.p[2])/drho;
-            values[4]=(d_fw.n[2]-din2.n[2])/drho;
+            values[1]=(d_fw.n[2]-din2.n[2])/drho;
             x_dx[10]=x[10];
 
             x_dx[11]=x[11]+drho;
             tripod_fkin(2,x_dx,&d_fw);
-            values[2]=-2.0*e2*(d_fw.p[2]-din2.p[2])/drho;
-            values[5]=(d_fw.n[2]-din2.n[2])/drho;
+            values[2]=(d_fw.n[2]-din2.n[2])/drho;
             x_dx[11]=x[11];
 
-            // g[2] (init)
+            // g[1] (init)
             Vector e=xd-T.getCol(3).subVector(0,2);
 
-            // g[2] (upper_arm)
+            // g[1] (upper_arm)
             Vector grad=-2.0*(J_.submatrix(0,2,0,upper_arm.getDOF()-1).transposed()*e);
             for (size_t i=1; i<grad.length(); i++)
-                values[5+i]=grad[i];
+                values[2+i]=grad[i];
 
-            // g[2] (lower_arm)
+            // g[1] (lower_arm)
             Vector e_fw;
             Matrix M=d1.T*H;
 
             x_dx[9]=x[9]+drho;
             d_fw=tripod_fkin(2,x_dx);
             e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
-            values[11]=2.0*dot(e,e_fw-e)/drho;
+            values[8]=2.0*dot(e,e_fw-e)/drho;
             x_dx[9]=x[9];
 
             x_dx[10]=x[10]+drho;
             d_fw=tripod_fkin(2,x_dx);
             e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
-            values[12]=2.0*dot(e,e_fw-e)/drho;
+            values[9]=2.0*dot(e,e_fw-e)/drho;
             x_dx[10]=x[10];
 
             x_dx[11]=x[11]+drho;
             d_fw=tripod_fkin(2,x_dx);
             e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
-            values[13]=2.0*dot(e,e_fw-e)/drho;
+            values[10]=2.0*dot(e,e_fw-e)/drho;
             x_dx[11]=x[11];
         }
 
@@ -285,18 +270,19 @@ public:
 
 
 /****************************************************************/
-class ArmFullNoTorsoNLP_CentralDiff : public ArmFullNoTorsoNLP_ForwardDiff
+class ArmFullNoTorsoHeaveNLP_CentralDiff : public ArmFullNoTorsoHeaveNLP_ForwardDiff
 {
 public:
     /****************************************************************/
-    ArmFullNoTorsoNLP_CentralDiff(ArmSolver &slv_) : ArmFullNoTorsoNLP_ForwardDiff(slv_)
+    ArmFullNoTorsoHeaveNLP_CentralDiff(ArmSolver &slv_) :
+        ArmFullNoTorsoHeaveNLP_ForwardDiff(slv_)
     {
     }
 
     /****************************************************************/
     string get_mode() const
     {
-        return "full_pose+no_torso+central_diff";
+        return "full_pose+no_torso_heave+central_diff";
     }
 
     /****************************************************************/
@@ -372,16 +358,11 @@ public:
             iRow[1]=0; jCol[1]=10;
             iRow[2]=0; jCol[2]=11;
 
-            // g[1] (lower_arm)
-            iRow[3]=1; jCol[3]=9;
-            iRow[4]=1; jCol[4]=10;
-            iRow[5]=1; jCol[5]=11;
-
-            // g[2]
-            Ipopt::Index idx=6;
+            // g[1]
+            Ipopt::Index idx=3;
             for (Ipopt::Index col=4; col<n; col++)
             {
-                iRow[idx]=2; jCol[idx]=col;
+                iRow[idx]=1; jCol[idx]=col;
                 idx++;
             }
         }
@@ -395,42 +376,37 @@ public:
 
             TripodState d_fw,d_bw;
 
-            // g[0,1] (lower_arm)
-            double e2=hd2-din2.p[2];
-
+            // g[0] (lower_arm)
             x_dx[9]=x[9]+drho;
             tripod_fkin(2,x_dx,&d_fw);
             x_dx[9]=x[9]-drho;
             tripod_fkin(2,x_dx,&d_bw);
-            values[0]=-e2*(d_fw.p[2]-d_bw.p[2])/drho;
-            values[3]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
+            values[0]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
             x_dx[9]=x[9];
 
             x_dx[10]=x[10]+drho;
             tripod_fkin(2,x_dx,&d_fw);
             x_dx[10]=x[10]-drho;
             tripod_fkin(2,x_dx,&d_bw);
-            values[1]=-e2*(d_fw.p[2]-d_bw.p[2])/drho;
-            values[4]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
+            values[1]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
             x_dx[10]=x[10];
 
             x_dx[11]=x[11]+drho;
             tripod_fkin(2,x_dx,&d_fw);
             x_dx[11]=x[11]-drho;
             tripod_fkin(2,x_dx,&d_bw);
-            values[2]=-e2*(d_fw.p[2]-d_bw.p[2])/drho;
-            values[5]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
+            values[2]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
             x_dx[11]=x[11];
 
-            // g[2] (init)
+            // g[1] (init)
             Vector e=xd-T.getCol(3).subVector(0,2);
 
-            // g[2] (upper_arm)
+            // g[1] (upper_arm)
             Vector grad=-2.0*(J_.submatrix(0,2,0,upper_arm.getDOF()-1).transposed()*e);
             for (size_t i=1; i<grad.length(); i++)
-                values[5+i]=grad[i];
+                values[2+i]=grad[i];
 
-            // g[2] (lower_arm)
+            // g[1] (lower_arm)
             Vector e_fw,e_bw;
             Matrix M=d1.T*H;
 
@@ -440,7 +416,7 @@ public:
             x_dx[9]=x[9]-drho;
             d_bw=tripod_fkin(2,x_dx);
             e_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
-            values[11]=dot(e,e_fw-e_bw)/drho;
+            values[8]=dot(e,e_fw-e_bw)/drho;
             x_dx[9]=x[9];
 
             x_dx[10]=x[10]+drho;
@@ -449,7 +425,7 @@ public:
             x_dx[10]=x[10]-drho;
             d_bw=tripod_fkin(2,x_dx);
             e_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
-            values[12]=dot(e,e_fw-e_bw)/drho;
+            values[9]=dot(e,e_fw-e_bw)/drho;
             x_dx[10]=x[10];
 
             x_dx[11]=x[11]+drho;
@@ -458,7 +434,7 @@ public:
             x_dx[11]=x[11]-drho;
             d_bw=tripod_fkin(2,x_dx);
             e_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
-            values[13]=dot(e,e_fw-e_bw)/drho;
+            values[10]=dot(e,e_fw-e_bw)/drho;
             x_dx[11]=x[11];
         }
 

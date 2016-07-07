@@ -251,8 +251,10 @@ bool SolverParameters::setMode(const string &mode)
                 configuration=configuration::heave;
             else if (submode=="no_heave")
                 configuration=configuration::no_heave;
-            else if (submode=="no_torso")
-                configuration=configuration::no_torso;
+            else if (submode=="no_torso_heave")
+                configuration=configuration::no_torso_heave;
+            else if (submode=="no_torso_no_heave")
+                configuration=configuration::no_torso_no_heave;
             else if (submode=="forward_diff")
                 use_central_difference=false;                
             else if (submode=="central_diff")

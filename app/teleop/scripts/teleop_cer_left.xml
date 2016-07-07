@@ -12,7 +12,7 @@
 
         <module>
                 <name>cer_teleop</name>
-                <parameters>--arm-type left</parameters>
+                <parameters>--arm-type left --torso_heave 0.07 --wrist_heave 0.02</parameters>
                 <dependencies>
                     <port timeout="5.0">/geomagic/state:o</port>
                 </dependencies>

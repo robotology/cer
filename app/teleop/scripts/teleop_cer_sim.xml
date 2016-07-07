@@ -12,7 +12,10 @@
 
         <module>
                 <name>cer_teleop</name>
-                <parameters>--arm-type left</parameters>
+                <parameters>--arm-type left --torso_heave 0.07 --wrist_heave 0.02</parameters>
+                <dependencies>
+                    <port timeout="5.0">/geomagic/state:o</port>
+                </dependencies>
                 <prefix>sim</prefix>
                 <node>windows</node>
         </module>
@@ -26,7 +29,7 @@
 
         <module>
                 <name>cer_reaching-controller</name>
-                <parameters>--robot SIM_CER_ROBOT --arm-type left --verbosity 1</parameters>
+                <parameters>--robot SIM_CER_ROBOT --arm-type left --verbosity 1 --T 1.0</parameters>
                 <prefix>sim</prefix>
                 <node>linux</node>
         </module>

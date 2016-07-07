@@ -118,8 +118,8 @@ public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {        
-        string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
-        string mode=rf.check("mode",Value("full_pose+no_torso+forward_diff")).asString().c_str();
+        string arm_type=rf.check("arm-type",Value("left")).asString();
+        string mode=rf.check("mode",Value("full_pose+no_torso_no_heave+forward_diff")).asString();
         solverTs=rf.check("solverTs",Value(0.01)).asDouble();
         double targetTs=rf.check("targetTs",Value(0.05)).asDouble();
         double f=rf.check("f",Value(0.1)).asDouble();
