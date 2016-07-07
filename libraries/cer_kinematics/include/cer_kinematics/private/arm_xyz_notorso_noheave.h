@@ -17,18 +17,18 @@
 
 
 /****************************************************************/
-class ArmXyzNoTorsoNLP_ForwardDiff : public ArmCommonNLP
+class ArmXyzNoTorsoNoHeaveNLP_ForwardDiff : public ArmCommonNLP
 {
 public:
     /****************************************************************/
-    ArmXyzNoTorsoNLP_ForwardDiff(ArmSolver &slv_) : ArmCommonNLP(slv_)
+    ArmXyzNoTorsoNoHeaveNLP_ForwardDiff(ArmSolver &slv_) : ArmCommonNLP(slv_)
     {
     }
 
     /****************************************************************/
     string get_mode() const
     {
-        return "xyz_pose+no_torso+forward_diff";
+        return "xyz_pose+no_torso_no_heave+forward_diff";
     }
 
     /****************************************************************/
@@ -237,18 +237,19 @@ public:
 
 
 /****************************************************************/
-class ArmXyzNoTorsoNLP_CentralDiff : public ArmXyzNoTorsoNLP_ForwardDiff
+class ArmXyzNoTorsoNoHeaveNLP_CentralDiff : public ArmXyzNoTorsoNoHeaveNLP_ForwardDiff
 {
 public:
     /****************************************************************/
-    ArmXyzNoTorsoNLP_CentralDiff(ArmSolver &slv_) : ArmXyzNoTorsoNLP_ForwardDiff(slv_)
+    ArmXyzNoTorsoNoHeaveNLP_CentralDiff(ArmSolver &slv_) :
+        ArmXyzNoTorsoNoHeaveNLP_ForwardDiff(slv_)
     {
     }
 
     /****************************************************************/
     string get_mode() const
     {
-        return "xyz_pose+no_torso+central_diff";
+        return "xyz_pose+no_torso_no_heave+central_diff";
     }
 
     /****************************************************************/
@@ -336,7 +337,7 @@ public:
 
             TripodState d_fw,d_bw;
 
-            // g[2,3] (lower_arm)
+            // g[0,1] (lower_arm)
             double e2=hd2-din2.p[2];
 
             x_dx[9]=x[9]+drho;

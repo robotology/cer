@@ -54,6 +54,7 @@ protected:
     RpcClient              robotCmdPort;
 
     string arm_type;
+    string mode;
     double torso_heave;
     double wrist_heave;
     double gain;
@@ -82,10 +83,19 @@ public:
         string robot=rf.check("robot",Value("cer")).asString();
         string geomagic=rf.check("geomagic",Value("geomagic")).asString();
         arm_type=rf.check("arm-type",Value("right")).asString();
+        gain=rf.check("gain",Value(1.5)).asDouble();        
+        
         torso_heave=rf.check("torso-heave",Value(0.07)).asDouble();
-        wrist_heave=rf.check("wrist-heave",Value(0.02)).asDouble();
-        gain=rf.check("gain",Value(1.5)).asDouble();;
-
+        wrist_heave=0.02;        
+        
+        if (rf.check("wrist-heave"))
+        {
+            wrist_heave=rf.find("wrist-heave").asDouble();
+            mode="full_pose+no_torso_no_heave";
+        }
+        else
+            mode="full_pose+no_torso_heave";
+        
         transform(arm_type.begin(),arm_type.end(),arm_type.begin(),::tolower);
         if ((arm_type!="left") && (arm_type!="right"))
         {
@@ -233,10 +243,9 @@ public:
         target.addList().read(payLoad);
         
         Bottle params;
-        Bottle &bLoad=params.addList();
-        Bottle &mode=bLoad.addList();
-        mode.addString("mode");
-        mode.addString("full_pose+no_torso");
+        Bottle &bLoad=params.addList().addList();
+        bLoad.addString("mode");
+        bLoad.addString(mode);
         
         Property &prop=robotTargetPort.prepare(); prop.clear();
         prop.put("parameters",params.get(0));

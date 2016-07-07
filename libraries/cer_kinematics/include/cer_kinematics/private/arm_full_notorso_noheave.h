@@ -17,18 +17,18 @@
 
 
 /****************************************************************/
-class ArmFullNoTorsoNLP_ForwardDiff : public ArmCommonNLP
+class ArmFullNoTorsoNoHeaveNLP_ForwardDiff : public ArmCommonNLP
 {
 public:
     /****************************************************************/
-    ArmFullNoTorsoNLP_ForwardDiff(ArmSolver &slv_) : ArmCommonNLP(slv_)
+    ArmFullNoTorsoNoHeaveNLP_ForwardDiff(ArmSolver &slv_) : ArmCommonNLP(slv_)
     {
     }
 
     /****************************************************************/
     string get_mode() const
     {
-        return "full_pose+no_torso+forward_diff";
+        return "full_pose+no_torso_no_heave+forward_diff";
     }
 
     /****************************************************************/
@@ -285,18 +285,19 @@ public:
 
 
 /****************************************************************/
-class ArmFullNoTorsoNLP_CentralDiff : public ArmFullNoTorsoNLP_ForwardDiff
+class ArmFullNoTorsoNoHeaveNLP_CentralDiff : public ArmFullNoTorsoNoHeaveNLP_ForwardDiff
 {
 public:
     /****************************************************************/
-    ArmFullNoTorsoNLP_CentralDiff(ArmSolver &slv_) : ArmFullNoTorsoNLP_ForwardDiff(slv_)
+    ArmFullNoTorsoNoHeaveNLP_CentralDiff(ArmSolver &slv_) :
+        ArmFullNoTorsoNoHeaveNLP_ForwardDiff(slv_)
     {
     }
 
     /****************************************************************/
     string get_mode() const
     {
-        return "full_pose+no_torso+central_diff";
+        return "full_pose+no_torso_no_heave+central_diff";
     }
 
     /****************************************************************/

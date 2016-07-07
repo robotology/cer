@@ -51,10 +51,12 @@ namespace cer {
         #include <cer_kinematics/private/arm_common.h>
         #include <cer_kinematics/private/arm_full_noheave.h>
         #include <cer_kinematics/private/arm_full_heave.h>
-        #include <cer_kinematics/private/arm_full_notorso.h>
+        #include <cer_kinematics/private/arm_full_notorso_noheave.h>
+        #include <cer_kinematics/private/arm_full_notorso_heave.h>
         #include <cer_kinematics/private/arm_xyz_noheave.h>
         #include <cer_kinematics/private/arm_xyz_heave.h>
-        #include <cer_kinematics/private/arm_xyz_notorso.h>
+        #include <cer_kinematics/private/arm_xyz_notorso_noheave.h>
+        #include <cer_kinematics/private/arm_xyz_notorso_heave.h>
     }
 }
 
@@ -160,11 +162,17 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     {
         switch (slvParameters.configuration)
         {
-        case configuration::no_torso:
+        case configuration::no_torso_no_heave:
             if (slvParameters.use_central_difference)
-                nlp=new ArmFullNoTorsoNLP_CentralDiff(*this); 
+                nlp=new ArmFullNoTorsoNoHeaveNLP_CentralDiff(*this); 
             else
-                nlp=new ArmFullNoTorsoNLP_ForwardDiff(*this); 
+                nlp=new ArmFullNoTorsoNoHeaveNLP_ForwardDiff(*this); 
+            break;
+        case configuration::no_torso_heave:
+            if (slvParameters.use_central_difference)
+                nlp=new ArmFullNoTorsoHeaveNLP_CentralDiff(*this); 
+            else
+                nlp=new ArmFullNoTorsoHeaveNLP_ForwardDiff(*this); 
             break;
         case configuration::heave:
             if (slvParameters.use_central_difference)
@@ -183,11 +191,17 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     {
         switch (slvParameters.configuration)
         {
-        case configuration::no_torso:
+        case configuration::no_torso_no_heave:
             if (slvParameters.use_central_difference)
-                nlp=new ArmXyzNoTorsoNLP_CentralDiff(*this); 
+                nlp=new ArmXyzNoTorsoNoHeaveNLP_CentralDiff(*this); 
             else
-                nlp=new ArmXyzNoTorsoNLP_ForwardDiff(*this); 
+                nlp=new ArmXyzNoTorsoNoHeaveNLP_ForwardDiff(*this); 
+            break;
+        case configuration::no_torso_heave:
+            if (slvParameters.use_central_difference)
+                nlp=new ArmXyzNoTorsoHeaveNLP_CentralDiff(*this); 
+            else
+                nlp=new ArmXyzNoTorsoHeaveNLP_ForwardDiff(*this); 
             break;
         case configuration::heave:
             if (slvParameters.use_central_difference)
