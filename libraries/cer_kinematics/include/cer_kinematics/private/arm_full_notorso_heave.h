@@ -91,7 +91,7 @@ public:
     {
         computeQuantities(x,new_x);
 
-        g[0]=din2.n[0];
+        g[0]=din2.n[2];
         g[1]=norm2(xd-T.getCol(3).subVector(0,2));
 
         latch_x_verifying_alpha(n,x,g);
@@ -256,7 +256,7 @@ public:
     {
         computeQuantities(x,new_x);
 
-        g[0]=din2.n[0];
+        g[0]=din2.n[2];
         g[1]=norm2(xd-T.getCol(3).subVector(0,2));
 
         latch_x_verifying_alpha(n,x,g);
