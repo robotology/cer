@@ -68,7 +68,7 @@ public:
         partName = rf.check("part", Value("torso_tripod")).asString();
 
         remoteName = slash + robotName + slash + partName;
-        localName = slash + ctrlName;
+        localName = ctrlName;
 
         //reads the configuration file
         Property ctrl_options;

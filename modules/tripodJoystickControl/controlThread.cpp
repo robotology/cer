@@ -21,6 +21,34 @@
 
 #include "controlThread.h"
 
+void ControlThread::setVels(double* vels)
+{
+    if (motors_enabled)
+    {
+        if (1)
+        {
+            int mods[3];
+            iCmd->getControlModes(mods);
+            if (mods[0] != VOCAB_CM_VELOCITY)
+            {
+                iCmd->setControlMode(0, VOCAB_CM_VELOCITY);
+                yarp::os::Time::delay(0.005);
+            }
+            if (mods[1] != VOCAB_CM_VELOCITY)
+            {
+                iCmd->setControlMode(1, VOCAB_CM_VELOCITY);
+                yarp::os::Time::delay(0.005);
+            }
+            if (mods[2] != VOCAB_CM_VELOCITY)
+            {
+                iCmd->setControlMode(2, VOCAB_CM_VELOCITY);
+                yarp::os::Time::delay(0.005);
+            }
+        }
+        iVel->velocityMove(vels);
+    }
+}
+
 void ControlThread::run()
 {
     double pidout_linear_speed  = 0;
@@ -33,8 +61,17 @@ void ControlThread::run()
         double val0 = b->get(joystick_channel_0).asDouble(); 
         double val1 = b->get(joystick_channel_1).asDouble();
         double val2 = b->get(joystick_channel_2).asDouble(); //elong
-        
-        if (fabs(val0) < 20 && fabs(val1) < 20 && fabs(val2) < 20) return;
+        double vels[3];
+        vels[0] = 0.0;
+        vels[1] = 0.0;
+        vels[2] = 0.0;
+
+        if (fabs(val0) < 20 && fabs(val1) < 20 && fabs(val2) < 20)
+        {
+            //send zero velocity command
+            setVels(vels);
+            return;
+        }
 
         if (val0 > 100) val0 = 100;
         if (val0 < -100) val0 = -100;
@@ -52,35 +89,10 @@ void ControlThread::run()
     
         //yDebug() << vel1 <<vel2 << vel3;
     
-        double vels[3];
         vels[0]=vel1;
         vels[1]=vel2;
         vels[2]=vel3;
-        int mods[3];
-        
-        if (motors_enabled)
-        {
-          if (1)
-          {    
-              iCmd -> getControlModes(mods);
-              if (mods[0] != VOCAB_CM_VELOCITY)
-              {
-                  iCmd->setControlMode(0,VOCAB_CM_VELOCITY);
-                  yarp::os::Time::delay(0.005);
-              }
-              if (mods[1] != VOCAB_CM_VELOCITY)
-              {
-                  iCmd->setControlMode(1,VOCAB_CM_VELOCITY);
-                  yarp::os::Time::delay(0.005);
-              }
-              if (mods[2] != VOCAB_CM_VELOCITY)
-              {
-                  iCmd->setControlMode(2,VOCAB_CM_VELOCITY);
-                  yarp::os::Time::delay(0.005);
-              }
-          }          
-          iVel -> velocityMove(vels);
-        }    
+        setVels(vels);
     }
     else 
     {
@@ -224,9 +236,9 @@ ctrl_options(options)
     joystick_channel_0 = rf.check("joystick_channel_0", Value(8)).asInt();
     joystick_channel_1 = rf.check("joystick_channel_1", Value(7)).asInt();
     joystick_channel_2 = rf.check("joystick_channel_2", Value(5)).asInt();
-    gain_0 = rf.check("gain_0", Value(0.0001)).asInt();
-    gain_1 = rf.check("gain_1", Value(0.0001)).asInt();
-    gain_2 = rf.check("gain_2", Value(0.0002)).asInt();
+    gain_0 = rf.check("gain_0", Value(0.0001)).asDouble();
+    gain_1 = rf.check("gain_1", Value(0.0001)).asDouble();
+    gain_2 = rf.check("gain_2", Value(0.0002)).asDouble();
 
     if (rf.check("no_motors"))
     {
@@ -237,5 +249,15 @@ ctrl_options(options)
 
 void ControlThread::threadRelease()
 {
+    if (iCmd)
+    {
+        iCmd->setControlMode(0, VOCAB_CM_POSITION);
+        iCmd->setControlMode(1, VOCAB_CM_POSITION);
+        iCmd->setControlMode(2, VOCAB_CM_POSITION);
+    }
+
+    port_joystick_control.interrupt();
+    port_joystick_control.close();
+
     yInfo() << "Thread stopped";
 }

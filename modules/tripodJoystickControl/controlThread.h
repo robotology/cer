@@ -60,9 +60,6 @@ protected:
     PolyDriver                *control_board_driver;
     BufferedPort<Bottle>      port_joystick_control;
 
-    BufferedPort<Bottle>      port_debug_linear;
-    BufferedPort<Bottle>      port_debug_angular;
-
     string                    remoteName;
     string                    localName;
 
@@ -102,7 +99,8 @@ public:
     virtual void threadRelease();
     virtual void afterStart(bool s);
     virtual void run();
-
+    
+    void setVels(double* vels);
     void printStats();
 };
 
