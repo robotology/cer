@@ -251,62 +251,15 @@ public:
     }
 
     /****************************************************************/
-    bool eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
-                     Ipopt::Number *grad_f)
+    bool eval_g(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
+                Ipopt::Index m, Ipopt::Number *g)
     {
         computeQuantities(x,new_x);
 
-        Vector e=dcm2axis(Rd*T.transposed());
-        e*=e[3]; e.pop_back();
+        g[0]=din2.n[0];
+        g[1]=norm2(xd-T.getCol(3).subVector(0,2));
 
-        Ipopt::Number x_dx[12];
-        for (Ipopt::Index i=0; i<n; i++)
-            x_dx[i]=x[i];
-
-        // torso
-        grad_f[0]=0.0;
-        grad_f[1]=0.0;
-        grad_f[2]=0.0;
-        grad_f[3]=0.0;
-
-        // upper_arm
-        Vector eax=dcm2axis(Rd*H_.transposed());
-        eax*=eax[3]; eax.pop_back();
-        Vector grad=-2.0*(J_.submatrix(3,5,0,upper_arm.getDOF()-1).transposed()*eax);
-        for (size_t i=1; i<grad.length(); i++)
-            grad_f[3+i]=grad[i] + 2.0*wpostural_upper_arm*(x[3+i]-x0[3+i]);
-
-        // lower_arm
-        TripodState d_fw,d_bw;
-        Vector e_fw,e_bw;
-        Matrix M=d1.T*H;
-
-        x_dx[9]=x[9]+drho;
-        d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*(M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
-        x_dx[9]=x[9]-drho;
-        d_bw=tripod_fkin(2,x_dx);
-        e_bw=dcm2axis(Rd*(M*d_bw.T*TN).transposed()); e_bw*=e_bw[3]; e_bw.pop_back();
-        grad_f[9]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(x[9]-x[10]);
-        x_dx[9]=x[9];
-
-        x_dx[10]=x[10]+drho;
-        d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*(M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
-        x_dx[10]=x[10]-drho;
-        d_bw=tripod_fkin(2,x_dx);
-        e_bw=dcm2axis(Rd*(M*d_bw.T*TN).transposed()); e_bw*=e_bw[3]; e_bw.pop_back();
-        grad_f[10]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(2.0*x[10]-x[9]-x[11]);
-        x_dx[10]=x[10];
-
-        x_dx[11]=x[11]+drho;
-        d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*(M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
-        x_dx[11]=x[11]-drho;
-        d_bw=tripod_fkin(2,x_dx);
-        e_bw=dcm2axis(Rd*(M*d_bw.T*TN).transposed()); e_bw*=e_bw[3]; e_bw.pop_back();
-        grad_f[11]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(x[11]-x[10]);
-        x_dx[11]=x[11];
+        latch_x_verifying_alpha(n,x,g);
 
         return true;
     }
