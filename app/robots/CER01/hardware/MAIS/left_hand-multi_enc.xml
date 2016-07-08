@@ -6,7 +6,8 @@
         <params file="general.xml" />
         <params file="hardware/electronics/cer_left_hand-mcp7-eln.xml" />
         <group name="JOINTS">
-            <param name="listofjoints"> 0 1 2 3 </param>
+            <param name="listofjoints"> 0 1 </param>
+            <param name="encoderConversionFactor"> 182.044 182.044 1.0 182.044 182.044 1.0 </param>
         </group>
     </device> 
     
