@@ -57,10 +57,5 @@
                 <protocol>tcp</protocol>
         </connection>
 
-        <connection>
-                <from>/cer_teleop/gazebo:o</from>
-                <to>/world_input_port</to>
-                <protocol>tcp</protocol>
-        </connection>
 </application>
 
