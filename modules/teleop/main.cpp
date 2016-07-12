@@ -56,7 +56,7 @@ protected:
     string mode;
     double wrist_heave;
     double gain;
-    bool isOrientationFixed;
+    bool reachState;
 
     enum {
         idle,
@@ -72,6 +72,7 @@ protected:
     Vector cur_x,cur_o;
     Vector pos0,rpy0;
     Vector x0,o0;
+    Vector fixedPosition;
     Vector fixedOrientation;
 
 public:
@@ -142,7 +143,7 @@ public:
 
         s0=s1=idle;
         c0=c1=0;
-        isOrientationFixed=false;
+        reachState=false;
         
         stateStr[idle]="idle";
         stateStr[triggered]="triggered";
@@ -162,6 +163,7 @@ public:
 
         x0.resize(3,0.0);
         o0.resize(4,0.0);
+        fixedPosition.resize(3,0.0);
         fixedOrientation.resize(4,0.0);
 
         gazeboPort.open("/cer_teleop/gazebo:o");
@@ -402,7 +404,11 @@ public:
                 Matrix Rd=axis2dcm(o0)*axis2dcm(ax)*axis2dcm(ay)*axis2dcm(az);
 
                 Vector od=dcm2axis(Rd);
-                goToPose(xd,isOrientationFixed?fixedOrientation:od);
+                if (reachState)
+                    goToPose(fixedPosition,od);
+                else
+                    goToPose(xd,fixedOrientation); 
+
                 updateGazebo(xd,od);
                 updateRVIZ(xd,od);
             }
@@ -411,11 +417,12 @@ public:
         {
             if (s0==triggered)
             {
-                isOrientationFixed=!isOrientationFixed;
+                reachState=!reachState;
+                fixedPosition=cur_x;
                 fixedOrientation=cur_o;
 
                 yInfo("pose=%s; hand=%s;",
-                      isOrientationFixed?"fixed-orientation":"full_pose",
+                      reachState?"fixed-position":"fixed-orientation",
                       vels[0]>0.0?"closing":"opening");
             }
 
@@ -456,7 +463,7 @@ public:
                 vels=-1.0*vels;
 
                 yInfo("pose=%s; hand=%s;",
-                      isOrientationFixed?"fixed-orientation":"full_pose",
+                      reachState?"fixed-position":"fixed-orientation",
                       vels[0]>0.0?"closing":"opening");
             }
 
