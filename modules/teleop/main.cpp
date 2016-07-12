@@ -43,7 +43,6 @@ protected:
 
     PolyDriver         drvHand;
     IControlMode2     *imod;
-    IPositionControl2 *ipos;
     IVelocityControl2 *ivel;
     VectorOf<int>      modes;
     Vector             vels;
@@ -127,28 +126,14 @@ public:
             delete rosNode;
             return false;
         }
+
+        IEncoders *ienc;
+        drvHand.view(ienc);
         drvHand.view(imod);
-        drvHand.view(ipos);
         drvHand.view(ivel);
 
         int nAxes;
-        ipos->getAxes(&nAxes);
-
-        Vector accs,poss;
-        for (int i=0; i<nAxes; i++)
-        {
-            modes.push_back(VOCAB_CM_POSITION);
-            accs.push_back(1e9);
-            vels.push_back(50.0);
-            poss.push_back(0.0);
-        }
-        
-        imod->setControlModes(modes.getFirst());
-        ipos->setRefAccelerations(accs.data());
-        ipos->setRefSpeeds(vels.data());
-        ipos->positionMove(poss.data());
-
-        modes.clear(); vels.clear();
+        ienc->getAxes(&nAxes);
         for (int i=0; i<nAxes; i++)
         {
             modes.push_back(VOCAB_CM_VELOCITY);
