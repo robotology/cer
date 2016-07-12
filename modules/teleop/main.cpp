@@ -75,6 +75,13 @@ protected:
     Vector fixedPosition;
     Vector fixedOrientation;
 
+    void printState()
+    {
+        yInfo("pose=%s; hand=%s;",
+              reachState?"fixed-position":"fixed-orientation",
+              vels[0]>0.0?"closing":"opening");
+    }
+
 public:
     /**********************************************************/
     bool configure(ResourceFinder &rf)
@@ -420,10 +427,7 @@ public:
                 reachState=!reachState;
                 fixedPosition=cur_x;
                 fixedOrientation=cur_o;
-
-                yInfo("pose=%s; hand=%s;",
-                      reachState?"fixed-position":"fixed-orientation",
-                      vels[0]>0.0?"closing":"opening");
+                printState();
             }
 
             if (c0!=0)
@@ -461,10 +465,7 @@ public:
             if (s1==triggered)
             {
                 vels=-1.0*vels;
-
-                yInfo("pose=%s; hand=%s;",
-                      reachState?"fixed-position":"fixed-orientation",
-                      vels[0]>0.0?"closing":"opening");
+                printState();
             }
 
             if (c1!=0)
