@@ -55,7 +55,6 @@ protected:
 
     string arm_type;
     string mode;
-    double torso_heave;
     double wrist_heave;
     double gain;
     bool isOrientationFixed;
@@ -85,9 +84,7 @@ public:
         arm_type=rf.check("arm-type",Value("right")).asString();
         gain=rf.check("gain",Value(1.5)).asDouble();        
         
-        torso_heave=rf.check("torso-heave",Value(0.07)).asDouble();
         wrist_heave=0.02;        
-        
         if (rf.check("wrist-heave"))
         {
             wrist_heave=rf.find("wrist-heave").asDouble();
@@ -234,7 +231,7 @@ public:
         od_*=od_[3]; od_.pop_back();
         
         Vector payLoad;
-        payLoad.push_back(torso_heave);
+        payLoad.push_back(0.0); // uncontrolled torso-heave
         payLoad.push_back(wrist_heave);
         payLoad=cat(payLoad,xd);
         payLoad=cat(payLoad,od_);
