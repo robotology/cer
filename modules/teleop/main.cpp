@@ -75,6 +75,7 @@ protected:
     Vector fixedPosition;
     Vector fixedOrientation;
 
+    /**********************************************************/
     void printState()
     {
         yInfo("pose=%s; hand=%s;",
