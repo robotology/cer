@@ -293,6 +293,8 @@ private:
     bool tripod_HW2user(yarp::sig::Vector &robot, yarp::sig::Vector &user);
     bool compute_speeds(yarp::sig::Vector &reference,  yarp::sig::Vector &encoders);
 
+    bool refreshPositionTargets(const int controlMode);
+
 public:
 
     tripodMotionControl();
@@ -354,6 +356,9 @@ public:
     virtual bool getRefAccelerationsRaw(double *accs);
     virtual bool stopRaw(int j);
     virtual bool stopRaw();
+    virtual bool getTargetPositionRaw(const int joint, double *ref);
+    virtual bool getTargetPositionsRaw(double *refs);
+    virtual bool getTargetPositionsRaw(const int n_joint, const int *joints, double *refs);
 
     // Position Control2 Interface
     virtual bool positionMoveRaw(const int n_joint, const int *joints, const double *refs);

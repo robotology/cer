@@ -207,6 +207,34 @@ bool tripodMotionControl::compute_speeds(yarp::sig::Vector& reference, yarp::sig
     return true;
 }
 
+bool tripodMotionControl::refreshPositionTargets(const int controlMode)
+{
+    if(controlMode == VOCAB_CM_POSITION)
+    {
+        if(_directionHW2User)
+        {
+            if(!_device.iJntEnc->getEncoders(_userRef_positions.data()) )
+                return false;
+
+            if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+            {
+                yError() << "Requested position is not reachable";
+            }
+        }
+        else
+        {
+            if(!_device.iJntEnc->getEncoders(_robotRef_positions.data()) )
+                return false;
+
+            if(!tripod_HW2user(_robotRef_positions, _userRef_positions))
+            {
+                yError() << "Requested position is not reachable";
+            }
+      }
+    }
+    return true;
+}
+
 
 #if 0
 void tripodMotionControl::copyPid_cer2eo(const Pid *in, Pid *out)
@@ -1320,6 +1348,28 @@ bool tripodMotionControl::stopRaw()
 {
     return _device.pos->stop();
 }
+
+bool tripodMotionControl::getTargetPositionRaw(const int joint, double *ref)
+{
+    *ref = _userRef_positions[joint];
+    return true;
+}
+
+bool tripodMotionControl::getTargetPositionsRaw(double *refs)
+{
+    memcpy(refs, _userRef_positions.data(), sizeof(refs[0])*_njoints);
+    return true;
+}
+
+bool tripodMotionControl::getTargetPositionsRaw(const int n_joint, const int *joints, double *refs)
+{
+    for(int i=0; i<n_joint; i++)
+    {
+        refs[i] = _userRef_positions[joints[i]];
+    }
+    return true;
+}
+
 ///////////// END Position Control INTERFACE  //////////////////
 
 ////////////////////////////////////////
@@ -1507,16 +1557,19 @@ bool tripodMotionControl::getControlModesRaw(const int n_joint, const int *joint
 
 bool tripodMotionControl::setControlModeRaw(const int j, const int mode)
 {
+    refreshPositionTargets(mode);
     return _device.iMode2->setControlMode(j, mode);
 }
 
 bool tripodMotionControl::setControlModesRaw(const int n_joint, const int *joints, int *modes)
 {
+    refreshPositionTargets(modes[0]);
     return _device.iMode2->setControlModes(n_joint, joints, modes);
 }
 
 bool tripodMotionControl::setControlModesRaw(int *modes)
 {
+    refreshPositionTargets(modes[0]);
     return _device.iMode2->setControlModes(_njoints, _axisMap, modes);
 }
 
