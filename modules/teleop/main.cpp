@@ -405,7 +405,7 @@ public:
                 drpy[2]=gain*(rpy[2]-rpy0[2]);
 
                 Vector ax(4,0.0),ay(4,0.0),az(4,0.0);
-                ax[0]=1.0; ax[3]=drpy[2]*((arm_type=="right")?+1.0:-1.0);
+                ax[0]=1.0; ax[3]=drpy[2];
                 ay[1]=1.0; ay[3]=drpy[1]*((arm_type=="right")?-1.0:+1.0);
                 az[2]=1.0; az[3]=drpy[0]*((arm_type=="right")?-1.0:+1.0);
 
