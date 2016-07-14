@@ -211,11 +211,11 @@ bool tripodMotionControl::refreshPositionTargets(const int controlMode)
 {
     if(controlMode == VOCAB_CM_POSITION)
     {
-        if(!getEncodersRaw(_robotRef_positions.data()) )
-            return false;
-
         if(_directionHW2User)
         {
+            if(!_device.iJntEnc->getEncoders(_userRef_positions.data()) )
+                return false;
+
             if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
             {
                 yError() << "Requested position is not reachable";
@@ -223,11 +223,14 @@ bool tripodMotionControl::refreshPositionTargets(const int controlMode)
         }
         else
         {
+            if(!_device.iJntEnc->getEncoders(_robotRef_positions.data()) )
+                return false;
+
             if(!tripod_HW2user(_robotRef_positions, _userRef_positions))
             {
                 yError() << "Requested position is not reachable";
             }
-        }
+      }
     }
     return true;
 }
