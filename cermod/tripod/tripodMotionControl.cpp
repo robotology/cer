@@ -207,6 +207,31 @@ bool tripodMotionControl::compute_speeds(yarp::sig::Vector& reference, yarp::sig
     return true;
 }
 
+bool tripodMotionControl::refreshPositionTargets(const int controlMode)
+{
+    if(controlMode == VOCAB_CM_POSITION)
+    {
+        if(!getEncodersRaw(_robotRef_positions.data()) )
+            return false;
+
+        if(_directionHW2User)
+        {
+            if(!tripod_user2HW(_userRef_positions, _robotRef_positions))
+            {
+                yError() << "Requested position is not reachable";
+            }
+        }
+        else
+        {
+            if(!tripod_HW2user(_robotRef_positions, _userRef_positions))
+            {
+                yError() << "Requested position is not reachable";
+            }
+        }
+    }
+    return true;
+}
+
 
 #if 0
 void tripodMotionControl::copyPid_cer2eo(const Pid *in, Pid *out)
@@ -1529,16 +1554,19 @@ bool tripodMotionControl::getControlModesRaw(const int n_joint, const int *joint
 
 bool tripodMotionControl::setControlModeRaw(const int j, const int mode)
 {
+    refreshPositionTargets(mode);
     return _device.iMode2->setControlMode(j, mode);
 }
 
 bool tripodMotionControl::setControlModesRaw(const int n_joint, const int *joints, int *modes)
 {
+    refreshPositionTargets(modes[0]);
     return _device.iMode2->setControlModes(n_joint, joints, modes);
 }
 
 bool tripodMotionControl::setControlModesRaw(int *modes)
 {
+    refreshPositionTargets(modes[0]);
     return _device.iMode2->setControlModes(_njoints, _axisMap, modes);
 }
 

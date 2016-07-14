@@ -293,6 +293,8 @@ private:
     bool tripod_HW2user(yarp::sig::Vector &robot, yarp::sig::Vector &user);
     bool compute_speeds(yarp::sig::Vector &reference,  yarp::sig::Vector &encoders);
 
+    bool refreshPositionTargets(const int controlMode);
+
 public:
 
     tripodMotionControl();
