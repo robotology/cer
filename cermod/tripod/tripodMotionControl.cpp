@@ -1320,6 +1320,28 @@ bool tripodMotionControl::stopRaw()
 {
     return _device.pos->stop();
 }
+
+bool tripodMotionControl::getTargetPositionRaw(const int joint, double *ref)
+{
+    *ref = _userRef_positions[joint];
+    return true;
+}
+
+bool tripodMotionControl::getTargetPositionsRaw(double *refs)
+{
+    memcpy(refs, _userRef_positions.data(), sizeof(refs[0])*_njoints);
+    return true;
+}
+
+bool tripodMotionControl::getTargetPositionsRaw(const int n_joint, const int *joints, double *refs)
+{
+    for(int i=0; i<n_joint; i++)
+    {
+        refs[i] = _userRef_positions[joints[i]];
+    }
+    return true;
+}
+
 ///////////// END Position Control INTERFACE  //////////////////
 
 ////////////////////////////////////////
