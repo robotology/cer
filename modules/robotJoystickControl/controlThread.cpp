@@ -225,9 +225,9 @@ void ControlThread::option3(double* axis)
     saturate(val4, 100);
     saturate(val5, 100);
 
-    double gain_0 = 0.0001;
-    double gain_1 = 0.0001;
-    double gain_2 = 0.0002;
+    double gain_0 = 0.00005;
+    double gain_1 = -0.00005;
+    double gain_2 = 0.00005;
     double gain_3 = 0.0001;
     double gain_4 = 0.0001;
     double gain_5 = 0.0001;
@@ -264,9 +264,9 @@ void ControlThread::option2(double* axis)
     static double ry;
     static double rz;
 
-    double gain_0 = 0.0001;
-    double gain_1 = 0.0001;
-    double gain_2 = 0.0002;
+    double gain_0 = 0.00005;
+    double gain_1 = -0.00005;
+    double gain_2 = 0.00005;
     double gain_3 = 0.0001;
     double gain_4 = 0.0001;
     double gain_5 = 0.0001;
@@ -356,6 +356,70 @@ void ControlThread::option1(double* axis)
     }
 }
 
+void ControlThread::getCartesianArmPositions()
+{
+    Bottle *sl = this->robotStatusPort_larm.read(true);
+    Bottle *sr = this->robotStatusPort_rarm.read(true);
+
+    if (sl)
+    {
+        initial_xyz_left.resize(3);
+        initial_rpy_left.resize(3);
+        current_xyz_left.resize(3);
+        current_rpy_left.resize(3);
+        current_xyz_left[0] = initial_xyz_left[0] = sl->get(0).asDouble();
+        current_xyz_left[1] = initial_xyz_left[1] = sl->get(1).asDouble();
+        current_xyz_left[2] = initial_xyz_left[2] = sl->get(2).asDouble();
+        Vector vi(4), vo(3);
+        vi[0] = sl->get(3).asDouble();
+        vi[1] = sl->get(4).asDouble();
+        vi[2] = sl->get(5).asDouble();
+        vi[3] = 0;
+#if 1
+        double norm = sqrt((vi[0] * vi[0]) + (vi[1] * vi[1]) + (vi[2] * vi[2]));
+        vi[0] = vi[0] / norm;
+        vi[1] = vi[1] / norm;
+        vi[2] = vi[2] / norm;
+        vi[3] = norm;
+        Matrix m = yarp::math::axis2dcm(vi);
+        vo = yarp::math::dcm2rpy(m);
+#else
+        vo[0] = vi[0]; vo[1] = vi[1]; vo[2] = vi[2];
+#endif 
+        current_rpy_left[0] = initial_rpy_left[0] = vo[0];
+        current_rpy_left[1] = initial_rpy_left[1] = vo[1];
+        current_rpy_left[2] = initial_rpy_left[2] = vo[2];
+    }
+    if (sr)
+    {
+        initial_xyz_right.resize(3);
+        initial_rpy_right.resize(3);
+        current_xyz_right.resize(3);
+        current_rpy_right.resize(3);
+        current_xyz_right[0] = initial_xyz_right[0] = sr->get(0).asDouble();
+        current_xyz_right[1] = initial_xyz_right[1] = sr->get(1).asDouble();
+        current_xyz_right[2] = initial_xyz_right[2] = sr->get(2).asDouble();
+        Vector vi(4), vo(3);
+        vi[0] = sr->get(3).asDouble();
+        vi[1] = sr->get(4).asDouble();
+        vi[2] = sr->get(5).asDouble();
+#if 1
+        double norm = sqrt((vi[0] * vi[0]) + (vi[1] * vi[1]) + (vi[2] * vi[2]));
+        vi[0] = vi[0] / norm;
+        vi[1] = vi[1] / norm;
+        vi[2] = vi[2] / norm;
+        vi[3] = norm;
+        Matrix m = yarp::math::axis2dcm(vi);
+        vo = yarp::math::dcm2rpy(m);
+#else
+        vo[0] = vi[0]; vo[1] = vi[1]; vo[2] = vi[2];
+#endif 
+        current_rpy_right[0] = initial_rpy_right[0] = vo[0];
+        current_rpy_right[1] = initial_rpy_right[1] = vo[1];
+        current_rpy_right[2] = initial_rpy_right[2] = vo[2];
+    }
+}
+
 //------------------------------------------------------------------------------------------------
 void ControlThread::run()
 {
@@ -367,67 +431,9 @@ void ControlThread::run()
     if (first_run)
     {
         yInfo() << "Waiting for initial position...";
-        Bottle *sl = this->robotStatusPort_larm.read(true);
-        Bottle *sr = this->robotStatusPort_rarm.read(true);
-        yInfo() << "...done";
-        if (sl)
-        {
-            initial_xyz_left.resize(3);
-            initial_rpy_left.resize(3);
-            current_xyz_left.resize(3);
-            current_rpy_left.resize(3);
-            current_xyz_left[0] = initial_xyz_left[0] = sl->get(0).asDouble();
-            current_xyz_left[1] = initial_xyz_left[1] = sl->get(1).asDouble();
-            current_xyz_left[2] = initial_xyz_left[2] = sl->get(2).asDouble();
-            Vector vi(4), vo(3);
-            vi[0] = sl->get(3).asDouble();
-            vi[1] = sl->get(4).asDouble();
-            vi[2] = sl->get(5).asDouble();
-            vi[3] = 0;
-#if 1
-            double norm = sqrt((vi[0]*vi[0])+(vi[1]*vi[1])+(vi[2]*vi[2]));
-            vi[0] = vi[0] / norm;
-            vi[1] = vi[1] / norm;
-            vi[2] = vi[2] / norm;
-            vi[3] = norm;
-            Matrix m = yarp::math::axis2dcm(vi);
-            vo = yarp::math::dcm2rpy(m);
-#else
-            vo[0] = vi[0]; vo[1] = vi[1]; vo[2] = vi[2];
-#endif 
-            current_rpy_left[0] = initial_rpy_left[0] = vo[0];
-            current_rpy_left[1] = initial_rpy_left[1] = vo[1];
-            current_rpy_left[2] = initial_rpy_left[2] = vo[2];
-        }
-        if (sr)
-        {
-            initial_xyz_right.resize(3);
-            initial_rpy_right.resize(3);
-            current_xyz_right.resize(3);
-            current_rpy_right.resize(3);
-            current_xyz_right[0] = initial_xyz_right[0] = sr->get(0).asDouble();
-            current_xyz_right[1] = initial_xyz_right[1] = sr->get(1).asDouble();
-            current_xyz_right[2] = initial_xyz_right[2] = sr->get(2).asDouble();
-            Vector vi(4), vo(3);
-            vi[0] = sr->get(3).asDouble();
-            vi[1] = sr->get(4).asDouble();
-            vi[2] = sr->get(5).asDouble();
-#if 1
-            double norm = sqrt((vi[0] * vi[0]) + (vi[1] * vi[1]) + (vi[2] * vi[2]));
-            vi[0] = vi[0] / norm;
-            vi[1] = vi[1] / norm;
-            vi[2] = vi[2] / norm;
-            vi[3] = norm;
-            Matrix m = yarp::math::axis2dcm(vi);
-            vo = yarp::math::dcm2rpy(m);
-#else
-            vo[0] = vi[0]; vo[1] = vi[1]; vo[2] = vi[2];
-#endif 
-            current_rpy_right[0] = initial_rpy_right[0] = vo[0];
-            current_rpy_right[1] = initial_rpy_right[1] = vo[1];
-            current_rpy_right[2] = initial_rpy_right[2] = vo[2];
-        }
+        getCartesianArmPositions();
         first_run = false;
+        yInfo() << "...done";
     }
 
     Bottle *b = this->port_joystick_control.read(false);
@@ -441,6 +447,7 @@ void ControlThread::run()
         if (fabs(axis[AXIS_L_SHIFT]) > 10 && fabs(axis[AXIS_R_SHIFT]) > 10)
         {
             option1(axis);
+            getCartesianArmPositions();
             return;
         }
         else if (fabs(axis[AXIS_L_SHIFT]) > 10 && fabs(axis[AXIS_R_SHIFT])<10)
@@ -456,6 +463,7 @@ void ControlThread::run()
         else if (fabs(axis[AXIS_L_SHIFT]) < 10 && fabs(axis[AXIS_R_SHIFT])<10)
         {
             option4(axis);
+            getCartesianArmPositions();
             return;
         }
         else
@@ -480,10 +488,11 @@ void ControlThread::printStats()
 
 bool ControlThread::threadInit()
 {
-    rosNode = new yarp::os::Node("/cer_joystickCtrl");
-    if (!rosPublisherPort.topic("/cer_joystickCtrl_marker"))
+    bool autoconnect = false;
+    rosNode = new yarp::os::Node(localName);
+    if (!rosPublisherPort.topic(localName+"_marker"))
     {
-        yError("Unable to publish data on /cer_joystickCtrl_marker topic");
+        yError()<<"Unable to publish data on " << localName << "_marker" << " topic";
         yWarning("Check your yarp-ROS network configuration");
         return false;
     }
@@ -492,8 +501,9 @@ bool ControlThread::threadInit()
     port_joystick_control.open(localName + "/joystick:i");
 
         //try to connect to joystickCtrl output
-        if (rf.check("joystick_connect"))
+        if (rf.check("autoconnect"))
         {
+            autoconnect = true;
             int joystick_trials = 0; 
             do
             {
@@ -524,24 +534,24 @@ bool ControlThread::threadInit()
     double start_time = yarp::os::Time::now();
 
     Property torso_tripod_control_board_options("(device remote_controlboard)");
-    torso_tripod_control_board_options.put("remote", "/cer/torso_tripod");
-    torso_tripod_control_board_options.put("local", "/cer_joystickCtrl/torso_tripod");
+    torso_tripod_control_board_options.put("remote", "/"+robotName+"/torso_tripod");
+    torso_tripod_control_board_options.put("local", localName + "/torso_tripod");
 
     Property torso_equiv_control_board_options("(device remote_controlboard)");
-    torso_equiv_control_board_options.put("remote", "/cer/torso");
-    torso_equiv_control_board_options.put("local", "/cer_joystickCtrl/torso");
+    torso_equiv_control_board_options.put("remote", "/"+robotName+"/torso");
+    torso_equiv_control_board_options.put("local", localName + "/torso");
 
     Property left_hand_control_board_options("(device remote_controlboard)");
-    left_hand_control_board_options.put("remote", "/cer/left_hand");
-    left_hand_control_board_options.put("local", "/cer_joystickCtrl/left_hand");
+    left_hand_control_board_options.put("remote", "/" + robotName + "/left_hand");
+    left_hand_control_board_options.put("local", localName + "/left_hand");
 
     Property right_hand_control_board_options("(device remote_controlboard)");
-    right_hand_control_board_options.put("remote", "/cer/right_hand");
-    right_hand_control_board_options.put("local", "/cer_joystickCtrl/right_hand");
+    right_hand_control_board_options.put("remote", "/" + robotName + "/right_hand");
+    right_hand_control_board_options.put("local", localName + "/right_hand");
 
     Property head_control_board_options("(device remote_controlboard)");
-    head_control_board_options.put("remote", "/cer/head");
-    head_control_board_options.put("local", "/cer_joystickCtrl/head");
+    head_control_board_options.put("remote", "/" + robotName + "/head");
+    head_control_board_options.put("local", localName + "/head");
     do
     {
         double current_time = yarp::os::Time::now();
@@ -625,40 +635,43 @@ bool ControlThread::threadInit()
         yWarning("Unable to connect the device driver, trying again...");
     } while (true);
 
-    robotCmdPort_larm.open("/cer_joystickCtrl/larm/cmd:rpc");
-    robotCmdPort_rarm.open("/cer_joystickCtrl/rarm/cmd:rpc");
-    robotTargetPort_larm.open("/cer_joystickCtrl/larm/target:o");
-    robotTargetPort_rarm.open("/cer_joystickCtrl/rarm/target:o");
-    robotStatusPort_larm.open("/cer_joystickCtrl/larm/status:i");
-    robotStatusPort_rarm.open("/cer_joystickCtrl/rarm/status:i");
-    robotCmdPort_base.open("/cer_joystickCtrl/base/cmd:o");
+    robotCmdPort_larm.open(localName + "/larm/cmd:rpc");
+    robotCmdPort_rarm.open(localName + "/rarm/cmd:rpc");
+    robotTargetPort_larm.open(localName + "/larm/target:o");
+    robotTargetPort_rarm.open(localName + "/rarm/target:o");
+    robotStatusPort_larm.open(localName + "/larm/status:i");
+    robotStatusPort_rarm.open(localName + "/rarm/status:i");
+    robotCmdPort_base.open(localName + "/base/cmd:o");
 
-    bool base_connected = yarp::os::Network::connect("/cer_joystickCtrl/base/cmd:o", "/baseControl/joystick:i");
-    bool left_cartesian_arm_connected = yarp::os::Network::connect("/cer_reaching-controller/left/state:o","/cer_joystickCtrl/larm/status:i");
-    bool right_cartesian_arm_connected = yarp::os::Network::connect("/cer_reaching-controller/right/state:o", "/cer_joystickCtrl/rarm/status:i");
-    bool left_arm_output_connected = yarp::os::Network::connect("/cer_joystickCtrl/larm/target:o", "/cer_joystickCtrl/larm/status:i");
-    bool right_arm_output_connected = yarp::os::Network::connect("/cer_joystickCtrl/rarm/target:o", "/cer_joystickCtrl/larm/status:i");
+    if (autoconnect)
+    {
+        bool base_connected = yarp::os::Network::connect(localName + "/base/cmd:o", "/baseControl/joystick:i");
+        bool left_cartesian_arm_connected = yarp::os::Network::connect("/cer_reaching-controller/left/state:o", localName + "/larm/status:i");
+        bool right_cartesian_arm_connected = yarp::os::Network::connect("/cer_reaching-controller/right/state:o", localName + "/rarm/status:i");
+        bool left_arm_output_connected = yarp::os::Network::connect(localName + "/larm/target:o", "/cer_reaching-controller/left/target:i");
+        bool right_arm_output_connected = yarp::os::Network::connect(localName + "/rarm/target:o", "/cer_reaching-controller/right/target:i");
+        if (base_connected == false)
+        {
+            yError() << "Failed to open mobile base interfaces";
+        }
+        if (left_cartesian_arm_connected == false)
+        {
+            yError() << "Failed to open left_arm  cartesian interfaces";
+        }
+        if (right_cartesian_arm_connected == false)
+        {
+            yError() << "Failed to open right_arm cartesian interfaces";
+        }
+        if (left_arm_output_connected == false)
+        {
+            yError() << "Failed to open left_arm motor interfaces";
+        }
+        if (right_arm_output_connected == false)
+        {
+            yError() << "Failed to open right_arm motor interfaces";
+        }
+    }
 
-    if (base_connected==false)
-    {
-        yError() << "Failed to open left_arm/right_arm cartesian interfaces";
-    }
-    if (left_cartesian_arm_connected == false)
-    {
-        yError() << "Failed to open left_arm/right_arm cartesian interfaces";
-    }
-    if (right_cartesian_arm_connected == false)
-    {
-        yError() << "Failed to open left_arm/right_arm cartesian interfaces";
-    }
-    if (left_arm_output_connected == false)
-    {
-        yError() << "Failed to open left_arm/right_arm cartesian interfaces";
-    }
-    if (right_arm_output_connected == false)
-    {
-        yError() << "Failed to open left_arm/right_arm cartesian interfaces";
-    }
     driver_torso_tripod->view(interface_torso_tripod_iDir);
     driver_torso_tripod->view(interface_torso_tripod_iVel);
     driver_torso_tripod->view(interface_torso_tripod_iEnc);
@@ -765,7 +778,7 @@ ctrl_options(options)
 
     thread_period = _period;
 
-    remoteName = ctrl_options.find("remote").asString();
+    robotName = ctrl_options.find("robot").asString();
     localName = ctrl_options.find("local").asString();
 
     motors_enabled = false;

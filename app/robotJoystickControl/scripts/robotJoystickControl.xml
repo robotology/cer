@@ -1,5 +1,5 @@
 <application>
-<name>tripodJoystickControl_application</name>
+<name>robotJoystickControl_application</name>
 
 <dependencies>	
 cerSrv
@@ -15,9 +15,9 @@ cerSrv
 
 <!-- joystick input -->
 <connection>
-	<from>/joystickControl:o</from>
-	<to>/cer_joystickCtrl/joystick:i</to>
-	<protocol>udp</protocol>
+	<from>/joystickCtrl:o</from>
+	<to>/robotJoystickControl/joystick:i</to>
+	<protocol>tcp</protocol>
 </connection>
 
 <!-- torso output connection -->
@@ -31,28 +31,28 @@ cerSrv
 
 <!-- mobile base output connection -->
 <connection>
-	<from>/cer_joystickCtrl/base/cmd:o</from>
+	<from>/robotJoystickControl/base/cmd:o</from>
 	<to>/baseControl/joystick:i</to>
-	<protocol>udp</protocol>
+	<protocol>tcp</protocol>
 </connection>
 
 <!-- state input -->
 <connection>
-	<from>/cer_reaching_controller/left/state:o</from>
-	<to>/cer_joystickCtrl/larm/status:i</to>
-	<protocol>udp</protocol>
+	<from>/cer_reaching-controller/left/state:o</from>
+	<to>/robotJoystickControl/larm/status:i</to>
+	<protocol>tcp</protocol>
 </connection>
 
 <connection>
-	<from>/cer_reaching_controller/right/state:o</from>
-	<to>/cer_joystickCtrl/rarm/status:i</to>
-	<protocol>udp</protocol>
+	<from>/cer_reaching-controller/right/state:o</from>
+	<to>/robotJoystickControl/rarm/status:i</to>
+	<protocol>tcp</protocol>
 </connection>
   
 <!-- commands right -->
 <connection>
 	<from>/cer_reaching-controller/right/state:o</from>
-	<to>/cer_teleop/state:i</to>
+	<to>/robotJoystickControl/rarm/status:i</to>
 	<protocol>tcp</protocol>
 </connection>
 
@@ -63,13 +63,13 @@ cerSrv
 </connection>
 
 <connection>
-	<from>/cer_teleop/target:o</from>
+	<from>/robotJoystickControl/rarm/target:o</from>
 	<to>/cer_reaching-controller/right/target:i</to>
 	<protocol>tcp</protocol>
 </connection>
 
 <connection>
-	<from>/cer_teleop/cmd:rpc</from>
+	<from>/robotJoystickControl/rarm/cmd:rpc</from>
 	<to>/cer_reaching-controller/right/rpc</to>
 	<protocol>tcp</protocol>
 </connection>
@@ -77,7 +77,7 @@ cerSrv
 <!-- commands left -->
 <connection>
 	<from>/cer_reaching-controller/left/state:o</from>
-	<to>/cer_teleop/state:i</to>
+	<to>/robotJoystickControl/larm/status:i</to>
 	<protocol>tcp</protocol>
 </connection>
 
@@ -88,13 +88,13 @@ cerSrv
 </connection>
 
 <connection>
-	<from>/cer_teleop/target:o</from>
+	<from>/robotJoystickControl/larm/target:o</from>
 	<to>/cer_reaching-controller/left/target:i</to>
 	<protocol>tcp</protocol>
 </connection>
 
 <connection>
-	<from>/cer_teleop/cmd:rpc</from>
+	<from>/robotJoystickControl/larm/cmd:rpc</from>
 	<to>/cer_reaching-controller/left/rpc</to>
 	<protocol>tcp</protocol>
 </connection>

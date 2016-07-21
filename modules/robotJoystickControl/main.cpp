@@ -56,7 +56,7 @@ public:
         string slash = "/";
         string ctrlName;
         string robotName;
-        string remoteName;
+       // string remoteName;
         string localName;
 
         Time::turboBoost();
@@ -81,7 +81,7 @@ public:
             ctrl_options.fromConfigFile(configFile.c_str());
         }
 
-        ctrl_options.put("remote", remoteName.c_str());
+        ctrl_options.put("robot", robotName.c_str());
         ctrl_options.put("local", localName.c_str());
 
         //check for robotInterface availablity
@@ -230,7 +230,7 @@ int main(int argc, char *argv[])
     ResourceFinder rf;
     rf.setVerbose(true);
     rf.setDefaultContext("cer");
-    rf.setDefaultConfigFile("tripodJoystickCtrl.ini");
+    rf.setDefaultConfigFile("robotJoystickCtrl.ini");
     rf.configure(argc,argv);
 
     if (rf.check("help"))
@@ -242,12 +242,9 @@ int main(int argc, char *argv[])
         yInfo("'no_motors' motor interface will not be opened.");
         yInfo("'joystick_connect' tries to automatically connect to the joystickCtrl output.");
         yInfo("'skip_robot_interface_check' does not connect to robotInterface/rpc (useful for simulator)");
-        yInfo("'max_elong' <value> max tripod elongation");
-        yInfo("'min_alpha' <value> min tripod elongation");
-        yInfo("'max_alpha' <value> max alpha angle");
 
         yInfo("''");
-        yInfo("example: tripodJoystickCtrl --robot SIM_CER_ROBOT --part torso --joystick_connect --skip_robot_interface_check ");
+        yInfo("example: robotJoystickCtrl --robot SIM_CER_ROBOT --joystick_connect --skip_robot_interface_check ");
         return 0;
     }
 

@@ -59,7 +59,7 @@ protected:
 
     BufferedPort<Bottle>      port_joystick_control;
 
-    string                    remoteName;
+    string                    robotName;
     string                    localName;
     bool                      first_run;
 
@@ -126,6 +126,7 @@ public:
     void reachingHandler(string arm_type, const bool b, const yarp::sig::Vector &pos, const yarp::sig::Vector &rpy);
     void saturate(double& v, double sat_lim);
     void updateRVIZ(const yarp::sig::Vector &xd, const yarp::sig::Vector &od);
+    void getCartesianArmPositions();
 
     void option1(double* axis);
     void option2(double* axis);
