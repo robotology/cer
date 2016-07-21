@@ -6,6 +6,7 @@ add_subdirectory(reaching)
 add_subdirectory(gaze-controller)
 add_subdirectory(teleop)
 add_subdirectory(tripodJoystickControl)
+add_subdirectory(robotJoystickControl)
 add_subdirectory(tfPublisher)
 
 if(NOT WIN32)

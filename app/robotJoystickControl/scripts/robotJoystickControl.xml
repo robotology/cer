@@ -1,0 +1,102 @@
+<application>
+<name>tripodJoystickControl_application</name>
+
+<dependencies>	
+cerSrv
+</dependencies>
+
+
+<!-- module -->
+<module>
+   <name>robotJoystickControl</name>
+   <parameters></parameters>
+   <node>cer-base</node>
+</module>
+
+<!-- joystick input -->
+<connection>
+	<from>/joystickControl:o</from>
+	<to>/cer_joystickCtrl/joystick:i</to>
+	<protocol>udp</protocol>
+</connection>
+
+<!-- torso output connection -->
+<!-- this is handled by yarp interfaces -->
+
+<!-- left_hand output connection -->
+<!-- this is handled by yarp interfaces -->
+
+<!-- right_hand output connection -->
+<!-- this is handled by yarp interfaces -->
+
+<!-- mobile base output connection -->
+<connection>
+	<from>/cer_joystickCtrl/base/cmd:o</from>
+	<to>/baseControl/joystick:i</to>
+	<protocol>udp</protocol>
+</connection>
+
+<!-- state input -->
+<connection>
+	<from>/cer_reaching_controller/left/state:o</from>
+	<to>/cer_joystickCtrl/larm/status:i</to>
+	<protocol>udp</protocol>
+</connection>
+
+<connection>
+	<from>/cer_reaching_controller/right/state:o</from>
+	<to>/cer_joystickCtrl/rarm/status:i</to>
+	<protocol>udp</protocol>
+</connection>
+  
+<!-- commands right -->
+<connection>
+	<from>/cer_reaching-controller/right/state:o</from>
+	<to>/cer_teleop/state:i</to>
+	<protocol>tcp</protocol>
+</connection>
+
+<connection>
+	<from>/cer_reaching-controller/right/solver:rpc</from>
+	<to>/cer_reaching-solver/right/rpc</to>
+	<protocol>tcp</protocol>
+</connection>
+
+<connection>
+	<from>/cer_teleop/target:o</from>
+	<to>/cer_reaching-controller/right/target:i</to>
+	<protocol>tcp</protocol>
+</connection>
+
+<connection>
+	<from>/cer_teleop/cmd:rpc</from>
+	<to>/cer_reaching-controller/right/rpc</to>
+	<protocol>tcp</protocol>
+</connection>
+		
+<!-- commands left -->
+<connection>
+	<from>/cer_reaching-controller/left/state:o</from>
+	<to>/cer_teleop/state:i</to>
+	<protocol>tcp</protocol>
+</connection>
+
+<connection>
+	<from>/cer_reaching-controller/left/solver:rpc</from>
+	<to>/cer_reaching-solver/left/rpc</to>
+	<protocol>tcp</protocol>
+</connection>
+
+<connection>
+	<from>/cer_teleop/target:o</from>
+	<to>/cer_reaching-controller/left/target:i</to>
+	<protocol>tcp</protocol>
+</connection>
+
+<connection>
+	<from>/cer_teleop/cmd:rpc</from>
+	<to>/cer_reaching-controller/left/rpc</to>
+	<protocol>tcp</protocol>
+</connection>
+
+</application>
