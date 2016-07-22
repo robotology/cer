@@ -8,6 +8,7 @@ add_subdirectory(teleop)
 add_subdirectory(tripodJoystickControl)
 add_subdirectory(robotJoystickControl)
 add_subdirectory(tfPublisher)
+add_subdirectory(textImage)
 
 if(NOT WIN32)
     add_subdirectory(audioSplitter)
