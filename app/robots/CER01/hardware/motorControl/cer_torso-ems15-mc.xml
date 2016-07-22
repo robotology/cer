@@ -25,8 +25,8 @@
 	<param name="controlLaw">    joint_pid_v1 </param> 
         <param name="controlUnits">  machine_units </param> 
         <param name="kp">            3000        3000       3000          5     </param>       
-        <param name="kd">               0           0          0          1     </param>       
-        <param name="ki">            5000        5000       5000          0.5   </param>       
+        <param name="kd">               0           0          0          0     </param>       
+        <param name="ki">            5000        5000       5000          0     </param>       
         <param name="limOutput">    10000       10000      10000          15000 </param>      
         <param name="maxOutput">    32000       32000      32000          32000 </param>          
         <param name="maxInt">        4000        4000       4000          0     </param>       
@@ -34,19 +34,19 @@
         <param name="ko">               0           0          0          0     </param>       
         <param name="stictionUp">       0           0          0          0     </param>       
         <param name="stictionDwn">      0           0          0          0     </param>     
-        <param name="kff">              0           0          0          0     </param>   
+        <param name="kff">              0           0          0          1     </param>   
     </group>
 
     <group name="VELOCITY_CONTROL">
 	<param name="controlLaw">    joint_pid_v1 </param> 
         <param name="controlUnits">  machine_units </param> 
-        <param name="kp">            3000        3000       3000          1     </param>       
-        <param name="kd">               0           0          0          0     </param>       
-        <param name="ki">            5000        5000       5000          5     </param>       
-        <param name="limOutput">    10000       10000      10000          15000 </param>      
-        <param name="maxOutput">    32000       32000      32000          32000 </param>          
+        <param name="kp">            3000        3000       3000          1280  </param>       
+        <param name="kd">               0           0          0          6144  </param>       
+        <param name="ki">            5000        5000       5000          1     </param>       
+        <param name="limOutput">    10000       10000      10000          0     </param>      
+        <param name="maxOutput">    32000       32000      32000          0     </param>          
         <param name="maxInt">        4000        4000       4000          0     </param>       
-        <param name="shift">            0           0          0          0     </param>       
+        <param name="shift">            0           0          0          14    </param>       
         <param name="ko">               0           0          0          0     </param>       
         <param name="stictionUp">       0           0          0          0     </param>       
         <param name="stictionDwn">      0           0          0          0     </param>     
