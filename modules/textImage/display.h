@@ -25,6 +25,8 @@ class MainModule :public yarp::os::RFModule
 public:
     yarp::os::Network                yarp;
     QGraphicsScene*                  scene;
+    QPen*                            outlinePen;
+    QBrush*                          brush;
 
     MainModule();
     ~MainModule();

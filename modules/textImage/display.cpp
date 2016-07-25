@@ -30,6 +30,16 @@ MainModule::~MainModule()
         delete scene;
         scene = 0;
     }
+    if (outlinePen)
+    {
+        delete outlinePen;
+        outlinePen = 0;
+    }
+    if (brush)
+    {
+        delete brush;
+        brush = 0;
+    }
     outputPort.interrupt();
     outputPort.close();
 }
@@ -64,6 +74,7 @@ bool MainModule::updateModule()
             {
                 QRect rect((current_string[i] - '0') * 29, 0, 29, 52);
                 QPixmap  qpm = img_numbers.copy(rect);
+                scene->addRect(QRect(0, 0, 80, 32), *outlinePen, *brush);
                 QGraphicsPixmapItem *p1 = scene->addPixmap(qpm);
                 p1->setScale(1);
                 p1->setFlag(QGraphicsItem::ItemIsMovable, true);
@@ -104,6 +115,8 @@ MainModule::MainModule()
     img_numbers.setMask(img_numbers.createMaskFromColor(QColor(255, 0, 255)));
 
     scene = new QGraphicsScene;
+    outlinePen = new QPen (Qt::black);
+    brush = new QBrush (Qt::black);
 
     inputPort.open("/textimage/txt:i");
     outputPort.open("/textimage/img:o");
