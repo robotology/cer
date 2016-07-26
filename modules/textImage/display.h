@@ -21,18 +21,27 @@
 
 class MainModule :public yarp::os::RFModule
 {
+    enum renderer_enum_type
+    {
+        none = 0,
+        bitmap =1,
+        qtfont =2
+    };
 
 public:
     yarp::os::Network                yarp;
     QGraphicsScene*                  scene;
+    QGraphicsTextItem*               text;
     QPen*                            outlinePen;
     QBrush*                          brush;
+    renderer_enum_type               text_renderer_type;
 
     MainModule();
     ~MainModule();
     bool updateModule();
     double getPeriod();
     int offset;
+    bool configure(yarp::os::ResourceFinder &rf);
 
 private:
 

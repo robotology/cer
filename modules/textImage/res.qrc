@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>images/numbers.bmp</file>
+        <file>images/default.bmp</file>
     </qresource>
 </RCC>
