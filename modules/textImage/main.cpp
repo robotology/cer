@@ -17,7 +17,7 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
 #include <yarp/sig/Vector.h>
-#include <QApplication.h>
+#include <QApplication>
 
 #include <iostream>
 #include <iomanip>

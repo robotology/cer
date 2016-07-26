@@ -49,7 +49,7 @@ private:
 
     std::string                                 current_string;
     yarp::os::BufferedPort<yarp::os::Bottle>  inputPort;
-    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb>>    outputPort;
+    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >    outputPort;
 };
 
 #endif
