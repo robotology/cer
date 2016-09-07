@@ -59,13 +59,13 @@ public:
 
 private:
 
-    QPixmap                          img_numbers;
+    QPixmap                                  img_numbers;
 
-    std::string                                 current_string;
-    yarp::os::BufferedPort<yarp::os::Bottle>  inputPort;
+    std::string                              current_string;
+    yarp::os::BufferedPort<yarp::os::Bottle> inputPort;
     yarp::os::Port rpcPort;
     yarp::os::Port cmdPort;
-    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb>>    outputPort;
+    yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> > outputPort;
 };
 
 #endif
