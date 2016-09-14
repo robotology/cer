@@ -102,7 +102,7 @@ class Controller : public RFModule, public PortReader
 
         string target_type=request.check("target-type",Value("cartesian")).asString();
         Bottle *target_location=request.find("target-location").asList();
-        if ((target_type!="cartesian") || (target_type!="angular") || (target_type!="image"))
+        if ((target_type!="cartesian") && (target_type!="angular") && (target_type!="image"))
             yError("Unrecognized target type \"%s\"!",target_type.c_str());
         else if (target_location==NULL)
             yWarning("Missing \"target-location\" option!");
