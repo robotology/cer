@@ -254,8 +254,8 @@ class Controller : public RFModule, public PortReader
         stamps[3]=stamps_[3];
 
         ienc[2]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(4,encs_.subVector(0,4));
-        stamps.setSubvector(4,stamps_.subVector(0,4));
+        encs.setSubvector(4,encs_.subVector(0,1));
+        stamps.setSubvector(4,stamps_.subVector(0,1));
 
         if (timeStamp!=NULL)
             *timeStamp=findMax(stamps);
