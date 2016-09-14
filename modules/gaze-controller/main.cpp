@@ -105,7 +105,7 @@ class Controller : public RFModule, public PortReader
         if ((target_type!="cartesian") || (target_type!="angular") || (target_type!="image"))
             yError("Unrecognized target type \"%s\"!",target_type.c_str());
         else if (target_location==NULL)
-            yError("Missing \"target-location\" option!");
+            yWarning("Missing \"target-location\" option!");
         else if (target_type=="cartesian")
         {
             if (target_location->size()>=3)
