@@ -19,7 +19,7 @@
         <param name="TorqueMax">             0                  0                  0                  0                        </param>
         <param name="JointEncoderType">      "NONE"             "NONE"             "NONE"             "AEA"                    </param>
         <param name="RotorEncoderType">      "ROIE"             "ROIE"             "ROIE"             "NONE"                   </param>
-        <param name="JointEncoderRes">       65535              65535              65535              4096                     </param>
+        <param name="JointEncoderRes">       65535              65535              65535             -4096                     </param>
         <param name="RotorEncoderRes">       65535              65535              65535              0                        </param>
         <param name="RotorIndexOffset">      0                  0                  0                  0                        </param>
         <param name="Gearbox">               1                  1                  1                  1                        </param>

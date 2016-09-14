@@ -10,7 +10,7 @@
       <params file="hardware/mechanicals/cer_head-mcp10-mec.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                35      45            </param>
+        <param name="jntPosMax">                35      70            </param>
         <param name="jntPosMin">                -25    -45            </param>
         <param name="rotorPosMin">              0       0            </param>
         <param name="rotorPosMax">              0       0            </param>
@@ -22,19 +22,29 @@
     </group>
 
     <group name="POSITION_CONTROL">
-	<param name="controlLaw">    joint_pid_v1            </param>
-        <param name="controlUnits">  machine_units           </param>
-        <param name="kp">              -3           5        </param>
-        <param name="kd">              -0           0        </param>
-        <param name="ki">              -3           5        </param>       
-        <param name="limOutput">      500         500        </param>
-        <param name="maxOutput">     3000        3000        </param>
-        <param name="maxInt">        3000        3000        </param>
-        <param name="shift">            0           0        </param>
-        <param name="ko">               0           0        </param>
-        <param name="stictionUp">       0           0        </param>
-        <param name="stictionDwn">      0           0        </param>
-        <param name="kff">              0           0        </param>
+	<param name="controlLaw">    joint_pid_v1            </param> 
+        <param name="controlUnits">  machine_units           </param> 
+        
+	<!-- <param name="kp">              -3           3        </param>       
+        <param name="kd">              -0           0        </param>       
+        <param name="ki">             -30          30        </param>       
+        <param name="limOutput">      500         500        </param>      
+        <param name="maxOutput">     3000        3000        </param>          
+        <param name="maxInt">        3000        3000        </param> -->
+
+	<param name="kp">              -3           5        </param>       
+        <param name="kd">              -0           0        </param>       
+        <param name="ki">              -3           5        </param> 
+        <param name="limOutput">      500        1500        </param>      
+        <param name="maxOutput">     3360        3360        </param>          
+        <param name="maxInt">        3000        1500        </param>   
+       
+        <param name="shift">            0           0        </param>       
+        <param name="ko">               0           0        </param>       
+        <param name="stictionUp">       0           0        </param>       
+        <param name="stictionDwn">      0           0        </param>     
+        <param name="kff">              0           0        </param>   
+>>>>>>> Stashed changes
     </group>
 
     <group name="VELOCITY_CONTROL">

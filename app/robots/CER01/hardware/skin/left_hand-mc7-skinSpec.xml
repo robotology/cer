@@ -8,14 +8,14 @@
             <param name="skinType">      0  </param> <!-- 0 ==> new skin
                                                               1 ==> palm and fingertips skin
                                                               2 ==> old skin without temperature compensation -->
-            <param name="noLoad">         0xf1  </param>
+            <param name="noLoad">         0xf0  </param>
             <param name="diagnostic">    false  </param>     <!-- used to config high level -->
         </group>
         
         
        <group name="defaultCfgTriangle">
             <param name="enabled">         true  </param> 
-            <param name="shift">           2  </param>
+            <param name="shift">           0  </param>
             <param name="cdcOffset">       0x2200  </param>
         </group>
 
