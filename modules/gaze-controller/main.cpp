@@ -381,7 +381,7 @@ class Controller : public RFModule, public PortReader
             if (frame==control_frame)
             {
                 Vector ang(2);
-                Vector z=Hee.getCol(3).subVector(0,2);                
+                Vector z=Hee.getCol(2).subVector(0,2);                
                 ang[0]=CTRL_RAD2DEG*atan2(z[1],z[0]);
                 ang[1]=CTRL_RAD2DEG*atan2(z[2],z[0]);
 
