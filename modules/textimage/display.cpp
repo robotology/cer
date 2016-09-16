@@ -172,12 +172,13 @@ bool MainModule::updateModule()
 
 bool MainModule::respond(const Bottle& command, Bottle& reply)
 {
-    reply.clear();
-
     if (command.get(0).asString()=="set_speed")
     {
         scroll_speed = command.get(1).asDouble();
     }
+
+    reply.addVocab(Vocab::encode("ack"));
+
     return true;
 }
 
