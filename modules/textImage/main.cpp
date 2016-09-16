@@ -50,7 +50,9 @@ int main(int argc, char *argv[])
     if (rf.check("help"))
     {
         yInfo() << "Options:";
-        yInfo() << "No options at the moment";
+        yInfo() << "font <string>";
+        yInfo() << "scroll_speed <double>";
+        yInfo() << "renderer <string>";
         return 0;
     }
 

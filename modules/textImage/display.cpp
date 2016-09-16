@@ -191,6 +191,11 @@ bool MainModule::configure(yarp::os::ResourceFinder &rf)
         fontname = rf.find("font").asString();
     }
 
+    if (rf.check("scroll_speed"))
+    {
+        scroll_speed = rf.find("scroll_speed").asDouble();
+    }
+
     if (rf.check("renderer"))
     {
         string tt = rf.find("renderer").asString();
