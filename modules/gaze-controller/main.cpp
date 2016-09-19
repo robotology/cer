@@ -72,7 +72,10 @@ class Controller : public RFModule, public PortReader
     string control_frame;
     double stop_threshold;
     double Ts;
-    Vector qd;    
+
+    Vector qd;
+    Vector pitchPhy;
+    Vector yawPhy;
 
     /****************************************************************/
     bool read(ConnectionReader &connection)
@@ -360,6 +363,91 @@ class Controller : public RFModule, public PortReader
     }
 
     /****************************************************************/
+    void getJointsBounds(Vector &pitchLim, Vector &yawLim)
+    {
+        HeadSolver &s=solver.begin()->second;
+        HeadParameters p=s.getHeadParameters();
+        iKinChain &chain=*p.head.asChain();
+
+        pitchLim.resize(2);
+        pitchLim[0]=chain[1].getMin();
+        pitchLim[1]=chain[1].getMax();
+
+        yawLim.resize(2);
+        yawLim[0]=chain[2].getMin();
+        yawLim[1]=chain[2].getMax();
+    }
+
+    /****************************************************************/
+    void applyCustomJointsBounds(const Bottle *pitchLim,
+                                 const Bottle *yawLim)
+    {
+        Value part=drivers[2].getValue("remote");
+        for (map<string,HeadSolver>::iterator it=solver.begin();
+             it!=solver.end(); it++)
+        {
+            yInfo("##### Applying custom joints bounds for control frame \"%s\"",
+                  it->first.c_str());
+            HeadSolver &s=it->second;
+
+            HeadParameters p=s.getHeadParameters();
+            iKinChain &chain=*p.head.asChain();            
+
+            int i=0;
+            if (pitchLim!=NULL)
+            {
+                bool doPrint=false;
+                if (pitchLim->size()>0)
+                {
+                    double val=(M_PI/180.0)*pitchLim->get(0).asDouble();
+                    val=std::min(std::max(val,pitchPhy[0]),pitchPhy[1]);
+                    chain[1+i].setMin(val);
+                    doPrint=true;
+                }
+
+                if (pitchLim->size()>1)
+                {
+                    double val=(M_PI/180.0)*pitchLim->get(1).asDouble();
+                    val=std::min(std::max(val,pitchPhy[0]),pitchPhy[1]);
+                    chain[1+i].setMax(val);
+                    doPrint=true;
+                }
+
+                if (doPrint)
+                    yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
+                          part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
+                          (180.0/M_PI)*chain[1+i].getMax());
+            }
+
+            i++;
+            if (yawLim!=NULL)
+            {
+                bool doPrint=false;
+                if (yawLim->size()>0)
+                {
+                    double val=(M_PI/180.0)*yawLim->get(0).asDouble();
+                    val=std::min(std::max(val,yawPhy[0]),yawPhy[1]);
+                    chain[1+i].setMin(val);
+                    doPrint=true;
+                }
+
+                if (yawLim->size()>1)
+                {
+                    double val=(M_PI/180.0)*yawLim->get(1).asDouble();
+                    val=std::min(std::max(val,yawPhy[0]),yawPhy[1]);
+                    chain[1+i].setMax(val);
+                    doPrint=true;
+                }
+
+                if (doPrint)
+                    yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
+                          part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
+                          (180.0/M_PI)*chain[1+i].getMax());
+            }
+        }
+    }
+
+    /****************************************************************/
     void fillState(const Vector &q, Property &state)
     {
         state.clear();
@@ -415,6 +503,14 @@ public:
         double T=rf.check("T",Value(1.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
+
+        Bottle *pitchLim=NULL; Bottle *yawLim=NULL;
+        Bottle &jointsLimits=rf.findGroup("joints-limits");
+        if (!jointsLimits.isNull())
+        {
+            pitchLim=rf.find("pitch").asList();
+            yawLim=rf.find("yaw").asList();
+        }
 
         Property option;
 
@@ -478,6 +574,8 @@ public:
 
         if (get_bounds)
             alignJointsBounds();
+        getJointsBounds(pitchPhy,yawPhy);
+        applyCustomJointsBounds(pitchLim,yawLim);
 
         string cameras_context="cameraCalibration";
         string cameras_file="cer.ini";
@@ -589,23 +687,39 @@ public:
         {
             if (cmd_0==Vocab::encode("set"))
             {
-                int cmd_1=cmd.get(1).asVocab();
-                if (cmd_1==Vocab::encode("T"))
+                string cmd_1=cmd.get(1).asString();
+                if (cmd_1=="T")
                 {
                     gen->setT(cmd.get(2).asDouble());
                     reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (cmd_1==Vocab::encode("Ts"))
+                else if (cmd_1=="Ts")
                 {
                     Ts=cmd.get(2).asDouble();
                     Ts=std::max(Ts,MIN_TS);
                     gen->setTs(Ts);
                     reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (cmd_1==Vocab::encode("verbosity"))
+                else if (cmd_1=="verbosity")
                 {
                     verbosity=cmd.get(2).asInt();
                     reply.addVocab(Vocab::encode("ack"));
+                }
+                else if (cmd_1=="joints-limits::pitch")
+                {
+                    if (Bottle *pitchLim=cmd.get(2).asList())
+                    {
+                        applyCustomJointsBounds(pitchLim,NULL);
+                        reply.addVocab(Vocab::encode("ack"));
+                    }
+                }
+                else if (cmd_1=="joints-limits::yaw")
+                {
+                    if (Bottle *yawLim=cmd.get(2).asList())
+                    {
+                        applyCustomJointsBounds(NULL,yawLim);
+                        reply.addVocab(Vocab::encode("ack"));
+                    }
                 }
             }
         }
@@ -613,21 +727,37 @@ public:
         {
             if (cmd_0==Vocab::encode("get"))
             {
-                int cmd_1=cmd.get(1).asVocab();
-                if (cmd_1==Vocab::encode("T"))
+                string cmd_1=cmd.get(1).asString();
+                if (cmd_1=="T")
                 {
                     reply.addVocab(Vocab::encode("ack"));
                     reply.addDouble(gen->getT());
                 }
-                else if (cmd_1==Vocab::encode("Ts"))
+                else if (cmd_1=="Ts")
                 {
                     reply.addVocab(Vocab::encode("ack"));
                     reply.addDouble(Ts);
                 }
-                else if (cmd_1==Vocab::encode("verbosity"))
+                else if (cmd_1=="verbosity")
                 {
                     reply.addVocab(Vocab::encode("ack"));
                     reply.addInt(verbosity);
+                }
+                else if (cmd_1=="joints-limits::pitch")
+                {
+                    Vector pitchLim,yawLim;
+                    getJointsBounds(pitchLim,yawLim);
+
+                    reply.addVocab(Vocab::encode("ack"));                    
+                    reply.addList().read(pitchLim);
+                }
+                else if (cmd_1=="joints-limits::yaw")
+                {
+                    Vector pitchLim,yawLim;
+                    getJointsBounds(pitchLim,yawLim);
+
+                    reply.addVocab(Vocab::encode("ack"));                    
+                    reply.addList().read(yawLim);
                 }
             }
         }
