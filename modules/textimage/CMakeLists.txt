@@ -31,9 +31,9 @@
                                        ${textimage_UI_GEN_SRCS})
 
   add_executable(textimage ${textimage_SRCS}
-                                      ${textimage_HDRS}
-                                      ${textimage_QRC_GEN_SRCS}
-                                      ${textimage_UI_GEN_SRCS})
+                           ${textimage_HDRS}
+                           ${textimage_QRC_GEN_SRCS}
+                           ${textimage_UI_GEN_SRCS})
 
   target_link_libraries(textimage ${YARP_LIBRARIES})
 
