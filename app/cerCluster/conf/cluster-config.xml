@@ -1,5 +1,5 @@
 <cluster name="cer01" user="r1-user">
-<nameserver namespace="/cer01" node="iiticublap070"> </nameserver>
+<nameserver namespace="/cer01" node="r1-base"> </nameserver>
 
 <node display=":0.0">iiticublap070</node>
 <node>r1-base</node>
