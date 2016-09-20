@@ -4,6 +4,6 @@
 <node display=":0.0">iiticublap070</node>
 <node>r1-base</node>
 <node>r1-torso</node>
-<node>r1-face</node>
+<node ssh-options="-X">r1-face</node>
 
 </cluster>
