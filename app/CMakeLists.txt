@@ -1,3 +1,4 @@
+add_subdirectory(cerCluster)
 add_subdirectory(robots)
 add_subdirectory(teleop)
 add_subdirectory(cameraCalibration)
