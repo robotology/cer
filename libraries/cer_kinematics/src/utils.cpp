@@ -152,15 +152,20 @@ protected:
         }
         else if (type=="depth")
         {
-            (*this)[lastLink].setA(0.0);
-            (*this)[lastLink].setD(0.202711);
+            (*this)[lastLink].setA(-0.044487);
+            (*this)[lastLink].setD(0.202701);
+        }
+        else if (type=="depth_rgb")
+        {
+            (*this)[lastLink].setA(-0.018487);
+            (*this)[lastLink].setD(0.202701);
         }
 
         Matrix HN=eye(4,4);
-        if (type=="depth")
-            HN(2,3)=0.062117;
-        else if (type=="gaze")
+        if (type=="gaze")
             HN(2,3)=0.051929;
+        else if ((type=="depth") || (type=="depth_rgb"))
+            HN(2,3)=0.052119;
         else
             HN(2,3)=0.061378;
         setHN(HN);
@@ -219,7 +224,8 @@ set<string> HeadParameters::getTypes()
     types.insert("cyclopic");
     types.insert("right");
     types.insert("gaze");
-    types.insert("depth");    
+    types.insert("depth");
+    types.insert("depth_rgb");
     return types;
 }
 
