@@ -128,10 +128,10 @@ class Controller : public RFModule, public PortReader
             if (target_location->size()>=2)
             {
                 Vector azi(4,0.0); azi[2]=1.0;
-                azi[3]=CTRL_DEG2RAD*target_location->get(0).asDouble();
+                azi[3]=(M_PI/180.0)*target_location->get(0).asDouble();
 
                 Vector ele(4,0.0); ele[1]=-1.0;
-                ele[3]=CTRL_DEG2RAD*target_location->get(1).asDouble();
+                ele[3]=(M_PI/180.0)*target_location->get(1).asDouble();
 
                 Matrix Hee;
                 Vector q0(6,0.0);
@@ -370,12 +370,12 @@ class Controller : public RFModule, public PortReader
         iKinChain &chain=*p.head.asChain();
 
         pitchLim.resize(2);
-        pitchLim[0]=chain[1].getMin();
-        pitchLim[1]=chain[1].getMax();
+        pitchLim[0]=(180.0/M_PI)*chain[1].getMin();
+        pitchLim[1]=(180.0/M_PI)*chain[1].getMax();
 
         yawLim.resize(2);
-        yawLim[0]=chain[2].getMin();
-        yawLim[1]=chain[2].getMax();
+        yawLim[0]=(180.0/M_PI)*chain[2].getMin();
+        yawLim[1]=(180.0/M_PI)*chain[2].getMax();
     }
 
     /****************************************************************/
@@ -399,17 +399,17 @@ class Controller : public RFModule, public PortReader
                 bool doPrint=false;
                 if (pitchLim->size()>0)
                 {
-                    double val=(M_PI/180.0)*pitchLim->get(0).asDouble();
+                    double val=pitchLim->get(0).asDouble();
                     val=std::min(std::max(val,pitchPhy[0]),pitchPhy[1]);
-                    chain[1+i].setMin(val);
+                    chain[1+i].setMin((M_PI/180.0)*val);
                     doPrint=true;
                 }
 
                 if (pitchLim->size()>1)
                 {
-                    double val=(M_PI/180.0)*pitchLim->get(1).asDouble();
+                    double val=pitchLim->get(1).asDouble();
                     val=std::min(std::max(val,pitchPhy[0]),pitchPhy[1]);
-                    chain[1+i].setMax(val);
+                    chain[1+i].setMax((M_PI/180.0)*val);
                     doPrint=true;
                 }
 
@@ -425,17 +425,17 @@ class Controller : public RFModule, public PortReader
                 bool doPrint=false;
                 if (yawLim->size()>0)
                 {
-                    double val=(M_PI/180.0)*yawLim->get(0).asDouble();
+                    double val=yawLim->get(0).asDouble();
                     val=std::min(std::max(val,yawPhy[0]),yawPhy[1]);
-                    chain[1+i].setMin(val);
+                    chain[1+i].setMin((M_PI/180.0)*val);
                     doPrint=true;
                 }
 
                 if (yawLim->size()>1)
                 {
-                    double val=(M_PI/180.0)*yawLim->get(1).asDouble();
+                    double val=yawLim->get(1).asDouble();
                     val=std::min(std::max(val,yawPhy[0]),yawPhy[1]);
-                    chain[1+i].setMax(val);
+                    chain[1+i].setMax((M_PI/180.0)*val);
                     doPrint=true;
                 }
 
@@ -469,9 +469,9 @@ class Controller : public RFModule, public PortReader
             if (frame==control_frame)
             {
                 Vector ang(2);
-                Vector z=Hee.getCol(2).subVector(0,2);                
-                ang[0]=CTRL_RAD2DEG*atan2(z[1],z[0]);
-                ang[1]=CTRL_RAD2DEG*atan2(z[2],z[0]);
+                Vector z=Hee.getCol(2).subVector(0,2);
+                ang[0]=(180.0/M_PI)*atan2(z[1],z[0]);
+                ang[1]=(180.0/M_PI)*atan2(z[2],z[0]);
 
                 Bottle val; val.addList().read(ang);
                 state.put("angular",val.get(0));
