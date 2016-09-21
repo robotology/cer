@@ -444,6 +444,8 @@ class Controller : public RFModule, public PortReader
                           part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
                           (180.0/M_PI)*chain[1+i].getMax());
             }
+
+            s.setHeadParameters(p);
         }
     }
 
