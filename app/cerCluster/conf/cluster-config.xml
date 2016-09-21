@@ -1,7 +1,7 @@
 <cluster name="cer01" user="r1-user">
 <nameserver namespace="/cer01" node="r1-base"> </nameserver>
 
-<node display=":0.0">iiticublap070</node>
+<node display=":0.0">r1-console-linux</node>
 <node>r1-base</node>
 <node>r1-torso</node>
 <node ssh-options="-X">r1-face</node>
