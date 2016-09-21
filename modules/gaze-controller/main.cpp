@@ -510,8 +510,8 @@ public:
         Bottle &jointsLimits=rf.findGroup("joints-limits");
         if (!jointsLimits.isNull())
         {
-            pitchLim=rf.find("pitch").asList();
-            yawLim=rf.find("yaw").asList();
+            pitchLim=jointsLimits.find("pitch").asList();
+            yawLim=jointsLimits.find("yaw").asList();
         }
 
         Property option;
