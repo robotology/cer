@@ -137,7 +137,7 @@ struct HeadParameters
      * Constructor. 
      *  
      * @param type  a string 
-     *              ["left"|"cyclopic"|"right"|"gaze"|"depth"|"depth_rgb"]
+     *              ["left"|"cyclopic"|"right"|"gaze"|"depth"|"depth_rgb"|"depth_center"]
      *              accounting for the end frame type.
      */
     HeadParameters(const std::string &type="gaze");
