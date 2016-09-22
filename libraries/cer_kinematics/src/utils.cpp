@@ -136,9 +136,9 @@ protected:
     /****************************************************************/
     void allocate(const string &type)
     {
-        pushLink(new iKinLink( -0.094,     0.4,-90.0*CTRL_DEG2RAD,180.0*CTRL_DEG2RAD,-60.0*CTRL_DEG2RAD,60.0*CTRL_DEG2RAD)); 
-        pushLink(new iKinLink( -0.016,     0.0, 90.0*CTRL_DEG2RAD, 10.0*CTRL_DEG2RAD,-30.0*CTRL_DEG2RAD,50.0*CTRL_DEG2RAD)); 
-        pushLink(new iKinLink(-0.0325,0.089491,-80.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD,-80.0*CTRL_DEG2RAD,80.0*CTRL_DEG2RAD)); 
+        pushLink(new iKinLink(  -0.094,     0.4,-90.0*CTRL_DEG2RAD,180.0*CTRL_DEG2RAD,-60.0*CTRL_DEG2RAD,60.0*CTRL_DEG2RAD)); 
+        pushLink(new iKinLink(  -0.016,     0.0, 90.0*CTRL_DEG2RAD, 10.0*CTRL_DEG2RAD,-30.0*CTRL_DEG2RAD,50.0*CTRL_DEG2RAD)); 
+        pushLink(new iKinLink(-0.03351,0.089481,-80.0*CTRL_DEG2RAD,-90.0*CTRL_DEG2RAD,-80.0*CTRL_DEG2RAD,80.0*CTRL_DEG2RAD)); 
 
         unsigned int lastLink=getN()-1;
         if (type=="right")
@@ -174,7 +174,7 @@ protected:
         else if (type=="depth_center")
             HN(2,3)=0.052114;
         else
-            HN(2,3)=0.061378;
+            HN(2,3)=0.064065;
         setHN(HN);
     }
 };
