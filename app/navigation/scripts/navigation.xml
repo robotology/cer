@@ -8,13 +8,13 @@
 		
         <module>
 			<name>baseControl</name>
-			<parameters>--config baseCtrl_cer.ini --joystick_connect --skip_robot_interface_check</parameters>
+			<parameters>--from baseCtrl_cer.ini --joystick_connect --skip_robot_interface_check</parameters>
 			<node>r1-base</node>
         </module>
 
         <module>
-			<name>joystickControl</name>
-			<parameters>--from cer_linux.ini</parameters>
+			<name>joystickCtrl</name>
+			<parameters>--context joystickCtrl --from cer_linux.ini</parameters>
 			<node>r1-base</node>
         </module>
 
@@ -33,7 +33,7 @@
 		<module>
 			<name>yarpview</name>
 			<parameters>--name /plannerView:i --out /mapClick:o</parameters>
-			<node>console</node>
+			<node>r1-console-windows</node>
 		</module>
 
 		<!-- connections -->
