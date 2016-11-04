@@ -346,9 +346,9 @@ void ControlThread::option1(double* axis)
     {
         Bottle& b = robotCmdPort_base.prepare();
         b.clear();
-        b.addInt(1);
-        b.addDouble(0);
-        b.addDouble(val5); //lin_speed
+        b.addInt(3);
+        b.addDouble(val5); //x_lin_speed
+        b.addDouble(val4); //y_lin_speed
         b.addDouble(val3); //ang_speed
         //b.addDouble(val6); //
         b.addDouble(50.0); //gain
@@ -431,6 +431,27 @@ void ControlThread::run()
     if (first_run)
     {
         yInfo() << "Waiting for initial position...";
+        Bottle* br = 0;
+        Bottle* bl = 0;
+        int timeout = 0;
+        do
+        {
+            bl = robotStatusPort_larm.read(false);
+            br = robotStatusPort_rarm.read(false);
+            timeout++;
+            yarp::os::Time::delay(1.0);
+            if      (bl == 0 && br != 0) yWarning("Cartesian controller left arm not ready yet");
+            else if (bl != 0 && br == 0) yWarning("Cartesian controller right arm not ready yet");
+            else if (bl == 0 && br == 0) yWarning("Cartesian controller left arm and right arm not ready yet");
+            if (timeout >= 10)
+            {
+                yError() << "Unable to connect to catesian controller, terminating....";
+                error_status = true;
+                return;
+            }
+        }
+        while (bl==0 || br==0);
+
         getCartesianArmPositions();
         first_run = false;
         yInfo() << "...done";
@@ -486,8 +507,15 @@ void ControlThread::printStats()
    // yDebug()<<stats.str();
 }
 
+int ControlThread::get_status()
+{
+    if (error_status) return -1;
+    return 0;
+}
+
 bool ControlThread::threadInit()
 {
+    error_status = false;
     bool autoconnect = false;
     rosNode = new yarp::os::Node(localName);
     if (!rosPublisherPort.topic(localName+"_marker"))

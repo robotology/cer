@@ -62,6 +62,7 @@ protected:
     string                    robotName;
     string                    localName;
     bool                      first_run;
+    bool                      error_status;
 
     //connection to the robot
     RpcClient                 robotCmdPort_larm;
@@ -132,6 +133,8 @@ public:
     void option2(double* axis);
     void option3(double* axis);
     void option4(double* axis);
+
+    int get_status();
 };
 
 #endif

@@ -203,12 +203,23 @@ public:
         return true;
     }
 
-    virtual double getPeriod()    { return 0.1;  }
+    virtual double getPeriod()    
+    {
+        return 0.1;
+    }
+
     virtual bool   updateModule()
     { 
         if (control_thr)
         {
             control_thr->printStats();
+            int status = control_thr->get_status();
+            if (status < 0)
+            {
+                yError() << "Fatal error, closing";
+                control_thr->stop();
+                return false;
+            }
         }
         else
         {
