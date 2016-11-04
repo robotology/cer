@@ -2,25 +2,25 @@
 <name>tripodJoystickControl_application</name>
 
 <dependencies>	
-cerSrv
+r1-base
 </dependencies>
 
 <module>
    <name>tripodJoystickControl</name>
-   <parameters>--from cer_torso.ini</parameters>
-   <node>cerSrv</node>
+   <parameters>--context tripodJoystickControl --from cer_torso.ini</parameters>
+   <node>r1-base</node>
 </module>
 
 <module>
    <name>tripodJoystickControl</name>
-   <parameters>--from cer_left_arm.ini</parameters>
-   <node>cerSrv</node>
+   <parameters>--context tripodJoystickControl --from cer_left_arm.ini</parameters>
+   <node>r1-base</node>
 </module>
 
 <module>
    <name>tripodJoystickControl</name>
-   <parameters>--from cer_right_arm.ini</parameters>
-   <node>cerSrv</node>
+   <parameters>--context tripodJoystickControl --from cer_right_arm.ini</parameters>
+   <node>r1-base</node>
 </module>
 
 </application>
