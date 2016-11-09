@@ -7,7 +7,7 @@
         <module>
                 <name>yarprobotinterface</name>
                 <parameters>--context geomagic --config geomagic.xml</parameters>
-                <node>windows</node>
+                <node>r1-console-windows</node>
         </module>
 
         <module>
@@ -16,19 +16,19 @@
                 <dependencies>
                     <port timeout="5.0">/geomagic/state:o</port>
                 </dependencies>
-                <node>windows</node>
+                <node>r1-console-windows</node>
         </module>
 
         <module>
                 <name>cer_reaching-solver</name>
                 <parameters>--robot cer --arm-type left --verbosity 1</parameters>
-                <node>cer-base</node>
+                <node>r1-base</node>
         </module>
 
         <module>
                 <name>cer_reaching-controller</name>
                 <parameters>--robot cer --arm-type left --verbosity 1 --T 1.0</parameters>
-                <node>cer-base</node>
+                <node>r1-base</node>
         </module>
 
 <!----- connections ------>

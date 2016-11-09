@@ -5,31 +5,31 @@
   <module>
     <name>imageSplitter</name>
     <parameters>--remote /SIM_CER_ROBOT/cam/cameras:o --nameLeft /SIM_CER_ROBOT/cam/left:o --nameRight /SIM_CER_ROBOT/cam/right:o --carrier shmem</parameters>
-    <node>/iitlapwge0936</node>
+    <node>/r1-console-linux</node>
   </module>
 
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubSimEyes.ini --group CAMERA_CALIBRATION_LEFT --name /SIM_CER_ROBOT/camCalibWithPose/left</parameters>
-    <node>/iitlapwge0936</node>
+    <node>/r1-console-linux</node>
   </module>
 
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubSimEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /SIM_CER_ROBOT/camCalibWithPose/right</parameters>
-    <node>/iitlapwge0936</node>
+    <node>/r1-console-linux</node>
   </module>
 
   <module>
     <name>yarpdev</name>
     <parameters>--device ovrheadset --hfov 88 --w 960 --h 720 --imagepose</parameters>
-    <node>/iiticublap057</node>
+    <node>/r1-console-windows</node>
   </module>
 
   <module>
     <name>positionDirectControl</name>
     <parameters>--robot SIM_CER_ROBOT --part head --joints "(0 1)"</parameters>
-    <node>/iitlapwge0936</node>
+    <node>/r1-console-linux</node>
   </module>
 
   <connection>
