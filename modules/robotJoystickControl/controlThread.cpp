@@ -205,7 +205,7 @@ void ControlThread::option4(double* axis)
         if (val1 > 0.1 || val1 < -0.1) velMoveHandler(val1>0, hand_joints, 50.0, interface_left_hand_iCmd, interface_left_hand_iVel);
 
         double val2 = axis[AXIS_RIGHT_HORIZONTAL];   //torso yaw
-        if (val2 > 0.1 || val2 < -0.1) velMoveHandler(val2>0, torso_yaw, 50.0, interface_torso_equiv_iCmd, interface_torso_equiv_iVel);
+        if (val2 > 0.1 || val2 < -0.1) velMoveHandler(val2>0, torso_yaw, 15.0, interface_torso_equiv_iCmd, interface_torso_equiv_iVel);
     }
 }
 
