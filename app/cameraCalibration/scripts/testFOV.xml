@@ -1,0 +1,84 @@
+<?xml version=1.0 ?>
+<application>
+  <name>FOV test</name>
+  <dependencies></dependencies>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--device grabber --subdevice usbCamera --d /dev/video0 --width 1280 --height 480 --name /cer/cam/cameras --framerate 30</parameters>
+    <node>/r1-torso</node>
+  </module>
+
+<!--
+  <module>
+    <name>dualCamCalib</name>
+    <parameters>--context cameraCalibration --from cerEyes_640x480.ini --dual --name /cer/camcalib/cameras</parameters>
+    <node>/r1-torso</node>
+  </module>
+
+  <module>
+    <name>dualCamCalib</name>
+    <parameters>--context cameraCalibration --from cerEyes_640x480.ini --dual --name /cer/camcalib/cameras</parameters>
+    <node>/r1-torso</node>
+  </module>
+-->
+
+  <module>
+    <name>imageSplitter</name>
+    <parameters>--nameInput /cer/splitter:i --remote /cer/cam/cameras --nameLeft /cer/cam/right:o --nameRight /cer/cam/left:o --carrier udp --autoconnect</parameters>
+    <node>/r1-torso</node>
+  </module>
+
+  <module>
+    <name>imageSplitter</name>
+    <parameters>--nameInput /SIM_CER_ROBOT/splitter:i --remote /SIM_CER_ROBOT/cam/cameras:o --nameLeft /SIM_CER_ROBOT/cam/right:o --nameRight /SIM_CER_ROBOT/cam/left:o --carrier udp --autoconnect</parameters>
+    <node>/r1-console-linux</node>
+  </module>
+
+  <module>
+    <name>yarpview</name>
+    <parameters>--name /fov_test --x 0 --y 0 --synch</parameters>
+    <node>/r1-console-linux</node>
+  </module>
+
+  <module>
+    <name>testStereoMatch</name>
+    <parameters></parameters>
+    <node>/r1-console-linux</node>
+  </module>
+
+  <!-- connections -->
+
+  <!-- stereomatch -->
+  <connection>
+    <from>/teststereomatch/o</from>
+    <to>/fov_test</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <from>/cer/cam/left:o</from>
+    <to>/teststereomatch/left</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <from>/SIM_CER_ROBOT/cam/left:o</from>
+    <to>/teststereomatch/right</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <from>/SIM_CER_ROBOT/cam/cameras:o</from>
+    <to>/SIM_CER_ROBOT/splitter:i</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <from>/cer/cam/cameras</from>
+    <to>/cer/splitter:i</to>
+    <protocol>udp</protocol>
+  </connection>
+
+</application>
+
