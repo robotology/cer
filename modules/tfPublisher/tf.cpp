@@ -78,28 +78,32 @@ void tf::rotFromRPY(double R, double P, double Y)
 {
     double    rot[3] = {R, P, Y};
     size_t    i;
-    Vector    rotV, rotQ;
+    Vector    rotV;
+    Quaternion rotQ;
     Matrix    rotM;
     i         = 3;
     rotV      = Vector(i, rot);
     rotM      = rpy2dcm(rotV);
-    rotQ      = dcm2quat(rotM);
-    rW        = rotQ[X_AX];
-    rX        = rotQ[Y_AX];
-    rY        = rotQ[Z_AX];
-    rZ        = rotQ[W_AX];
+    rotQ.fromRotationMatrix(rotM);
+    rW        = rotQ.w();
+    rX        = rotQ.x();
+    rY        = rotQ.y();
+    rZ        = rotQ.z();
     return;
 }
 Vector tf::getRPYRot() const
 {
-    Vector rotQ, rotV;
+    Quaternion rotQ;
+    Vector rotV;
     size_t i;
     Matrix rotM;
-    double rot[4] = { rW, rX, rY, rZ };
     
     i    = 4;
-    rotQ = Vector( i, rot );
-    rotM = quat2dcm( rotQ );
+    rotQ.w() = rW;
+    rotQ.x() = rX;
+    rotQ.y() = rY;
+    rotQ.z() = rZ;
+    rotM = rotQ.toRotationMatrix();
     rotV = dcm2rpy( rotM );
     
     return rotV;

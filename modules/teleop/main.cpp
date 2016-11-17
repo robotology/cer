@@ -273,7 +273,8 @@ public:
         marker.action = visualization_msgs_Marker::ADD;
 
         //center
-        Vector q = dcm2quat(axis2dcm(od));
+        Quaternion q;
+        q.fromRotationMatrix(axis2dcm(od));
         marker.id = 1;
         marker.pose.position.x = xd[0];
         marker.pose.position.y = xd[1];
