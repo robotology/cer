@@ -295,10 +295,10 @@ public:
         /*
         //x
         marker.id = 2;
-        marker.pose.orientation.x = q[3];
-        marker.pose.orientation.y = q[0];
-        marker.pose.orientation.z = q[1];
-        marker.pose.orientation.w = q[2];
+        marker.pose.orientation.x = q.x();
+        marker.pose.orientation.y = q.y();
+        marker.pose.orientation.z = q.z();
+        marker.pose.orientation.w = q.w();
         marker.scale.x = 0.5;
         marker.scale.y = 0.05;
         marker.scale.z = 0.05;
@@ -309,10 +309,10 @@ public:
 
         //y
         marker.id = 3;        
-        marker.pose.orientation.x = q[3];
-        marker.pose.orientation.y = q[0];
-        marker.pose.orientation.z = q[1];
-        marker.pose.orientation.w = q[2];
+        marker.pose.orientation.x = q.x();
+        marker.pose.orientation.y = q.y();
+        marker.pose.orientation.z = q.z();
+        marker.pose.orientation.w = q.w();
         marker.scale.x = 0.05;
         marker.scale.y = 0.5;
         marker.scale.z = 0.05;
@@ -323,10 +323,10 @@ public:
 
         //z
         marker.id = 4;        
-        marker.pose.orientation.x = q[3];
-        marker.pose.orientation.y = q[0];
-        marker.pose.orientation.z = q[1];
-        marker.pose.orientation.w = q[2];
+        marker.pose.orientation.x = q.x();
+        marker.pose.orientation.y = q.y();
+        marker.pose.orientation.z = q.z();
+        marker.pose.orientation.w = q.w();
         marker.scale.x = 0.05;
         marker.scale.y = 0.05;
         marker.scale.z = 0.5;
