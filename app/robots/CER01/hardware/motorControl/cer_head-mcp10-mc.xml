@@ -8,6 +8,7 @@
       <params file="general.xml" />
       <params file="hardware/electronics/cer_head-mcp10-eln.xml" />
       <params file="hardware/mechanicals/cer_head-mcp10-mec.xml" />
+      <params file="hardware/motorcontrol/cer_head-mcp10-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                35      70            </param>

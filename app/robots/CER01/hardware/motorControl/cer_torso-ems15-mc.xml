@@ -8,6 +8,7 @@
       <params file="general.xml" />
       <params file="hardware/electronics/cer_torso-ems15-eln.xml" />
       <params file="hardware/mechanicals/cer_torso-ems15-mec.xml" />
+      <params file="hardware/motorControl/cer_torso-ems15-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                0.17    0.17         0.17       30     </param>

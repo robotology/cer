@@ -6,6 +6,7 @@
       <params file="general.xml" />
       <params file="hardware/electronics/cer_left_upper_arm-ems17-eln.xml" />
       <params file="hardware/mechanicals/cer_left_upper_arm-ems17-mec.xml" />
+      <params file="hardware/motorcontrol/cer_left_upper_arm-ems17-mc-service.xml" />
 
     <group name="LIMITS">
     <!--    <param name="jntPosMax">                  85            70         85        95         </param>   no covers -->
