@@ -6,6 +6,7 @@
       <params file="general.xml" />
       <params file="hardware/electronics/cer_base-ems21-eln.xml" />
       <params file="hardware/mechanicals/cer_base-ems21-mec.xml" />
+      <params file="hardware/motorcontrol/cer_base-ems21-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">              0          0           0        0     </param>

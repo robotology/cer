@@ -8,6 +8,7 @@
       <params file="general.xml" />
       <params file="hardware/electronics/cer_left_hand-mcp7-eln.xml" />
       <params file="hardware/mechanicals/cer_left_hand-mcp7-mec.xml" />
+      <params file="hardware/motorcontrol/cer_left_hand-mcp7-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                140     110           </param>
