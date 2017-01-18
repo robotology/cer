@@ -33,13 +33,13 @@ public:
     cv::Scalar              barColor;   // Color of bar as loaded from file
 
     // Offset values for placing stuff and size
-    const int barWidth;
-    const int eyeWidth;
-    const int eyeHeight;
-    const int faceWidth, faceHeight;
-    const int hearBar0_y, hearBar0_x, hearBar0_minLen, hearBar0_maxLen;
-    const int hearBar1_y, hearBar1_x, hearBar1_minLen, hearBar1_maxLen;
-    const int noseBar0_y, noseBar0_x, noseBar0_maxLen;
+    int barWidth;
+    int eyeWidth;
+    int eyeHeight;
+    int faceWidth, faceHeight;
+    int hearBar0_y, hearBar0_x, hearBar0_minLen, hearBar0_maxLen;
+    int hearBar1_y, hearBar1_x, hearBar1_minLen, hearBar1_maxLen;
+    int noseBar0_y, noseBar0_x, noseBar0_maxLen;
 
     int hearBarR0_x;    // Shall be constant as well, but cannot determine size at compile time
     int hearBarR1_x;

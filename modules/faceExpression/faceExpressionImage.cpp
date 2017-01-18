@@ -16,7 +16,7 @@ using namespace std;
 using namespace yarp::os;
 
 FaceExpressionImageModule::FaceExpressionImageModule() :    th(0.2, imagePort),
-                                                            imagePath("/home/linaro/Anand"),
+                                                            imagePath(""),
                                                             blink_per_minute(20)
 {
 
@@ -25,8 +25,16 @@ FaceExpressionImageModule::FaceExpressionImageModule() :    th(0.2, imagePort),
 bool FaceExpressionImageModule::configure(ResourceFinder &rf)
 {
     // Check input params
-    if(rf.check("path"))
+    if(!rf.check("path"))
+    {
+        ConstString imagePath_test = rf.findFileByName("images/blink_1.bmp");
+        size_t last = imagePath_test.rfind("/");
+        imagePath = imagePath_test.substr(0, last);
+    }
+    else
+    {
         imagePath = rf.find(ConstString("path")).asString();
+    }
 
     // Open ports
     if(!rpcPort  .open("/" + getName() + "/rpc") )
@@ -90,6 +98,22 @@ bool FaceExpressionImageModule::configure(ResourceFinder &rf)
     // Quit if something wrong!!
     if(!ok) return false;
 
+    // Check for oprtional params
+    th.hearBar0_x       = rf.check("hearBar0_x",      Value( 1), "horizontal offset from left border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    th.hearBar0_y       = rf.check("hearBar0_y",      Value( 6), "vertical offset from bottom border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    th.hearBar0_minLen  = rf.check("hearBar0_minLen", Value( 3), "minimum length  of outer ear bar").asInt();
+    th.hearBar0_maxLen  = rf.check("hearBar0_maxLen", Value(18), "maximum length  of outer ear bar").asInt();
+    th.hearBar0_len     = rf.check("hearBar0_len",    Value(10), "starting length of outer ear bar").asInt();
+
+    th.hearBar1_x       = rf.check("hearBar1_x",      Value( 3), "horizontal offset from left border of inner ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    th.hearBar1_y       = rf.check("hearBar1_y",      Value( 6), "vertical offset from bottom border of inner ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    th.hearBar1_minLen  = rf.check("hearBar1_minLen", Value( 4), "minimum length  of inner ear bar").asInt();
+    th.hearBar1_maxLen  = rf.check("hearBar1_maxLen", Value(19), "maximum length  of inner ear bar").asInt();
+    th.hearBar1_len     = rf.check("hearBar1_len",    Value(11), "starting length of inner ear bar").asInt();
+
+    th.hearBarR0_x = FACE_WIDTH - 1 - th.hearBar0_x;
+    th.hearBarR1_x = FACE_WIDTH - 1 - th.hearBar1_x;
+
     th.threadInit();
 
     return true;
@@ -111,6 +135,7 @@ bool FaceExpressionImageModule::respond(const Bottle& command, Bottle& reply)
         case VOCAB_AUDIO_STOP:
         {
             th.activateBars(false);
+            th.step();
         }
         break;
 
@@ -239,9 +264,6 @@ BlinkThread::BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig:
     delays[ 8] = 0.065;
     delays[ 9] = 0.065;
     delays[10] = 0.065;
-
-    hearBarR0_x = FACE_WIDTH - 1 - hearBar0_x;
-    hearBarR1_x = FACE_WIDTH - 1 - hearBar1_x;
 }
 
 void BlinkThread::afterStart(bool s)
@@ -275,10 +297,6 @@ bool BlinkThread::threadInit()
     //
     // Add bars:
     //
-
-    // Set current hear bars size as from original image
-//     hearBar0_len = blinkBar.rows;
-//     hearBar1_len = blinkBar.rows +1;
 
     // Get color from image
     barColor = Scalar(blinkBar.at<cv::Vec3b>(0, 0));
@@ -321,12 +339,11 @@ void BlinkThread::run()
         if(doBars)
         {
             percentage = (float)rand() / (float)RAND_MAX;
-            updateBars(percentage);
         }
+        updateBars(percentage);
 
         if(doBlink)
         {
-            yTrace() << __LINE__;
             index++;
             updateBlink(index);
 

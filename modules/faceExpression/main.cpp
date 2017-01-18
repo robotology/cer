@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 {
     ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultContext("cer");
+    rf.setDefaultContext("faceExpressionImage");
     rf.setDefaultConfigFile("faceExpressionImage.ini");
     rf.configure(argc,argv);
 
