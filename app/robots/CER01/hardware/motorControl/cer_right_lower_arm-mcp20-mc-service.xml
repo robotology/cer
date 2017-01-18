@@ -44,9 +44,9 @@
                 </group>
                 
                 <group name="ENCODER1">  
-                    <param name="type">             none                none                none                aea               </param>  
-                    <param name="port">             CONN:none           CONN:none           CONN:none           CONN:P10                 </param>
-                    <param name="position">         atjoint             atjoint             atjoint             atjoint                  </param> 
+                    <param name="type">             none                none                none                aea                </param>  
+                    <param name="port">             CONN:none           CONN:none           CONN:none           CONN:P10           </param>
+                    <param name="position">         none                none                none                atjoint            </param> 
                 </group>        
                 
                 <group name="ENCODER2">

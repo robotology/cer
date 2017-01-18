@@ -56,7 +56,7 @@
                 <group name="ENCODER1">  
                     <param name="type">             aea                aea                 aea             aea          </param>  
                     <param name="port">             CONN:P6            CONN:P8             CONN:P7         CONN:P9      </param>
-                    <param name="position">         none               none                none            none         </param> 
+                    <param name="position">         atjoint            atjoint             atjoint         atjoint      </param> 
                 </group>        
                 
                 <group name="ENCODER2">
