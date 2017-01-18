@@ -1,0 +1,32 @@
+<application>
+<name>faceExpression</name>
+
+<dependencies>	
+cerSrv
+</dependencies>
+
+
+<!-- module -->
+<module>
+   <name>faceExpression</name>
+   <parameters></parameters>
+   <node>cer-head</node>
+</module>
+
+
+<!-- connect to face display -->
+<connection>
+    <from> /faceExpressionImage/image:o </from>
+    <to> /faceDisplay/input:i </to>
+    <protocol> udp </protocol>
+</connection>
+
+<!-- connect rpc module input port to command producer -->
+<connection>
+    <from> /faceExpressionImage/rpc  </from>
+    <to> /whatever </to>
+    <protocol>tcp</protocol>
+</connection>
+
+</application>
+

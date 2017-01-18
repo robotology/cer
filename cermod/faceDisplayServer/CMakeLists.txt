@@ -2,7 +2,10 @@
 # Authors: Alberto Cardellino
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
-yarp_prepare_device(faceDisplayServer TYPE cer::dev::FaceDisplayServer INCLUDE faceDisplayServer.h)
+yarp_prepare_plugin(faceDisplayServer
+                    CATEGORY device
+                    TYPE cer::dev::FaceDisplayServer
+                    INCLUDE faceDisplayServer.h)
 
 project(FaceDisplayServer)
 

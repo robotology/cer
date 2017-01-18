@@ -9,6 +9,7 @@ add_subdirectory(tripodJoystickControl)
 add_subdirectory(robotJoystickControl)
 add_subdirectory(tfPublisher)
 add_subdirectory(textimage)
+add_subdirectory(faceExpression)
 
 if(NOT WIN32)
     add_subdirectory(audioSplitter)
