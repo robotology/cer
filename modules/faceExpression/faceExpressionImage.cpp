@@ -54,8 +54,6 @@ bool FaceExpressionImageModule::configure(ResourceFinder &rf)
         yError() << "RFModule cannot read from RPC port (" << rpcPort.getName() << ")";
     }
 
-    Network::connect("/" + getName() + "/image:o", "/yarpview/img:i");
-
     // Load basic images
     th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_1.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
     th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_2.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
@@ -189,26 +187,18 @@ bool FaceExpressionImageModule::updateModule()
 
     period_percent = ((float)rand() / (float)RAND_MAX);
     period_sec = 60 / (blink_per_minute + 6 * period_percent) / 0.1;
-    yInfo() << "period_sec "<<  period_sec;
 
-
-
-    static int ciao = 0;
+    static int shall_blink = 0;
     float r;
 
+    shall_blink++;
 
-    ciao++;
-    yInfo() << "RRRR "<<  r << " ciao " << ciao;
-
-
-    if(ciao >= period_sec)
+    if(shall_blink >= period_sec)
     {
         th.activateBlink(true);
-
-        ciao = 0;
-
         r = ((float)rand() / (float)RAND_MAX) * 100;
         r < 30 ? doubleBlink = true : doubleBlink = false;
+        shall_blink = 0;
     }
 
     if(th.doBlink || th.doBars)
@@ -216,7 +206,6 @@ bool FaceExpressionImageModule::updateModule()
 
     if(doubleBlink)
     {
-        yError() << "Double blink!!";
         th.activateBlink(true);
         th.step();
     }
@@ -266,10 +255,7 @@ BlinkThread::BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig:
     delays[10] = 0.065;
 }
 
-void BlinkThread::afterStart(bool s)
-{
-    yDebug() << "After start";
-}
+void BlinkThread::afterStart(bool s) { }
 
 void BlinkThread::activateBars(bool activate)
 {
@@ -325,7 +311,6 @@ bool BlinkThread::threadInit()
 
 void BlinkThread::run()
 {
-    yTrace();
     // Compute hear bars sizes
     // Left side
     float percentage = 0.5;
@@ -368,8 +353,6 @@ bool BlinkThread::updateBars(float percentage)
 {
     hearBar0_len = hearBar0_minLen + (hearBar0_maxLen - hearBar0_minLen) *  percentage;
     hearBar1_len = hearBar1_minLen + (hearBar1_maxLen - hearBar1_minLen) *  percentage;
-
-    yDebug() << "% " << percentage <<  " ** len : " << hearBar0_len << " ** " << hearBar1_len;
 
     // Reset bars to black
     blackBar(Rect(0, 0, barWidth, 32)).  copyTo  (face(cv::Rect(hearBar0_x,  0, barWidth, 32)));
