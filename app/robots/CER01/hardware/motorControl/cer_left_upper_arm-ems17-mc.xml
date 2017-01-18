@@ -6,12 +6,12 @@
       <params file="general.xml" />
       <params file="hardware/electronics/cer_left_upper_arm-ems17-eln.xml" />
       <params file="hardware/mechanicals/cer_left_upper_arm-ems17-mec.xml" />
-      <params file="hardware/motorcontrol/cer_left_upper_arm-ems17-mc-service.xml" />
+      <params file="hardware/motorControl/cer_left_upper_arm-ems17-mc-service.xml" />
 
     <group name="LIMITS">
     <!--    <param name="jntPosMax">                  85            70         85        95         </param>   no covers -->
         <param name="jntPosMax">                      55            65         85        95         </param>
-        <param name="jntPosMin">                     -25            11        -85        5          </param>
+        <param name="jntPosMin">                     -25            0         -85        5          </param>
         <param name="rotorPosMin">                    0             0          0         0          </param> 
         <param name="rotorPosMax">                    0             0          0         0          </param>
         <param name="motorOverloadCurrents">          5000          5000       5000      5000       </param>
