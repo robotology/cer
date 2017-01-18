@@ -16,7 +16,7 @@
             
             <group name="CONTROLLER"> 
             
-                <param name="type"> eomc_ctrlboard_FOREARM  </param> 
+                <param name="type"> eomc_ctrlboard_CER_LOWER_ARM </param> 
                     
                 
                 <param name ="matrixJ2M"> 
