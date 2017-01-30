@@ -13,28 +13,7 @@
                 <param name="type">                 mc4plus        </param> 
             </group>          
 
-           
             
-            <group name="CONTROLLER"> 
-            
-                <param name="type"> eomc_ctrlboard_CER_NECK        </param> 
-                                   
-                <param name ="matrixJ2M"> 
-                    1.00    0.00    0.00    0.00
-                    0.00    1.00    0.00    0.00
-                    0.00    0.00    1.00    0.00
-                    0.00    0.00    0.00    1.00   
-                </param>
-               
-                <param name ="matrixE2J">  
-                    1.00    0.00    0.00    0.00
-                    0.00    1.00    0.00    0.00
-                    0.00    0.00    1.00    0.00
-                    0.00    0.00    0.00    1.00   
-                </param>
-                
-            </group>                
-
             <group name="JOINTMAPPING">
 
                <group name="ACTUATOR">                 
@@ -44,23 +23,21 @@
                 
                 <group name="ENCODER1">  
                     <param name="type">             eomc_enc_aea        aea                 </param>  
-                    <param name="port">             CONN:P11            CONN:P10             </param>
+                    <param name="port">             CONN:P11            CONN:P10            </param>
                     <param name="position">         eomc_pos_atjoint    atjoint             </param> 
+                    <param name="resolution">       4096                -4096               </param>
+                    <param name="numofnoisebits">      3                3                   </param>  
                 </group>        
                 
                 <group name="ENCODER2">
                     <param name="type">             eomc_enc_none       none                </param>
                     <param name="port">             CONN:none           CONN:none           </param>
                     <param name="position">         eomc_pos_none       none                </param>
+                    <param name="resolution">        0                  0                   </param>
+                    <param name="numofnoisebits">    0                  0                   </param>  
                 </group> 
  
             </group>    
-            
-            <group name="JOINTSETS">
-
-                <param name="list">                 0                   1                   </param> 
-
-            </group>
             
         </group>
            

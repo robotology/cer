@@ -26,25 +26,6 @@
                 </group>
             </group>
             
-            <group name="CONTROLLER"> 
-            
-                <param name="type"> eomc_ctrlboard_CER_BASE     </param> 
-                                
-                <param name ="matrixJ2M"> 
-                    1.00    0.00    0.00    0.00
-                    0.00    1.00    0.00    0.00
-                    0.00    0.00    1.00    0.00
-                    0.00    0.00    0.00    1.00   
-                </param>
-               
-                <param name ="matrixE2J">  
-                    1.00    0.00    0.00    0.00
-                    0.00    1.00    0.00    0.00
-                    0.00    0.00    1.00    0.00
-                    0.00    0.00    0.00    1.00   
-                </param>
-                
-            </group>                
 
             <group name="JOINTMAPPING">
 
@@ -54,25 +35,23 @@
                 </group>
                 
                 <group name="ENCODER1">  
-                    <param name="type">             none                none                none            none         </param>  
-                    <param name="port">             CONN:none           CONN:none           CONN:none       CONN:none    </param>
-                    <param name="position">         none                none                none            none         </param> 
+                    <param name="type">             hallmotor           hallmotor           none            none        </param>  
+                    <param name="port">             CAN1:4:0            CAN1:2:0            CONN:none       CONN:none    </param>
+                    <param name="position">         atmotor             atmotor             none            none        </param> 
+                    <param name="resolution">       -14400              14400               0               0           </param>
+                    <param name="numofnoisebits">      0                0                   0               0           </param>  
                 </group>        
                 
                 <group name="ENCODER2">
                     <param name="type">             none                none                none            none        </param>
                     <param name="port">             CONN:none           CONN:none           CONN:none       CONN:none   </param>
                     <param name="position">         none                none                none            none        </param>
+                    <param name="resolution">          0                0                   0               0           </param>
+                    <param name="numofnoisebits">      0                0                   0               0           </param>  
                 </group> 
  
             </group>    
-            
-            <group name="JOINTSETS">
 
-                <param name="list">                 0                   1                   2               3           </param> 
-
-            </group>
-            
         </group>
            
     </group>
