@@ -31,8 +31,11 @@
        
        <param name="positionControl">  JOINT_POS_VEL_CTRL     JOINT_POS_VEL_CTRL    JOINT_POS_VEL_CTRL    JOINT_POS_VEL_CTRL    </param> 
        <param name="velocityControl">  none                   none                  none                  none                  </param> 
-       <param name="torqueControl">    JOINT_TRQ_VEL_CTRL     JOINT_TRQ_VEL_CTRL    JOINT_TRQ_VEL_CTRL    JOINT_TRQ_VEL_CTRL    </param>
-        <param name="currentPid">      2FOC_FEEDBACK          2FOC_FEEDBACK         2FOC_FEEDBACK         2FOC_FEEDBACK         </param> 
+<!--        <param name="torqueControl">    JOINT_TRQ_VEL_CTRL     JOINT_TRQ_VEL_CTRL    JOINT_TRQ_VEL_CTRL    JOINT_TRQ_VEL_CTRL    </param> -->
+       
+       <param name="torqueControl">      none                   none                  none                  none  </param>
+
+ <param name="currentPid">      2FOC_FEEDBACK          2FOC_FEEDBACK         2FOC_FEEDBACK         2FOC_FEEDBACK         </param> 
     </group>
 
     
@@ -65,7 +68,7 @@
     
 
     
-    <group name="TORQUE_CONTROL">
+    <group name="JOINT_TRQ_VEL_CTRL">
         <param name="controlLaw">       PidTrq_withInnerVelPid      </param> 
         <param name="controlUnits">     machine_units               </param>         
         <param name="trq_kp">               1          1         1        1         </param>       

@@ -14,28 +14,6 @@
             </group>          
 
             
-            <group name="CONTROLLER"> 
-            
-                <param name="type"> eomc_ctrlboard_CER_LOWER_ARM </param> 
-                    
-                
-                <param name ="matrixJ2M"> 
-                    1.000   0.000   0.000   0.000
-                    0.000   1.000   0.000   0.000
-                    0.000   0.000   1.000   0.000
-                    0.000   0.000   0.000   1.000   
-                </param>
-               
-                <param name ="matrixE2J">  
-                    1.000   0.000   0.000   0.000
-                    0.000   1.000   0.000   0.000
-                    0.000   0.000   1.000   0.000
-                    0.000   0.000   0.000   1.000   
-                </param>
-
-                
-            </group>                
-
             <group name="JOINTMAPPING">
 
                 <group name="ACTUATOR">                 
@@ -60,10 +38,6 @@
                     <param name="numofnoisebits">   0                   0                   0                   0                       </param>  
                 </group>  
             </group>    
-            
-            <group name="JOINTSETS">
-                <param name="list">                 0                   0                   0                   1                       </param> 
-            </group>
             
         </group>
            
