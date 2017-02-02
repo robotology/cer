@@ -13,28 +13,6 @@
                 <param name="type">             mc2plus             </param> 
             </group>          
 
-            
-            <group name="CONTROLLER"> 
-            
-                <param name="type"> eomc_ctrlboard_CER_HAND  </param> 
-                    
-                
-                <param name ="matrixJ2M"> 
-                    1.000   0.000   0.000   0.000
-                    0.000   1.000   0.000   0.000
-                    0.000   0.000   1.000   0.000
-                    0.000   0.000   0.000   1.000   
-                </param>
-               
-                <param name ="matrixE2J">  
-                    1.000   0.000   0.000   0.000
-                    0.000   1.000   0.000   0.000
-                    0.000   0.000   1.000   0.000
-                    0.000   0.000   0.000   1.000   
-                </param>
-
-                
-            </group>                
 
             <group name="JOINTMAPPING">
 
@@ -44,22 +22,22 @@
                 </group>
                 
                 <group name="ENCODER1">  
-                    <param name="type">             spichainof3         spichainof3                 </param>  
+                    <param name="type">             spichainof3         spichainof3         </param>  
                     <param name="port">             CONN:P10            CONN:P11            </param>
                     <param name="position">         atjoint             atjoint             </param> 
+                    <param name="resolution">       -4096               4096                </param>
+                    <param name="numofnoisebits">   3                   3                   </param> 
                 </group>        
                 
                 <group name="ENCODER2">
                     <param name="type">             qenc                qenc                </param>
                     <param name="port">             CONN:P3             CONN:P2             </param>
                     <param name="position">         atmotor             atmotor             </param>
+                    <param name="resolution">       -1024              -1024                </param>
+                    <param name="numofnoisebits">    0                   0                  </param>
                 </group>  
             </group>    
-            
-            <group name="JOINTSETS">
-                <param name="list">                 0                   1                  </param> 
-            </group>
-            
+
         </group>
            
     </group>
