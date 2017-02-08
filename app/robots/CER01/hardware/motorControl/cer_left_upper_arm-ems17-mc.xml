@@ -21,7 +21,11 @@
         <param name="motorPwmLimit">                  32000         32000      32000     32000      </param>    
     </group>
 
-<group name="CONTROLS">
+    <group name="TIMEOUTS">
+        <param name="velocity">               100       100           100        100    </param>
+    </group>
+    
+    <group name="CONTROLS">
        
        <param name="positionControl">  JOINT_POS_VEL_CTRL     JOINT_POS_VEL_CTRL    JOINT_POS_VEL_CTRL    JOINT_POS_VEL_CTRL    </param> 
        <param name="velocityControl">  none                   none                  none                  none                  </param> 
