@@ -13,7 +13,6 @@
         <param name="Gearbox_E2J">            1                   1              </param>
         <param name="useMotorSpeedFbk">       0                   0              </param>
         <param name="MotorType">             "DC"                "DC"            </param>
-        <param name="MotorPoles">             2                   2               </param>
         <param name="Verbose">               0   </param>
     </group>
 
