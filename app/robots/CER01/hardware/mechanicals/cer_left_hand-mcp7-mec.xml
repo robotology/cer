@@ -3,7 +3,7 @@
 
 <params robot="CER01" build="1">
     <group name="GENERAL">
-        <param name="MotioncontrolVersion">  2 </param>
+        <param name="MotioncontrolVersion">  3 </param>
         <param name="Joints">                2  </param> 
         <param name="AxisName">              "l_palm"           "l_thumb"       </param>
         <param name="AxisMap">               0                  1               </param>
@@ -33,10 +33,10 @@
         </param>
        
         <param name ="matrixE2J">  
-            1.000   0.000   0.000   0.000   0.000   0.000
-            0.000   1.000   0.000   0.000   0.000   0.000
-            0.000   0.000   1.000   0.000   0.000   0.000
-            0.000   0.000   0.000   1.000   0.000   0.000   
+           -1.000   1.000   0.000   0.000   0.000   0.000
+            0.000   0.000   0.000  -1.000   1.000   0.000
+            0.000   0.000   0.000   0.000   0.000   0.000
+            0.000   0.000   0.000   0.000   0.000   0.000   
         </param>
                 
     </group>   

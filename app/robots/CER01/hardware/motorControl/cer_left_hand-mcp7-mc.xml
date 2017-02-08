@@ -35,8 +35,8 @@
         <param name="currentPid">      none                   none                  </param> 
     </group>
 
-	<group name="POSITION_CONTROL">
-	<param name="controlLaw">    joint_pid_v1            </param> 
+	<group name="JOINT_PID_V1">
+    <param name="controlLaw">    Pid_inPos_outPwm </param> 
         <param name="controlUnits">  metric_units           </param> 
         <param name="pos_kp">             -100         100        </param>       
         <param name="pos_kd">                0           0        </param>       
