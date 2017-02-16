@@ -15,6 +15,14 @@
         <param name="MotorType">                "BLL_MECAP"   "BLL_MECAP" "BLL_MECAP"   "BLL_MECAP" </param>
         <param name="Verbose">                  0             </param>
     </group>
+    
+    <group name="LIMITS">
+    <!--    <param name="jntPosMax">                  85            70         85        95        </param>   no covers -->
+        <param name="hardwareJntPosMax">            55            65         85        95        </param>
+        <param name="hardwareJntPosMin">           -25            0         -85        5         </param>
+        <param name="rotorPosMin">                    0             0          0         0         </param> 
+        <param name="rotorPosMax">                    0             0          0         0         </param>
+    </group>
 
     <group name="2FOC">
         <param name="HasHallSensor">         1             1           1             1             </param>

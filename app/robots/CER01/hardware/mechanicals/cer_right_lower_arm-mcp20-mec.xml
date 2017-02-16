@@ -11,9 +11,16 @@
         <param name="Encoder">               56333.333          56333.333          56333.333          182.044                 </param>
         <param name="Gearbox_M2J">               1                  1                  1                  1                   </param>
         <param name="Gearbox_E2J">               1                  1                  1                 64                   </param>
-        <param name="useMotorSpeedFbk">          1                  1                  1                  1 </param>
+        <param name="useMotorSpeedFbk">          1                  1                  1                  1                   </param>
         <param name="MotorType">             "DC"               "DC"               "DC"               "DC"                    </param>
         <param name="Verbose">               0   </param>
+    </group>
+    
+    <group name="LIMITS">
+        <param name="hardwareJntPosMax">      0.12               0.12                  0.12                 80     </param>
+        <param name="hardwareJntPosMin">      0                  0                     0                    -80    </param>
+        <param name="rotorPosMin">            0                  0                     0                    0      </param>
+        <param name="rotorPosMax">            0                  0                     0                    0      </param>
     </group>
 
     <group name="COUPLINGS"> 
