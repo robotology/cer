@@ -8,9 +8,10 @@
     <devices file="hardware/motorControl/cer_base-ems21-mc.xml" />
     <devices file="wrappers/motorControl/cer_base-mc_wrapper.xml" />
 
-    <!-- LASER -->
+    <!-- LASER 
     <devices file="hardware/rpLidar/laser_hw.xml" /> 
     <devices file="wrappers/rpLidar/laser_wrapper.xml" /> 
+    -->
 
     <!-- HEAD -->
     <devices file="hardware/motorControl/cer_head-mcp10-mc.xml" />

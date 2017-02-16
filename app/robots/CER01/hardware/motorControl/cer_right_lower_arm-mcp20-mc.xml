@@ -8,6 +8,7 @@
       <params file="general.xml" />
       <params file="hardware/electronics/cer_right_lower_arm-mcp20-eln.xml" />
       <params file="hardware/mechanicals/cer_right_lower_arm-mcp20-mec.xml" />
+      <params file="hardware/motorControl/cer_right_lower_arm-mcp20-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                  0.12     0.12    0.12     80     </param>
