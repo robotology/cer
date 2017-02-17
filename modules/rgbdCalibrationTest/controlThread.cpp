@@ -37,6 +37,8 @@ void ControlThread::run()
         yDebug() << "invalid image size";
         return;
     }
+    float *center_value_p = (float*)(m_depth_image.getPixelAddress(m_depth_width/2, m_depth_height/2));
+    float center_value = *center_value_p;
 
     if (m_gain_image.width() == 0)
     {
@@ -48,21 +50,43 @@ void ControlThread::run()
         {
             float* pixel_depth_p = (float*)m_depth_image.getPixelAddress(ix, iy);
             float  pixel_depth = *pixel_depth_p;
-            float  error = pixel_depth / m_real_value;
+            
+            float  error_gain = 1.0;
+            if (m_real_value!=-1)
+            {error_gain = pixel_depth / m_real_value;}
+            else
+            {error_gain = pixel_depth / center_value;}
+            
+            //yDebug() << error;
             yarp::sig::PixelRgb& rgb_p = m_gain_image.safePixel(ix, iy);
-            if (error > 1.0)
+            const double MAX_VAL = 1.5;
+            double m = 255/(1-MAX_VAL);
+            double q = -MAX_VAL * m;
+               
+            if (error_gain > 1.0)
             {
+                if (error_gain>MAX_VAL) error_gain = MAX_VAL;
+
                 rgb_p.r = (char)(255 * 1);
-                rgb_p.g = (char)(255 * (1 / (error - 1)));
-                rgb_p.b = (char)(255 * (1 / (error - 1)));
+                rgb_p.g = (char)(m*error_gain+q);
+                rgb_p.b = (char)(m*error_gain+q);
             }
             else
             {
-                rgb_p.r = (char)(255 * (1 / (1 - error)));
-                rgb_p.g = (char)(255 * (1 / (1 - error)));
+                error_gain=1/error_gain;
+                if (error_gain>MAX_VAL) error_gain = MAX_VAL;                
+                rgb_p.r = (char)(m*error_gain+q);
+                rgb_p.g = (char)(m*error_gain+q);
                 rgb_p.b = (char)(255 * 1);
             }
-            if (error < 0)
+            if (pixel_depth == 0.0)
+            {
+                rgb_p.r = 0;
+                rgb_p.g = 0;
+                rgb_p.b = 0;
+            }
+         
+            if (error_gain < 0)
             {
                 rgb_p.r = 0;
                 rgb_p.g = 0;
@@ -70,7 +94,7 @@ void ControlThread::run()
             }
         }
     }
-    m_test_port.write(m_depth_image);
+    m_test_port.write(m_gain_image);
 }
 
 void ControlThread::printStats()
@@ -104,6 +128,7 @@ bool ControlThread::threadInit()
         return false;
     }
 
+    m_real_value = -1;
     m_real_value = (float)(m_rf.find("real_value").asDouble());
     m_depth_width = iRGBD->getDepthWidth();
     m_depth_height = iRGBD->getDepthHeight();
