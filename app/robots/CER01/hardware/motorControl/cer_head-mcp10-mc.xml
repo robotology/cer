@@ -8,12 +8,11 @@
       <params file="general.xml" />
       <params file="hardware/electronics/cer_head-mcp10-eln.xml" />
       <params file="hardware/mechanicals/cer_head-mcp10-mec.xml" />
+      <params file="hardware/motorControl/cer_head-mcp10-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                35      70            </param>
         <param name="jntPosMin">                -25    -45            </param>
-        <param name="rotorPosMin">              0       0            </param>
-        <param name="rotorPosMax">              0       0            </param>
         <param name="jntVelMax">                50      50           </param>
         <param name="motorOverloadCurrents">    5000    5000         </param>
         <param name="motorNominalCurrents">     8000    8000         </param>
@@ -21,8 +20,23 @@
         <param name="motorPwmLimit">            3000    3000         </param>
     </group>
 
-    <group name="POSITION_CONTROL">
-	    <param name="controlLaw">    joint_pid_v1            </param>
+    
+     <group name="TIMEOUTS">
+        <param name="velocity">             100           100         </param>
+    </group>
+
+
+    <group name="CONTROLS">
+       <param name="positionControl">  JOINT_PID_V1           JOINT_PID_V1         </param> 
+       <param name="velocityControl">  VEL_CONTROL            VEL_CONTROL          </param> 
+       <param name="torqueControl">    none                   none                 </param>
+        <param name="currentPid">      none                   none                 </param> 
+    </group>
+    
+    
+    
+    <group name="JOINT_PID_V1">
+	    <param name="controlLaw">    Pid_inPos_outPwm       </param> 
         <param name="controlUnits">  machine_units           </param>
 
 	<!-- <param name="kp">              -3           3        </param>
@@ -32,53 +46,37 @@
         <param name="maxOutput">     3000        3000        </param>
         <param name="maxInt">        3000        3000        </param> -->
 
-	    <param name="kp">              -3           5        </param>
-        <param name="kd">              -0           0        </param>
-        <param name="ki">              -3           5        </param>
-        <param name="limOutput">      500        1500        </param>
-        <param name="maxOutput">     3360        3360        </param>
-        <param name="maxInt">        3000        1500        </param>
+	    <param name="pos_kp">              -3           5        </param>
+        <param name="pos_kd">              -0           0        </param>
+        <param name="pos_ki">              -3           5        </param>
+        <!-- limoutput is not more used!!!!! <param name="limOutput">      500        1500        </param> -->
+        <param name="pos_maxOutput">     3360        3360        </param>
+        <param name="pos_maxInt">        3000        1500        </param>
 
-        <param name="shift">            0           0        </param>
-        <param name="ko">               0           0        </param>
-        <param name="stictionUp">       0           0        </param>
-        <param name="stictionDwn">      0           0        </param>
-        <param name="kff">              0           0        </param>
+        <param name="pos_shift">            0           0        </param>
+        <param name="pos_ko">               0           0        </param>
+        <param name="pos_stictionUp">       0           0        </param>
+        <param name="pos_stictionDwn">      0           0        </param>
+        <param name="pos_kff">              0           0        </param>
     </group>
 
-    <group name="VELOCITY_CONTROL">
-	<param name="controlLaw">    joint_pid_v1            </param>
+    <group name="VEL_CONTROL">
+	<param name="controlLaw">    Pid_inVel_outPwm            </param>
         <param name="controlUnits">  machine_units           </param>
-        <param name="kp">              -5           5        </param>
-        <param name="kd">              -0           0        </param>
-        <param name="ki">              -5          50        </param>
-        <param name="limOutput">      500         500        </param>
-        <param name="maxOutput">     3000        3000        </param>
-        <param name="maxInt">        3000        3000        </param>
-        <param name="shift">            0           0        </param>
-        <param name="ko">               0           0        </param>
-        <param name="stictionUp">       0           0        </param>
-        <param name="stictionDwn">      0           0        </param>
-        <param name="kff">              0           0        </param>
+        <param name="vel_kp">              -5           5        </param>
+        <param name="vel_kd">              -0           0        </param>
+        <param name="vel_ki">              -5          50        </param>
+        <!-- limoutput is not more used!!!!! <param name="limOutput">      500         500        </param> -->
+        <param name="vel_maxOutput">     3000        3000        </param>
+        <param name="vel_maxInt">        3000        3000        </param>
+        <param name="vel_shift">            0           0        </param>
+        <param name="vel_ko">               0           0        </param>
+        <param name="vel_stictionUp">       0           0        </param>
+        <param name="vel_stictionDwn">      0           0        </param>
+        <param name="vel_kff">              0           0        </param>
     </group>
 
-    <group name="TORQUE_CONTROL">
-        <param name="controlLaw">    motor_pid_with_friction_v1               </param>
-        <param name="controlUnits">  metric_units                             </param>
-        <param name="kp">              0          0            </param>
-        <param name="kd">              0          0            </param>
-        <param name="ki">              0          0            </param>
-        <param name="maxOutput">       0          0            </param>
-        <param name="maxInt">          0          0            </param>
-        <param name="shift">           0          0            </param>
-        <param name="ko">              0          0            </param>
-        <param name="stictionUp">      0          0            </param>
-        <param name="stictionDwn">     0          0            </param>
-        <param name="kff">             0          0            </param>
-        <param name="kbemf">           0          0            </param>
-        <param name="filterType">      0          0            </param>
-        <param name="ktau">            0          0            </param>
-    </group>
+    
 
     <group name="IMPEDANCE">
         <param name="stiffness">       0      0           </param>
