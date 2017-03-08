@@ -11,6 +11,7 @@ add_subdirectory(tfPublisher)
 add_subdirectory(textimage)
 add_subdirectory(faceExpression)
 add_subdirectory(rgbdCalibrationTest)
+#add_subdirectory(altVelController)
 
 if(NOT WIN32)
     add_subdirectory(audioSplitter)

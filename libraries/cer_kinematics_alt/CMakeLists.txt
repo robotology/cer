@@ -2,4 +2,7 @@
 # Author: Alessandro Scalzo
 # email:  alessandro.scalzo@iit.it
 
-add_subdirectory(SelfCollisionLib)
+add_subdirectory(RobotModelLib)
+add_subdirectory(R1ModelLib)
+add_subdirectory(RobotControlLib)
+add_subdirectory(R1ControlLib)
