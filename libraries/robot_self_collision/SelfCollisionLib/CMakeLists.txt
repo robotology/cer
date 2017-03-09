@@ -10,10 +10,18 @@ file(GLOB headers include/*.h)
 source_group("Header Files" FILES ${headers})
 source_group("Source Files" FILES ${sources})
 
+get_property(R1ModelLib_INCLUDE_DIRS
+             TARGET R1ModelLib
+             PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
+
+get_property(RobotModelLib_INCLUDE_DIRS
+             TARGET RobotModelLib
+             PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${PROJECT_SOURCE_DIR}/../R1ModelLib/include)
-include_directories(${PROJECT_SOURCE_DIR}/../RobotModelLib/include)
 include_directories(${YARP_INCLUDE_DIRS})
+include_directories(${R1ModelLib_INCLUDE_DIRS})
+include_directories(${RobotModelLib_INCLUDE_DIRS})
 
 add_definitions(-D_USE_MATH_DEFINES)
 add_library(${PROJECT_NAME} ${headers} ${sources})

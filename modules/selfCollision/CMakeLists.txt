@@ -11,8 +11,18 @@ get_property(SelfCollisionLib_INCLUDE_DIRS
              TARGET SelfCollisionLib
              PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
 
+get_property(R1ModelLib_INCLUDE_DIRS
+             TARGET R1ModelLib
+             PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
+
+get_property(RobotModelLib_INCLUDE_DIRS
+             TARGET RobotModelLib
+             PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
+			 
 include_directories(${YARP_INCLUDE_DIRS}
                     ${ICUB_INCLUDE_DIRS}
+					${R1ModelLib_INCLUDE_DIRS}
+					${RobotModelLib_INCLUDE_DIRS}
                     ${SelfCollisionLib_INCLUDE_DIRS})
 
 file(GLOB folder_source *.cpp)
@@ -23,7 +33,7 @@ source_group("Header Files" FILES ${folder_header})
 
 add_executable(${PROJECTNAME} ${folder_source} ${folder_header})
 
-target_link_libraries(${PROJECTNAME} ${YARP_LIBRARIES} SelfCollisionLib)
+target_link_libraries(${PROJECTNAME} ${YARP_LIBRARIES} SelfCollisionLib R1ModelLib RobotModelLib)
 
 install(TARGETS ${PROJECTNAME} DESTINATION bin)
 

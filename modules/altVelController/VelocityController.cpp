@@ -15,8 +15,8 @@
  * Public License for more details
 */
 
-//#define ONLINE
-#define JOYSTICK
+#define ONLINE
+//#define JOYSTICK
 
 #ifdef JOYSTICK
 #include <SDL.h>
@@ -358,10 +358,12 @@ protected:
 	R1Model *r1Model;
     R1Controller *r1Ctrl;
 
+#ifdef JOYSTICK
 	SDL_Joystick *mStick;
 	int mNumJoyAxis;
 	int mNumJoyButt;
 	int mNumJoyHats;
+#endif
 
 	Transform TargetL;
 	Transform TargetR;

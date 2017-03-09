@@ -23,7 +23,7 @@ get_property(RobotModelLib_INCLUDE_DIRS
 include_directories(${YARP_INCLUDE_DIRS}
                     ${SDL_INCLUDE_DIR}
                     ${R1ControlLib_INCLUDE_DIRS}
-					${RobotControlLib_INCLUDE_DIRS}
+                    ${RobotControlLib_INCLUDE_DIRS}
                     ${R1ModelLib_INCLUDE_DIRS}
                     ${RobotModelLib_INCLUDE_DIRS})
 

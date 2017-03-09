@@ -21,6 +21,7 @@
 //#include <iCubModel.h>
 //#include <iCub3Model.h>
 
+using namespace cer::robot_model::r1;
 using namespace cer::robot_model::self_collision;
 
 SelfCollisionLib::SelfCollisionLib(int robot_type)
