@@ -38,7 +38,7 @@ namespace cer
 
 			Sphere(){}
 
-			Sphere(double x, double y, double z, double r, char *s) : Clocal(x, y, z), radius(r), name(s)
+			Sphere(double x, double y, double z, double r, const char *s) : Clocal(x, y, z), radius(r), name(s)
 			{
 			}
 
@@ -77,7 +77,7 @@ namespace cer
 			Cover(int id = FLOATING) : partID(id){ nspheres = 0; }
 			~Cover(){}
 
-			Sphere* addSphere(double x, double y, double z, double r, char *name)
+			Sphere* addSphere(double x, double y, double z, double r, const char *name)
 			{
 				sphere[nspheres] = Sphere(x, y, z, r, name);
 

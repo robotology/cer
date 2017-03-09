@@ -136,7 +136,7 @@ public:
 	{
 		if (!rf.check("model") || !rf.check("name"))
 		{
-			printf("usage:\n % selfCollision --name <myname> --model <R1 | iCub | iCub3>\n");
+			printf("usage:\nselfCollision --name <myname> --model <R1 | iCub | iCub3>\n");
 			return false;
 		}
 
@@ -151,7 +151,7 @@ public:
 			selfCollisionThread = new SelfCollisionThread(sRobotName, SelfCollisionLib::ICUB3_MODEL);
 		else 		
 		{
-			printf("Usage:\n % selfCollision --name <myname> --model <R1 | iCub | iCub3>\n");
+			printf("Usage:\nselfCollision --name <myname> --model <R1 | iCub | iCub3>\n");
 			return false;
 		}
 
@@ -195,12 +195,12 @@ int main(int argc, char** argv)
 {
 	yarp::os::Network yarp;
 
-	argc = 5;
-	char* fargv[] = {"selfCollision","--name", "r1", "--model","R1"};
+	//argc = 5;
+	//char* fargv[] = {"selfCollision","--name", "r1", "--model","R1"};
 
 	yarp::os::ResourceFinder rf;
 	rf.setVerbose(true);
-	rf.configure(argc, fargv);
+	rf.configure(argc, argv);
 
 	SelfCollisionModule module;
 

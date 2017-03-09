@@ -350,12 +350,12 @@ public:
     virtual void onStop();
 
 protected:
-	void sendConfig(cer::robot_model::Matrix &q);
+    void sendConfig(cer::robot_model::Matrix &q);
     void sendCOM(const std::string& name,int R,int G,int B,cer::robot_model::Vec3& P,double size,double alpha);
-    void sendTarget(const std::string& name,int R,int G,int B,double x,double y,double z,double size,double alpha,double rx=0.0,double ry=0.0,double rz=0.0);
-	void sendCover(const std::string& name, double x, double y, double z, double size);
+    void sendTarget(const char* name,int R,int G,int B,double x,double y,double z,double size,double alpha,double rx=0.0,double ry=0.0,double rz=0.0);
+    void sendCover(const std::string& name, double x, double y, double z, double size);
 
-	R1Model *r1Model;
+    R1Model *r1Model;
     R1Controller *r1Ctrl;
 
 #ifdef JOYSTICK
@@ -657,15 +657,15 @@ void R1ControlModule::run()
 	Vec3 WstarL = 5.0*(TargetL.Rj().quaternion() * HandL.Rj().quaternion().conj()).V;
 	Vec3 WstarR = 5.0*(TargetR.Rj().quaternion() * HandR.Rj().quaternion().conj()).V;
 
-	VjoyL.print();
-	VjoyR.print();
-	WjoyL.print();
-	WjoyR.print();
+	//VjoyL.print();
+	//VjoyR.print();
+	//WjoyL.print();
+	//WjoyR.print();
 
-	VjoyL.clear();
-	VjoyR.clear();
-	WjoyL.clear();
-	WjoyR.clear();
+	//VjoyL.clear();
+	//VjoyR.clear();
+	//WjoyL.clear();
+	//WjoyR.clear();
 
 	double vl3[] = { VjoyL.x, VjoyL.y, VjoyL.z };
 	double vr3[] = { VjoyR.x, VjoyR.y, VjoyR.z };
@@ -679,8 +679,8 @@ void R1ControlModule::run()
 	{
 		r1Ctrl->velControl(qphantom, qdot, vl3, wl3, vr3, wr3);
 
-		sendTarget(std::string("targetL"), 255, 64, 0, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.666, ArpyL.x, ArpyL.y, ArpyL.z);
-		sendTarget(std::string("targetR"), 0, 64, 255, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.666, ArpyR.x, ArpyR.y, ArpyR.z);
+		sendTarget("targetL", 255, 64, 0, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.666, ArpyL.x, ArpyL.y, ArpyL.z);
+		sendTarget("targetR", 0, 64, 255, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.666, ArpyR.x, ArpyR.y, ArpyR.z);
 	}
 	else if (L_active)
 	{
@@ -688,8 +688,8 @@ void R1ControlModule::run()
 
 		TargetR = HandR;
 
-		sendTarget(std::string("targetL"), 0, 64, 255, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.666, ArpyL.x, ArpyL.y, ArpyL.z);
-		sendTarget(std::string("targetR"), 192, 192, 192, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.5, ArpyR.x, ArpyR.y, ArpyR.z);
+		sendTarget("targetL", 0, 64, 255, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.666, ArpyL.x, ArpyL.y, ArpyL.z);
+		sendTarget("targetR", 192, 192, 192, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.5, ArpyR.x, ArpyR.y, ArpyR.z);
 	}
 	else if (R_active)
 	{
@@ -697,8 +697,8 @@ void R1ControlModule::run()
 
 		TargetL = HandL;
 
-		sendTarget(std::string("targetL"), 192, 192, 192, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.5, ArpyL.x, ArpyL.y, ArpyL.z);
-		sendTarget(std::string("targetR"), 0, 64, 255, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.666, ArpyR.x, ArpyR.y, ArpyR.z);
+		sendTarget("targetL", 192, 192, 192, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.5, ArpyL.x, ArpyL.y, ArpyL.z);
+		sendTarget("targetR", 0, 64, 255, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.666, ArpyR.x, ArpyR.y, ArpyR.z);
 	}
 	else
 	{
@@ -707,8 +707,8 @@ void R1ControlModule::run()
 		TargetL = HandL;
 		TargetR = HandR;
 
-		sendTarget(std::string("targetL"), 192, 192, 192, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.5, ArpyL.x, ArpyL.y, ArpyL.z);
-		sendTarget(std::string("targetR"), 192, 192, 192, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.5, ArpyR.x, ArpyR.y, ArpyR.z);
+		sendTarget("targetL", 192, 192, 192, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.5, ArpyL.x, ArpyL.y, ArpyL.z);
+		sendTarget("targetR", 192, 192, 192, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.5, ArpyR.x, ArpyR.y, ArpyR.z);
 	}
 
 	static int TAU = 1;
@@ -882,7 +882,7 @@ void R1ControlModule::sendCOM(const std::string& name, int R, int G, int B, cer:
     portObjects.writeStrict();
 }
 
-void R1ControlModule::sendTarget(const std::string& name, int R, int G, int B, double x, double y, double z, double size, double alpha, double rx, double ry, double rz)
+void R1ControlModule::sendTarget(const char* name, int R, int G, int B, double x, double y, double z, double size, double alpha, double rx, double ry, double rz)
 {
     yarp::os::Bottle& botR=portObjects.prepare();
     botR.clear();
