@@ -8,7 +8,7 @@
 cmake_minimum_required(VERSION 2.8.9)
 project(cer)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${${PROJECT_NAME}_SOURCE_DIR}/cmake")
 
 find_package(YARP 2.3.64.4 REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
@@ -65,3 +65,7 @@ endif()
 
 
 
+## Install ROS config file in a ROS-like way
+include(ROSconfigHelpers)
+set_ros_config_install_prefix()
+ROS_config_install()
