@@ -1,0 +1,19 @@
+<package format="2">
+  <!-- Package Metadata -->
+  <name>cer</name>
+  <version> 0.0.1 </version>
+    <description> This package contains config and launch files to run navigation 
+                  application with R1 robot </description>
+              
+  <maintainer email="alberto.carde@gmail.com"> Alberto Cardellino </maintainer>
+  <license> LGPL </license>
+
+
+  <!-- Required by ament -->
+  <buildtool_depend> ament_cmake </buildtool_depend>
+  <export>
+    <build_type> ament_cmake </build_type>
+  </export>
+
+</package>
+

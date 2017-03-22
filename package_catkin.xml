@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!-- <package format="2"> -->
+<package>
+    <!-- mandatory header for a Catkin package -->
+    <name> cer </name>
+    <version> 0.0.1 </version>
+    <description> This package contains config and launch files to run navigation 
+                  application with R1 robot </description>
+
+    <maintainer email="alberto.cardellino@iit.it"> Alberto Cardellino </maintainer>
+    <license> GPL </license>
+
+    <!-- optional fields -->
+    <author email="alberto.cardellino@iit.it"> Alberto Cardellino </author>
+
+    <url> TODO </url>
+    <url type="repository"> TODO </url>
+    <url type="bugtracker"> TODO </url>
+
+    <!-- build and run info -->
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+</package>
