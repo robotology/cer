@@ -445,11 +445,11 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
     u/=(n>0.0?n:1.0);
     u.push_back(n);
 
-    Vector rpy=dcm2rpy(axis2dcm(u));
+    Vector ypr=dcm2ypr(axis2dcm(u));
     hpr.resize(3);
     hpr[0]=d.p[2];
-    hpr[1]=CTRL_RAD2DEG*rpy[1];
-    hpr[2]=CTRL_RAD2DEG*rpy[0];
+    hpr[1]=CTRL_RAD2DEG*ypr[1];
+    hpr[2]=CTRL_RAD2DEG*ypr[2];
 
     return true;
 }
@@ -561,11 +561,11 @@ bool TripodSolver::ikin(const Vector &hpr, Vector &lll,
         return false;
     }
 
-    Vector rpy(3,0.0);
-    rpy[0]=CTRL_DEG2RAD*hpr[2];
-    rpy[1]=CTRL_DEG2RAD*hpr[1];
+    Vector ypr(3,0.0);
+    ypr[1]=CTRL_DEG2RAD*hpr[1];
+    ypr[2]=CTRL_DEG2RAD*hpr[2];
 
-    Vector ud=dcm2axis(rpy2dcm(rpy));
+    Vector ud=dcm2axis(ypr2dcm(ypr));
     ud=ud[3]*ud;
     ud.pop_back();
 
