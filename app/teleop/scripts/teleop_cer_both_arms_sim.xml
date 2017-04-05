@@ -1,0 +1,47 @@
+<application>
+<name>CER_TELEOP_BOTH_ARMS_SIM</name>
+
+        <dependencies>
+        </dependencies>
+
+        <module>
+                <name>cer_reaching-solver</name>
+                <parameters>--robot SIM_CER_ROBOT --arm-type left --verbosity 1</parameters>
+                <node>r1-console-linux</node>
+        </module>
+
+        <module>
+                <name>cer_reaching-controller</name>
+                <parameters>--robot SIM_CER_ROBOT --arm-type left --verbosity 1 --T 1.0</parameters>
+                <node>r1-console-linux</node>
+        </module>
+
+        <module>
+                <name>cer_reaching-solver</name>
+                <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1</parameters>
+                <node>r1-console-linux</node>
+        </module>
+
+        <module>
+                <name>cer_reaching-controller</name>
+                <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1 --T 1.0</parameters>
+                <node>r1-console-linux</node>
+        </module>
+
+<!----- connections ------>
+
+        <connection>
+                <from>/cer_reaching-controller/left/solver:rpc</from>
+                <to>/cer_reaching-solver/left/rpc</to>
+                <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+                <from>/cer_reaching-controller/right/solver:rpc</from>
+                <to>/cer_reaching-solver/right/rpc</to>
+                <protocol>tcp</protocol>
+        </connection>
+
+
+</application>
+
