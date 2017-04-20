@@ -2,8 +2,11 @@
 # Author: Ugo Pattacini
 # email:  ugo.pattacini@iit.it
 
-add_subdirectory(reaching)
-add_subdirectory(gaze-controller)
+if(IPOPT_FOUND)
+    add_subdirectory(reaching)
+    add_subdirectory(gaze-controller)
+endif()
+
 add_subdirectory(teleop)
 add_subdirectory(tripodJoystickControl)
 add_subdirectory(robotJoystickControl)
