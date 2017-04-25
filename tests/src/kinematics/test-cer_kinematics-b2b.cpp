@@ -48,14 +48,11 @@ struct Input
     Matrix Hd;
     double torso_heave;
     double lower_arm_heave;
-    Input() : xd(3,0.0), ud(3,0.0), Hd(eye(4,4)),
+    Input() : xd(3,0.0), ud(4,0.0), Hd(eye(4,4)),
               torso_heave(0.0), lower_arm_heave(0.0) { }
     void calcHd()
     {
-        double n=norm(ud);
-        Vector ud_=ud/(n>0.0?n:1.0);
-        ud_.push_back(n);
-        Hd=axis2dcm(ud_);
+        Hd=axis2dcm(ud);
         Hd.setSubcol(xd,0,3);
     }
 };
@@ -71,24 +68,24 @@ int main()
     // input #0
     in.torso_heave=0.05;
     in.lower_arm_heave=0.01;
-    in.xd[0]=0.2; in.xd[1]=-0.4;     in.xd[2]=0.35;
-    in.ud[0]=0.0; in.ud[1]=M_PI/2.0; in.ud[2]=0.0;
+    in.xd[0]=0.2; in.xd[1]=-0.4; in.xd[2]=0.35;
+    in.ud[0]=0.0; in.ud[1]=1.0;  in.ud[2]=0.0;  in.ud[3]=M_PI/2.0;
     in.calcHd();
     input.push_back(in);
 
     // input #1
     in.torso_heave=0.05;
     in.lower_arm_heave=0.01;
-    in.xd[0]=0.2; in.xd[1]=-0.6;     in.xd[2]=0.35;
-    in.ud[0]=0.0; in.ud[1]=M_PI/2.0; in.ud[2]=0.0;
+    in.xd[0]=0.2; in.xd[1]=-0.6; in.xd[2]=0.35;
+    in.ud[0]=0.0; in.ud[1]=1.0;  in.ud[2]=0.0;  in.ud[3]=M_PI/2.0;
     in.calcHd();
     input.push_back(in);
 
     // input #2
     in.torso_heave=0.05;
     in.lower_arm_heave=0.0;
-    in.xd[0]=0.4; in.xd[1]=-0.2;     in.xd[2]=0.25;
-    in.ud[0]=0.0; in.ud[1]=M_PI/2.0; in.ud[2]=0.0;
+    in.xd[0]=0.4; in.xd[1]=-0.2; in.xd[2]=0.25;
+    in.ud[0]=0.0; in.ud[1]=1.0;  in.ud[2]=0.0;  in.ud[3]=M_PI/2.0;
     in.calcHd();
     input.push_back(in);
 
@@ -132,7 +129,6 @@ int main()
 
         Vector x_1=H_1.getCol(3).subVector(0,2);
         Vector u_1=dcm2axis(H_1);
-        u_1*=u_1[3]; u_1.pop_back();
 
         ostringstream jconstr;
         for (size_t j=0; j<3; j++)

@@ -93,7 +93,6 @@ int main(int argc, char *argv[])
     ud[3]=M_PI/2.0;     
 
     Matrix Hd=axis2dcm(ud);
-    ud*=ud[3]; ud.pop_back();
     Hd(2,3)=table_height+floor_z;
     
     // timing statistics
@@ -140,7 +139,6 @@ int main(int argc, char *argv[])
             Vector xd=Hd.getCol(3).subVector(0,2);
             Vector x=H.getCol(3).subVector(0,2);
             Vector u=dcm2axis(H);
-            u*=u[3]; u.pop_back();
 
             ostringstream stream;
             stream.precision(5);

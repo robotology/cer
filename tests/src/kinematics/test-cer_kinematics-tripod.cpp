@@ -53,14 +53,14 @@ public:
         solver.setParameters(TripodParameters(0.09,0.0,0.2,30.0));
 
         mode=rf.check("mode",Value(MODE_ZD_UD)).asString().c_str();
-        int verbosity=rf.check("verbosity",Value(1)).asInt();        
+        int verbosity=rf.check("verbosity",Value(1)).asInt();
 
         if ((mode!=MODE_ZD_UD) && (mode!=MODE_HPR))
         {
             yWarning("Unrecognized input mode!");
             mode=MODE_ZD_UD;
         }
-        use_hpr=(mode==MODE_HPR); 
+        use_hpr=(mode==MODE_HPR);
 
         iPort.open("/solver:i");
         oPort.open("/solver:o");
@@ -95,7 +95,7 @@ public:
         Bottle *ibData=iPort.read(false);
         if (ibData!=NULL)
         {
-            if (ibData->size()!=(use_hpr?3:4))
+            if (ibData->size()!=(use_hpr?3:5))
             {
                 yError("Wrong \"%s\" input size!",mode.c_str());
                 return true;
@@ -116,11 +116,12 @@ public:
             }
             else
             {
-                Vector ud(3);
+                Vector ud(4);
                 double zd=ibData->get(0).asDouble();
                 ud[0]=ibData->get(1).asDouble();
                 ud[1]=ibData->get(2).asDouble();
                 ud[2]=ibData->get(3).asDouble();
+                ud[3]=ibData->get(4).asDouble();
                 solver.setInitialGuess(rho);
                 solver.ikin(zd,ud,rho);
 

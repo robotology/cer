@@ -45,8 +45,8 @@ class Target : public RateThread
     void helperPrint(const double t, const string &tag, const int cnt,
                      const Vector &x) const
     {
-        printf("%.3f %s %d %.3f %.3f %.3f %.3f %.3f %.3f\n",
-               t,tag.c_str(),cnt,x[0],x[1],x[2],x[3],x[4],x[5]);
+        printf("%.3f %s %d %.3f %.3f %.3f %.3f %.3f %.3f %.3f\n",
+               t,tag.c_str(),cnt,x[0],x[1],x[2],x[3],x[4],x[5],x[6]);
     }
 
     /****************************************************************/
@@ -56,7 +56,7 @@ class Target : public RateThread
         const double t=Time::now()-t0;
         const double phi=2.0*M_PI*f*t;
 
-        Vector r(6,0.0);
+        Vector r(7,0.0);
         r[1]=R*cos(phi);
         r[2]=R*sin(phi);
 
@@ -66,10 +66,11 @@ class Target : public RateThread
 
 public:
     /****************************************************************/
-    Target() : RateThread(10), c(6,0.0), xd(6,0.0), f(0.1), R(0.1), cnt(0)
+    Target() : RateThread(10), c(7,0.0), xd(7,0.0), f(0.1), R(0.1), cnt(0)
     {
         c[0]=0.35;
-        c[4]=M_PI/2.0;
+        c[4]=1.0;
+        c[6]=M_PI/2.0;
         t0=Time::now();
     }
 
@@ -165,11 +166,7 @@ public:
         int cnt;
         Vector xd=target.get_xd(cnt);
 
-        Vector ud=xd.subVector(3,5);
-        double n=norm(ud);
-        ud/=(n>0.0?n:1.0);
-        ud.push_back(n);
-        Matrix Hd=axis2dcm(ud);
+        Matrix Hd=axis2dcm(xd.subVector(3,6));
         Hd(0,3)=xd[0];
         Hd(1,3)=xd[1];
         Hd(2,3)=xd[2];
@@ -180,10 +177,7 @@ public:
         Matrix H;
         solver.fkin(q,H);
         Vector x=H.getCol(3).subVector(0,2);
-        Vector u=dcm2axis(H);
-        u*=u[3];
-        u.pop_back();
-        x=cat(x,u);
+        x=cat(x,dcm2axis(H));
         target.print(cnt,x);
 
         return true;

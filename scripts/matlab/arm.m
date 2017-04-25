@@ -361,7 +361,7 @@ if ~strcmp(tline,'do')
         if init_done
             [yarpData,status]=str2num(tline); %#ok<ST2NM>
             if status~=0
-                q=reshape(yarpData(7:7+length(q)-1),size(q));
+                q=reshape(yarpData(8:8+length(q)-1),size(q));
 
                 set(0,'CurrentFigure',hfig);
                 hax=get(hfig,'CurrentAxes');
@@ -385,9 +385,8 @@ if ~strcmp(tline,'do')
                 A=max(abs(lim))*0.1;
 
                 xd=yarpData(1:3);
-                ud=yarpData(4:6);
-                theta=norm(ud); ud=ud/theta;
-                Rd=axang2rotm([ud theta]);
+                ud=yarpData(4:7);
+                Rd=axang2rotm(ud);
 
                 hp=plot3(hax,xd(1),xd(2),xd(3),...
                          'go','LineWidth',3,'MarkerSize',5);
@@ -406,7 +405,7 @@ if ~strcmp(tline,'do')
                 hg_coms=hggroup;                
                 for i=1:7
                     j=3*(i-1);
-                    com=yarpData(7+length(q)+(j:j+2));
+                    com=yarpData(8+length(q)+(j:j+2));
                     if i<7
                         hcom=plot3(hax,com(1),com(2),com(3),...
                                   'bs','LineWidth',2,'MarkerSize',5);

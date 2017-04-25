@@ -53,9 +53,8 @@ data=dlmread(filename);
 sz=size(data);
 
 for i=1:sz(1)
-    u=data(i,7:9);
-    n=norm(u);
-    R=axang2rotm([u/n n]);
+    u=data(i,7:10);
+    R=axang2rotm(u);
 
     c='go';
     if data(i,end)<=0
@@ -68,8 +67,7 @@ for i=1:sz(1)
     quiver3(data(i,4),data(i,5),data(i,6),R(1,1),R(2,1),R(3,1),0.3*A,'r');
     quiver3(data(i,4),data(i,5),data(i,6),R(1,2),R(2,2),R(3,2),0.3*A,'g');
     quiver3(data(i,4),data(i,5),data(i,6),R(1,3),R(2,3),R(3,3),0.3*A,'b');
-    plot3(data(i,10),data(i,11),floor_z,'kd',...
-          'MarkerSize',2);
+    plot3(data(i,11),data(i,12),floor_z,'kd','MarkerSize',2);
       
     drawnow;
 end

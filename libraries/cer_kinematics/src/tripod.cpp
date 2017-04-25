@@ -88,6 +88,7 @@ protected:
             d.u[0]=-d.n[1]/sin_theta;
             d.u[1]=d.n[0]/sin_theta;
             d.u[2]=0.0;
+            d.u[3]=acos(q33);
             double tmp=(1.0-q33);
             double q11=tmp*d.u[0]*d.u[0]+q33;
             double q22=tmp*d.u[1]*d.u[1]+q33;
@@ -97,8 +98,7 @@ protected:
             double m1=params.r/q33*(-0.5*q11+1.5*q22);
             d.p[0]=params.r-m1*q11;
             d.p[1]=-m1*q21;
-            d.p[2]=x[0]-m1*q31;
-            d.u*=acos(q33);
+            d.p[2]=x[0]-m1*q31;            
 
             // transformation matrix
             d.T(0,0)=q11; d.T(0,1)=q21; d.T(0,2)=-q31; d.T(0,3)=d.p[0];
@@ -109,10 +109,13 @@ protected:
         if (internal!=NULL)
             *internal=d;
 
-        d.n=params.R0*d.n;
-        d.u=params.R0*d.u;
+        d.n=params.R0*d.n;        
         d.p=params.R0*d.p+params.p0;
         d.T=params.T0*d.T;
+
+        double theta=d.u[3];
+        d.u=params.R0*d.u.subVector(0,2);
+        d.u.push_back(theta);
 
         return d;
     }
@@ -122,7 +125,7 @@ public:
     TripodNLP(TripodSolver &slv_) : slv(slv_), params(slv_.parameters)
     {
         zd=(params.l_max+params.l_min)/2.0;
-        ud.resize(3,0.0);
+        ud.resize(4,0.0);
 
         rho0.resize(3,zd);
         rho=rho0;
@@ -353,10 +356,7 @@ public:
     {
         if (slv.callback!=NULL)
         {
-            double n=norm(ud);
-            Vector ud_=ud/(n>0.0?n:1.0);
-            ud_.push_back(n);
-            Matrix Hd=axis2dcm(ud_);
+            Matrix Hd=axis2dcm(ud);
             Hd(2,3)=zd;
 
             Matrix Hee=d.T;
@@ -440,12 +440,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(lll);
 
-    Vector u=d.u;
-    double n=norm(u);
-    u/=(n>0.0?n:1.0);
-    u.push_back(n);
-
-    Vector ypr=dcm2ypr(axis2dcm(u));
+    Vector ypr=dcm2ypr(axis2dcm(d.u));
     hpr.resize(3);
     hpr[0]=d.p[2];
     hpr[1]=CTRL_RAD2DEG*ypr[1];
@@ -477,7 +472,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
                         Vector &lll, int *exit_code)
 {
     LockGuard lg(makeThreadSafe);
-    if (ud.length()<3)
+    if (ud.length()<4)
     {
         yError("mis-sized orientation vector!");
         return false;
@@ -566,9 +561,6 @@ bool TripodSolver::ikin(const Vector &hpr, Vector &lll,
     ypr[2]=CTRL_DEG2RAD*hpr[2];
 
     Vector ud=dcm2axis(ypr2dcm(ypr));
-    ud=ud[3]*ud;
-    ud.pop_back();
-
     return ikin(hpr[0],ud,lll,exit_code);
 }
 
@@ -583,9 +575,6 @@ bool TripodSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     }
 
     Vector ud=dcm2axis(Hd);
-    ud=ud[3]*ud;
-    ud.pop_back();
-
     return ikin(Hd(2,3),ud,q,exit_code);
 }
 

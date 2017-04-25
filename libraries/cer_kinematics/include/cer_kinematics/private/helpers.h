@@ -75,7 +75,7 @@ struct TripodState
     yarp::sig::Matrix T;
 
     /****************************************************************/
-    TripodState():n(3,0.0),u(3,0.0),p(3,0.0),T(yarp::math::eye(4,4)) { }
+    TripodState():n(3,0.0),u(4,0.0),p(3,0.0),T(yarp::math::eye(4,4)) { }
 };
 
 }

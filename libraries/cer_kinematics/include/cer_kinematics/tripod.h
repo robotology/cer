@@ -94,7 +94,7 @@ public:
      * @param lll    the three elongations ([m]).
      * @param p      the computed 3d position of the platform center
      *               ([m]).
-     * @param u      the 3 components orientation (axis*angle) given
+     * @param u      the 3 components orientation (axis,angle) given
      *               in [rad].
      * @return true/false on success/failure.
      */
@@ -130,7 +130,7 @@ public:
      * 
      * @param zd     desired heave ([m]).
      * @param ud     the desired orientation given as 3 components 
-     *               vector (axis*angle) expressed in [rad].
+     *               vector (axis,angle) expressed in [rad].
      * @param lll    the solved three elongations ([m]).
      * @return true/false on success/failure.
      */

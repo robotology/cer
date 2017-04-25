@@ -230,7 +230,7 @@ public:
 
         if (Bottle *payLoad=cmd.find("target").asList())
         {
-            if (payLoad->size()<8)
+            if (payLoad->size()<9)
             {
                 yError("wrong target size!");
                 reply.clear();
@@ -241,18 +241,16 @@ public:
             p.torso_heave=payLoad->get(0).asDouble();
             p.lower_arm_heave=payLoad->get(1).asDouble();
 
-            Vector xd(3),ud(3);
+            Vector xd(3),ud(4);
             xd[0]=payLoad->get(2).asDouble();
             xd[1]=payLoad->get(3).asDouble();
             xd[2]=payLoad->get(4).asDouble();
             ud[0]=payLoad->get(5).asDouble();
             ud[1]=payLoad->get(6).asDouble();
             ud[2]=payLoad->get(7).asDouble();
+            ud[3]=payLoad->get(8).asDouble();
 
-            double n=norm(ud);
-            Vector ud_=ud/(n>0.0?n:1.0);
-            ud_.push_back(n);
-            Matrix Hd=axis2dcm(ud_);
+            Matrix Hd=axis2dcm(ud);
             Hd.setSubcol(xd,0,3);
 
             solver.setSolverParameters(p);

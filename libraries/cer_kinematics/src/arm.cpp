@@ -235,8 +235,6 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     {
         Vector xd=Hd.getCol(3).subVector(0,2);
         Vector ud=dcm2axis(Hd);
-        ud*=ud[3];
-        ud.pop_back();
 
         Matrix H=nlp->fkin(q);
         TripodState din1,din2;
@@ -244,8 +242,6 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         nlp->tripod_fkin(2,q,&din2);
         Vector x=H.getCol(3).subVector(0,2);
         Vector u=dcm2axis(H);
-        u*=u[3];
-        u.pop_back();
 
         yInfo(" *** Arm Solver ******************************");
         yInfo(" *** Arm Solver:              arm = %s",armParameters.upper_arm.getType().c_str());

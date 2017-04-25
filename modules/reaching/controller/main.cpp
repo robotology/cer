@@ -175,8 +175,7 @@ class Controller : public RFModule, public PortReader
     bool areJointsHealthy()
     {
         for (size_t i=0; i<curMode.size(); i++)
-            if ((curMode[i]==VOCAB_CM_HW_FAULT) ||
-                (curMode[i]==VOCAB_CM_IDLE))
+            if ((curMode[i]==VOCAB_CM_HW_FAULT) || (curMode[i]==VOCAB_CM_IDLE))
                 return false;
         return true;
     }
@@ -418,15 +417,7 @@ public:
         Vector &pose=statePort.prepare();
         pose=Hee.getCol(3).subVector(0,2);
 
-        Vector oee;
-        if (orientation_type=="rpy")
-            oee=dcm2rpy(Hee);
-        else
-        {
-            oee=dcm2axis(Hee);
-            oee*=oee[3]; oee.pop_back();
-        }
-
+        Vector oee=(orientation_type=="rpy"?dcm2rpy(Hee):dcm2axis(Hee));
         pose=cat(pose,oee);
 
         if (timeStamp>=0.0)

@@ -108,7 +108,7 @@ public:
         Bottle *target=portTarget.read(false);
         if (target!=NULL)
         {
-            if (target->size()<9)
+            if (target->size()<10)
             {
                 yError("wrong target size!");
                 return true;
@@ -116,7 +116,7 @@ public:
 
             string mode;
             double hd1,hd2;
-            Vector xd(3),ud(3);
+            Vector xd(3),ud(4);
 
             mode=target->get(0).asString().c_str();
             hd1=target->get(1).asDouble();
@@ -127,15 +127,13 @@ public:
             ud[0]=target->get(6).asDouble();
             ud[1]=target->get(7).asDouble();
             ud[2]=target->get(8).asDouble();
+            ud[3]=target->get(9).asDouble();
 
             bool warm_start=false;
             if (target->size()>=10)
                 warm_start=(target->get(9).asString()=="warm_start");
 
-            double n=norm(ud);
-            Vector ud_=ud/(n>0.0?n:1.0);
-            ud_.push_back(n);
-            Matrix Hd=axis2dcm(ud_);
+            Matrix Hd=axis2dcm(ud);
             Hd.setSubcol(xd,0,3);
 
             SolverParameters p=solver.getSolverParameters();

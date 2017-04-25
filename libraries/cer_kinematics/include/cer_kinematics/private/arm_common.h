@@ -81,6 +81,7 @@ protected:
             d.u[0]=-d.n[1]/sin_theta;
             d.u[1]=d.n[0]/sin_theta;
             d.u[2]=0.0;
+            d.u[3]=acos(q33);
             double tmp=(1.0-q33);
             double q11=tmp*d.u[0]*d.u[0]+q33;
             double q22=tmp*d.u[1]*d.u[1]+q33;
@@ -91,7 +92,6 @@ protected:
             d.p[0]=params.r-m1*q11;
             d.p[1]=-m1*q21;
             d.p[2]=x[offs+0]-m1*q31;
-            d.u*=acos(q33);
 
             // transformation matrix
             d.T(0,0)=q11; d.T(0,1)=q21; d.T(0,2)=-q31; d.T(0,3)=d.p[0];
@@ -103,9 +103,12 @@ protected:
             *internal=d;
 
         d.n=params.R0*d.n;
-        d.u=params.R0*d.u;
         d.p=params.R0*d.p+params.p0;
         d.T=params.T0*d.T;
+
+        double theta=d.u[3];
+        d.u=params.R0*d.u.subVector(0,2);
+        d.u.push_back(theta);
 
         return d;
     }
@@ -257,8 +260,6 @@ public:
         Rd(0,3)=Rd(1,3)=Rd(2,3)=0.0;
 
         ud=dcm2axis(Rd);
-        ud*=ud[3];
-        ud.pop_back();
     }
 
     /****************************************************************/

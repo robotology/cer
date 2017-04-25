@@ -73,7 +73,7 @@ kinData=ComputeFwKin;
 printInfo(kinData);
 hg_tripod=DrawTripod(kinData);
 
-xd=[P.L/2 0 0 0];
+xd=[P.L/2 0 0 0 0];
 ax1=patch([s1(1) s2(1) s3(1)],[s1(2) s2(2) s3(2)],...
           [s1(3) s2(3) s3(3)]+xd(1),'y');
 alpha(ax1,P.transparency);
@@ -246,7 +246,7 @@ global xd pitch roll R ui_des;
 global hfig hg_target;
 
 persistent executing;
-if isempty(executing);
+if isempty(executing)
     executing=false;
 end
 
@@ -274,8 +274,7 @@ end
 set(ui_des{idx},'String',num2str(val,5));
 
 R=angle2dcm(0,pitch,roll);
-u=rotm2axang(R);
-xd(2:4)=u(4)*u(1:3);
+xd(2:5)=rotm2axang(R);
 
 rs1=R*s1;
 rs2=R*s2;
@@ -446,4 +445,3 @@ global writer;
 
 close(writer);
 delete(obj);
-
