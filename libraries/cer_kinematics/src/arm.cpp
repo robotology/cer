@@ -243,6 +243,9 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         Vector x=H.getCol(3).subVector(0,2);
         Vector u=dcm2axis(H);
 
+        Vector e_u=dcm2axis(Hd*H.transposed());
+        e_u*=e_u[3]; e_u.pop_back();
+
         yInfo(" *** Arm Solver ******************************");
         yInfo(" *** Arm Solver:              arm = %s",armParameters.upper_arm.getType().c_str());
         yInfo(" *** Arm Solver:             mode = %s",nlp->get_mode().c_str());
@@ -258,7 +261,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         yInfo(" *** Arm Solver:         ud [rad] = (%s)",ud.toString(4,4).c_str());
         yInfo(" *** Arm Solver:            q [*] = (%s)",q.toString(4,4).c_str());
         yInfo(" *** Arm Solver:          e_x [m] = %g",norm(xd-x));
-        yInfo(" *** Arm Solver:        e_u [rad] = %g",norm(ud-u));
+        yInfo(" *** Arm Solver:        e_u [rad] = %g",norm(e_u));
         yInfo(" *** Arm Solver:         e_h1 [m] = %g",fabs(slvParameters.torso_heave-din1.p[2]));
         yInfo(" *** Arm Solver:     alpha1 [deg] = %g",CTRL_RAD2DEG*acos(din1.n[2]));
         yInfo(" *** Arm Solver:         e_h2 [m] = %g",fabs(slvParameters.lower_arm_heave-din2.p[2]));

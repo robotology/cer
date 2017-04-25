@@ -154,10 +154,13 @@ int main()
         double h2=H_tmp0(2,3);
         double alpha2=R2D*acos(H_tmp0(2,2));
 
+        Vector e_u=dcm2axis(input[i].Hd*H_1.transposed());
+        e_u*=e_u[3]; e_u.pop_back();
+
         yInfo()<<"           q_1 [*] = ("<<q_1.toString(5,5).c_str()<<")";
         yInfo()<<"joints-constraints = ("<<jconstr.str()<<")";
         yInfo()<<"         e_x_1 [m] = "<<norm(input[i].xd-x_1);
-        yInfo()<<"       e_u_1 [rad] = "<<norm(input[i].ud-u_1);
+        yInfo()<<"       e_u_1 [rad] = "<<norm(e_u);
         yInfo()<<"        e_h1_1 [m] = "<<fabs(input[i].torso_heave-h1);
         yInfo()<<"    alpha1_1 [deg] = "<<alpha1<<" ("<<(alpha1<=armParams.torso.alpha_max?"ok":"fail")<<")";
         yInfo()<<"        e_h2_1 [m] = "<<fabs(input[i].lower_arm_heave-h2);
