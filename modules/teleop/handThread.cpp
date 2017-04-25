@@ -90,16 +90,11 @@ void HandThread::stopReaching()
 
 void HandThread::goToPose(const Vector &xd, const Vector &od)
 {
-    Vector od_ = od;
-    od_       *= od_[3];
-
-    od_.pop_back();
-
     Vector payLoad;
     payLoad.push_back(0.0); // uncontrolled torso-heave
     payLoad.push_back(wrist_heave);
     payLoad = cat(payLoad, xd);
-    payLoad = cat(payLoad, od_);
+    payLoad = cat(payLoad, od);
 
     Bottle target;
     target.addList().read(payLoad);
@@ -385,11 +380,8 @@ void HandThread::run()
     {
         if (Vector* pose = robotStatePort.read(false))
         {
-            cur_x    = pose->subVector(0,2);
-            cur_o    = pose->subVector(3,5);
-            double n = norm(cur_o);
-            cur_o   /= (n > 0.0 ? n : 1.0);
-            cur_o.push_back(n);
+            cur_x = pose->subVector(0,2);
+            cur_o = pose->subVector(3,6);
         }
 
         getData();
