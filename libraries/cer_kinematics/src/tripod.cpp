@@ -52,11 +52,14 @@ class TripodNLP : public Ipopt::TNLP
 protected:
     TripodSolver &slv;
     const TripodParametersExtended params;
-
+    
     Vector ud;
     double zd;
     Vector rho0,rho;
     double drho;
+
+    Matrix Rd;
+    Vector e;
 
     TripodState d,din;
     Vector lll;
@@ -216,6 +219,10 @@ public:
                 this->lll[i]=x[i];
 
             d=fkin(x,&din);
+
+            Rd=axis2dcm(ud);
+            e=dcm2axis(Rd*d.T.transposed());
+            e*=e[3]; e.pop_back();
         }
     }
 
@@ -224,7 +231,7 @@ public:
                 Ipopt::Number &obj_value)
     {
         computeQuantities(x,new_x);
-        obj_value=norm2(ud-d.u);
+        obj_value=norm2(e);
 
         return true;
     }
@@ -237,31 +244,37 @@ public:
 
         Ipopt::Number x_dx[3];
         TripodState d_fw,d_bw;
-        Vector tmp=ud-d.u;
+        Vector e_fw,e_bw;
 
         x_dx[0]=x[0]+drho;
         x_dx[1]=x[1];
         x_dx[2]=x[2];
         d_fw=fkin(x_dx);
+        e_fw=dcm2axis(Rd*d_fw.T.transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
         x_dx[0]=x[0]-drho;
         d_bw=fkin(x_dx);
-        grad_f[0]=-dot(tmp,d_fw.u-d_bw.u)/drho;
+        e_bw=dcm2axis(Rd*d_bw.T.transposed()); e_bw*=e_bw[3]; e_bw.pop_back();        
+        grad_f[0]=dot(e,e_fw-e_bw)/drho;
 
         x_dx[0]=x[0];
         x_dx[1]=x[1]+drho;
         x_dx[2]=x[2];
         d_fw=fkin(x_dx);
+        e_fw=dcm2axis(Rd*d_fw.T.transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
         x_dx[1]=x[1]-drho;
         d_bw=fkin(x_dx);
-        grad_f[1]=-dot(tmp,d_fw.u-d_bw.u)/drho;
+        e_bw=dcm2axis(Rd*d_bw.T.transposed()); e_bw*=e_bw[3]; e_bw.pop_back();        
+        grad_f[1]=dot(e,e_fw-e_bw)/drho;
 
         x_dx[0]=x[0];
         x_dx[1]=x[1];
         x_dx[2]=x[2]+drho;
         d_fw=fkin(x_dx);
+        e_fw=dcm2axis(Rd*d_fw.T.transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
         x_dx[2]=x[2]-drho;
         d_bw=fkin(x_dx);
-        grad_f[2]=-dot(tmp,d_fw.u-d_bw.u)/drho;
+        e_bw=dcm2axis(Rd*d_bw.T.transposed()); e_bw*=e_bw[3]; e_bw.pop_back();        
+        grad_f[2]=dot(e,e_fw-e_bw)/drho;
 
         return true;
     }
@@ -511,6 +524,9 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
     {
         TripodState d=nlp->fkin(lll);
 
+        Vector e_u=dcm2axis(axis2dcm(ud)*d.T.transposed());
+        e_u*=e_u[3]; e_u.pop_back();
+
         yInfo(" *** Tripod Solver ******************************");
         yInfo(" *** Tripod Solver:    lll0 [m] = (%s)",lll0.toString(4,4).c_str());
         yInfo(" *** Tripod Solver:      zd [m] = %g",zd);
@@ -518,7 +534,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         yInfo(" *** Tripod Solver:     lll [m] = (%s)",lll.toString(4,4).c_str());
         yInfo(" *** Tripod Solver:     u [rad] = (%s)",d.u.toString(4,4).c_str());
         yInfo(" *** Tripod Solver:       p [m] = (%s)",d.p.toString(4,4).c_str());
-        yInfo(" *** Tripod Solver:   e_u [rad] = %g",norm(ud-d.u));
+        yInfo(" *** Tripod Solver:   e_u [rad] = %g",norm(e_u));
         yInfo(" *** Tripod Solver:     e_z [m] = %g",fabs(zd-d.p[2]));
         yInfo(" *** Tripod Solver: alpha [deg] = %g",CTRL_RAD2DEG*acos(d.n[2]));
         yInfo(" *** Tripod Solver:     dt [ms] = %g",1000.0*(t1-t0));
