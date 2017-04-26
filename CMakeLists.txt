@@ -58,10 +58,4 @@ add_subdirectory(cermod)
 add_subdirectory(gazeboYarpPlugin)
 add_subdirectory(modules)
 add_subdirectory(tools)
-
-if(IPOPT_FOUND)
-    add_subdirectory(tests)
-endif()
-
-
-
+add_subdirectory(tests)

@@ -15,10 +15,10 @@ find_package(RTF 1.1)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
 set(CMAKE_SHARED_MODULE_PREFIX "")
 
-add_subdirectory(src/kinematics)
-
 if(RTF_FOUND)
-   add_subdirectory(src/tripod)
-   add_subdirectory(src/displayTest)
+   add_subdirectory(tripodTest)
+   add_subdirectory(displayTest)
 endif()
+
+add_subdirectory(rgbdCalibrationTest)
 

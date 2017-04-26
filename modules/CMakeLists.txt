@@ -13,7 +13,6 @@ add_subdirectory(robotJoystickControl)
 add_subdirectory(tfPublisher)
 add_subdirectory(textimage)
 add_subdirectory(faceExpression)
-add_subdirectory(rgbdCalibrationTest)
 #add_subdirectory(altVelController)
 #add_subdirectory(selfCollision)
 
