@@ -3,7 +3,7 @@
 # email:  ugo.pattacini@iit.it
 
 cmake_minimum_required(VERSION 2.8.9)
-project(cer_kinematics-tests)
+project(cer_kinematics-tools)
 
 get_property(cer_kinematics_INCLUDE_DIRS
              TARGET cer_kinematics
@@ -14,27 +14,35 @@ include_directories(${YARP_INCLUDE_DIRS}
                     ${cer_kinematics_INCLUDE_DIRS})
 
 add_definitions(-D_USE_MATH_DEFINES)
-add_executable(test-cer_kinematics-tripod    test-cer_kinematics-tripod.cpp)
-add_executable(test-cer_kinematics-forward   test-cer_kinematics-forward.cpp)
-add_executable(test-cer_kinematics-arm       test-cer_kinematics-arm.cpp)
-add_executable(test-cer_kinematics-head      test-cer_kinematics-head.cpp)
-add_executable(test-cer_kinematics-stability test-cer_kinematics-stability.cpp)
-add_executable(test-cer_kinematics-tracking  test-cer_kinematics-tracking.cpp)
-#add_executable(test-cer_kinematics-b2b       test-cer_kinematics-b2b.cpp)
+add_executable(cer_kinematics-tripod    cer_kinematics-tripod.cpp)
+add_executable(cer_kinematics-forward   cer_kinematics-forward.cpp)
+add_executable(cer_kinematics-arm       cer_kinematics-arm.cpp)
+add_executable(cer_kinematics-head      cer_kinematics-head.cpp)
+add_executable(cer_kinematics-stability cer_kinematics-stability.cpp)
+add_executable(cer_kinematics-tracking  cer_kinematics-tracking.cpp)
+#add_executable(cer_kinematics-b2b       cer_kinematics-b2b.cpp)
 
-target_link_libraries(test-cer_kinematics-tripod    ${YARP_LIBRARIES} ctrlLib cer_kinematics)
-target_link_libraries(test-cer_kinematics-forward   ${YARP_LIBRARIES} cer_kinematics)
-target_link_libraries(test-cer_kinematics-arm       ${YARP_LIBRARIES} cer_kinematics)
-target_link_libraries(test-cer_kinematics-head      ${YARP_LIBRARIES} cer_kinematics)
-target_link_libraries(test-cer_kinematics-stability ${YARP_LIBRARIES} cer_kinematics)
-target_link_libraries(test-cer_kinematics-tracking  ${YARP_LIBRARIES} cer_kinematics)
-#target_link_libraries(test-cer_kinematics-b2b       ${YARP_LIBRARIES} iKin cer_kinematics cer_kinematics_alt)
+target_link_libraries(cer_kinematics-tripod    ${YARP_LIBRARIES} ctrlLib cer_kinematics)
+target_link_libraries(cer_kinematics-forward   ${YARP_LIBRARIES} cer_kinematics)
+target_link_libraries(cer_kinematics-arm       ${YARP_LIBRARIES} cer_kinematics)
+target_link_libraries(cer_kinematics-head      ${YARP_LIBRARIES} cer_kinematics)
+target_link_libraries(cer_kinematics-stability ${YARP_LIBRARIES} cer_kinematics)
+target_link_libraries(cer_kinematics-tracking  ${YARP_LIBRARIES} cer_kinematics)
+#target_link_libraries(cer_kinematics-b2b       ${YARP_LIBRARIES} iKin cer_kinematics cer_kinematics_alt)
 
-install(TARGETS test-cer_kinematics-tripod
-                test-cer_kinematics-forward
-                test-cer_kinematics-arm
-                test-cer_kinematics-head
-                test-cer_kinematics-stability
-                test-cer_kinematics-tracking
-#                test-cer_kinematics-b2b
+set_target_properties(cer_kinematics-tripod    PROPERTIES FOLDER ${PROJECT_NAME})
+set_target_properties(cer_kinematics-forward   PROPERTIES FOLDER ${PROJECT_NAME})
+set_target_properties(cer_kinematics-arm       PROPERTIES FOLDER ${PROJECT_NAME})
+set_target_properties(cer_kinematics-head      PROPERTIES FOLDER ${PROJECT_NAME})
+set_target_properties(cer_kinematics-stability PROPERTIES FOLDER ${PROJECT_NAME})
+set_target_properties(cer_kinematics-tracking  PROPERTIES FOLDER ${PROJECT_NAME})
+#set_target_properties(cer_kinematics-b2b       PROPERTIES FOLDER ${PROJECT_NAME})
+
+install(TARGETS cer_kinematics-tripod
+                cer_kinematics-forward
+                cer_kinematics-arm
+                cer_kinematics-head
+                cer_kinematics-stability
+                cer_kinematics-tracking
+#                cer_kinematics-b2b
         DESTINATION bin)
