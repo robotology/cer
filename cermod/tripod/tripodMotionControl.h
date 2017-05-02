@@ -68,7 +68,7 @@ public:
     yarp::dev::IControlCalibration2  *calib2;
     yarp::dev::ITorqueControl        *iTorque;
     yarp::dev::IImpedanceControl     *iImpedance;
-    yarp::dev::IOpenLoopControl      *iOpenLoop;
+    yarp::dev::IPWMControl           *iPWM;
     yarp::dev::IControlMode          *iMode;
     yarp::dev::IControlMode2         *iMode2;
     yarp::dev::IAxisInfo             *info;

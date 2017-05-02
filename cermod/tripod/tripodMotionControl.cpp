@@ -35,7 +35,7 @@ HW_deviceHelper::HW_deviceHelper() : pid(NULL),
                                      calib2(NULL),
                                      iTorque(NULL),
                                      iImpedance(NULL),
-                                     iOpenLoop(NULL),
+                                     iPWM(NULL),
                                      iMode(NULL),
                                      iMode2(NULL),
                                      info(NULL),
@@ -66,7 +66,7 @@ void HW_deviceHelper::detach()
     calib2 = NULL;
     iTorque = NULL;
     iImpedance = NULL;
-    iOpenLoop = NULL;
+    iPWM = NULL;
     iMode = NULL;
     iMode2 = NULL;
     info = NULL;
@@ -102,7 +102,7 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
         subdevice->view(iImpedance);
         subdevice->view(iMode);
         subdevice->view(iMode2);
-        subdevice->view(iOpenLoop);
+        subdevice->view(iPWM);
         subdevice->view(iJntEnc);
         subdevice->view(iMotEnc);
         subdevice->view(iInteract);
@@ -124,8 +124,8 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
     if ((iImpedance==0) && (_subDevVerbose))
         yWarning() << "tripodMotionControl:  Warning iImpedance not valid interface";
 
-    if ((iOpenLoop==0) && (_subDevVerbose))
-        yWarning() << "tripodMotionControl:  Warning iOpenLoop not valid interface";
+    if ((iPWM==0) && (_subDevVerbose))
+        yWarning() << "tripodMotionControl:  Warning iPWMControl not valid interface";
 
     if ((iInteract==0) && (_subDevVerbose))
         yWarning() << "tripodMotionControl:  Warning iInteractionMode not valid interface";
