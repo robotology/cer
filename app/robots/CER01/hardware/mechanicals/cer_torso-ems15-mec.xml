@@ -13,6 +13,8 @@
         <param name="Gearbox_E2J">           1             1            1               1           </param>
        <param name="useMotorSpeedFbk">      1              1            1               1           </param>
          <param name="MotorType">             "DC"         "DC"         "DC"          "BLL_MECAP"    </param>
+        <param name="fullscalePWM">          32000        32000        32000         32000         </param>
+        <param name="ampsToSensor">          1000.0       1000.0       1000.0        1000.0        </param>
         <param name="Verbose">               0   </param>
     </group>
 
@@ -31,8 +33,6 @@
         <param name="HasRotorEncoderIndex">  0            0            0             0             </param>
         <param name="HasSpeedEncoder">       0            0            0             0             </param>
         <param name="RotorIndexOffset">      0            0            0             0             </param>
-        <param name="fullscalePWM">          32000        32000        32000         32000         </param>
-        <param name="ampsToSensor">          1000.0       1000.0       1000.0        1000.0        </param>
         <param name="MotorPoles">            2            2            2             8             </param>
     </group>
 
