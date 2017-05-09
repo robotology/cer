@@ -386,7 +386,7 @@ bool tripodMotionControl::dealloc()
 
 tripodMotionControl::tripodMotionControl() :
     ImplementControlCalibration2<tripodMotionControl, IControlCalibration2>(this),
-//     ImplementPidControl<tripodMotionControl, IPidControl>(this),
+//     ImplementPidControl(this),
 //     ImplementVelocityControl<tripodMotionControl, IVelocityControl>(this),
     ImplementEncodersTimed(this),
     ImplementPositionControl2(this),
@@ -485,7 +485,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
     ImplementEncodersTimed::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementMotorEncoders::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementPositionControl2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
-//     ImplementPidControl<tripodMotionControl, IPidControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+//     ImplementPidControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementControlMode2::initialize(_njoints, _axisMap);
 //     ImplementVelocityControl<tripodMotionControl, IVelocityControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
@@ -828,7 +828,7 @@ bool tripodMotionControl::close()
     ImplementPositionControl2::uninitialize();
 //     ImplementVelocityControl<tripodMotionControl, IVelocityControl>::uninitialize();
     ImplementVelocityControl2::uninitialize();
-//     ImplementPidControl<tripodMotionControl, IPidControl>::uninitialize();
+//     ImplementPidControl::uninitialize();
     ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>::uninitialize();
     ImplementControlCalibration2<tripodMotionControl, IControlCalibration2>::uninitialize();
     ImplementControlLimits2::uninitialize();
