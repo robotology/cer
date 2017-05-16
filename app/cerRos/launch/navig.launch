@@ -2,19 +2,16 @@
     <master auto="start"/>
     <!-- <arg name="map" />
     #<arg name="localization" default="amcl" />
-    #<arg name="model" default="$(env ROBOT_CODE)/cer-sim/cer-gazebo/cer2/cer.urdf"/>
+    #<arg name="model" default="$(env ROBOT_CODE)/cer/app/robots/CER01/cer.urdf"/>
     #<param name="robot_description" command="$(find xacro)/xacro inorder $(arg model)" />
     #<node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
     #<node name="map_server" pkg="map_server" type="map_server" args="$(arg map)"/>
     #<include file="$(arg localization).launch" /> -->
     <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
-        <rosparam file="costmap_common.yaml" command="load" ns="global_costmap" />
-        <rosparam file="costmap_common.yaml" command="load" ns="local_costmap" />
-        <rosparam file="local_costmap.yaml" command="load" />
-        <rosparam file="global_costmap.yaml" command="load" />
-        <rosparam file="planner.yaml" command="load" />
-    </node>
-    
-    <node pkg="rviz" type="rviz" name="rviz">
+        <rosparam file="../navigation/costmap_common.yaml" command="load" ns="global_costmap" />
+        <rosparam file="../navigation/costmap_common.yaml" command="load" ns="local_costmap" />
+        <rosparam file="../navigation/local_costmap.yaml" command="load" />
+        <rosparam file="../navigation/global_costmap.yaml" command="load" />
+        <rosparam file="../navigation/planner.yaml" command="load" />
     </node>
 </launch>
