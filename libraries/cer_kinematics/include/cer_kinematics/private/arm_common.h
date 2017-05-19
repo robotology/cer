@@ -105,10 +105,7 @@ protected:
         d.n=params.R0*d.n;
         d.p=params.R0*d.p+params.p0;
         d.T=params.T0*d.T;
-
-        double theta=d.u[3];
-        d.u=params.R0*d.u.subVector(0,2);
-        d.u.push_back(theta);
+        d.u=dcm2axis(d.T);
 
         return d;
     }
