@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <rtf/TestAssert.h>
-#include <rtf/yarp/YarpTestAsserter.h>
+#include <yarp/rtf/TestAsserter.h>
 #include <rtf/dll/Plugin.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/Time.h>
@@ -19,8 +19,8 @@
 #include <tripodTest.h>
 
 using namespace RTF;
-using namespace RTF::YARP;
 using namespace yarp::os;
+using namespace yarp::rtf;
 
 
 // prepare the plugin
@@ -51,7 +51,7 @@ bool TripodTest::checkTimeout(double start)
 }
 
 /**************** Main Test ***********************/
-TripodTest::TripodTest() : YarpTestCase("TripodTest")
+TripodTest::TripodTest() : yarp::rtf::TestCase("TripodTest")
 {
     joints.resize(0);
     joints.zero();
@@ -244,7 +244,7 @@ void TripodTest::run()
         // wait until current position is different from initial position,
         // i.e. the motors actually moved a bit
         bool ret;
-        while(YarpTestAsserter::isApproxEqual(prevEncs, encoders, posTolerance))
+        while(TestAsserter::isApproxEqual(prevEncs, encoders, posTolerance))
         {
             prevEncs = encoders;
             yarp::os::Time::delay(0.05);
@@ -259,11 +259,11 @@ void TripodTest::run()
 
         // read current speed and check with the reference speed.
         iEnc->getEncoderSpeeds(encSpeeds.data());
-        RTF_TEST_CHECK(YarpTestAsserter::isApproxEqual(refSpeeds, encSpeeds, velTolerance),
+        RTF_TEST_CHECK(TestAsserter::isApproxEqual(refSpeeds, encSpeeds, velTolerance),
                        Asserter::format("Motor moving at correct speed of %d.", refSpeeds[0]) );
 
         // wait until the motors stop moving, i.e. the tripod reaches HW limits
-        while(YarpTestAsserter::isApproxEqual(prevEncs, encoders, posTolerance) == false)
+        while(TestAsserter::isApproxEqual(prevEncs, encoders, posTolerance) == false)
         {
             prevEncs = encoders;
             yarp::os::Time::delay(0.05);

@@ -7,13 +7,14 @@
 #ifndef TRIPOD_TEST_H
 #define TRIPOD_TEST_H
 
-#include <rtf/yarp/YarpTestCase.h>
+#include <yarp/rtf/TestCase.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/RateThread.h>
+#include <yarp/sig/Vector.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 
-#include <rtf/yarp/JointsPosMotion.h>
+#include <yarp/rtf/JointsPosMotion.h>
 
 /**
 * \ingroup cer-tests
@@ -30,7 +31,7 @@
 #define DEFAULT_POS_THRESHOLD  0.005  // 5mm
 #define DEFAULT_VEL_THRESHOLD  0.01   // 1cm/s
 
-class TripodTest : public YarpTestCase
+class TripodTest : public yarp::rtf::TestCase
 {
 public:
     TripodTest();
@@ -48,7 +49,7 @@ private:
 
     yarp::dev::PolyDriver           tripod;
     yarp::sig::Vector               joints;
-    RTF::YARP::jointsPosMotion      *helper;
+    yarp::rtf::jointsPosMotion      *helper;
 
     yarp::dev::IPositionControl     *iPos;
     yarp::dev::IPositionDirect      *iDir;
