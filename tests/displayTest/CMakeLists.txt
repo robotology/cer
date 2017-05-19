@@ -11,7 +11,8 @@ cmake_minimum_required(VERSION 2.8.9)
 set(TESTNAME displayTest)
 
 # add the required cmake packages
-find_package(RTF COMPONENTS DLL)
+find_package(RTF)
+find_package(RTF 1.1 COMPONENTS DLL)
 find_package(YARP REQUIRED)
 
 # add include directories
@@ -27,7 +28,7 @@ include_directories(${FaceDisplayServer_SOURCE_DIR})
 add_library(${TESTNAME} MODULE displayTest.h displayTest.cpp)
 
 # add required libraries
-target_link_libraries(${TESTNAME} ${RTF_LIBRARIES} ${YARP_LIBRARIES} ${OpenCV_LIBRARIES})
+target_link_libraries(${TESTNAME} ${RTF_LIBRARIES} ${YARP_LIBRARIES} YARP::YARP_rtf ${OpenCV_LIBRARIES})
 
 # set the installation options
 install(TARGETS ${TESTNAME}

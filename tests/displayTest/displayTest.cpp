@@ -9,7 +9,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <rtf/TestAssert.h>
-#include <rtf/yarp/YarpTestAsserter.h>
 #include <rtf/dll/Plugin.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/Time.h>
@@ -21,7 +20,6 @@
 
 
 using namespace RTF;
-using namespace RTF::YARP;
 using namespace yarp::os;
 using namespace yarp::sig;
 
@@ -31,9 +29,8 @@ PREPARE_PLUGIN(DisplayTest)
 
 
 /**************** Main Test ***********************/
-DisplayTest::DisplayTest() : YarpTestCase("DisplayTest")
+DisplayTest::DisplayTest() : yarp::rtf::TestCase("DisplayTest")
 {
-
 }
 
 DisplayTest::~DisplayTest() { }

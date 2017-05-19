@@ -15,7 +15,7 @@
 
 #include <IFaceDisplayInterface.h>
 
-#include <rtf/yarp/YarpTestCase.h>
+#include <yarp/rtf/TestCase.h>
 
 /**
 * \ingroup cer-tests
@@ -28,7 +28,7 @@
 * | remote         | string | -     | /robot/faceDisplay | No       | The prefix name of the remote ports to connect to. | -     |
 */
 
-class DisplayTest : public YarpTestCase
+class DisplayTest : public yarp::rtf::TestCase
 {
 public:
     DisplayTest();
@@ -39,10 +39,9 @@ public:
     virtual void tearDown();
 
 private:
-    yarp::sig::Image                image;
-    yarp::dev::PolyDriver           display;
-    cer::dev::IFaceDisplay          *iDisp;
-
+    yarp::sig::Image       image;
+    yarp::dev::PolyDriver  display;
+    cer::dev::IFaceDisplay *iDisp;
 };
 
 #endif //DISPLAY_TEST_H
