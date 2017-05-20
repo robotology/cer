@@ -157,7 +157,7 @@ int main()
         Vector e_u=dcm2axis(input[i].Hd*H_1.transposed());
         e_u*=e_u[3]; e_u.pop_back();
 
-        yInfo()<<"           q_1 [*] = ("<<q_1.toString(5,5).c_str()<<")";
+        yInfo()<<"           q_1 [*] = ("<<q_1.toString(5,5)<<")";
         yInfo()<<"joints-constraints = ("<<jconstr.str()<<")";
         yInfo()<<"         e_x_1 [m] ="<<norm(input[i].xd-x_1);
         yInfo()<<"       e_u_1 [rad] ="<<norm(e_u);

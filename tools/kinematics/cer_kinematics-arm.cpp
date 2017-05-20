@@ -39,7 +39,7 @@ public:
     bool exec(const int iter, const Matrix &Hd, const Vector &q,
               const Matrix &Hee)
     {
-        yDebug("q[%d]=(%s)",iter,q.toString(3,3).c_str());
+        yDebug()<<"q["<<iter<<"]=("<<q.toString(3,3)<<")";
         return true;
     }
 };
@@ -61,7 +61,7 @@ public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
+        string arm_type=rf.check("arm-type",Value("left")).asString();
         double external_weight=rf.check("external-weight",Value(2.0)).asDouble();
         double floor_z=rf.check("floor-z",Value(-0.16)).asDouble();
         int verbosity=rf.check("verbosity",Value(1)).asInt();
@@ -118,7 +118,7 @@ public:
             double hd1,hd2;
             Vector xd(3),ud(4);
 
-            mode=target->get(0).asString().c_str();
+            mode=target->get(0).asString();
             hd1=target->get(1).asDouble();
             hd2=target->get(2).asDouble();
             xd[0]=target->get(3).asDouble();

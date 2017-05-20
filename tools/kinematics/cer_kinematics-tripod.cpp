@@ -58,7 +58,7 @@ public:
         Matrix R=(rf.check("add-base-rotation")?axis2dcm(rot):eye(4,4));
         solver.setParameters(TripodParameters(0.09,0.0,0.2,30.0,R));
 
-        mode=rf.check("mode",Value(MODE_ZD_UD)).asString().c_str();
+        mode=rf.check("mode",Value(MODE_ZD_UD)).asString();
         int verbosity=rf.check("verbosity",Value(1)).asInt();
 
         if ((mode!=MODE_ZD_UD) && (mode!=MODE_HPR))

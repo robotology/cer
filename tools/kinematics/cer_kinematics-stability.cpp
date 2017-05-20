@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
     rf.configure(argc,argv);
 
     // command-line options
-    string arm_type=rf.check("arm-type",Value("left")).asString().c_str();
-    string grasp_type=rf.check("grasp-type",Value("top")).asString().c_str();
+    string arm_type=rf.check("arm-type",Value("left")).asString();
+    string grasp_type=rf.check("grasp-type",Value("top")).asString();
     double table_height=rf.check("table-height",Value(0.7)).asDouble();
     double external_weight=rf.check("external-weight",Value(2.0)).asDouble();
     double floor_z=rf.check("floor-z",Value(-0.16)).asDouble();
@@ -144,13 +144,13 @@ int main(int argc, char *argv[])
             stream.precision(5);
             stream<<fixed;
 
-            stream<<xd.toString(3,3).c_str();
+            stream<<xd.toString(3,3);
             stream<<"\t";
-            stream<<x.toString(3,3).c_str();
+            stream<<x.toString(3,3);
             stream<<"\t";
-            stream<<u.toString(3,3).c_str();
+            stream<<u.toString(3,3);
             stream<<"\t";
-            stream<<com.subVector(0,2).toString(3,3).c_str();
+            stream<<com.subVector(0,2).toString(3,3);
             stream<<"\t";
             stream<<margin;
 

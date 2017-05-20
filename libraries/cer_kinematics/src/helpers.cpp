@@ -90,7 +90,7 @@ TripodState TripodNLPHelper::fkinHelper(const Ipopt::Number *x,
         double m1=params.r/q33*(-0.5*q11+1.5*q22);
         d.p[0]=params.r-m1*q11;
         d.p[1]=-m1*q21;
-        d.p[2]=x[0]-m1*q31;            
+        d.p[2]=x[0]-m1*q31;
 
         // transformation matrix
         d.T(0,0)=q11; d.T(0,1)=q21; d.T(0,2)=-q31; d.T(0,3)=d.p[0];
