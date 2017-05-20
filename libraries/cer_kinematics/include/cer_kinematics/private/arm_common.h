@@ -17,7 +17,8 @@
 
 
 /****************************************************************/
-class ArmCommonNLP : public Ipopt::TNLP
+class ArmCommonNLP : public TripodNLPHelper,
+                     public Ipopt::TNLP
 {
 protected:
     ArmSolver &slv;
@@ -57,57 +58,7 @@ protected:
         const TripodParametersExtended &params=((which==1)?torso:lower_arm);
         int offs=(which==1)?0:9;
 
-        double q33=sqrt(27.0)*params.r/sqrt(12.0*(x[offs+2]*x[offs+2]-(x[offs+0]+x[offs+1])*x[offs+2]+
-                                            x[offs+1]*x[offs+1]-x[offs+0]*x[offs+1]+x[offs+0]*x[offs+0]+
-                                            (27.0/12.0)*params.r*params.r));
-
-        TripodState d;
-        if (q33>=1.0)
-        {
-            d.n=params.z;
-            d.u=0.0;
-            d.p[0]=d.p[1]=0.0;
-            d.p[2]=d.T(2,3)=x[offs+0];
-        }
-        else
-        {
-            Vector v1=params.s[0]+x[offs+0]*params.z;
-            Vector v2=params.s[1]+x[offs+1]*params.z;
-            Vector v3=params.s[2]+x[offs+2]*params.z;
-            d.n=cross(v2-v1,v3-v1);
-            d.n/=norm(d.n);
-
-            double sin_theta=sqrt(1.0-q33*q33);
-            d.u[0]=-d.n[1]/sin_theta;
-            d.u[1]=d.n[0]/sin_theta;
-            d.u[2]=0.0;
-            d.u[3]=acos(q33);
-            double tmp=(1.0-q33);
-            double q11=tmp*d.u[0]*d.u[0]+q33;
-            double q22=tmp*d.u[1]*d.u[1]+q33;
-            double q21=tmp*d.u[0]*d.u[1];
-            double q31=-sin_theta*d.u[1];
-            double q32=sin_theta*d.u[0];
-            double m1=params.r/q33*(-0.5*q11+1.5*q22);
-            d.p[0]=params.r-m1*q11;
-            d.p[1]=-m1*q21;
-            d.p[2]=x[offs+0]-m1*q31;
-
-            // transformation matrix
-            d.T(0,0)=q11; d.T(0,1)=q21; d.T(0,2)=-q31; d.T(0,3)=d.p[0];
-            d.T(1,0)=q21; d.T(1,1)=q22; d.T(1,2)=-q32; d.T(1,3)=d.p[1];
-            d.T(2,0)=q31; d.T(2,1)=q32; d.T(2,2)=q33;  d.T(2,3)=d.p[2];
-        }
-
-        if (internal!=NULL)
-            *internal=d;
-
-        d.T=params.T0*d.T;
-        d.n[0]=d.T(0,2); d.n[1]=d.T(1,2); d.n[2]=d.T(2,2);
-        d.p[0]=d.T(0,3); d.p[1]=d.T(1,3); d.p[2]=d.T(2,3);
-        d.u=dcm2axis(d.T);
-
-        return d;
+        return fkinHelper(&x[offs],params,internal);
     }
 
     /****************************************************************/

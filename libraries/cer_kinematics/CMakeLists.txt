@@ -18,7 +18,8 @@ set(headers         include/${PROJECT_NAME}/utils.h
                     include/${PROJECT_NAME}/tripod.h
                     include/${PROJECT_NAME}/arm.h
                     include/${PROJECT_NAME}/head.h)
-set(sources         src/utils.cpp
+set(sources         src/helpers.cpp
+                    src/utils.cpp
                     src/tripod.cpp
                     src/arm.cpp
                     src/head.cpp)
