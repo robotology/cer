@@ -16,9 +16,11 @@
 */
 
 #include <string>
+#include <cmath>
 
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
+#include <yarp/math/Math.h>
 
 #include <iCub/ctrl/math.h>
 #include <iCub/ctrl/minJerkCtrl.h>
@@ -31,6 +33,7 @@
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace cer::kinematics;
 
@@ -50,7 +53,10 @@ public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        solver.setParameters(TripodParameters(0.09,0.0,0.2,30.0));
+        Vector rot(4,0.0);
+        rot[2]=1.0; rot[3]=M_PI;
+        Matrix R=(rf.check("add-base-rotation")?axis2dcm(rot):eye(4,4));
+        solver.setParameters(TripodParameters(0.09,0.0,0.2,30.0,R));
 
         mode=rf.check("mode",Value(MODE_ZD_UD)).asString().c_str();
         int verbosity=rf.check("verbosity",Value(1)).asInt();
