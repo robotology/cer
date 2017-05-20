@@ -19,7 +19,7 @@
 #include <cmath>
 #include <deque>
 
-#include <yarp/os/Log.h>
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/LockGuard.h>
 #include <yarp/sig/Vector.h>
@@ -357,7 +357,7 @@ bool TripodSolver::setInitialGuess(const Vector &lll0)
 {
     if (lll0.length()<3)
     {
-        yError("mis-sized elongation vector!");
+        yError()<<"mis-sized elongation vector!";
         return false;
     }
 
@@ -371,7 +371,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u)
 {
     if (lll.length()<3)
     {
-        yError("mis-sized elongation vector!");
+        yError()<<"mis-sized elongation vector!";
         return false;
     }
 
@@ -389,7 +389,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
 {
     if (lll.length()<3)
     {
-        yError("mis-sized elongation vector!");
+        yError()<<"mis-sized elongation vector!";
         return false;
     }
 
@@ -411,7 +411,7 @@ bool TripodSolver::fkin(const Vector &q, Matrix &H, const int frame)
 {
     if (q.length()<3)
     {
-        yError("mis-sized elongation vector!");
+        yError()<<"mis-sized elongation vector!";
         return false;
     }
 
@@ -430,7 +430,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
     LockGuard lg(makeThreadSafe);
     if (ud.length()<4)
     {
-        yError("mis-sized orientation vector!");
+        yError()<<"mis-sized orientation vector!";
         return false;
     }
 
@@ -471,18 +471,18 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         Vector e_u=dcm2axis(axis2dcm(ud)*d.T.transposed());
         e_u*=e_u[3]; e_u.pop_back();
 
-        yInfo(" *** Tripod Solver ******************************");
-        yInfo(" *** Tripod Solver:    lll0 [m] = (%s)",lll0.toString(4,4).c_str());
-        yInfo(" *** Tripod Solver:      zd [m] = %g",zd);
-        yInfo(" *** Tripod Solver:    ud [rad] = (%s)",ud.toString(4,4).c_str());
-        yInfo(" *** Tripod Solver:     lll [m] = (%s)",lll.toString(4,4).c_str());
-        yInfo(" *** Tripod Solver:     u [rad] = (%s)",d.u.toString(4,4).c_str());
-        yInfo(" *** Tripod Solver:       p [m] = (%s)",d.p.toString(4,4).c_str());
-        yInfo(" *** Tripod Solver:   e_u [rad] = %g",norm(e_u));
-        yInfo(" *** Tripod Solver:     e_z [m] = %g",fabs(zd-d.p[2]));
-        yInfo(" *** Tripod Solver: alpha [deg] = %g",CTRL_RAD2DEG*acos(din.n[2]));
-        yInfo(" *** Tripod Solver:     dt [ms] = %g",1000.0*(t1-t0));
-        yInfo(" *** Tripod Solver ******************************");
+        yInfo()<<" *** Tripod Solver ******************************";
+        yInfo()<<" *** Tripod Solver:    lll0 [m] = ("<<lll0.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:      zd [m] ="<<zd;
+        yInfo()<<" *** Tripod Solver:    ud [rad] = ("<<ud.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:     lll [m] = ("<<lll.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:     u [rad] = ("<<d.u.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:       p [m] = ("<<d.p.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:   e_u [rad] ="<<norm(e_u);
+        yInfo()<<" *** Tripod Solver:     e_z [m] ="<<fabs(zd-d.p[2]);
+        yInfo()<<" *** Tripod Solver: alpha [deg] ="<<CTRL_RAD2DEG*acos(din.n[2]);
+        yInfo()<<" *** Tripod Solver:     dt [ms] ="<<1000.0*(t1-t0);
+        yInfo()<<" *** Tripod Solver ******************************";
     }
 
     switch (status)
@@ -492,14 +492,14 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         case Ipopt::Feasible_Point_Found:
         {
             if (verbosity>0)
-                yInfo(" *** Tripod Solver: IpOpt return code %d",status);
+                yInfo()<<" *** Tripod Solver: IpOpt return code"<<status;
             return true;
         } 
 
         default:
         {
             if (verbosity>0)
-                yWarning(" *** Tripod Solver: IpOpt return code %d",status);
+                yWarning()<<" *** Tripod Solver: IpOpt return code"<<status;
             return false;
         } 
     }
@@ -512,7 +512,7 @@ bool TripodSolver::ikin(const Vector &hpr, Vector &lll,
 {
     if (hpr.length()<3)
     {
-        yError("mis-sized input vector!");
+        yError()<<"mis-sized input vector!";
         return false;
     }
 
@@ -530,7 +530,7 @@ bool TripodSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 {
     if ((Hd.rows()!=4) || (Hd.cols()!=4))
     {
-        yError("mis-sized desired end-effector frame!");
+        yError()<<"mis-sized desired end-effector frame!";
         return false;
     }
 

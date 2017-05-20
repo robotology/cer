@@ -18,7 +18,7 @@
 #include <cmath>
 #include <algorithm>
 
-#include <yarp/os/Log.h>
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/LockGuard.h>
 #include <yarp/math/Math.h>
@@ -266,7 +266,7 @@ bool HeadSolver::setInitialGuess(const Vector &q0)
     size_t L=3+headParameters.head.getDOF();
     if (q0.length()<L)
     {
-        yError("mis-sized DOFs vector!");
+        yError()<<"mis-sized DOFs vector!";
         return false;
     }
 
@@ -281,7 +281,7 @@ bool HeadSolver::fkin(const Vector &q, Matrix &H, const int frame)
     size_t L=3+headParameters.head.getDOF();
     if (q.length()<L)
     {
-        yError("mis-sized DOFs vector!");
+        yError()<<"mis-sized DOFs vector!";
         return false;
     }
 
@@ -302,7 +302,7 @@ bool HeadSolver::ikin(const Vector &xd, Vector &q, int *exit_code)
     LockGuard lg(makeThreadSafe);
     if (xd.length()!=3)
     {
-        yError("mis-sized desired fixation point!");
+        yError()<<"mis-sized desired fixation point!";
         return false;
     }
 
@@ -335,18 +335,18 @@ bool HeadSolver::ikin(const Vector &xd, Vector &q, int *exit_code)
 
     if (verbosity>0)
     {
-        yInfo(" *** Head Solver ******************************");
-        yInfo(" *** Head Solver:             head = %s",headParameters.head.getType().c_str());
-        yInfo(" *** Head Solver:          tol [*] = %g",slvParameters.tol);
-        yInfo(" *** Head Solver:   constr_tol [*] = %g",slvParameters.constr_tol);
-        yInfo(" *** Head Solver:     max_iter [#] = %d",slvParameters.max_iter);
-        yInfo(" *** Head Solver: max_cpu_time [s] = %g",slvParameters.max_cpu_time);
-        yInfo(" *** Head Solver:           q0 [*] = (%s)",q0.toString(4,4).c_str());
-        yInfo(" *** Head Solver:           xd [m] = (%s)",xd.toString(4,4).c_str());
-        yInfo(" *** Head Solver:          q [deg] = (%s)",q.toString(4,4).c_str());
-        yInfo(" *** Head Solver:      e_ang [deg] = %g",e_ang);
-        yInfo(" *** Head Solver:          dt [ms] = %g",1000.0*(t1-t0));
-        yInfo(" *** Head Solver ******************************");
+        yInfo()<<" *** Head Solver ******************************";
+        yInfo()<<" *** Head Solver:             head ="<<headParameters.head.getType();
+        yInfo()<<" *** Head Solver:          tol [*] ="<<slvParameters.tol;
+        yInfo()<<" *** Head Solver:   constr_tol [*] ="<<slvParameters.constr_tol;
+        yInfo()<<" *** Head Solver:     max_iter [#] ="<<slvParameters.max_iter;
+        yInfo()<<" *** Head Solver: max_cpu_time [s] ="<<slvParameters.max_cpu_time;
+        yInfo()<<" *** Head Solver:           q0 [*] = ("<<q0.toString(4,4)<<")";
+        yInfo()<<" *** Head Solver:           xd [m] = ("<<xd.toString(4,4)<<")";
+        yInfo()<<" *** Head Solver:          q [deg] = ("<<q.toString(4,4)<<")";
+        yInfo()<<" *** Head Solver:      e_ang [deg] ="<<e_ang;
+        yInfo()<<" *** Head Solver:          dt [ms] ="<<1000.0*(t1-t0);
+        yInfo()<<" *** Head Solver ******************************";
     }
 
     switch (status)
@@ -356,14 +356,14 @@ bool HeadSolver::ikin(const Vector &xd, Vector &q, int *exit_code)
         case Ipopt::Feasible_Point_Found:
         {
             if (verbosity>0)
-                yInfo(" *** Head Solver: IpOpt return code %d",status);
+                yInfo()<<" *** Head Solver: IpOpt return code"<<status;
             return true;
         } 
 
         default:
         {
             if (verbosity>0)
-                yWarning(" *** Head Solver: IpOpt return code %d",status);
+                yWarning()<<" *** Head Solver: IpOpt return code"<<status;
             return false;
         } 
     }
@@ -377,7 +377,7 @@ bool HeadSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 {
     if ((Hd.rows()!=4) || (Hd.cols()!=4))
     {
-        yError("mis-sized desired end-effector frame!");
+        yError()<<"mis-sized desired end-effector frame!";
         return false;
     }
 

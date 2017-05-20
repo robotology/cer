@@ -20,7 +20,7 @@
 #include <limits>
 #include <algorithm>
 
-#include <yarp/os/Log.h>
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/LockGuard.h>
 #include <yarp/math/Math.h>
@@ -88,7 +88,7 @@ bool ArmSolver::setInitialGuess(const Vector &q0)
     size_t L=3+armParameters.upper_arm.getDOF()+3;
     if (q0.length()<L)
     {
-        yError("mis-sized DOFs vector!");
+        yError()<<"mis-sized DOFs vector!";
         return false;
     }
 
@@ -103,7 +103,7 @@ bool ArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
     size_t L=3+armParameters.upper_arm.getDOF()+3;
     if (q.length()<L)
     {
-        yError("mis-sized DOFs vector!");
+        yError()<<"mis-sized DOFs vector!";
         return false;
     }
 
@@ -120,7 +120,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     LockGuard lg(makeThreadSafe);
     if ((Hd.rows()!=4) || (Hd.cols()!=4))
     {
-        yError("mis-sized desired end-effector frame!");
+        yError()<<"mis-sized desired end-effector frame!";
         return false;
     }
 
@@ -152,7 +152,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
             app->Options()->SetNumericValue("mu_init",1e-6);
         }
         else if (verbosity>0)
-            yWarning(" *** Arm Solver: requested \"warm start\" but values are not available => \"warm start\" is disabled!");
+            yWarning()<<" *** Arm Solver: requested \"warm start\" but values are not available => \"warm start\" is disabled!";
     }
     app->Options()->SetStringValue("warm_start_init_point",warm_start_str.c_str());
     app->Initialize();
@@ -246,28 +246,28 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         Vector e_u=dcm2axis(Hd*H.transposed());
         e_u*=e_u[3]; e_u.pop_back();
 
-        yInfo(" *** Arm Solver ******************************");
-        yInfo(" *** Arm Solver:              arm = %s",armParameters.upper_arm.getType().c_str());
-        yInfo(" *** Arm Solver:             mode = %s",nlp->get_mode().c_str());
-        yInfo(" *** Arm Solver:       warm_start = %s",warm_start_str.c_str());
-        yInfo(" *** Arm Solver:          tol [*] = %g",slvParameters.tol);
-        yInfo(" *** Arm Solver:   constr_tol [*] = %g",slvParameters.constr_tol);
-        yInfo(" *** Arm Solver:     max_iter [#] = %d",slvParameters.max_iter);
-        yInfo(" *** Arm Solver: max_cpu_time [s] = %g",slvParameters.max_cpu_time);
-        yInfo(" *** Arm Solver:           q0 [*] = (%s)",q0.toString(4,4).c_str());
-        yInfo(" *** Arm Solver:          hd1 [m] = %g",slvParameters.torso_heave);
-        yInfo(" *** Arm Solver:          hd2 [m] = %g",slvParameters.lower_arm_heave);
-        yInfo(" *** Arm Solver:           xd [m] = (%s)",xd.toString(4,4).c_str());
-        yInfo(" *** Arm Solver:         ud [rad] = (%s)",ud.toString(4,4).c_str());
-        yInfo(" *** Arm Solver:            q [*] = (%s)",q.toString(4,4).c_str());
-        yInfo(" *** Arm Solver:          e_x [m] = %g",norm(xd-x));
-        yInfo(" *** Arm Solver:        e_u [rad] = %g",norm(e_u));
-        yInfo(" *** Arm Solver:         e_h1 [m] = %g",fabs(slvParameters.torso_heave-din1.p[2]));
-        yInfo(" *** Arm Solver:     alpha1 [deg] = %g",CTRL_RAD2DEG*acos(din1.n[2]));
-        yInfo(" *** Arm Solver:         e_h2 [m] = %g",fabs(slvParameters.lower_arm_heave-din2.p[2]));
-        yInfo(" *** Arm Solver:     alpha2 [deg] = %g",CTRL_RAD2DEG*acos(din2.n[2]));
-        yInfo(" *** Arm Solver:          dt [ms] = %g",1000.0*(t1-t0));
-        yInfo(" *** Arm Solver ******************************");
+        yInfo()<<" *** Arm Solver ******************************";
+        yInfo()<<" *** Arm Solver:              arm ="<<armParameters.upper_arm.getType();
+        yInfo()<<" *** Arm Solver:             mode ="<<nlp->get_mode();
+        yInfo()<<" *** Arm Solver:       warm_start ="<<warm_start_str;
+        yInfo()<<" *** Arm Solver:          tol [*] ="<<slvParameters.tol;
+        yInfo()<<" *** Arm Solver:   constr_tol [*] ="<<slvParameters.constr_tol;
+        yInfo()<<" *** Arm Solver:     max_iter [#] ="<<slvParameters.max_iter;
+        yInfo()<<" *** Arm Solver: max_cpu_time [s] ="<<slvParameters.max_cpu_time;
+        yInfo()<<" *** Arm Solver:           q0 [*] = ("<<q0.toString(4,4)<<")";
+        yInfo()<<" *** Arm Solver:          hd1 [m] ="<<slvParameters.torso_heave;
+        yInfo()<<" *** Arm Solver:          hd2 [m] ="<<slvParameters.lower_arm_heave;
+        yInfo()<<" *** Arm Solver:           xd [m] = ("<<xd.toString(4,4)<<")";
+        yInfo()<<" *** Arm Solver:         ud [rad] = ("<<ud.toString(4,4)<<")";
+        yInfo()<<" *** Arm Solver:            q [*] = ("<<q.toString(4,4)<<")";
+        yInfo()<<" *** Arm Solver:          e_x [m] ="<<norm(xd-x);
+        yInfo()<<" *** Arm Solver:        e_u [rad] ="<<norm(e_u);
+        yInfo()<<" *** Arm Solver:         e_h1 [m] ="<<fabs(slvParameters.torso_heave-din1.p[2]);
+        yInfo()<<" *** Arm Solver:     alpha1 [deg] ="<<CTRL_RAD2DEG*acos(din1.n[2]);
+        yInfo()<<" *** Arm Solver:         e_h2 [m] ="<<fabs(slvParameters.lower_arm_heave-din2.p[2]);
+        yInfo()<<" *** Arm Solver:     alpha2 [deg] ="<<CTRL_RAD2DEG*acos(din2.n[2]);
+        yInfo()<<" *** Arm Solver:          dt [ms] ="<<1000.0*(t1-t0);
+        yInfo()<<" *** Arm Solver ******************************";
     }
 
     switch (status)
@@ -277,14 +277,14 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         case Ipopt::Feasible_Point_Found:
         {
             if (verbosity>0)
-                yInfo(" *** Arm Solver: IpOpt return code %d",status);
+                yInfo()<<" *** Arm Solver: IpOpt return code"<<status;
             return true;
         } 
 
         default:
         {
             if (verbosity>0)
-                yWarning(" *** Arm Solver: IpOpt return code %d",status);
+                yWarning()<<" *** Arm Solver: IpOpt return code"<<status;
             return false;
         } 
     }
@@ -403,7 +403,7 @@ bool ArmCOM::getCOMs(const Vector &q, deque<Vector> &coms) const
     int nJoints=3+solver.getArmParameters().upper_arm.getDOF()+3;
     if (q.length()!=nJoints)
     {
-        yError(" *** Arm COM: input joints are fewer than %d!",nJoints);
+        yError()<<" *** Arm COM: input joints are fewer than"<<nJoints;
         return false;
     }
 
@@ -441,7 +441,7 @@ bool ArmCOM::getSupportMargin(const Vector &com, double &margin) const
 {
     if (com.length()!=4)
     {
-        yError(" *** Arm COM: input CoM is not homogeneous!");
+        yError()<<" *** Arm COM: input CoM is not homogeneous!";
         return false;
     }
 

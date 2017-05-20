@@ -155,13 +155,13 @@ int main(int argc, char *argv[])
             stream<<margin;
 
             fout<<stream.str()<<endl;
-            yInfo("%s",stream.str().c_str());
-            yInfo("solving time [ms]: min=%d, avg=%d, std=%d, max=%d;",
-                  (int)minT,(int)avgT,(int)stdT,(int)maxT);
+            yInfo()<<stream.str();
+            yInfo()<<"solving time [ms]: min="<<(int)minT<<", avg="
+                   <<(int)avgT<<", std="<<(int)stdT<<", max="<<(int)maxT<<";";
 
             if (gSignalStatus==SIGINT)
             {
-                yWarning("SIGINT detected: closing ...");
+                yWarning()<<"SIGINT detected: closing ...";
                 break;
             }
         }

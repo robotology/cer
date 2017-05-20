@@ -110,7 +110,7 @@ public:
         {
             if (target->size()<10)
             {
-                yError("wrong target size!");
+                yError()<<"wrong target size!";
                 return true;
             }
 
@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
     Network yarp;
     if (!yarp.checkNetwork())
     {
-        yError("YARP server not available!");
+        yError()<<"YARP server not available!";
         return 1;
     }
     

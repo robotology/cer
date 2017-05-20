@@ -57,7 +57,7 @@ public:
 
         if ((mode!=MODE_ZD_UD) && (mode!=MODE_HPR))
         {
-            yWarning("Unrecognized input mode!");
+            yWarning()<<"Unrecognized input mode!";
             mode=MODE_ZD_UD;
         }
         use_hpr=(mode==MODE_HPR);
@@ -69,7 +69,7 @@ public:
         solver.setVerbosity(verbosity);
         gen=new minJerkTrajGen(rho,getPeriod(),2.0);
 
-        yInfo("Using \"%s\" input mode",mode.c_str());
+        yInfo()<<"Using \""<<mode<<"\" input mode";
         return true;
     }
 
@@ -97,7 +97,7 @@ public:
         {
             if (ibData->size()!=(use_hpr?3:5))
             {
-                yError("Wrong \"%s\" input size!",mode.c_str());
+                yError()<<"Wrong \""<<mode<<"\" input size!";
                 return true;
             }
 
@@ -110,9 +110,8 @@ public:
                 solver.setInitialGuess(rho);
                 solver.ikin(hpr,rho);
 
-                yInfo("hpr=(%s); rho=(%s);",
-                      hpr.toString(5,5).c_str(),
-                      rho.toString(5,5).c_str());
+                yInfo()<<"hpr=("<<hpr.toString(5,5)
+                       <<"); rho=("<<rho.toString(5,5)<<");";
             }
             else
             {
@@ -125,9 +124,8 @@ public:
                 solver.setInitialGuess(rho);
                 solver.ikin(zd,ud,rho);
 
-                yInfo("zd=%g; ud=(%s); rho=(%s);",
-                      zd,ud.toString(5,5).c_str(),
-                      rho.toString(5,5).c_str());
+                yInfo()<<"zd="<<zd<<"; ud=("<<ud.toString(5,5)
+                       <<"); rho=("<<rho.toString(5,5)<<");";
             }
         }
         else
@@ -149,7 +147,7 @@ int main(int argc, char *argv[])
     Network yarp;
     if (!yarp.checkNetwork())
     {
-        yError("YARP server not available!");
+        yError()<<"YARP server not available!";
         return 1;
     }
     
