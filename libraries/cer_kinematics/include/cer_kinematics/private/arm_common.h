@@ -103,10 +103,8 @@ protected:
             *internal=d;
 
         d.T=params.T0*d.T;
-        d.n=params.R0*d.n;
-        d.p[0]=d.T(0,3);
-        d.p[1]=d.T(1,3);
-        d.p[2]=d.T(2,3);
+        d.n[0]=d.T(0,2); d.n[1]=d.T(1,2); d.n[2]=d.T(2,2);
+        d.p[0]=d.T(0,3); d.p[1]=d.T(1,3); d.p[2]=d.T(2,3);
         d.u=dcm2axis(d.T);
 
         return d;
