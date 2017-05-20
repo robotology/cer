@@ -317,13 +317,8 @@ public:
     {
         if (slv.callback!=NULL)
         {
-            Matrix Hd=axis2dcm(ud);
-            Hd(2,3)=zd;
-
-            Matrix Hee=d.T;
-            Hd.setSubcol(d.p,0,3);
-
-            return slv.callback->exec(iter,Hd,lll,Hee);
+            Matrix Hd=Rd; Hd(2,3)=zd;
+            return slv.callback->exec(iter,Hd,lll,d.T);
         }
         else
             return true;
