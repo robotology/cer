@@ -521,7 +521,8 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
 
     if (verbosity>0)
     {
-        TripodState d=nlp->fkin(lll);
+        TripodState din;
+        TripodState d=nlp->fkin(lll,&din);
 
         Vector e_u=dcm2axis(axis2dcm(ud)*d.T.transposed());
         e_u*=e_u[3]; e_u.pop_back();
@@ -535,7 +536,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         yInfo(" *** Tripod Solver:       p [m] = (%s)",d.p.toString(4,4).c_str());
         yInfo(" *** Tripod Solver:   e_u [rad] = %g",norm(e_u));
         yInfo(" *** Tripod Solver:     e_z [m] = %g",fabs(zd-d.p[2]));
-        yInfo(" *** Tripod Solver: alpha [deg] = %g",CTRL_RAD2DEG*acos(d.n[2]));
+        yInfo(" *** Tripod Solver: alpha [deg] = %g",CTRL_RAD2DEG*acos(din.n[2]));
         yInfo(" *** Tripod Solver:     dt [ms] = %g",1000.0*(t1-t0));
         yInfo(" *** Tripod Solver ******************************");
     }
