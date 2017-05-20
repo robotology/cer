@@ -102,9 +102,11 @@ protected:
         if (internal!=NULL)
             *internal=d;
 
-        d.n=params.R0*d.n;
-        d.p=params.R0*d.p+params.p0;
         d.T=params.T0*d.T;
+        d.n=params.R0*d.n;
+        d.p[0]=d.T(0,3);
+        d.p[1]=d.T(1,3);
+        d.p[2]=d.T(2,3);
         d.u=dcm2axis(d.T);
 
         return d;
