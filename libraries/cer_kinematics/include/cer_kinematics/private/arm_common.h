@@ -37,7 +37,7 @@ protected:
 
     Matrix H0,HN,Hd,Rd;
     Vector x0,x;
-    Vector xd,ud;
+    Vector xd;
 
     Vector latch_x;
     VectorOf<int> latch_idx;
@@ -206,8 +206,6 @@ public:
 
         Rd=Hd;
         Rd(0,3)=Rd(1,3)=Rd(2,3)=0.0;
-
-        ud=dcm2axis(Rd);
     }
 
     /****************************************************************/

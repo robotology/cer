@@ -53,12 +53,11 @@ class TripodNLP : public TripodNLPHelper,
 protected:
     TripodSolver &slv;
     const TripodParametersExtended params;
-    
-    Vector ud;
-    double zd;
+        
     Vector rho0,rho;
     double drho;
 
+    double zd;
     Matrix Rd;
     Vector e;
 
@@ -76,8 +75,7 @@ public:
     TripodNLP(TripodSolver &slv_) : slv(slv_), params(slv_.parameters)
     {
         zd=(params.l_max+params.l_min)/2.0;
-        ud.resize(4,0.0);
-        Rd=axis2dcm(ud);
+        Rd=eye(4,4);
 
         rho0.resize(3,zd);
         rho=rho0;
@@ -108,9 +106,7 @@ public:
     /****************************************************************/
     void set_ud(const Vector &ud)
     {
-        size_t len=std::min(this->ud.length(),ud.length());
-        for (size_t i=0; i<len; i++)
-            this->ud[i]=ud[i];
+        yAssert(ud.length()>=4);
         Rd=axis2dcm(ud);
     }
 
@@ -168,7 +164,7 @@ public:
             for (size_t i=0; i<this->lll.length(); i++)
                 this->lll[i]=x[i];
 
-            d=fkin(x,&din);            
+            d=fkin(x,&din);
             e=dcm2axis(Rd*d.T.transposed());
             e*=e[3]; e.pop_back();
         }
