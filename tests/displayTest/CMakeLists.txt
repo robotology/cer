@@ -11,7 +11,6 @@ cmake_minimum_required(VERSION 2.8.9)
 set(TESTNAME displayTest)
 
 # add the required cmake packages
-find_package(RTF)
 find_package(RTF 1.1 COMPONENTS DLL)
 find_package(YARP REQUIRED)
 

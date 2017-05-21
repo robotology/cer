@@ -233,7 +233,7 @@ public:
     {
         computeQuantities(x,new_x);
 
-        Ipopt::Number tmp=(zd-din.p[2]);
+        Ipopt::Number tmp=zd-din.p[2];
         g[0]=tmp*tmp;
         g[1]=din.n[2];
 
