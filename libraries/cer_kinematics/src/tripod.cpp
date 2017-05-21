@@ -495,6 +495,7 @@ bool TripodSolver::ikin(const Vector &hpr, Vector &lll, int *exit_code)
 bool TripodSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 {
     yAssert((Hd.rows()==4)&&(Hd.cols()==4));
-    return ikin(Hd(2,3),dcm2axis(Hd),q,exit_code);
+    Matrix Hd_=SE3inv(parameters.T0)*Hd;
+    return ikin(Hd_(2,3),dcm2axis(Hd),q,exit_code);
 }
 
