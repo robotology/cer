@@ -158,7 +158,8 @@ public:
      * @param exit_code pointer to solver's exit codes. 
      * @return true/false on success/failure.
      */
-    virtual bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &q,
+    virtual bool ikin(const yarp::sig::Matrix &Hd,
+                      yarp::sig::Vector &q,
                       int *exit_code=NULL);
 
     /**

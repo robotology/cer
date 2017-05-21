@@ -424,7 +424,6 @@ bool ArmCOM::getCOMs(const Vector &q, deque<Vector> &coms) const
 bool ArmCOM::getSupportMargin(const Vector &com, double &margin) const
 {
     yAssert(com.length()==4);
-
     margin=std::numeric_limits<double>::max();
     Vector neg_mrg;
 
