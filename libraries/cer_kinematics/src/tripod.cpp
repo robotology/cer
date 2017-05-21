@@ -490,8 +490,7 @@ bool TripodSolver::ikin(const Vector &hpr, Vector &lll,
     ypr[1]=CTRL_DEG2RAD*hpr[1];
     ypr[2]=CTRL_DEG2RAD*hpr[2];
 
-    Vector ud=dcm2axis(ypr2dcm(ypr));
-    return ikin(hpr[0],ud,lll,exit_code);
+    return ikin(hpr[0],dcm2axis(ypr2dcm(ypr)),lll,exit_code);
 }
 
 
