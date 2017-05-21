@@ -86,11 +86,7 @@ int ArmSolver::computeMode() const
 bool ArmSolver::setInitialGuess(const Vector &q0)
 {
     size_t L=3+armParameters.upper_arm.getDOF()+3;
-    if (q0.length()<L)
-    {
-        yError()<<"mis-sized DOFs vector!";
-        return false;
-    }
+    yAssert(q0.length()>=L);
 
     this->q0=q0.subVector(0,L-1);
     return true;
@@ -101,11 +97,7 @@ bool ArmSolver::setInitialGuess(const Vector &q0)
 bool ArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
 {
     size_t L=3+armParameters.upper_arm.getDOF()+3;
-    if (q.length()<L)
-    {
-        yError()<<"mis-sized DOFs vector!";
-        return false;
-    }
+    yAssert(q.length()>=L);
 
     Ipopt::SmartPtr<ArmFullNoHeaveNLP_ForwardDiff> nlp=new ArmFullNoHeaveNLP_ForwardDiff(*this);
     H=nlp->fkin(q,frame);
@@ -118,11 +110,7 @@ bool ArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
 bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 {
     LockGuard lg(makeThreadSafe);
-    if ((Hd.rows()!=4) || (Hd.cols()!=4))
-    {
-        yError()<<"mis-sized desired end-effector frame!";
-        return false;
-    }
+    yAssert((Hd.rows()==4)&&(Hd.cols()==4));
 
     int mode=computeMode();
     int print_level=std::max(verbosity-5,0);
@@ -401,11 +389,7 @@ ArmCOM::ArmCOM(ArmSolver &solver_, const double external_weight,
 bool ArmCOM::getCOMs(const Vector &q, deque<Vector> &coms) const
 {
     int nJoints=3+solver.getArmParameters().upper_arm.getDOF()+3;
-    if (q.length()!=nJoints)
-    {
-        yError()<<" *** Arm COM: input joints are fewer than"<<nJoints;
-        return false;
-    }
+    yAssert(q.length()==nJoints);
 
     coms.clear(); 
     coms.push_back(relComs[0]);
@@ -439,11 +423,7 @@ bool ArmCOM::getCOMs(const Vector &q, deque<Vector> &coms) const
 /****************************************************************/
 bool ArmCOM::getSupportMargin(const Vector &com, double &margin) const
 {
-    if (com.length()!=4)
-    {
-        yError()<<" *** Arm COM: input CoM is not homogeneous!";
-        return false;
-    }
+    yAssert(com.length()==4);
 
     margin=std::numeric_limits<double>::max();
     Vector neg_mrg;

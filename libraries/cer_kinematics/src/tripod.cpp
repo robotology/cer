@@ -351,12 +351,7 @@ TripodSolver::TripodSolver(const TripodParameters &params,
 /****************************************************************/
 bool TripodSolver::setInitialGuess(const Vector &lll0)
 {
-    if (lll0.length()<3)
-    {
-        yError()<<"mis-sized elongation vector!";
-        return false;
-    }
-
+    yAssert(lll0.length()>=3);
     this->lll0=lll0.subVector(0,2);
     return true;
 }
@@ -365,11 +360,7 @@ bool TripodSolver::setInitialGuess(const Vector &lll0)
 /****************************************************************/
 bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u)
 {
-    if (lll.length()<3)
-    {
-        yError()<<"mis-sized elongation vector!";
-        return false;
-    }
+    yAssert(lll.length()>=3);
 
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(lll);
@@ -383,12 +374,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u)
 /****************************************************************/
 bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
 {
-    if (lll.length()<3)
-    {
-        yError()<<"mis-sized elongation vector!";
-        return false;
-    }
-
+    yAssert(lll.length()>=3);
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(lll);
 
@@ -405,11 +391,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
 /****************************************************************/
 bool TripodSolver::fkin(const Vector &q, Matrix &H, const int frame)
 {
-    if (q.length()<3)
-    {
-        yError()<<"mis-sized elongation vector!";
-        return false;
-    }
+    yAssert(q.length()>=3);
 
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(q);
@@ -424,11 +406,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
                         Vector &lll, int *exit_code)
 {
     LockGuard lg(makeThreadSafe);
-    if (ud.length()<4)
-    {
-        yError()<<"mis-sized orientation vector!";
-        return false;
-    }
+    yAssert(ud.length()>=4);
 
     int print_level=std::max(verbosity-5,0);
 
@@ -506,11 +484,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
 bool TripodSolver::ikin(const Vector &hpr, Vector &lll,
                         int *exit_code)
 {
-    if (hpr.length()<3)
-    {
-        yError()<<"mis-sized input vector!";
-        return false;
-    }
+    yAssert(hpr.length()>=3);
 
     Vector ypr(3,0.0);
     ypr[1]=CTRL_DEG2RAD*hpr[1];
@@ -524,13 +498,7 @@ bool TripodSolver::ikin(const Vector &hpr, Vector &lll,
 /****************************************************************/
 bool TripodSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 {
-    if ((Hd.rows()!=4) || (Hd.cols()!=4))
-    {
-        yError()<<"mis-sized desired end-effector frame!";
-        return false;
-    }
-
-    Vector ud=dcm2axis(Hd);
-    return ikin(Hd(2,3),ud,q,exit_code);
+    yAssert((Hd.rows()==4)&&(Hd.cols()==4));
+    return ikin(Hd(2,3),dcm2axis(Hd),q,exit_code);
 }
 

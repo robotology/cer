@@ -264,11 +264,7 @@ void HeadSolver::setVerbosity(const int verb)
 bool HeadSolver::setInitialGuess(const Vector &q0)
 {
     size_t L=3+headParameters.head.getDOF();
-    if (q0.length()<L)
-    {
-        yError()<<"mis-sized DOFs vector!";
-        return false;
-    }
+    yAssert(q0.length()>=L);
 
     this->q0=q0.subVector(0,L-1);
     return true;
@@ -279,11 +275,7 @@ bool HeadSolver::setInitialGuess(const Vector &q0)
 bool HeadSolver::fkin(const Vector &q, Matrix &H, const int frame)
 {
     size_t L=3+headParameters.head.getDOF();
-    if (q.length()<L)
-    {
-        yError()<<"mis-sized DOFs vector!";
-        return false;
-    }
+    yAssert(q.length()>=L);
 
     torso.fkin(q.subVector(0,2),H);
     headParameters.head.setAng(CTRL_DEG2RAD*q.subVector(3,5));
@@ -300,11 +292,7 @@ bool HeadSolver::fkin(const Vector &q, Matrix &H, const int frame)
 bool HeadSolver::ikin(const Vector &xd, Vector &q, int *exit_code)
 {
     LockGuard lg(makeThreadSafe);
-    if (xd.length()!=3)
-    {
-        yError()<<"mis-sized desired fixation point!";
-        return false;
-    }
+    yAssert(xd.length()==3);
 
     int print_level=std::max(verbosity-5,0);
 
@@ -375,12 +363,7 @@ bool HeadSolver::ikin(const Vector &xd, Vector &q, int *exit_code)
 /****************************************************************/
 bool HeadSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 {
-    if ((Hd.rows()!=4) || (Hd.cols()!=4))
-    {
-        yError()<<"mis-sized desired end-effector frame!";
-        return false;
-    }
-
+    yAssert((Hd.rows()==4)&&(Hd.cols()==4));
     return ikin(Hd.getCol(3).subVector(0,2),q,exit_code);
 }
 
