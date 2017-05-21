@@ -46,9 +46,6 @@ class IKSolver : public RFModule
     minJerkTrajGen *gen;
     Vector rho;
 
-    string mode;
-    bool use_hpr;
-
 public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
@@ -58,24 +55,13 @@ public:
         Matrix R=(rf.check("add-base-rotation")?axis2dcm(rot):eye(4,4));
         solver.setParameters(TripodParameters(0.09,0.0,0.2,30.0,R));
 
-        mode=rf.check("mode",Value(MODE_ZD_UD)).asString();
-        int verbosity=rf.check("verbosity",Value(1)).asInt();
-
-        if ((mode!=MODE_ZD_UD) && (mode!=MODE_HPR))
-        {
-            yWarning()<<"Unrecognized input mode!";
-            mode=MODE_ZD_UD;
-        }
-        use_hpr=(mode==MODE_HPR);
+        rho.resize(3,0.0);
+        solver.setVerbosity(rf.check("verbosity",Value(1)).asInt());
+        gen=new minJerkTrajGen(rho,getPeriod(),2.0);
 
         iPort.open("/solver:i");
         oPort.open("/solver:o");
 
-        rho.resize(3,0.0);
-        solver.setVerbosity(verbosity);
-        gen=new minJerkTrajGen(rho,getPeriod(),2.0);
-
-        yInfo()<<"Using \""<<mode<<"\" input mode";
         return true;
     }
 
@@ -101,38 +87,23 @@ public:
         Bottle *ibData=iPort.read(false);
         if (ibData!=NULL)
         {
-            if (ibData->size()!=(use_hpr?3:5))
+            if (ibData->size()<5)
             {
-                yError()<<"Wrong \""<<mode<<"\" input size!";
+                yError()<<"Wrong input size!";
                 return true;
             }
 
-            if (use_hpr)
-            {
-                Vector hpr(3);
-                hpr[0]=ibData->get(0).asDouble();
-                hpr[1]=ibData->get(1).asDouble();
-                hpr[2]=ibData->get(2).asDouble();
-                solver.setInitialGuess(rho);
-                solver.ikin(hpr,rho);
+            Vector ud(4);
+            double zd=ibData->get(0).asDouble();
+            ud[0]=ibData->get(1).asDouble();
+            ud[1]=ibData->get(2).asDouble();
+            ud[2]=ibData->get(3).asDouble();
+            ud[3]=ibData->get(4).asDouble();
+            solver.setInitialGuess(rho);
+            solver.ikin(zd,ud,rho);
 
-                yInfo()<<"hpr=("<<hpr.toString(5,5)
-                       <<"); rho=("<<rho.toString(5,5)<<");";
-            }
-            else
-            {
-                Vector ud(4);
-                double zd=ibData->get(0).asDouble();
-                ud[0]=ibData->get(1).asDouble();
-                ud[1]=ibData->get(2).asDouble();
-                ud[2]=ibData->get(3).asDouble();
-                ud[3]=ibData->get(4).asDouble();
-                solver.setInitialGuess(rho);
-                solver.ikin(zd,ud,rho);
-
-                yInfo()<<"zd="<<zd<<"; ud=("<<ud.toString(5,5)
-                       <<"); rho=("<<rho.toString(5,5)<<");";
-            }
+            yInfo()<<"zd="<<zd<<"; ud=("<<ud.toString(5,5)
+                   <<"); rho=("<<rho.toString(5,5)<<");";
         }
         else
         {

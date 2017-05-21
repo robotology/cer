@@ -12,6 +12,8 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/sig/Matrix.h>
+#include <yarp/math/Math.h>
 
 #include <tripodMotionControl.h>
 
@@ -21,6 +23,8 @@ using namespace yarp::os::impl;
 using namespace cer::dev;
 using namespace cer::dev::impl;
 // using namespace yarp::dev::impl;
+using namespace yarp::sig;
+using namespace yarp::math;
 
 HW_deviceHelper::HW_deviceHelper() : pid(NULL),
                                      pos(NULL),
@@ -177,13 +181,35 @@ bool HW_deviceHelper::isConfigured()
 bool tripodMotionControl::tripod_user2HW(yarp::sig::Vector &user, yarp::sig::Vector &robot)
 {
     // The caller must use mutex or private data
-    return solver.ikin(user, robot);
+    yAssert(user.length()>=3);
+    
+    Vector ypr(3,0.0);
+    double &zd=user[0];                                     // heave
+    ypr[1]=_baseTransformation(0,0)*(M_PI/180.0)*user[1];   // pitch
+    ypr[2]=_baseTransformation(1,1)*(M_PI/180.0)*user[2];   // roll
+    Matrix Rd=ypr2dcm(ypr); Rd(2,3)=zd;
+    Rd=_baseTransformation*Rd;
+
+    return solver.ikin(Rd,robot);
 }
 
 bool tripodMotionControl::tripod_HW2user(yarp::sig::Vector &robot, yarp::sig::Vector &user)
 {
     // The caller must use mutex or private data
-    return solver.fkin(robot, user);
+    Matrix H;
+    if (solver.fkin(robot,H))
+    {
+        Matrix H_=SE3inv(_baseTransformation)*H;
+        Vector ypr=dcm2ypr(H);
+
+        user.resize(3);
+        user[0]=H_(2,3);                // heave
+        user[1]=(180.0/M_PI)*ypr[1];    // pitch
+        user[2]=(180.0/M_PI)*ypr[2];    // roll
+        return true;
+    }
+    else
+        return false;
 }
 
 bool tripodMotionControl::compute_speeds(yarp::sig::Vector& reference, yarp::sig::Vector& encoders)
@@ -795,7 +821,6 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
     yDebug() << "Transformation Matrix is \n" << _baseTransformation.toString().c_str();
     cer::kinematics::TripodParameters tParam(radius, lMin, lMax, alpha, _baseTransformation);
     solver.setParameters(tParam);
-
 
     Bottle &limits_group=config.findGroup("LIMITS");
     if (limits_group.isNull())
