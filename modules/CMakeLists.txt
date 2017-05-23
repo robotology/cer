@@ -5,9 +5,10 @@
 if(IPOPT_FOUND)
     add_subdirectory(reaching)
     add_subdirectory(gaze-controller)
-    add_subdirectory(altVelController)
-    add_subdirectory(selfCollision)
 endif()
+
+add_subdirectory(altVelController)
+add_subdirectory(selfCollision)
 
 add_subdirectory(teleop)
 add_subdirectory(tripodJoystickControl)
@@ -15,7 +16,6 @@ add_subdirectory(robotJoystickControl)
 add_subdirectory(tfPublisher)
 add_subdirectory(textimage)
 add_subdirectory(faceExpression)
-
 
 if(NOT WIN32)
     add_subdirectory(audioSplitter)
