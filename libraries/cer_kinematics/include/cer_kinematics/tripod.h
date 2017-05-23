@@ -104,17 +104,6 @@ public:
     /**
      * Forward Kinematics Law.
      * 
-     * @param lll    the three elongations ([m]).
-     * @param hpr    the computed heave ([m]), pitch ([deg]) and 
-     *               roll ([deg]).
-     * @return true/false on success/failure.
-     */
-    virtual bool fkin(const yarp::sig::Vector &lll,
-                      yarp::sig::Vector &hpr);
-
-    /**
-     * Forward Kinematics Law.
-     * 
      * @param q      the three elongations ([m]).
      * @param H      the 4-by-4 homogeneous matrix of the platform 
      *               ([m]).
@@ -136,18 +125,6 @@ public:
      */
     virtual bool ikin(const double zd, const yarp::sig::Vector &ud,
                       yarp::sig::Vector &lll, int *exit_code=NULL);
-
-    /**
-     * Inverse Kinematics Law with heave-pitch-roll.
-     * 
-     * @param hpr    the desired heave ([m]), pitch ([deg]) and roll
-     *               ([deg]) to solve for.
-     * @param lll    the solved three elongations ([m]).
-     * @return true/false on success/failure.
-     */
-    virtual bool ikin(const yarp::sig::Vector &hpr,
-                      yarp::sig::Vector &lll,
-                      int *exit_code=NULL);
 
     /**
      * Inverse Kinematics Law.

@@ -18,6 +18,7 @@ if(ENABLE_cermod_tripodMotionControl)
                         ${cer_kinematics_INCLUDE_DIRS})
 
     yarp_add_plugin(tripodMotionControl tripodMotionControl.h tripodMotionControl.cpp)
+    add_definitions(-D_USE_MATH_DEFINES)
     target_link_libraries(tripodMotionControl ${YARP_LIBRARIES} cer_kinematics)
     yarp_install(TARGETS tripodMotionControl
                  COMPONENT Runtime

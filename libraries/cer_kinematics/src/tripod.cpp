@@ -371,23 +371,6 @@ bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u)
 
 
 /****************************************************************/
-bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
-{
-    yAssert(lll.length()>=3);
-    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
-    TripodState d=nlp->fkin(lll);
-
-    Vector ypr=dcm2ypr(d.T);
-    hpr.resize(3);
-    hpr[0]=d.p[2];
-    hpr[1]=CTRL_RAD2DEG*ypr[1];
-    hpr[2]=CTRL_RAD2DEG*ypr[2];
-
-    return true;
-}
-
-
-/****************************************************************/
 bool TripodSolver::fkin(const Vector &q, Matrix &H, const int frame)
 {
     yAssert(q.length()>=3);
@@ -475,19 +458,6 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
             return false;
         } 
     }
-}
-
-
-/****************************************************************/
-bool TripodSolver::ikin(const Vector &hpr, Vector &lll, int *exit_code)
-{
-    yAssert(hpr.length()>=3);
-
-    Vector ypr(3,0.0);
-    ypr[1]=CTRL_DEG2RAD*hpr[1];
-    ypr[2]=CTRL_DEG2RAD*hpr[2];
-
-    return ikin(hpr[0],dcm2axis(ypr2dcm(ypr)),lll,exit_code);
 }
 
 
