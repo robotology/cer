@@ -443,8 +443,8 @@ void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info
             if (m_clock % _T_controller == 0) {
                 sendTorqueToGazebo(j, m_referenceTorques[j]);
             }
-        } else if (m_controlMode[j] == VOCAB_CM_OPENLOOP) {
-            //OpenLoop control sends torques to gazebo at this moment.
+        } else if (m_controlMode[j] == VOCAB_CM_PWM) {
+            //PWM control sends torques to gazebo at this moment.
             //Check if gazebo implements a "motor" entity and change the code accordingly.
             if (m_clock % _T_controller == 0) {
                 sendTorqueToGazebo(j, m_referenceTorques[j]);

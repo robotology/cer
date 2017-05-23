@@ -462,7 +462,7 @@ bool GazeboTripodMotionControl::setControlMode(const int j, const int mode)
         break;
         case VOCAB_CM_VELOCITY :
         case VOCAB_CM_TORQUE :
-        case VOCAB_CM_OPENLOOP :
+        case VOCAB_CM_PWM :
         default :
             yError() << "Mode " << yarp::os::Vocab::decode(mode) << " is not yet implemented for GazeboTripodMotionControl";
             ret = false;
