@@ -5,31 +5,31 @@
   <module>
     <name>imageSplitter</name>
     <parameters>--remote /SIM_CER_ROBOT/cam/cameras:o --nameLeft /SIM_CER_ROBOT/cam/left:o --nameRight /SIM_CER_ROBOT/cam/right:o --carrier shmem</parameters>
-    <node>/r1-console-linux</node>
+    <node>/r1-console-sim</node>
   </module>
 
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubSimEyes.ini --group CAMERA_CALIBRATION_LEFT --name /SIM_CER_ROBOT/camCalibWithPose/left</parameters>
-    <node>/r1-console-linux</node>
+    <node>/r1-console-sim</node>
   </module>
 
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubSimEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /SIM_CER_ROBOT/camCalibWithPose/right</parameters>
-    <node>/r1-console-linux</node>
+    <node>/r1-console-sim</node>
   </module>
 
   <module>
     <name>yarpdev</name>
-    <parameters>--from oculus.ini</parameters>
+    <parameters>--context OculusTeleop --from oculus.ini</parameters>
     <node>/r1-console-windows</node>
   </module>
 
   <module>
     <name>positionDirectControl</name>
     <parameters>--robot SIM_CER_ROBOT --part head --joints "(0 1)"</parameters>
-    <node>/r1-console-linux</node>
+    <node>/r1-console-sim</node>
   </module>
 
   <connection>
@@ -44,62 +44,34 @@
     <protocol>shmem</protocol>
   </connection>
 
-<!--
-  <connection>
-    <from>/SIM_CER_ROBOT/inertial</from>
-    <to>/SIM_CER_ROBOT/camCalibWithPose/left/imu/in</to>
-    <protocol>shmem</protocol>
-  </connection>
-
-  <connection>
-    <from>/SIM_CER_ROBOT/inertial</from>
-    <to>/SIM_CER_ROBOT/camCalibWithPose/right/imu/in</to>
-    <protocol>shmem</protocol>
-  </connection>
--->
-
   <connection>
     <from>/SIM_CER_ROBOT/head/state:o</from>
     <to>/SIM_CER_ROBOT/camCalibWithPose/right/head_encs/in</to>
-    <protocol>shmem</protocol>
+    <protocol>udp+send.portmonitor+type.dll+file.cer2headpose</protocol>
   </connection>
 
   <connection>
     <from>/SIM_CER_ROBOT/head/state:o</from>
     <to>/SIM_CER_ROBOT/camCalibWithPose/left/head_encs/in</to>
-    <protocol>shmem</protocol>
+    <protocol>udp+send.portmonitor+type.dll+file.cer2headpose</protocol>
   </connection>
-
-<!--
-  <connection>
-    <from>/SIM_CER_ROBOT/torso/state:o</from>
-    <to>/SIM_CER_ROBOT/camCalibWithPose/right/torso_encs/in</to>
-    <protocol>shmem</protocol>
-  </connection>
-
-  <connection>
-    <from>/SIM_CER_ROBOT/torso/state:o</from>
-    <to>/SIM_CER_ROBOT/camCalibWithPose/left/torso_encs/in</to>
-    <protocol>shmem</protocol>
-  </connection>
--->
 
   <connection>
     <from>/SIM_CER_ROBOT/camCalibWithPose/left/out</from>
     <to>/oculus/display/left:i</to>
-    <protocol>udp</protocol>
+    <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
     <from>/SIM_CER_ROBOT/camCalibWithPose/right/out</from>
     <to>/oculus/display/right:i</to>
-    <protocol>udp</protocol>
+    <protocol>mjpeg</protocol>
   </connection>
 
   <connection>
     <from>/oculus/headpose/orientation:o</from>
     <to>/directPositionControl/SIM_CER_ROBOT/head/command:i</to>
-    <protocol>udp+send.portmonitor+type.dll+file.oculus2cer</protocol>
+    <protocol>udp+recv.portmonitor+type.dll+file.oculus2cer</protocol>
   </connection>
 
 </application>

@@ -22,7 +22,7 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters>--from oculus.ini</parameters>
+    <parameters>--context OculusTeleop --from oculus.ini</parameters>
     <node>/r1-console-windows</node>
   </module>
 
