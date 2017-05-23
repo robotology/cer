@@ -2,6 +2,9 @@
 # Author: Daniele E. Domenichelli <daniele.domenichelli@iit.it>
 # CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 
+option(COMPILE_TEXTIMAGE "Enable compilation of textImage module" OFF)
+
+if(COMPILE_TEXTIMAGE)
   find_package (Qt5 COMPONENTS Widgets Gui)
 
   include(YarpUseQt5)
@@ -48,3 +51,4 @@
                                     INSTALL_COMPONENT utilities
                                     INSTALL_DESTINATION "${CMAKE_INSTALL_BINDIR}")
 
+endif()
