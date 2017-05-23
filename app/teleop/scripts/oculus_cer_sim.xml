@@ -22,7 +22,7 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters>--device ovrheadset --hfov 88 --w 960 --h 720 --imagepose</parameters>
+    <parameters>--from oculus.ini</parameters>
     <node>/r1-console-windows</node>
   </module>
 
