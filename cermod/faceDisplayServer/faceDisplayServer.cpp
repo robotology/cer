@@ -83,7 +83,7 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
     imagePortName = config.check("name", yarp::os::Value("/robot/faceDisplay/image:i"), "Name of the port receiving images").toString();
 
     deviceFileName = config.check("display", yarp::os::Value("/dev/auxdisp"), "Device file to use in the system, i.e. '/dev/auxdisp'").toString();
-    rootPath = config.check("path", yarp::os::Value("/home/linaro/AUXDISP"), "Where images are located").toString();
+    rootPath = config.check("path", yarp::os::Value("/home/r1-user/AUXDISP"), "Where images are located").toString();
 
     if(!rpcPort.open(rpcPortName))
     {
