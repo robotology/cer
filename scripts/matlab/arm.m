@@ -192,7 +192,7 @@ A=max(abs(lim))*0.1;
 
 kin=ComputeFwKinTripod(T1,q(1:3));
 
-T0=axang2rotm([0 0 1 pi]);
+T0=axis2dcm([0 0 1 pi]);
 T0=[T0 [0.044 0 0.470]'; 0 0 0 1];
 kin.s1=T0*[kin.s1;1];
 kin.s2=T0*[kin.s2;1];
@@ -386,7 +386,7 @@ if ~strcmp(tline,'do')
 
                 xd=yarpData(1:3);
                 ud=yarpData(4:7);
-                Rd=axang2rotm(ud);
+                Rd=axis2dcm(ud);
 
                 hp=plot3(hax,xd(1),xd(2),xd(3),...
                          'go','LineWidth',3,'MarkerSize',5);

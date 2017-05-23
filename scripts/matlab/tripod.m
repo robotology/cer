@@ -274,7 +274,7 @@ end
 set(ui_des{idx},'String',num2str(val,5));
 
 R=angle2dcm(0,pitch,roll);
-xd(2:5)=rotm2axang(R);
+xd(2:5)=dcm2axis(R);
 
 rs1=R*s1;
 rs2=R*s2;
