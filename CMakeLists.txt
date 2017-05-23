@@ -52,17 +52,15 @@ add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"               
 
 if(IPOPT_FOUND)
     add_subdirectory(libraries/cer_kinematics)
-    add_subdirectory(libraries/cer_kinematics_alt)
-    add_subdirectory(libraries/robot_self_collision)
-    add_subdirectory(tools)
 endif()
 
-
+add_subdirectory(libraries/cer_kinematics_alt)
+add_subdirectory(libraries/robot_self_collision)
 
 add_subdirectory(app)
 add_subdirectory(cermod)
 add_subdirectory(gazeboYarpPlugin)
 add_subdirectory(modules)
-
+add_subdirectory(tools)
 add_subdirectory(tests)
 
