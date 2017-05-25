@@ -42,6 +42,7 @@ if(GAZEBO_TRIPOD_PLUGIN)
                       ${CMAKE_CURRENT_SOURCE_DIR}/../cermod/tripod)
 
   link_directories(${GAZEBO_LIBRARY_DIRS})
+  add_definitions(-D_USE_MATH_DEFINES)
   add_library(gazeboTripod ${gazeboTripod_source} ${gazeboTripod_headers})
 
   target_link_libraries(gazeboTripod GazeboYarpPlugins::singleton

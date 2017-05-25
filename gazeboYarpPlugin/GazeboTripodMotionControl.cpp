@@ -10,14 +10,20 @@
 #include <GazeboYarpPlugins/Handler.hh>
 
 #include <cstdio>
+#include <cmath>
+
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/math/Angle.hh>
 
 #include <yarp/os/LogStream.h>
+#include <yarp/sig/Vector.h>
+#include <yarp/sig/Matrix.h>
+#include <yarp/math/Math.h>
 
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::math;
 using namespace yarp::dev;
 using namespace cer::dev;
 
@@ -43,7 +49,20 @@ bool GazeboTripodMotionControl::NOT_YET_IMPLEMENTED(const char *txt)
 bool GazeboTripodMotionControl::tripod_client2Sim(yarp::sig::Vector &client, yarp::sig::Vector &sim)
 {
     // The caller must use mutex or private data
-    return solver.fkin(client, sim);
+    Matrix H;
+    if (solver.fkin(client,H))
+    {
+        Matrix H_=SE3inv(_baseTransformation)*H;
+        Vector ypr=dcm2ypr(H);
+
+        sim.resize(3);
+        sim[0]=H_(2,3);                // heave
+        sim[1]=(180.0/M_PI)*ypr[1];    // pitch
+        sim[2]=(180.0/M_PI)*ypr[2];    // roll
+        return true;
+    }
+    else
+        return false;
 }
 
 bool GazeboTripodMotionControl::tripod_Sim2client(yarp::sig::Vector &sim, yarp::sig::Vector &client)
