@@ -13,6 +13,8 @@ project(cer-tests)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins)
 set(CMAKE_SHARED_MODULE_PREFIX "")
 
+find_package(RTF 1.1 COMPONENTS DLL)
+
 if(RTF_FOUND)
     add_subdirectory(displayTest)
     if(IPOPT_FOUND)

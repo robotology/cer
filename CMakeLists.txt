@@ -18,8 +18,6 @@ list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 find_package(ICUB REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 
-find_package(RTF 1.1 COMPONENTS DLL)
-
 find_package(IPOPT)
 if(NOT IPOPT_FOUND)
     message(WARNING "IPOPT library was not found, some kinematics module will not be available.")
@@ -62,5 +60,10 @@ add_subdirectory(cermod)
 add_subdirectory(gazeboYarpPlugin)
 add_subdirectory(modules)
 add_subdirectory(tools)
-add_subdirectory(tests)
+
+option(CER_COMPILE_TESTS "Compile tests" OFF)
+if(CER_COMPILE_TESTS)
+  add_subdirectory(tests)
+endif()
+
 
