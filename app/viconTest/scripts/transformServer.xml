@@ -1,0 +1,13 @@
+<application>
+<name>viconTest transformServer</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>yarpdev</name>
+   <parameters>--device transformServer --context viconTest --from transformServer.ini</parameters>
+   <node>r1-console-linux</node>
+</module>
+
+</application>
