@@ -18,8 +18,6 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 
-#include <hapticdevice/IHapticDevice.h>
-
 #include "ros_messages/visualization_msgs_Marker.h"
 #include "ros_messages/visualization_msgs_MarkerArray.h"
 
@@ -28,7 +26,6 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
-using namespace hapticdevice;
 
 
 /**********************************************************/
