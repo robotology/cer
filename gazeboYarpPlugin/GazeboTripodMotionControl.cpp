@@ -1023,23 +1023,33 @@ bool GazeboTripodMotionControl::setTorqueMode()
     return ret;
 }
 
-bool GazeboTripodMotionControl::setTorquePid(int joint, const Pid &pid){return NOT_YET_IMPLEMENTED("setTorquePid");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::setTorquePids(const Pid *newPids){return NOT_YET_IMPLEMENTED("setTorquePids");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorquePid(int joint, Pid *pid){return NOT_YET_IMPLEMENTED("getTorquePid");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorquePids(Pid *pids) {return NOT_YET_IMPLEMENTED("getTorquePids");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueRange(int, double*, double *){return NOT_YET_IMPLEMENTED("getTorqueRange");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueRanges(double *, double *){return NOT_YET_IMPLEMENTED("getTorqueRanges");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::setTorqueErrorLimit(int , double ){return NOT_YET_IMPLEMENTED("setTorqueErrorLimit");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::setTorqueErrorLimits(const double *){return NOT_YET_IMPLEMENTED("setTorqueErrorLimits");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueError(int , double *){return NOT_YET_IMPLEMENTED("getTorqueError");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueErrors(double *){return NOT_YET_IMPLEMENTED("getTorqueErrors");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorquePidOutput(int , double *){return NOT_YET_IMPLEMENTED("getTorquePidOutput");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorquePidOutputs(double *){return NOT_YET_IMPLEMENTED("getTorquePidOutputs");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueErrorLimit(int , double *){return NOT_YET_IMPLEMENTED("getTorqueErrorLimit");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueErrorLimits(double *){return NOT_YET_IMPLEMENTED("getTorqueErrorLimits");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::resetTorquePid(int ){return NOT_YET_IMPLEMENTED("resetTorquePid");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::disableTorquePid(int ){return NOT_YET_IMPLEMENTED("disableTorquePid");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::enableTorquePid(int ){return NOT_YET_IMPLEMENTED("enableTorquePid");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::setTorqueOffset(int , double ){return NOT_YET_IMPLEMENTED("setTorqueOffset");} //NOT IMPLEMENTED
 bool GazeboTripodMotionControl::getBemfParam(int , double *){return NOT_YET_IMPLEMENTED("getBemfParam");} //NOT IMPLEMENTED
 bool GazeboTripodMotionControl::setBemfParam(int , double ){return NOT_YET_IMPLEMENTED("getBemfParam");} //NOT IMPLEMENTED
+
+/***************************************/
+/*
+ * IPidControl Interface methods
+ */
+ bool GazeboTripodMotionControl::setPid(const PidControlTypeEnum& pidtype, int j, const Pid &pid)                        {return NOT_YET_IMPLEMENTED("setPid");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPids(const PidControlTypeEnum& pidtype, const Pid *pids)                             {return NOT_YET_IMPLEMENTED("setPids");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPidReference(const PidControlTypeEnum& pidtype, int j, double ref)                   {return NOT_YET_IMPLEMENTED("setPidReference");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPidReferences(const PidControlTypeEnum& pidtype, const double *refs)                 {return NOT_YET_IMPLEMENTED("setPidReferences");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPidErrorLimit(const PidControlTypeEnum& pidtype, int j, double limit)                {return NOT_YET_IMPLEMENTED("setPidErrorLimit");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPidErrorLimits(const PidControlTypeEnum& pidtype, const double *limits)              {return NOT_YET_IMPLEMENTED("setPidErrorLimits");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidError(const PidControlTypeEnum& pidtype, int j, double *err)                      {return NOT_YET_IMPLEMENTED("getPidError");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidErrors(const PidControlTypeEnum& pidtype, double *errs)                           {return NOT_YET_IMPLEMENTED("getPidErrors");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidOutput(const PidControlTypeEnum& pidtype, int j, double *out)                     {return NOT_YET_IMPLEMENTED("getPidOutput");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidOutputs(const PidControlTypeEnum& pidtype, double *outs)                          {return NOT_YET_IMPLEMENTED("getPidOutputs");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPid(const PidControlTypeEnum& pidtype, int j, Pid *pid)                              {return NOT_YET_IMPLEMENTED("getPid");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPids(const PidControlTypeEnum& pidtype, Pid *pids)                                   {return NOT_YET_IMPLEMENTED("getPids");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidReference(const PidControlTypeEnum& pidtype, int j, double *ref)                  {return NOT_YET_IMPLEMENTED("getPidReference");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidReferences(const PidControlTypeEnum& pidtype, double *refs)                       {return NOT_YET_IMPLEMENTED("getPidReferences");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidErrorLimit(const PidControlTypeEnum& pidtype, int j, double *limit)               {return NOT_YET_IMPLEMENTED("getPidErrorLimit");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidErrorLimits(const PidControlTypeEnum& pidtype, double *limits)                    {return NOT_YET_IMPLEMENTED("getPidErrorLimits");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::resetPid(const PidControlTypeEnum& pidtype, int j)                                      {return NOT_YET_IMPLEMENTED("resetPid");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::disablePid(const PidControlTypeEnum& pidtype, int j)                                    {return NOT_YET_IMPLEMENTED("disablePid");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::enablePid(const PidControlTypeEnum& pidtype, int j)                                     {return NOT_YET_IMPLEMENTED("enablePid");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPidOffset(const PidControlTypeEnum& pidtype, int j, double v)                        {return NOT_YET_IMPLEMENTED("setPidOffset");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::isPidEnabled(const PidControlTypeEnum& pidtype, int j, bool* enabled)                   {return NOT_YET_IMPLEMENTED("isPidEnabled");} //NOT IMPLEMENTED
+
+

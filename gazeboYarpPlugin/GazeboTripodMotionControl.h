@@ -29,6 +29,7 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
+#include <yarp/dev/IPidControl.h>
 #include <string>
 #include <vector>
 
@@ -482,6 +483,32 @@ private:
 
     double convertUserToGazebo(double value);
     double *convertUserToGazebo(double *values);
+
+
+    bool setPid(const yarp::dev::PidControlTypeEnum& pidtype, int j, const yarp::dev::Pid &pid);
+    bool setPids(const yarp::dev::PidControlTypeEnum& pidtype, const yarp::dev::Pid *pids);
+    bool setPidReference(const yarp::dev::PidControlTypeEnum& pidtype, int j, double ref);
+    bool setPidReferences(const yarp::dev::PidControlTypeEnum& pidtype, const double *refs);
+    bool setPidErrorLimit(const yarp::dev::PidControlTypeEnum& pidtype, int j, double limit);
+    bool setPidErrorLimits(const yarp::dev::PidControlTypeEnum& pidtype, const double *limits);
+    bool getPidError(const yarp::dev::PidControlTypeEnum& pidtype, int j, double *err);
+    bool getPidErrors(const yarp::dev::PidControlTypeEnum& pidtype, double *errs);
+    bool getPidOutput(const yarp::dev::PidControlTypeEnum& pidtype, int j, double *out);
+    bool getPidOutputs(const yarp::dev::PidControlTypeEnum& pidtype, double *outs);
+    bool getPid(const yarp::dev::PidControlTypeEnum& pidtype, int j, yarp::dev::Pid *pid);
+    bool getPids(const yarp::dev::PidControlTypeEnum& pidtype, yarp::dev::Pid *pids);
+    bool getPidReference(const yarp::dev::PidControlTypeEnum& pidtype, int j, double *ref);
+    bool getPidReferences(const yarp::dev::PidControlTypeEnum& pidtype, double *refs);
+    bool getPidErrorLimit(const yarp::dev::PidControlTypeEnum& pidtype, int j, double *limit);
+    bool getPidErrorLimits(const yarp::dev::PidControlTypeEnum& pidtype, double *limits);
+    bool resetPid(const yarp::dev::PidControlTypeEnum& pidtype, int j);
+    bool disablePid(const yarp::dev::PidControlTypeEnum& pidtype, int j);
+    bool enablePid(const yarp::dev::PidControlTypeEnum& pidtype, int j);
+    bool setPidOffset(const yarp::dev::PidControlTypeEnum& pidtype, int j, double v);
+    bool isPidEnabled(const yarp::dev::PidControlTypeEnum& pidtype, int j, bool* enabled);
+
 };
+
+
 
 #endif //GAZEBOYARP_TRIPOD_CONTROLBOARD_DRIVER_HH
