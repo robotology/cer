@@ -917,6 +917,16 @@ bool GazeboTripodMotionControl::getTorques(double *t)
     return ret;
 }
 
+bool GazeboTripodMotionControl::getTorqueRange(int j, double *min, double *max)
+{
+	return NOT_YET_IMPLEMENTED("getTorqueRange");
+}
+
+bool GazeboTripodMotionControl::getTorqueRanges(double *min, double *max)
+{
+    return NOT_YET_IMPLEMENTED("getTorqueRanges");
+}
+
 bool GazeboTripodMotionControl::getRefTorque(int j, double* t)
 {
     if (t && j >= 0 && j < (int)m_numberOfJoints) {

@@ -254,24 +254,8 @@ public:
     virtual bool setTorqueMode();
     virtual bool getBemfParam(int j, double *bemf);
     virtual bool setBemfParam(int j, double bemf);
-    virtual bool setTorquePid(int j, const yarp::dev::Pid &pid);
     virtual bool getTorqueRange(int j, double *min, double *max);
     virtual bool getTorqueRanges(double *min, double *max);
-    virtual bool setTorquePids(const yarp::dev::Pid *pids);
-    virtual bool setTorqueErrorLimit(int j, double limit);
-    virtual bool setTorqueErrorLimits(const double *limits);
-    virtual bool getTorqueError(int j, double *err);
-    virtual bool getTorqueErrors(double *errs);
-    virtual bool getTorquePidOutput(int j, double *out);
-    virtual bool getTorquePidOutputs(double *outs);
-    virtual bool getTorquePid(int j, yarp::dev::Pid *pid);
-    virtual bool getTorquePids(yarp::dev::Pid *pids);
-    virtual bool getTorqueErrorLimit(int j, double *limit);
-    virtual bool getTorqueErrorLimits(double *limits);
-    virtual bool resetTorquePid(int j);
-    virtual bool disableTorquePid(int j);
-    virtual bool enableTorquePid(int j);
-    virtual bool setTorqueOffset(int j, double v);
 
     #if 0
     //IMPEDANCE CTRL
