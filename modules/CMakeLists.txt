@@ -13,7 +13,7 @@ add_subdirectory(selfCollision)
 add_subdirectory(teleop)
 add_subdirectory(tripodJoystickControl)
 add_subdirectory(robotJoystickControl)
-add_subdirectory(textimage)
+add_subdirectory(textImage)
 add_subdirectory(faceExpression)
 
 if(NOT WIN32)
