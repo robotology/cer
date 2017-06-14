@@ -1,22 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>    
 
 <devices>
-    <device name="r1Laser" type="rpLidar2">  
+    <device name="cerLaser" type="rpLidar2">  
        <group name="GENERAL">
-            <param name="name">            r1_laser     </param>
+            <param name="name">            cer_laser     </param>
             <param name="clip_max">        3.5          </param>
             <param name="clip_min">        0.1          </param>
-            <param name="max_angle">       359          </param>
+            <param name="max_angle">       360          </param>
             <param name="min_angle">       0            </param>
             <param name="resolution">      1            </param>
             <param name="allow_infinity">  1            </param>
             <param name="serial_baudrate"> 115200       </param>
             <param name="serial_port">     /dev/ttyUSB0 </param>
+            <param name="sample_buffer_life">  0        </param>
         </group>
         <group name="SKIP">
-            <param name="min">  0  160  </param>
-            <param name="max">  30 360  </param>
-        </group>
+            <param name="min">  35     </param>
+            <param name="max">  325    </param>
+        </group> 
     </device>
 </devices>
 
