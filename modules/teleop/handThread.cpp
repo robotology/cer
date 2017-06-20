@@ -3,6 +3,7 @@
 #include <yarp/math/Math.h>
 #include <yarp/os/Time.h>
 #include <limits>
+#include <cmath>
 using namespace yarp::dev;
 using namespace yarp::os;
 using namespace std;
@@ -20,7 +21,7 @@ void HandThread::printState()
 
 bool HandThread::openControlBoards(yarp::os::Searchable& rf)
 {
-    gain            = rf.check("gain",     Value(1.5)).asDouble();
+    gain            = rf.check("gain",     Value(1)).asDouble();
     wrist_heave     = 0.02;
 
     if (rf.check("wrist-heave"))
@@ -30,7 +31,7 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
     }
     else
     {
-        mode = "full_pose+no_torso_heave";
+        mode = "xyz_pose+no_torso_no_heave";
     }
 
     string   part  = ((arm_type == left_hand) ? "left_hand" : "right_hand");
@@ -41,6 +42,7 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
 
     if (!drvHand.open(optHand))
     {
+        yError() << "teleop: failed to open remote control board for" << part;
         return false;
     }
 
@@ -69,6 +71,8 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
         modes.push_back(VOCAB_CM_VELOCITY);
         vels.push_back(40.0);
     }
+
+    return true;
 }
 
 void HandThread::stopReaching()
@@ -186,13 +190,11 @@ void HandThread::updateGazebo(const Vector& xd, const Vector& od)
     }
 }
 
-
-
 void HandThread::reachingHandler(const bool dragging_switch, const Vector& pos, const Vector& rpy)
 {
     if (dragging_switch)
     {
-        if (handDraggingStatus == idle)
+        if (handDraggingStatus == idle && targetDistance < targetRadius)
         {
             handDraggingStatus = triggered;
         }
@@ -325,6 +327,7 @@ double HandThread::getPeriod()
 bool HandThread::threadInit()
 {
     string hand;
+    bool   r;
     hand = arm_type == left_hand ? "left" : "right";
     reachState         = false;
     handDraggingStatus = handGripStatus  = idle;
@@ -339,18 +342,19 @@ bool HandThread::threadInit()
     fixedOrientation.resize(4, 0.0);
 
 
-    if (!rosPublisherPort.topic("/cer_teleop_marker"))
+    if (!rosPublisherPort.topic("/cer_teleop_marker_" + hand))
     {
         yError("Unable to publish data on /cer_teleop_marker topic");
         yWarning("Check your yarp-ROS network configuration");
         return false;
     }
 
-    gazeboPort.open("/cer_teleop/gazebo:o");
-    robotTargetPort.open("/cer_teleop/target_" + hand + ":o");
-    robotStatePort.open("/cer_teleop/state_" + hand + ":i");
-    robotCmdPort.open("/cer_teleop/cmd_" + hand + ":rpc");
+    r = gazeboPort.open("/cer_teleop/gazebo_" + hand+":o");
+    r &= robotTargetPort.open("/cer_teleop/target_" + hand + ":o");
+    r &= robotStatePort.open("/cer_teleop/state_" + hand + ":i");
+    r &= robotCmdPort.open("/cer_teleop/cmd_" + hand + ":rpc");
 
+    return r;
 }
 
 void HandThread::threadRelease()
@@ -385,11 +389,16 @@ void HandThread::run()
         }
 
         getData();
+
         reachingHandler(button0, pos, rpy);
         handHandler(button1);
     }
     else
     {
-        yError("No robot connected!");
+        double time = yarp::os::Time::now();
+        if(fmod(time, 1.0) == 0)
+        {
+            yError("No robot connected!");
+        }
     }
 }

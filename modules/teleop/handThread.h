@@ -22,6 +22,7 @@ public:
         yarp::sig::Vector rpy;
         bool              button0;
         bool              button1;
+        double            targetDistance;
     };
 
     enum TeleOp_hand
@@ -31,6 +32,7 @@ public:
         hand_count = 2
     };
 
+    //method
     HandThread(TeleOp_hand hand) : RateThread(10), arm_type(hand){}
     virtual      ~HandThread(){}
     void         setData(CommandData newdata)
@@ -39,7 +41,6 @@ public:
         criticalSection = newdata;
         mutex.unlock();
     }
-
     void         setGrabTrigger();
     void         setDragTrigger();
     virtual bool threadInit()    YARP_OVERRIDE;
@@ -48,6 +49,9 @@ public:
     bool         openControlBoards(yarp::os::Searchable& rf);
     void         reachingHandler(const bool dragging_switch, const yarp::sig::Vector& pos, const yarp::sig::Vector& rpy);
     void         handHandler(const bool hand_grip_switch);
+
+    //properties
+    double       targetRadius;
 
 private:
     typedef yarp::os::BufferedPort<yarp::os::Bottle>   BottlePort;
@@ -108,6 +112,7 @@ private:
     BottlePort         gazeboPort;
     MarkerArrayPort    rosPublisherPort;
     CommandData        criticalSection;
+    double             targetDistance;
 
     //method
     void   printState();
@@ -119,10 +124,11 @@ private:
     void   getData()
     {
         mutex.lock();
-        pos     = criticalSection.pos;
-        rpy     = criticalSection.rpy;
-        button0 = criticalSection.button0;
-        button1 = criticalSection.button1;
+        pos            = criticalSection.pos;
+        rpy            = criticalSection.rpy;
+        button0        = criticalSection.button0;
+        button1        = criticalSection.button1;
+        targetDistance = criticalSection.targetDistance;
         mutex.unlock();
     }
 

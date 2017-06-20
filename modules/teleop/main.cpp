@@ -56,7 +56,7 @@ protected:
     Node*              rosNode;
     PolyDriver         drvControlSource;
     PolyDriver         drvJoypad;
-    IHapticDevice*     igeo;
+    IHapticDevice*     igeo{YARP_NULLPTR};
     IFrameTransform*   iTf;
     IJoypadController* iJoypad;
     map<int,string>    stateStr;
@@ -75,6 +75,8 @@ public:
         param_v.push_back(std::make_pair("tfRemote",            ParamParser::TYPE_STRING));
         param_v.push_back(std::make_pair("tf_left_hand_frame",  ParamParser::TYPE_STRING));
         param_v.push_back(std::make_pair("tf_right_hand_frame", ParamParser::TYPE_STRING));
+        param_v.push_back(std::make_pair("left_radius",         ParamParser::TYPE_DOUBLE));
+        param_v.push_back(std::make_pair("right_radius",        ParamParser::TYPE_DOUBLE));
         param_v.push_back(std::make_pair("tf_root_frame",       ParamParser::TYPE_STRING));
         param_v.push_back(std::make_pair("joyDevice",           ParamParser::TYPE_STRING));
         param_v.push_back(std::make_pair("joyLocal",            ParamParser::TYPE_STRING));
@@ -89,7 +91,7 @@ public:
         tf_cfg.put("device",  rf.find("tfDevice").asString());
         tf_cfg.put("local",   rf.find("tfLocal").asString());
         tf_cfg.put("remote",  rf.find("tfRemote").asString());
-        tf_cfg.put("device",  rf.find("joyDevice").asString());
+        joy_cfg.put("device", rf.find("joyDevice").asString());
         joy_cfg.put("local",  rf.find("joyLocal").asString());
         joy_cfg.put("remote", rf.find("joyRemote").asString());
 
@@ -109,13 +111,13 @@ public:
             return false;
         }
 
-        if(!drvControlSource.open(joy_cfg))
+        if(!drvJoypad.open(joy_cfg))
         {
-            yError() << "Teleoperation Module: unable to open the tf device";
+            yError() << "Teleoperation Module: unable to open the Joypad Device";
             return false;
         }
 
-        if (!drvControlSource.view(iJoypad))
+        if (!drvJoypad.view(iJoypad))
         {
             yError() << "Teleoperation Module: dynamic_cast to IJoypadController interface failed";
             return false;
@@ -206,8 +208,22 @@ public:
             }
             hands[HandThread::left_hand]  = &left;
             hands[HandThread::right_hand] = &right;
-            left.openControlBoards(rf);
-            right.openControlBoards(rf);
+
+            left.targetRadius = rf.find("left_radius").asDouble();
+            right.targetRadius = rf.find("right_radius").asDouble();
+
+            if(!left.openControlBoards(rf)  ||
+               !right.openControlBoards(rf))
+            {
+                yError() << "teleop: something goes wrong...";
+                return false;
+            }
+
+            if(!left.start() || !right.start())
+            {
+                yError() << "teleop: thread start fail";
+                return false;
+            }
             break;
 
         case HAPTIC_DEVICE:
@@ -243,7 +259,11 @@ public:
 
     bool close()
     {
-        igeo->setTransformation(eye(4, 4));
+        if(igeo != YARP_NULLPTR)
+        {
+            igeo->setTransformation(eye(4, 4));
+        }
+
         drvControlSource.close();
 
         left.stop();
@@ -264,7 +284,7 @@ public:
     bool updateModule()
     {
         //disclaimer: those static are read only constant value.. (so it's safe for them to be static)
-        Matrix                   m;
+        Matrix                   m, m_gripper;
         float                    button0, button1;
         static const string      enum2frameName[HandThread::hand_count] = {leftHandFrame, rightHandFrame};
         static HandThread*       enum2hands[HandThread::hand_count]     = {&left, &right};
@@ -278,25 +298,41 @@ public:
         else if (frameSource == VR_DEVICE)
         {
             for(int i = 0; i < HandThread::hand_count; ++i)
-            {
+            { 
+                string gripper = i ? "r_gripper" : "l_gripper";
                 if(!iTf->getTransform(enum2frameName[i], rootHandFrame, m))
                 {
-                    return false;
+                    yWarning() << "teleop: unable to get transform between" << enum2frameName[i] << rootHandFrame;
+                    return true;
                 }
 
-                if(!iJoypad->getButton(i * 2 + 0, button0) || !iJoypad->getButton(i * 2 + 1, button1))
+                if(!iTf->getTransform(enum2frameName[i], gripper, m_gripper))
                 {
-                    yError() << "unable to get buttons state";
-                    return false;
+                    yWarning() << "teleop: unable to get transform between" << enum2frameName[i] << gripper;
+                    return true;
                 }
 
-                m = T * m;
+                if(!iJoypad->getButton(!i * 4 + 0, button0) || !iJoypad->getButton(!i * 4 + 3, button1))
+                {
+                    yWarning() << "unable to get buttons state";
+                    return true;
+                }
+
+                //m = T * m;
                 HandThread::CommandData data;
-                data.pos     = m.subcol(0, 3, 3);
-                data.rpy     = dcm2rpy(m);
-                data.button0 = button0 > 0.3;
-                data.button1 = button1;
+                data.pos            = m.subcol(0, 3, 3);
+                data.rpy            = dcm2rpy(m);
+                data.button0        = button0 > 0.3;
+                data.button1        = button1;
+                data.targetDistance = sqrt(m_gripper[0][3] * m_gripper[0][3] +
+                                           m_gripper[1][3] * m_gripper[1][3] +
+                                           m_gripper[2][3] * m_gripper[2][3]);
                 (*enum2hands[i]).setData(data);
+
+                if(data.targetDistance < (*enum2hands[i]).targetRadius)
+                {
+                    //set give a feedback to the user here
+                }
             }
         }
 
