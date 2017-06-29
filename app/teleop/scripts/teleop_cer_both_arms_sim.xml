@@ -28,9 +28,15 @@
                 <node>r1-console-linux</node>
         </module>
 
-	<module>
+	    <module>
                 <name>cer_teleop</name>
                 <parameters>--from /usr/local/src/robot/cer/app/teleop/conf/oculus.ini</parameters>
+                <node>r1-console-linux</node>
+        </module>
+        
+        <module>
+                <name>baseControl</name>
+                <parameters>--from /usr/local/src/robot/navigation/app/baseControl/conf/baseCtrl_cer.ini --skip_robot_interface_check</parameters>
                 <node>r1-console-linux</node>
         </module>
 

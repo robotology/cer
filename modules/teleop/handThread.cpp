@@ -194,9 +194,12 @@ void HandThread::reachingHandler(const bool dragging_switch, const Vector& pos, 
 {
     if (dragging_switch)
     {
-        if (handDraggingStatus == idle && targetDistance < targetRadius)
+        if (handDraggingStatus == idle)
         {
-            handDraggingStatus = triggered;
+            if(((targetDistance < targetRadius) || targetRadius < 0.000001))
+            {
+                handDraggingStatus = triggered;
+            }
         }
         else if (handDraggingStatus == triggered)
         {
@@ -213,7 +216,7 @@ void HandThread::reachingHandler(const bool dragging_switch, const Vector& pos, 
                 handDraggingStatus = running;
             }
         }
-        else
+        else //dragging status == running
         {
             Vector xd(4, 0.0);
             Vector drpy(3);
