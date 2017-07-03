@@ -18,11 +18,11 @@ class HandThread : public yarp::os::RateThread
 public:
     struct CommandData
     {
-        yarp::sig::Vector pos;
-        yarp::sig::Vector rpy;
-        bool              button0;
-        bool              button1;
-        double            targetDistance;
+        yarp::sig::Vector pos{3};
+        yarp::sig::Vector rpy{3};
+        bool              button0{false};
+        bool              button1{false};
+        double            targetDistance{0.0};
     };
 
     enum TeleOp_hand
