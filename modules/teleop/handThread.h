@@ -21,8 +21,9 @@ public:
         yarp::sig::Vector pos{3};
         yarp::sig::Vector rpy{3};
         bool              button0{false};
-        bool              button1{false};
+        double            button1{false};
         double            targetDistance{0.0};
+        int               controlMode;
     };
 
     enum TeleOp_hand
@@ -54,17 +55,26 @@ public:
     double       targetRadius;
 
 private:
-    typedef yarp::os::BufferedPort<yarp::os::Bottle>   BottlePort;
-    typedef yarp::os::BufferedPort<yarp::os::Property> PropertyPort;
-    typedef yarp::os::BufferedPort<yarp::sig::Vector>  VectorPort;
-    typedef yarp::sig::Vector                          Vector;
-    typedef yarp::sig::VectorOf<int>                   IntVector;
-    typedef yarp::os::RpcClient                        RpcClient;
-    typedef yarp::dev::IVelocityControl                IVelocityControl;
-    typedef yarp::dev::IControlMode2                   IControlMode2;
-    typedef yarp::dev::IEncoders                       IEncoders;
-    typedef yarp::dev::PolyDriver                      PolyDriver;
+    struct ctrlRange
+    {
+        double min;
+        double size;
+    };
+
+    typedef yarp::os::BufferedPort<yarp::os::Bottle>             BottlePort;
+    typedef yarp::os::BufferedPort<yarp::os::Property>           PropertyPort;
+    typedef yarp::os::BufferedPort<yarp::sig::Vector>            VectorPort;
+    typedef yarp::sig::Vector                                    Vector;
+    typedef yarp::sig::VectorOf<int>                             IntVector;
+    typedef yarp::os::RpcClient                                  RpcClient;
+    typedef yarp::dev::IVelocityControl                          IVelocityControl;
+    typedef yarp::dev::IPositionControl2                         IPositionControl2;
+    typedef yarp::dev::IControlLimits                            IControlLimits;
+    typedef yarp::dev::IControlMode2                             IControlMode2;
+    typedef yarp::dev::IEncoders                                 IEncoders;
+    typedef yarp::dev::PolyDriver                                PolyDriver;
     typedef yarp::os::Publisher<visualization_msgs_MarkerArray>  MarkerArrayPort;
+    typedef std::vector<ctrlRange>                               vecCtrlRanges;
 
     enum TeleOp_state
     {
@@ -96,6 +106,8 @@ private:
     IEncoders*         ienc;
     IControlMode2*     imod;
     IVelocityControl*  ivel;
+    IPositionControl2* ipos;
+    IControlLimits*    ilim;
     PolyDriver         drvHand;
     IntVector          modes;
     Vector             vels;
@@ -104,6 +116,7 @@ private:
     Vector             rpy;
     bool               button0;
     bool               button1;
+    int                controlMode;
     bool               dragTrigger;
     yarp::os::Mutex    mutex;
     double             gain;
@@ -113,6 +126,7 @@ private:
     MarkerArrayPort    rosPublisherPort;
     CommandData        criticalSection;
     double             targetDistance;
+    vecCtrlRanges      controlRanges;
 
     //method
     void   printState();
@@ -129,6 +143,7 @@ private:
         button0        = criticalSection.button0;
         button1        = criticalSection.button1;
         targetDistance = criticalSection.targetDistance;
+        controlMode    = criticalSection.controlMode;
         mutex.unlock();
     }
 

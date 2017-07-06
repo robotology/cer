@@ -60,7 +60,19 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
 
     if (!drvHand.view(ivel))
     {
-        yError() << "Teleoperation Module: dynamic_cast to IVelocityControl2 interface failed";
+        yError() << "Teleoperation Module: dynamic_cast to IVelocityControl interface failed";
+        return false;
+    }
+
+    if (!drvHand.view(ipos))
+    {
+        yError() << "Teleoperation Module: dynamic_cast to IPositionControl2 interface failed";
+        return false;
+    }
+
+    if (!drvHand.view(ilim))
+    {
+        yError() << "Teleoperation Module: dynamic_cast to IControlLimits interface failed";
         return false;
     }
 
@@ -70,6 +82,10 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
     {
         modes.push_back(VOCAB_CM_VELOCITY);
         vels.push_back(40.0);
+        ctrlRange range;
+        ilim->getLimits(i, &range.min, &range.size);
+        range.size -= range.min;
+        controlRanges.push_back(range);
     }
 
     return true;
@@ -297,14 +313,24 @@ void HandThread::handHandler(const bool hand_grip_switch)
             if (++b1_pressedCount * getPeriod() > 0.5)
             {
 
-                imod->setControlModes(modes.getFirst());
+                imod->setControlModes(&controlMode);
                 handGripStatus = running;
             }
         }
         else // running
         {
 
-            ivel->velocityMove(vels.data());
+            if(controlMode == VOCAB_CM_VELOCITY)
+            {
+                ivel->velocityMove(vels.data());
+            }
+            else if(controlMode == VOCAB_CM_POSITION)
+            {
+                for(int i = 0; i < controlRanges.size(); i++)
+                {
+                    ipos->positionMove(i, controlRanges[i].min + controlRanges[i].size * button1);
+                }
+            }
         }
     }
     else

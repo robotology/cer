@@ -22,6 +22,8 @@
 #include "handThread.h"
 #include "ros_messages/visualization_msgs_Marker.h"
 
+#define CTRLMODE VOCAB_CM_POSITION
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -129,6 +131,14 @@ public:
             yError() << "teleoperation via tf requires at least 4 button";
             return false;
         }
+
+        unsigned int axisCount;
+        if(iJoypad->getAxisCount(axisCount) && axisCount < 4)
+        {
+            yError() << "teleoperation via tf requires at least 4 axis";
+            return false;
+        }
+
 
         return true;
     }
@@ -300,6 +310,7 @@ public:
             for(int i = 0; i < HandThread::hand_count; ++i)
             { 
                 string gripper = i ? "r_gripper" : "l_gripper";
+                double axis0, axis1;
                 if(!iTf->getTransform(enum2frameName[i], rootHandFrame, m))
                 {
                     yWarning() << "teleop: unable to get transform between" << enum2frameName[i] << rootHandFrame;
@@ -312,7 +323,13 @@ public:
                     return true;
                 }
 
-                if(!iJoypad->getButton(!i * 4 + 0, button0) || !iJoypad->getButton(!i * 4 + 3, button1))
+                if(!iJoypad->getButton(!i * 4 + 0, button0) /*|| !iJoypad->getButton(!i * 4 + 3, button1)*/)
+                {
+                    yWarning() << "unable to get buttons state";
+                    return true;
+                }
+
+                if(!iJoypad->getAxis(!i * 2 + 0, axis0) || !iJoypad->getAxis(!i * 2 + 1, axis1))
                 {
                     yWarning() << "unable to get buttons state";
                     return true;
@@ -323,7 +340,8 @@ public:
                 data.pos            = m.subcol(0, 3, 3);
                 data.rpy            = dcm2rpy(m);
                 data.button0        = button0 > 0.3;
-                data.button1        = button1;
+                data.button1        = CTRLMODE == VOCAB_CM_POSITION ? (axis0 + axis1)/2 : axis0 - axis1;
+                data.controlMode    = CTRLMODE;
                 data.targetDistance = sqrt(m_gripper[0][3] * m_gripper[0][3] +
                                            m_gripper[1][3] * m_gripper[1][3] +
                                            m_gripper[2][3] * m_gripper[2][3]);
@@ -331,7 +349,7 @@ public:
 
                 if(data.targetDistance < (*enum2hands[i]).targetRadius)
                 {
-                    //set give a feedback to the user here
+                    //give a feedback to the user here
                 }
             }
         }
