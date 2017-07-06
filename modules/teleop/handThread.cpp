@@ -148,7 +148,7 @@ void HandThread::updateRVIZ(const Vector &xd, const Vector &od)
     Quaternion q;
     q.fromRotationMatrix(axis2dcm(od));
 
-    marker.id                 = 1;
+    marker.id                 = arm_type + 1;
     marker.pose.position.x    = xd[0];
     marker.pose.position.y    = xd[1];
     marker.pose.position.z    = xd[2];
@@ -163,6 +163,9 @@ void HandThread::updateRVIZ(const Vector &xd, const Vector &od)
     marker.color.r            = 0.0;
     marker.color.g            = 1.0;
     marker.color.b            = 0.0;
+    marker.lifetime.sec       = 1.0;
+    marker.lifetime.nsec      = 0.0;
+    marker.mesh_use_embedded_materials = false;
 
     markerarray.markers.push_back(marker);
 
@@ -282,6 +285,7 @@ void HandThread::reachingHandler(const bool dragging_switch, const Vector& pos, 
 
 void HandThread::handHandler(const bool hand_grip_switch)
 {
+
     if (hand_grip_switch)
     {
         if (handGripStatus == idle)
@@ -297,7 +301,7 @@ void HandThread::handHandler(const bool hand_grip_switch)
                 handGripStatus = running;
             }
         }
-        else
+        else // running
         {
 
             ivel->velocityMove(vels.data());
