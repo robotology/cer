@@ -130,8 +130,8 @@ public:
             ud[3]=target->get(9).asDouble();
 
             bool warm_start=false;
-            if (target->size()>=10)
-                warm_start=(target->get(9).asString()=="warm_start");
+            if (target->size()>=11)
+                warm_start=(target->get(10).asString()=="warm_start");
 
             Matrix Hd=axis2dcm(ud);
             Hd.setSubcol(xd,0,3);
