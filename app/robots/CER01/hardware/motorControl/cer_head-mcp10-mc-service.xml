@@ -21,13 +21,21 @@
                     <param name="port">             CONN:P3             CONN:P2             </param>
                 </group>
                 
+          <!--      <group name="ENCODER1">  
+                    <param name="type">             eomc_enc_aea        qenc                </param>  
+                    <param name="port">             CONN:P11            CONN:P2             </param>
+                    <param name="position">         eomc_pos_atjoint    atmotor             </param> 
+                    <param name="resolution">       4096                4096                </param>
+                    <param name="numofnoisebits">   3                   0                   </param>  
+                </group> -->       
+
                 <group name="ENCODER1">  
                     <param name="type">             eomc_enc_aea        aea                 </param>  
                     <param name="port">             CONN:P11            CONN:P10            </param>
                     <param name="position">         eomc_pos_atjoint    atjoint             </param> 
-                    <param name="resolution">       4096                -4096               </param>
-                    <param name="numofnoisebits">      3                3                   </param>  
-                </group>        
+                    <param name="resolution">       4096                4096               </param>
+                    <param name="numofnoisebits">   3                   3                   </param>  
+                </group>
                 
                 <group name="ENCODER2">
                     <param name="type">             eomc_enc_none       none                </param>

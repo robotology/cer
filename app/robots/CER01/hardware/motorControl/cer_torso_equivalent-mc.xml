@@ -20,8 +20,8 @@
       <param name="Min_el">      0.0    </param>
       <param name="Max_alpha">   10.0   </param>
 
-      <param name="BASE_TRANSFORMATION">  -1.0    0.0     0.0    0.0
-                                           0.0   -1.0     0.0    0.0
+      <param name="BASE_TRANSFORMATION">   1.0    0.0     0.0    0.0
+                                           0.0    1.0     0.0    0.0
                                            0.0    0.0     1.0    0.0
                                            0.0    0.0     0.0    1.0
       </param>
