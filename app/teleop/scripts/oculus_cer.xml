@@ -41,7 +41,6 @@
   <module>
     <name>frameGrabberGui2</name>
     <parameters>--local /cer/fggui/cameras --remote /cer/cam/cameras --x 0 --y 350 --width 350 --height 500</parameters>
-    <tag>fggui</tag>
     <node>/r1-console-windows</node>
   </module>
 

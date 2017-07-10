@@ -16,21 +16,21 @@
                 <dependencies>
                     <port timeout="5.0">/geomagic/state:o</port>
                 </dependencies>
-                <prefix>sim</prefix>
+                <prefix>/sim</prefix>
                 <node>r1-console-windows</node>
         </module>
 
         <module>
                 <name>cer_reaching-solver</name>
                 <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1</parameters>
-                <prefix>sim</prefix>
+                <prefix>/sim</prefix>
                 <node>r1-console-linux</node>
         </module>
 
         <module>
                 <name>cer_reaching-controller</name>
                 <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1 --T 1.0</parameters>
-                <prefix>sim</prefix>
+                <prefix>/sim</prefix>
                 <node>r1-console-linux</node>
         </module>
 
