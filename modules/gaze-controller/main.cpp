@@ -42,9 +42,28 @@ using namespace iCub::ctrl;
 using namespace iCub::iKin;
 using namespace cer::kinematics;
 
+// forward declaration
+class Controller;
 
 /****************************************************************/
-class Controller : public RFModule, public PortReader
+class TargetPort : public BufferedPort<Property>
+{
+    Controller *ctrl;
+
+    /****************************************************************/
+    void onRead(Property &request);
+
+public:
+    /****************************************************************/
+    TargetPort() : ctrl(NULL) { }
+
+    /****************************************************************/
+    void setController(Controller *ctrl) { this->ctrl=ctrl; }
+};
+
+
+/****************************************************************/
+class Controller : public RFModule
 {
     PolyDriver         drivers[3];
     IEncodersTimed*    ienc[3];
@@ -60,7 +79,7 @@ class Controller : public RFModule, public PortReader
     minJerkTrajGen* gen;
     
     BufferedPort<Property> statePort;
-    Port targetPort;
+    TargetPort targetPort;
     RpcServer rpcPort;
     Stamp txInfo;
 
@@ -76,132 +95,6 @@ class Controller : public RFModule, public PortReader
     Vector qd;
     Vector pitchPhy;
     Vector yawPhy;
-
-    /****************************************************************/
-    bool read(ConnectionReader &connection)
-    {
-        Property request;
-        request.read(connection);
-
-        if (closing)
-            return true;
-
-        if (verbosity>0)
-            yInfo("Received target request: %s",request.toString().c_str());
-
-        if (request.check("control-frame"))
-        {
-            string control_frame_=request.find("control-frame").asString();
-            const set<string>::iterator it=avFrames.find(control_frame_);
-            if (it==avFrames.end())
-                yError("Unrecognized control frame type \"%s\"!",control_frame_.c_str());                
-            else
-                control_frame=control_frame_;
-        }
-
-        bool doControl=false;        
-        Vector xd(3);
-        Vector q;
-
-        string target_type=request.check("target-type",Value("cartesian")).asString();
-        Bottle *target_location=request.find("target-location").asList();
-        if ((target_type!="cartesian") && (target_type!="angular") && (target_type!="image"))
-            yError("Unrecognized target type \"%s\"!",target_type.c_str());
-        else if (target_location==NULL)
-            yWarning("Missing \"target-location\" option!");
-        else if (target_type=="cartesian")
-        {
-            if (target_location->size()>=3)
-            {
-                xd[0]=target_location->get(0).asDouble();
-                xd[1]=target_location->get(1).asDouble();
-                xd[2]=target_location->get(2).asDouble();
-
-                q=getEncoders();
-                doControl=true;
-            }
-            else
-                yError("Provided too few Cartesian coordinates!");
-        }
-        else if (target_type=="angular")
-        {
-            if (target_location->size()>=2)
-            {
-                Vector azi(4,0.0); azi[2]=1.0;
-                azi[3]=(M_PI/180.0)*target_location->get(0).asDouble();
-
-                Vector ele(4,0.0); ele[1]=-1.0;
-                ele[3]=(M_PI/180.0)*target_location->get(1).asDouble();
-
-                Matrix Hee;
-                Vector q0(6,0.0);
-                solver[control_frame].fkin(q0,Hee);
-
-                Vector xc(4,0.0);
-                xc[2]=xc[3]=1.0;
-
-                xd=axis2dcm(azi)*axis2dcm(ele)*Hee*xc;
-                xd.pop_back();
-
-                q=getEncoders();
-                doControl=true;
-            }
-            else
-                yError("Provided too few angular coordinates!");
-        }
-        else if (target_type=="image")
-        {
-            string image=request.check("image",Value("left")).asString();
-            if (avFrames.find(image)==avFrames.end())
-                yError("Unrecognized image type \"%s\"!",image.c_str());
-            else if (intrinsincs.find(image)==intrinsincs.end())
-                yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
-            else 
-            {                    
-                if (target_location->size()>=2)
-                {
-                    Vector p(3,1.0);
-                    if (target_location->size()>=3)
-                        p[2]=target_location->get(2).asDouble();
-
-                    p[0]=p[2]*target_location->get(0).asDouble(); 
-                    p[1]=p[2]*target_location->get(1).asDouble();
-                    
-                    Matrix Hee;
-                    q=getEncoders();
-                    solver[image].fkin(q,Hee);
-
-                    Vector xc=intrinsincs[image]*p;
-                    xc[3]=1.0;
-
-                    xd=Hee*xc;
-                    xd.pop_back();
-
-                    doControl=true;
-                }
-                else
-                    yError("Provided too few image coordinates!");
-            }
-        }
-        else
-            yError("Reached a point in the code we shouldn't have reached :(");
-
-        if (doControl)
-        {
-            LockGuard lg(mutex);
-            solver[control_frame].setInitialGuess(q);
-            solver[control_frame].ikin(xd,qd);
-
-            if (!controlling)
-                gen->init(q.subVector(4,5));
-            
-            controlling=true;
-            if (verbosity>0)
-                yInfo("Going to: %s",qd.toString(3,3).c_str());
-        }
-
-        return true;
-    }
 
     /****************************************************************/
     void getIntrinsics(ResourceFinder &rf)
@@ -558,7 +451,8 @@ public:
 
         statePort.open("/cer_gaze-controller/state:o");
         targetPort.open("/cer_gaze-controller/target:i");
-        targetPort.setReader(*this);
+        targetPort.setController(this);
+        targetPort.useCallback();
 
         rpcPort.open("/cer_gaze-controller/rpc");
         attach(rpcPort);
@@ -608,7 +502,7 @@ public:
         if (controlling)
             stopControl();
 
-        if (targetPort.isOpen())
+        if (!targetPort.isClosed())
             targetPort.close(); 
 
         if (!statePort.isClosed())
@@ -629,6 +523,127 @@ public:
     double getPeriod()
     {
         return Ts;
+    }
+
+    /****************************************************************/
+    void onRead(Property &request)
+    {
+        if (closing)
+            return;
+
+        if (verbosity>0)
+            yInfo("Received target request: %s",request.toString().c_str());
+
+        if (request.check("control-frame"))
+        {
+            string control_frame_=request.find("control-frame").asString();
+            const set<string>::iterator it=avFrames.find(control_frame_);
+            if (it==avFrames.end())
+                yError("Unrecognized control frame type \"%s\"!",control_frame_.c_str());                
+            else
+                control_frame=control_frame_;
+        }
+
+        bool doControl=false;        
+        Vector xd(3);
+        Vector q;
+
+        string target_type=request.check("target-type",Value("cartesian")).asString();
+        Bottle *target_location=request.find("target-location").asList();
+        if ((target_type!="cartesian") && (target_type!="angular") && (target_type!="image"))
+            yError("Unrecognized target type \"%s\"!",target_type.c_str());
+        else if (target_location==NULL)
+            yWarning("Missing \"target-location\" option!");
+        else if (target_type=="cartesian")
+        {
+            if (target_location->size()>=3)
+            {
+                xd[0]=target_location->get(0).asDouble();
+                xd[1]=target_location->get(1).asDouble();
+                xd[2]=target_location->get(2).asDouble();
+
+                q=getEncoders();
+                doControl=true;
+            }
+            else
+                yError("Provided too few Cartesian coordinates!");
+        }
+        else if (target_type=="angular")
+        {
+            if (target_location->size()>=2)
+            {
+                Vector azi(4,0.0); azi[2]=1.0;
+                azi[3]=(M_PI/180.0)*target_location->get(0).asDouble();
+
+                Vector ele(4,0.0); ele[1]=-1.0;
+                ele[3]=(M_PI/180.0)*target_location->get(1).asDouble();
+
+                Matrix Hee;
+                Vector q0(6,0.0);
+                solver[control_frame].fkin(q0,Hee);
+
+                Vector xc(4,0.0);
+                xc[2]=xc[3]=1.0;
+
+                xd=axis2dcm(azi)*axis2dcm(ele)*Hee*xc;
+                xd.pop_back();
+
+                q=getEncoders();
+                doControl=true;
+            }
+            else
+                yError("Provided too few angular coordinates!");
+        }
+        else if (target_type=="image")
+        {
+            string image=request.check("image",Value("left")).asString();
+            if (avFrames.find(image)==avFrames.end())
+                yError("Unrecognized image type \"%s\"!",image.c_str());
+            else if (intrinsincs.find(image)==intrinsincs.end())
+                yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
+            else 
+            {                    
+                if (target_location->size()>=2)
+                {
+                    Vector p(3,1.0);
+                    if (target_location->size()>=3)
+                        p[2]=target_location->get(2).asDouble();
+
+                    p[0]=p[2]*target_location->get(0).asDouble(); 
+                    p[1]=p[2]*target_location->get(1).asDouble();
+
+                    Matrix Hee;
+                    q=getEncoders();
+                    solver[image].fkin(q,Hee);
+
+                    Vector xc=intrinsincs[image]*p;
+                    xc[3]=1.0;
+
+                    xd=Hee*xc;
+                    xd.pop_back();
+
+                    doControl=true;
+                }
+                else
+                    yError("Provided too few image coordinates!");
+            }
+        }
+        else
+            yError("Reached a point in the code we shouldn't have reached :(");
+
+        if (doControl)
+        {
+            LockGuard lg(mutex);
+            solver[control_frame].setInitialGuess(q);
+            solver[control_frame].ikin(xd,qd);
+
+            if (!controlling)
+                gen->init(q.subVector(4,5));
+
+            controlling=true;
+            if (verbosity>0)
+                yInfo("Going to: %s",qd.toString(3,3).c_str());
+        }
     }
 
     /****************************************************************/
@@ -775,6 +790,14 @@ public:
         return true;
     }
 };
+
+
+/****************************************************************/
+void TargetPort::onRead(Property &request)
+{
+    if (ctrl!=NULL)
+        ctrl->onRead(request);
+}
 
 
 /****************************************************************/

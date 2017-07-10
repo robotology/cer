@@ -36,9 +36,28 @@ using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace cer::kinematics;
 
+// forward declaration
+class Controller;
 
 /****************************************************************/
-class Controller : public RFModule, public PortReader
+class TargetPort : public BufferedPort<Property>
+{
+    Controller *ctrl;
+
+    /****************************************************************/
+    void onRead(Property &target);
+
+public:
+    /****************************************************************/
+    TargetPort() : ctrl(NULL) { }
+
+    /****************************************************************/
+    void setController(Controller *ctrl) { this->ctrl=ctrl; }
+};
+
+
+/****************************************************************/
+class Controller : public RFModule
 {
     PolyDriver         drivers[4];
     VectorOf<int>      jointsIndexes[4];
@@ -54,7 +73,7 @@ class Controller : public RFModule, public PortReader
     minJerkTrajGen* gen;
     
     BufferedPort<Vector> statePort;
-    Port targetPort;
+    TargetPort targetPort;
     RpcServer rpcPort;
     RpcClient solverPort;
     Stamp txInfo;
@@ -68,68 +87,6 @@ class Controller : public RFModule, public PortReader
     double stop_threshold_prismatic;
     double Ts;
     Vector qd;    
-
-    /****************************************************************/
-    bool read(ConnectionReader &connection)
-    {
-        Property target;
-        target.read(connection);
-
-        if (closing)
-            return true;
-
-        if (verbosity>0)
-            yInfo("Received target request: %s",target.toString().c_str());
-
-        if (!target.check("q"))
-        {
-            Vector q=getEncoders();
-            Bottle b; b.addList().read(q);
-            target.put("q",b.get(0));
-        }
-
-        if (verbosity>0)
-            yInfo("Forwarding request to solver: %s",target.toString().c_str());
-
-        Bottle reply;
-        bool latch_controlling=controlling;
-        if (solverPort.write(target,reply))
-        {
-            if (verbosity>0)
-                yInfo("Received reply from solver: %s",reply.toString().c_str());
-
-            if (reply.get(0).asVocab()==Vocab::encode("ack"))
-            {
-                if (reply.size()>1)
-                {
-                    if (Bottle *payLoad=reply.get(1).asList())
-                    {
-                        LockGuard lg(mutex);
-                        // process only if we didn't receive
-                        // a stop request in the meanwhile
-                        if (controlling==latch_controlling)
-                        {
-                            for (size_t i=0; i<qd.length(); i++)
-                                qd[i]=payLoad->get(i).asDouble();
-
-                            if (!controlling)
-                                gen->init(getEncoders());
-                            
-                            controlling=true;
-                            if (verbosity>0)
-                                yInfo("Going to: %s",qd.toString(3,3).c_str());
-                        }
-                    }
-                }
-            }
-            else
-                yError("Malformed target type!");
-        }
-        else
-            yError("Unable to communicate with the solver");
-
-        return true;
-    }
 
     /****************************************************************/
     Vector getEncoders(double *timeStamp=NULL)
@@ -339,7 +296,8 @@ public:
         solverPort.open(("/cer_reaching-controller/"+arm_type+"/solver:rpc").c_str());
 
         targetPort.open(("/cer_reaching-controller/"+arm_type+"/target:i").c_str());
-        targetPort.setReader(*this);
+        targetPort.setController(this);
+        targetPort.useCallback();
 
         rpcPort.open(("/cer_reaching-controller/"+arm_type+"/rpc").c_str());
         attach(rpcPort);
@@ -378,7 +336,7 @@ public:
         if (controlling)
             stopControl();
 
-        if (targetPort.isOpen())
+        if (!targetPort.isClosed())
             targetPort.close(); 
 
         if (!statePort.isClosed())
@@ -402,6 +360,63 @@ public:
     double getPeriod()
     {
         return Ts;
+    }
+
+    /****************************************************************/
+    void onRead(Property &target)
+    {
+        if (closing)
+            return;
+
+        if (verbosity>0)
+            yInfo("Received target request: %s",target.toString().c_str());
+
+        if (!target.check("q"))
+        {
+            Vector q=getEncoders();
+            Bottle b; b.addList().read(q);
+            target.put("q",b.get(0));
+        }
+
+        if (verbosity>0)
+            yInfo("Forwarding request to solver: %s",target.toString().c_str());
+
+        Bottle reply;
+        bool latch_controlling=controlling;
+        if (solverPort.write(target,reply))
+        {
+            if (verbosity>0)
+                yInfo("Received reply from solver: %s",reply.toString().c_str());
+
+            if (reply.get(0).asVocab()==Vocab::encode("ack"))
+            {
+                if (reply.size()>1)
+                {
+                    if (Bottle *payLoad=reply.get(1).asList())
+                    {
+                        LockGuard lg(mutex);
+                        // process only if we didn't receive
+                        // a stop request in the meanwhile
+                        if (controlling==latch_controlling)
+                        {
+                            for (size_t i=0; i<qd.length(); i++)
+                                qd[i]=payLoad->get(i).asDouble();
+
+                            if (!controlling)
+                                gen->init(getEncoders());
+
+                            controlling=true;
+                            if (verbosity>0)
+                                yInfo("Going to: %s",qd.toString(3,3).c_str());
+                        }
+                    }
+                }
+            }
+            else
+                yError("Malformed target type!");
+        }
+        else
+            yError("Unable to communicate with the solver");
     }
 
     /****************************************************************/
@@ -525,6 +540,14 @@ public:
         return true;
     }
 };
+
+
+/****************************************************************/
+void TargetPort::onRead(Property &target)
+{
+    if (ctrl!=NULL)
+        ctrl->onRead(target);
+}
 
 
 /****************************************************************/
