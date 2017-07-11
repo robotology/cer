@@ -197,6 +197,18 @@ public:
                     ack=true;
                 }
 
+                if (parameters->check("torso_heave"))
+                {
+                    p.torso_heave=parameters->find("torso_heave").asDouble();
+                    ack=true;
+                }
+
+                if (parameters->check("lower_arm_heave"))
+                {
+                    p.lower_arm_heave=parameters->find("lower_arm_heave").asDouble();
+                    ack=true;
+                }
+
                 if (parameters->check("tol"))
                 {
                     p.tol=parameters->find("tol").asDouble();
@@ -230,7 +242,7 @@ public:
 
         if (Bottle *payLoad=cmd.find("target").asList())
         {
-            if (payLoad->size()<9)
+            if (payLoad->size()<7)
             {
                 yError("wrong target size!");
                 reply.clear();
@@ -238,17 +250,14 @@ public:
                 return true;
             }
             
-            p.torso_heave=payLoad->get(0).asDouble();
-            p.lower_arm_heave=payLoad->get(1).asDouble();
-
             Vector xd(3),ud(4);
-            xd[0]=payLoad->get(2).asDouble();
-            xd[1]=payLoad->get(3).asDouble();
-            xd[2]=payLoad->get(4).asDouble();
-            ud[0]=payLoad->get(5).asDouble();
-            ud[1]=payLoad->get(6).asDouble();
-            ud[2]=payLoad->get(7).asDouble();
-            ud[3]=payLoad->get(8).asDouble();
+            xd[0]=payLoad->get(0).asDouble();
+            xd[1]=payLoad->get(1).asDouble();
+            xd[2]=payLoad->get(2).asDouble();
+            ud[0]=payLoad->get(3).asDouble();
+            ud[1]=payLoad->get(4).asDouble();
+            ud[2]=payLoad->get(5).asDouble();
+            ud[3]=payLoad->get(6).asDouble();
 
             Matrix Hd=axis2dcm(ud);
             Hd.setSubcol(xd,0,3);
