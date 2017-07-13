@@ -2,13 +2,11 @@
 
   <!-- dynamic map generation -->
   <node name="gmapping_node" pkg="gmapping" type="slam_gmapping" respawn="false" >
-  <param name="temporalUpdate" value="-1" />
-  <remap to="/laser" from="/scan" />
-  <param name="angularUpdate"  value="0.04" />
-  <param name="base_frame" value="mobile_base_body_link" />
+  <remap from="/scan" to="/laser" />
   <param name="transform_publish_period" value = "0.01" />
+        <param name="base_frame" value="mobile_base_lidar" />
         <param name="map_frame" value = "map" />
-        <param name="odom_frame" value = "device" />
+        <param name="odom_frame" value = "start_of_service" />
         <param name="minimumScore" value = "1000" />
         <param name="map_update_interval" value="0.5"/>
         <param name="maxUrange" value="6.0"/>
@@ -26,7 +24,7 @@
         <param name="stt" value="0.02"/>
         <param name="linearUpdate" value="0.25"/>     
         <param name="angularUpdate" value="0.05"/>   
-        <param name="temporalUpdate" value="-1.0"/>
+        <param name="temporalUpdate" value="0.1"/>
         <param name="resampleThreshold" value="0.5"/>
         <param name="particles" value="300"/>
         <param name="xmin" value="-50.0"/>
