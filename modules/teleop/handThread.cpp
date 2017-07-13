@@ -27,11 +27,11 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
     if (rf.check("wrist-heave"))
     {
         wrist_heave = rf.find("wrist-heave").asDouble();
-        mode        = "full_pose+no_torso_no_heave";
+        mode        = "full_pose+no_torso_heave";
     }
     else
     {
-        mode = "xyz_pose+no_torso_no_heave";
+        mode = "full_pose+no_torso_no_heave";
     }
 
     string   part  = ((arm_type == left_hand) ? "left_hand" : "right_hand");
@@ -133,10 +133,17 @@ void HandThread::goToPose(const Vector &xd, const Vector &od)
 
 void HandThread::updateRVIZ(const Vector &xd, const Vector &od)
 {
+    Matrix   m;
     double   yarpTimeStamp = yarp::os::Time::now();
     uint64_t time;
     uint64_t nsec_part;
     uint64_t sec_part;
+
+    m = axis2dcm(od);
+    m.setSubcol(xd, 0, 3);
+    mutex.lock();
+    criticalSection.tf = m;
+    mutex.unlock();
 
     time      = (uint64_t)(yarpTimeStamp * 1000000000UL);
     nsec_part = (time % 1000000000UL);
@@ -157,7 +164,7 @@ void HandThread::updateRVIZ(const Vector &xd, const Vector &od)
     marker.header.stamp.sec  = (yarp::os::NetUint32)sec_part;
     marker.header.stamp.nsec = (yarp::os::NetUint32)nsec_part;
     marker.ns                = "cer-teleop_namespace";
-    marker.type              = visualization_msgs_Marker::SPHERE;
+    marker.type              = visualization_msgs_Marker::CYLINDER;
     marker.action            = visualization_msgs_Marker::ADD;
 
     //center
@@ -168,10 +175,10 @@ void HandThread::updateRVIZ(const Vector &xd, const Vector &od)
     marker.pose.position.x    = xd[0];
     marker.pose.position.y    = xd[1];
     marker.pose.position.z    = xd[2];
-    marker.pose.orientation.x = 0.0;
-    marker.pose.orientation.y = 0.0;
-    marker.pose.orientation.z = 0.0;
-    marker.pose.orientation.w = 1.0;
+    marker.pose.orientation.x = q.x();
+    marker.pose.orientation.y = q.y();
+    marker.pose.orientation.z = q.z();
+    marker.pose.orientation.w = q.w();
     marker.scale.x            = 0.05;
     marker.scale.y            = 0.05;
     marker.scale.z            = 0.05;
@@ -244,6 +251,7 @@ void HandThread::reachingHandler(const bool dragging_switch, const Vector& pos, 
             xd[0]     = gain * (pos[0] - pos0[0]);
             xd[1]     = gain * (pos[1] - pos0[1]);
             xd[2]     = gain * (pos[2] - pos0[2]);
+
             xd[3]     = 1.0;
             Matrix H0 = eye(4,4);
             H0(0,3)   = x0[0];
@@ -252,19 +260,23 @@ void HandThread::reachingHandler(const bool dragging_switch, const Vector& pos, 
             xd        = H0 * xd;
             xd.pop_back();
 
-            drpy[0]   = gain * (rpy[0] - rpy0[0]);
-            drpy[1]   = gain * (rpy[1] - rpy0[1]);
-            drpy[2]   = gain * (rpy[2] - rpy0[2]);
-            ax[0]     = 1.0;
-            ay[1]     = 1.0;
-            az[2]     = 1.0;
-            ax[3]     = drpy[2];
-            ay[3]     = drpy[1] * ((arm_type == right_hand) ? -1.0 : +1.0);
-            az[3]     = drpy[0] * ((arm_type == right_hand) ? -1.0 : +1.0);
-            Matrix Rd = axis2dcm(o0) * axis2dcm(ax) * axis2dcm(ay) * axis2dcm(az);
-            Vector od = dcm2axis(Rd);
+            drpy[0]   = gain * (absoluteRotation ? rpy[0] : (rpy[0] - rpy0[0]));
+            drpy[1]   = -gain * (absoluteRotation ? rpy[2] : (rpy[2] - rpy0[2]));
+            drpy[2]   = gain * (absoluteRotation ? rpy[1] : (rpy[1] - rpy0[1]));
+            //ax[0]     = 1.0;
+            //ay[1]     = 1.0;
+            //az[2]     = 1.0;
+            //ax[3]     = drpy[0];
+            //ay[3]     = drpy[1]; //* ((arm_type == right_hand) ? -1.0 : +1.0); for geomagic
+            //az[3]     = drpy[2]; //* ((arm_type == right_hand) ? -1.0 : +1.0); for geomagic
+            Matrix Rd = axis2dcm(o0) * rpy2dcm(drpy);//axis2dcm(ax) * axis2dcm(ay) * axis2dcm(az);
+            Vector od = absoluteRotation ? dcm2axis(rpy2dcm(drpy)) : dcm2axis(Rd);
 
-            if (reachState)
+            if(simultMovRot)
+            {
+                goToPose(xd, od);
+            }
+            else if (reachState)
             {
                 goToPose(fixedPosition, od);
             }
@@ -302,7 +314,7 @@ void HandThread::reachingHandler(const bool dragging_switch, const Vector& pos, 
 void HandThread::handHandler(const bool hand_grip_switch)
 {
 
-    if (hand_grip_switch)
+    if (hand_grip_switch || !singleButton)
     {
         if (handGripStatus == idle)
         {
@@ -322,13 +334,14 @@ void HandThread::handHandler(const bool hand_grip_switch)
 
             if(controlMode == VOCAB_CM_VELOCITY)
             {
-                ivel->velocityMove(vels.data());
+                ivel->velocityMove((vels * button1).data());
             }
-            else if(controlMode == VOCAB_CM_POSITION)
+            else if(controlMode == VOCAB_CM_POSITION_DIRECT)
             {
                 for(int i = 0; i < controlRanges.size(); i++)
                 {
-                    ipos->positionMove(i, controlRanges[i].min + controlRanges[i].size * button1);
+                    ipos->setPosition(i, controlRanges[i].min + controlRanges[i].size * button1);
+
                 }
             }
         }
@@ -337,7 +350,10 @@ void HandThread::handHandler(const bool hand_grip_switch)
     {
         if (handGripStatus == triggered)
         {
-            vels = -1.0 * vels;
+            if(controlMode == VOCAB_CM_VELOCITY && singleButton)
+            {
+                vels = -1.0 * vels;
+            }
             printState();
         }
 

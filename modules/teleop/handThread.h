@@ -1,4 +1,5 @@
 #include <string>
+#include <yarp/sig/Matrix.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/BufferedPort.h>
@@ -23,7 +24,18 @@ public:
         bool              button0{false};
         double            button1{false};
         double            targetDistance{0.0};
-        int               controlMode;
+        int               controlMode{VOCAB_CM_POSITION_DIRECT};
+        bool              singleButton{false};
+        bool              simultMovRot{false};
+        bool              absoluteRotation{false};
+        yarp::sig::Matrix tf{4, 4};
+        CommandData()
+        {
+            tf[0][0] = 1;
+            tf[1][1] = 1;
+            tf[2][2] = 1;
+            tf[3][3] = 1;
+        }
     };
 
     enum TeleOp_hand
@@ -36,10 +48,25 @@ public:
     //method
     HandThread(TeleOp_hand hand) : RateThread(10), arm_type(hand){}
     virtual      ~HandThread(){}
+
+    yarp::sig::Matrix getMatrix()
+    {
+        yarp::os::LockGuard l(mutex);
+        return criticalSection.tf;
+    }
+
     void         setData(CommandData newdata)
     {
         mutex.lock();
-        criticalSection = newdata;
+        criticalSection.absoluteRotation = newdata.absoluteRotation;
+        criticalSection.button0        = newdata.button0       ;
+        criticalSection.button1        = newdata.button1       ;
+        criticalSection.controlMode    = newdata.controlMode   ;
+        criticalSection.pos            = newdata.pos           ;
+        criticalSection.rpy            = newdata.rpy           ;
+        criticalSection.simultMovRot   = newdata.simultMovRot  ;
+        criticalSection.singleButton   = newdata.singleButton  ;
+        criticalSection.targetDistance = newdata.targetDistance;
         mutex.unlock();
     }
     void         setGrabTrigger();
@@ -68,7 +95,7 @@ private:
     typedef yarp::sig::VectorOf<int>                             IntVector;
     typedef yarp::os::RpcClient                                  RpcClient;
     typedef yarp::dev::IVelocityControl                          IVelocityControl;
-    typedef yarp::dev::IPositionControl2                         IPositionControl2;
+    typedef yarp::dev::IPositionDirect                           IPositionDirect;
     typedef yarp::dev::IControlLimits                            IControlLimits;
     typedef yarp::dev::IControlMode2                             IControlMode2;
     typedef yarp::dev::IEncoders                                 IEncoders;
@@ -106,7 +133,7 @@ private:
     IEncoders*         ienc;
     IControlMode2*     imod;
     IVelocityControl*  ivel;
-    IPositionControl2* ipos;
+    IPositionDirect*   ipos;
     IControlLimits*    ilim;
     PolyDriver         drvHand;
     IntVector          modes;
@@ -115,7 +142,7 @@ private:
     Vector             pos;
     Vector             rpy;
     bool               button0;
-    bool               button1;
+    double             button1;
     int                controlMode;
     bool               dragTrigger;
     yarp::os::Mutex    mutex;
@@ -127,6 +154,9 @@ private:
     CommandData        criticalSection;
     double             targetDistance;
     vecCtrlRanges      controlRanges;
+    bool               singleButton;
+    bool               simultMovRot;
+    bool               absoluteRotation;
 
     //method
     void   printState();
@@ -138,12 +168,15 @@ private:
     void   getData()
     {
         mutex.lock();
-        pos            = criticalSection.pos;
-        rpy            = criticalSection.rpy;
-        button0        = criticalSection.button0;
-        button1        = criticalSection.button1;
-        targetDistance = criticalSection.targetDistance;
-        controlMode    = criticalSection.controlMode;
+        pos              = criticalSection.pos;
+        rpy              = criticalSection.rpy;
+        button0          = criticalSection.button0;
+        button1          = criticalSection.button1;
+        targetDistance   = criticalSection.targetDistance;
+        controlMode      = criticalSection.controlMode;
+        singleButton     = criticalSection.singleButton;
+        simultMovRot     = criticalSection.simultMovRot;
+        absoluteRotation = criticalSection.absoluteRotation;
         mutex.unlock();
     }
 

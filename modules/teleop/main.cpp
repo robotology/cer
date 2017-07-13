@@ -22,8 +22,6 @@
 #include "handThread.h"
 #include "ros_messages/visualization_msgs_Marker.h"
 
-#define CTRLMODE VOCAB_CM_POSITION
-
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -63,6 +61,7 @@ protected:
     IJoypadController* iJoypad;
     map<int,string>    stateStr;
     Matrix             Tsim;
+    int                ctrlMode;
 
     /**********************************************************/
 
@@ -83,9 +82,24 @@ public:
         param_v.push_back(std::make_pair("joyDevice",           ParamParser::TYPE_STRING));
         param_v.push_back(std::make_pair("joyLocal",            ParamParser::TYPE_STRING));
         param_v.push_back(std::make_pair("joyRemote",           ParamParser::TYPE_STRING));
+        param_v.push_back(std::make_pair("control_mode",        ParamParser::TYPE_STRING));
 
         if(!param_parser.parse(rf, param_v))
         {
+            return false;
+        }
+
+        if(rf.find("control_mode").asString() == "velocity")
+        {
+            ctrlMode = VOCAB_CM_VELOCITY;
+        }
+        else if(rf.find("control_mode").asString() == "position")
+        {
+            ctrlMode = VOCAB_CM_POSITION_DIRECT;
+        }
+        else
+        {
+            yError() << "teleop: control mode not supported.. possible value are 'position' and 'velocity'";
             return false;
         }
 
@@ -145,6 +159,7 @@ public:
 
     bool configureHaptic(ResourceFinder& rf)
     {
+        ctrlMode = VOCAB_CM_VELOCITY;
         string device   = rf.check("device",   Value("geomagic")).asString();
 
         Property optGeo("(device hapticdeviceclient)");
@@ -294,16 +309,28 @@ public:
     bool updateModule()
     {
         //disclaimer: those static are read only constant value.. (so it's safe for them to be static)
-        Matrix                   m, m_gripper;
-        float                    button0, button1;
-        static const string      enum2frameName[HandThread::hand_count] = {leftHandFrame, rightHandFrame};
-        static HandThread*       enum2hands[HandThread::hand_count]     = {&left, &right};
+        Matrix                  m, m_gripper;
+        float                   button0, button1;
+        HandThread::CommandData data;
+        static const string     enum2frameName[HandThread::hand_count] = {leftHandFrame, rightHandFrame};
+        static HandThread*      enum2hands[HandThread::hand_count]     = {&left, &right};
         if (frameSource == HAPTIC_DEVICE)
         {
             Vector buttons, pos, rpy;
             igeo->getButtons(buttons);
             igeo->getPosition(pos);
             igeo->getOrientation(rpy);
+
+            data.pos              = pos;
+            data.rpy              = rpy;
+            data.button0          = buttons[0];
+            data.button1          = buttons[1];
+            data.controlMode      = VOCAB_CM_VELOCITY;
+            data.singleButton     = true;
+            data.targetDistance   = 0;
+            data.simultMovRot     = false;
+            data.absoluteRotation = false;
+            (*enum2hands[0]).setData(data);
         }
         else if (frameSource == VR_DEVICE)
         {
@@ -311,41 +338,52 @@ public:
             { 
                 string gripper = i ? "r_gripper" : "l_gripper";
                 double axis0, axis1;
+                bool reset = false;
+
+                if(!iJoypad->getButton(!i * 4 + 0, button0) /*|| !iJoypad->getButton(!i * 4 + 3, button1)*/)
+                {
+                    yWarning() << "unable to get buttons state";
+                    reset = true;
+                }
+
+                if(!iJoypad->getAxis(i, axis0) || !iJoypad->getAxis(i + 2, axis1))
+                {
+                    yWarning() << "unable to get buttons state";
+                    reset = true;
+                }
+
                 if(!iTf->getTransform(enum2frameName[i], rootHandFrame, m))
                 {
                     yWarning() << "teleop: unable to get transform between" << enum2frameName[i] << rootHandFrame;
-                    return true;
+                    reset = true;
                 }
 
                 if(!iTf->getTransform(enum2frameName[i], gripper, m_gripper))
                 {
                     yWarning() << "teleop: unable to get transform between" << enum2frameName[i] << gripper;
-                    return true;
+                    reset = true;
                 }
 
-                if(!iJoypad->getButton(!i * 4 + 0, button0) /*|| !iJoypad->getButton(!i * 4 + 3, button1)*/)
+                if(reset)
                 {
-                    yWarning() << "unable to get buttons state";
+                    (*enum2hands[i]).setData(data);
                     return true;
                 }
 
-                if(!iJoypad->getAxis(!i * 2 + 0, axis0) || !iJoypad->getAxis(!i * 2 + 1, axis1))
-                {
-                    yWarning() << "unable to get buttons state";
-                    return true;
-                }
-
-                //m = T * m;
-                HandThread::CommandData data;
-                data.pos            = m.subcol(0, 3, 3);
-                data.rpy            = dcm2rpy(m);
-                data.button0        = button0 > 0.3;
-                data.button1        = CTRLMODE == VOCAB_CM_POSITION ? (axis0 + axis1)/2 : axis0 - axis1;
-                data.controlMode    = CTRLMODE;
-                data.targetDistance = sqrt(m_gripper[0][3] * m_gripper[0][3] +
-                                           m_gripper[1][3] * m_gripper[1][3] +
-                                           m_gripper[2][3] * m_gripper[2][3]);
+                data.pos                = m.subcol(0, 3, 3);
+                data.rpy                = dcm2rpy(m);
+                data.button0            = button0 > 0.3;
+                data.button1            = ctrlMode == VOCAB_CM_POSITION_DIRECT ? (axis0 + axis1)/2 : axis0 - axis1;
+                data.controlMode        = ctrlMode;
+                data.singleButton       = false;
+                data.simultMovRot       = true;
+                data.absoluteRotation   = false;
+                data.targetDistance     = sqrt(m_gripper[0][3] * m_gripper[0][3] +
+                                               m_gripper[1][3] * m_gripper[1][3] +
+                                               m_gripper[2][3] * m_gripper[2][3]);
                 (*enum2hands[i]).setData(data);
+
+                iTf->setTransform(enum2frameName[i]+"_target", "mobile_base_body_link",  (*enum2hands[i]).getMatrix());
 
                 if(data.targetDistance < (*enum2hands[i]).targetRadius)
                 {
