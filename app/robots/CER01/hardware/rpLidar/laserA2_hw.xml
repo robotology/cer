@@ -4,7 +4,7 @@
     <device name="cerLaser" type="rpLidar2">  
        <group name="GENERAL">
             <param name="name">            cer_laser     </param>
-            <param name="clip_max">        3.5          </param>
+            <param name="clip_max">        7.0          </param>
             <param name="clip_min">        0.1          </param>
             <param name="max_angle">       360          </param>
             <param name="min_angle">       0            </param>
