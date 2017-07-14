@@ -62,6 +62,7 @@ protected:
     map<int,string>    stateStr;
     Matrix             Tsim;
     int                ctrlMode;
+    bool               absoluteRotation{false};
 
     /**********************************************************/
 
@@ -102,6 +103,7 @@ public:
             yError() << "teleop: control mode not supported.. possible value are 'position' and 'velocity'";
             return false;
         }
+        absoluteRotation = rf.check("absolute_rotation");
 
         Property tf_cfg, joy_cfg;
         tf_cfg.put("device",  rf.find("tfDevice").asString());
@@ -377,7 +379,7 @@ public:
                 data.controlMode        = ctrlMode;
                 data.singleButton       = false;
                 data.simultMovRot       = true;
-                data.absoluteRotation   = false;
+                data.absoluteRotation   = absoluteRotation;
                 data.targetDistance     = sqrt(m_gripper[0][3] * m_gripper[0][3] +
                                                m_gripper[1][3] * m_gripper[1][3] +
                                                m_gripper[2][3] * m_gripper[2][3]);

@@ -252,8 +252,15 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
             H0(0,3)   = x0[0];
             H0(1,3)   = x0[1];
             H0(2,3)   = x0[2];
-            //xd        = H0 * xd;
-            m         = H0 * (SE3inv(pose0) * pose);
+            if(absoluteRotation)
+            {
+                m = (pose * pose0.transposed()) * H0;
+            }
+            else
+            {
+                m = H0 * (pose0.transposed() * pose);
+            }
+
 
             if(simultMovRot)
             {
