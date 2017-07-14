@@ -320,9 +320,10 @@ public:
             igeo->getButtons(buttons);
             igeo->getPosition(pos);
             igeo->getOrientation(rpy);
+            m = rpy2dcm(rpy);
+            m.setSubcol(pos, 0, 3);
 
-            data.pos              = pos;
-            data.rpy              = rpy;
+            data.pose             = m;
             data.button0          = buttons[0];
             data.button1          = buttons[1];
             data.controlMode      = VOCAB_CM_VELOCITY;
@@ -370,8 +371,7 @@ public:
                     return true;
                 }
 
-                data.pos                = m.subcol(0, 3, 3);
-                data.rpy                = dcm2rpy(m);
+                data.pose               = m;
                 data.button0            = button0 > 0.3;
                 data.button1            = ctrlMode == VOCAB_CM_POSITION_DIRECT ? (axis0 + axis1)/2 : axis0 - axis1;
                 data.controlMode        = ctrlMode;

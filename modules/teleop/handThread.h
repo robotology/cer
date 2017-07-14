@@ -19,8 +19,7 @@ class HandThread : public yarp::os::RateThread
 public:
     struct CommandData
     {
-        yarp::sig::Vector pos{3};
-        yarp::sig::Vector rpy{3};
+        yarp::sig::Matrix pose{4, 4};
         bool              button0{false};
         double            button1{false};
         double            targetDistance{0.0};
@@ -59,14 +58,13 @@ public:
     {
         mutex.lock();
         criticalSection.absoluteRotation = newdata.absoluteRotation;
-        criticalSection.button0        = newdata.button0       ;
-        criticalSection.button1        = newdata.button1       ;
-        criticalSection.controlMode    = newdata.controlMode   ;
-        criticalSection.pos            = newdata.pos           ;
-        criticalSection.rpy            = newdata.rpy           ;
-        criticalSection.simultMovRot   = newdata.simultMovRot  ;
-        criticalSection.singleButton   = newdata.singleButton  ;
-        criticalSection.targetDistance = newdata.targetDistance;
+        criticalSection.button0          = newdata.button0         ;
+        criticalSection.button1          = newdata.button1         ;
+        criticalSection.controlMode      = newdata.controlMode     ;
+        criticalSection.pose             = newdata.pose            ;
+        criticalSection.simultMovRot     = newdata.simultMovRot    ;
+        criticalSection.singleButton     = newdata.singleButton    ;
+        criticalSection.targetDistance   = newdata.targetDistance  ;
         mutex.unlock();
     }
     void         setGrabTrigger();
@@ -75,7 +73,7 @@ public:
     virtual void threadRelease() YARP_OVERRIDE;
     virtual void run()           YARP_OVERRIDE;
     bool         openControlBoards(yarp::os::Searchable& rf);
-    void         reachingHandler(const bool dragging_switch, const yarp::sig::Vector& pos, const yarp::sig::Vector& rpy);
+    void         reachingHandler(const bool dragging_switch, const yarp::sig::Matrix &pose);
     void         handHandler(const bool hand_grip_switch);
 
     //properties
@@ -102,6 +100,7 @@ private:
     typedef yarp::dev::PolyDriver                                PolyDriver;
     typedef yarp::os::Publisher<visualization_msgs_MarkerArray>  MarkerArrayPort;
     typedef std::vector<ctrlRange>                               vecCtrlRanges;
+    typedef yarp::sig::Matrix                                    Matrix;
 
     enum TeleOp_state
     {
@@ -117,7 +116,8 @@ private:
     Vector             cur_x;
     Vector             cur_o;
     Vector             pos0;
-    Vector             rpy0;
+    Vector             pos;
+    Matrix             pose0;
     Vector             x0;
     Vector             o0;
     Vector             fixedPosition;
@@ -139,8 +139,7 @@ private:
     IntVector          modes;
     Vector             vels;
     bool               grabTrigger;
-    Vector             pos;
-    Vector             rpy;
+    Matrix             pose;
     bool               button0;
     double             button1;
     int                controlMode;
@@ -168,8 +167,7 @@ private:
     void   getData()
     {
         mutex.lock();
-        pos              = criticalSection.pos;
-        rpy              = criticalSection.rpy;
+        pose             = criticalSection.pose;
         button0          = criticalSection.button0;
         button1          = criticalSection.button1;
         targetDistance   = criticalSection.targetDistance;

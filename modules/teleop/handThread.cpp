@@ -216,7 +216,7 @@ void HandThread::updateGazebo(const Vector& xd, const Vector& od)
     }
 }
 
-void HandThread::reachingHandler(const bool dragging_switch, const Vector& pos, const Vector& rpy)
+void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
 {
     if (dragging_switch)
     {
@@ -231,57 +231,44 @@ void HandThread::reachingHandler(const bool dragging_switch, const Vector& pos, 
         {
             if (++b0_pressedCount * getPeriod() > 0.5)
             {
-                pos0[0]            = pos[0];
-                pos0[1]            = pos[1];
-                pos0[2]            = pos[2];
-                rpy0[0]            = rpy[0];
-                rpy0[1]            = rpy[1];
-                rpy0[2]            = rpy[2];
+                pose0              = pose;
+                pos0               = pose0.getCol(3);
                 x0                 = cur_x;
                 o0                 = cur_o;
                 handDraggingStatus = running;
+
+                pos0.pop_back();
             }
         }
         else //dragging status == running
         {
-            Vector xd(4, 0.0);
-            Vector drpy(3);
-            Vector ax(4, 0.0), ay(4, 0.0), az(4, 0.0);
-
-            xd[0]     = gain * (pos[0] - pos0[0]);
-            xd[1]     = gain * (pos[1] - pos0[1]);
-            xd[2]     = gain * (pos[2] - pos0[2]);
-
-            xd[3]     = 1.0;
-            Matrix H0 = eye(4,4);
+            Vector xd, od;
+            Matrix m  = eye(4, 4);
+            Matrix H0 = axis2dcm(o0);
+            pos       = pose.getCol(3);
+            pos.pop_back();
+            xd        = x0 + (pos - pos0);
+            xd.push_back(1);
             H0(0,3)   = x0[0];
             H0(1,3)   = x0[1];
             H0(2,3)   = x0[2];
-            xd        = H0 * xd;
-            xd.pop_back();
-
-            drpy[0]   = gain * (absoluteRotation ? rpy[0] : (rpy[0] - rpy0[0]));
-            drpy[1]   = -gain * (absoluteRotation ? rpy[2] : (rpy[2] - rpy0[2]));
-            drpy[2]   = gain * (absoluteRotation ? rpy[1] : (rpy[1] - rpy0[1]));
-            //ax[0]     = 1.0;
-            //ay[1]     = 1.0;
-            //az[2]     = 1.0;
-            //ax[3]     = drpy[0];
-            //ay[3]     = drpy[1]; //* ((arm_type == right_hand) ? -1.0 : +1.0); for geomagic
-            //az[3]     = drpy[2]; //* ((arm_type == right_hand) ? -1.0 : +1.0); for geomagic
-            Matrix Rd = axis2dcm(o0) * rpy2dcm(drpy);//axis2dcm(ax) * axis2dcm(ay) * axis2dcm(az);
-            Vector od = absoluteRotation ? dcm2axis(rpy2dcm(drpy)) : dcm2axis(Rd);
+            //xd        = H0 * xd;
+            m         = H0 * (SE3inv(pose0) * pose);
 
             if(simultMovRot)
             {
+                od = dcm2axis(m);
+                xd.pop_back();
                 goToPose(xd, od);
             }
             else if (reachState)
             {
+                od = dcm2axis(m);
                 goToPose(fixedPosition, od);
             }
             else
             {
+                xd.pop_back();
                 goToPose(xd, fixedOrientation);
             }
 
@@ -381,8 +368,6 @@ bool HandThread::threadInit()
     reachState         = false;
     handDraggingStatus = handGripStatus  = idle;
     b0_pressedCount    = b1_pressedCount = 0;
-    pos0.resize(3, 0.0);
-    rpy0.resize(3, 0.0);
     cur_x.resize(3, 0.0);
     cur_o.resize(4, 0.0);
     x0.resize(3, 0.0);
@@ -439,7 +424,7 @@ void HandThread::run()
 
         getData();
 
-        reachingHandler(button0, pos, rpy);
+        reachingHandler(button0, pose);
         handHandler(button1);
     }
     else
