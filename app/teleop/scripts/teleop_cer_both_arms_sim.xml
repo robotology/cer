@@ -28,9 +28,21 @@
                 <node>r1-console-linux</node>
         </module>
 
+	    <module>
+                <name>cer_teleop</name>
+                <parameters>--from /usr/local/src/robot/cer/app/teleop/conf/oculus.ini</parameters>
+                <node>r1-console-linux</node>
+        </module>
+        
+        <module>
+                <name>baseControl</name>
+                <parameters>--from /usr/local/src/robot/navigation/app/baseControl/conf/baseCtrl_cer.ini --skip_robot_interface_check</parameters>
+                <node>r1-console-linux</node>
+        </module>
+
 <!----- connections ------>
 
-        <connection>
+        <connection>	
                 <from>/cer_reaching-controller/left/solver:rpc</from>
                 <to>/cer_reaching-solver/left/rpc</to>
                 <protocol>tcp</protocol>
@@ -41,6 +53,43 @@
                 <to>/cer_reaching-solver/right/rpc</to>
                 <protocol>tcp</protocol>
         </connection>
+
+	<connection>
+                <from>/cer_reaching-controller/left/state:o</from>
+                <to>/cer_teleop/state_left:i</to>
+                <protocol>udp</protocol>
+        </connection>
+	
+	<connection>
+                <from>/cer_teleop/target_left:o</from>
+                <to>/cer_reaching-controller/left/target:i</to>
+                <protocol>udp</protocol>
+        </connection>
+
+	<connection>
+                <from>/cer_reaching-controller/right/state:o</from>
+                <to>/cer_teleop/state_right:i</to>
+                <protocol>udp</protocol>
+        </connection>
+	
+	<connection>
+                <from>/cer_teleop/target_right:o</from>
+                <to>/cer_reaching-controller/right/target:i</to>
+                <protocol>udp</protocol>
+        </connection>
+
+	<connection>
+                <from>/cer_teleop/gazebo_left:o</from>
+                <to>/world_input_port</to>
+                <protocol>udp</protocol>
+        </connection>
+
+	<connection>
+                <from>/cer_teleop/gazebo_right:o</from>
+                <to>/world_input_port</to>
+                <protocol>udp</protocol>
+        </connection>
+
 
 
 </application>

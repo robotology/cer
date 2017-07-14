@@ -22,8 +22,26 @@
 
   <module>
     <name>yarpdev</name>
+    <parameters>--device transformServer --ROS "(enable_ros_subscriber true)" "(enable_ros_publisher true)"</parameters>
+    <node>/r1-console-linux</node>
+  </module>
+
+  <module>
+    <name>roslaunch</name>
+    <parameters>cer robotStatePublisher.launch</parameters>
+    <node>/r1-console-linux</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
     <parameters>--context OculusTeleop --from oculus.ini</parameters>
     <node>/r1-console-windows</node>
+  </module>
+
+  <module>
+    <name>rviz</name>
+    <parameters></parameters>
+    <node>/r1-console-linux</node>
   </module>
 
   <module>
@@ -59,13 +77,13 @@
   <connection>
     <from>/SIM_CER_ROBOT/camCalibWithPose/left/out</from>
     <to>/oculus/display/left:i</to>
-    <protocol>mjpeg</protocol>
+    <protocol>udp</protocol>
   </connection>
 
   <connection>
     <from>/SIM_CER_ROBOT/camCalibWithPose/right/out</from>
     <to>/oculus/display/right:i</to>
-    <protocol>mjpeg</protocol>
+    <protocol>udp</protocol>
   </connection>
 
   <connection>
