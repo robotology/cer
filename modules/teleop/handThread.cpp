@@ -111,8 +111,8 @@ void HandThread::stopReaching()
 void HandThread::goToPose(const Vector &xd, const Vector &od)
 {
     Vector payLoad;
-    payLoad.push_back(0.0); // uncontrolled torso-heave
-    payLoad.push_back(wrist_heave);
+    //payLoad.push_back(0.0); // uncontrolled torso-heave
+    //payLoad.push_back(wrist_heave);
     payLoad = cat(payLoad, xd);
     payLoad = cat(payLoad, od);
 
@@ -120,9 +120,18 @@ void HandThread::goToPose(const Vector &xd, const Vector &od)
     target.addList().read(payLoad);
 
     Bottle  params;
-    Bottle& bLoad = params.addList().addList();
+    Bottle& list  = params.addList();
+    Bottle& bLoad = list.addList();
     bLoad.addString("mode");
     bLoad.addString(mode);
+
+    Bottle& btorso_heave = list.addList();
+    btorso_heave.addString("torso_heave");
+    btorso_heave.addDouble(0.0);
+
+    Bottle& blower_arm_heave = list.addList();
+    blower_arm_heave.addString("lower_arm_heave");
+    blower_arm_heave.addDouble(wrist_heave);
 
     Property& prop = robotTargetPort.prepare();
     prop.clear();
