@@ -61,7 +61,7 @@
 
     <module>
        <name>localizationServer</name>
-       <parameters>--context robotPathPlannerExample --from localizationServer.ini</parameters>
+       <parameters>--context localizationServer --from localizationServer.ini</parameters>
        <node>r1-console-linux</node>
     </module>
 
