@@ -59,6 +59,12 @@
        <node>r1-console-windows</node>
     </module>
 
+    <module>
+       <name>localizationServer</name>
+       <parameters>--context robotPathPlannerExample --from localizationServer.ini</parameters>
+       <node>r1-console-linux</node>
+    </module>
+
     <!-- connections --> 
     <connection>
        <from>/robotGoto/control:o</from>
@@ -80,7 +86,7 @@
 
     <connection>
        <from>/robotPathPlanner/commands:o</from>
-       <to>/robotGoto/rpc:i</to>
+       <to>/robotGoto/rpc</to>
        <protocol>tcp</protocol>
     </connection>
 
