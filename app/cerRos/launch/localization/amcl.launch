@@ -1,6 +1,9 @@
 <launch>
 
   <node pkg="amcl" type="amcl" name="amcl" args="scan:=laser">
+    <param name="initial_pose_x" value="0" />
+    <param name="initial_pose_y" value="0" />
+    <param name="initial_pose_a" value="0" />
     <param name="base_frame_id" value="mobile_base_body_link"/>
     <param name="odom_frame_id" value="odom"/>
     <param name="min_particles" value="500"/>
