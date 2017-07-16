@@ -9,7 +9,7 @@
     <devices file="wrappers/motorControl/cer_base-mc_wrapper.xml" />
 
     <!-- laser -->
-    <devices file="hardware/rpLidar/laser_hw.xml" /> 
+    <devices file="hardware/rpLidar/laserA2_hw.xml" /> 
     <devices file="wrappers/rpLidar/laser_wrapper.xml" /> 
 
     <!-- ROS -->

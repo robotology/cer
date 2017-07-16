@@ -8,11 +8,11 @@
             <param name="clip_min">        0.1          </param>
             <param name="max_angle">       360          </param>
             <param name="min_angle">       0            </param>
-            <param name="resolution">      1            </param>
+            <param name="resolution">      0.5           </param>
             <param name="allow_infinity">  1            </param>
             <param name="serial_baudrate"> 115200       </param>
             <param name="serial_port">     /dev/ttyUSB0 </param>
-            <param name="sample_buffer_life">  0        </param>
+            <param name="sample_buffer_life">  1        </param>
         </group>
         <group name="SKIP">
             <param name="min">  35     </param>
