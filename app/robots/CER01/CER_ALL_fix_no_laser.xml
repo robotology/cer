@@ -25,16 +25,12 @@
     <devices file="wrappers/motorControl/cer_right_wrist_tripod-mc_wrapper.xml" />
     
     <!-- LEFT HAND -->
-<!--
-    <devices file="hardware/motorControl/cer_left_hand-mcp14-mc.xml" />
+    <devices file="hardware/motorControl/cer_left_hand-mcp7-mc.xml" />
     <devices file="wrappers/motorControl/cer_left_hand-mc_wrapper.xml" />
--->
 
     <!-- RIGHT HAND -->
-<!--
-    <devices file="hardware/motorControl/cer_right_hand-mcp14-mc.xml" />
+    <devices file="hardware/motorControl/cer_right_hand-mcp9-mc.xml" />
     <devices file="wrappers/motorControl/cer_right_hand-mc_wrapper.xml" />
--->
 
     <!-- TORSO -->
     <devices file="hardware/motorControl/cer_torso-ems15-mc.xml" />
@@ -60,11 +56,9 @@
     <devices file="calibrators/cer_torso-calib.xml" />
     <devices file="calibrators/cer_left_arm-calib.xml" />
     <devices file="calibrators/cer_right_arm-calib.xml" />   
-    <devices file="calibrators/cer_head-calib.xml" /> 
-<!--
+    <devices file="calibrators/cer_head-calib.xml" />
     <devices file="calibrators/cer_left_hand-calib.xml" />
     <devices file="calibrators/cer_right_hand-calib.xml" />
--->
 
 
 

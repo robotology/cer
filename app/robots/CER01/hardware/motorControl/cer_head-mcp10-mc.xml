@@ -17,7 +17,7 @@
         <param name="motorOverloadCurrents">    5000    5000         </param>
         <param name="motorNominalCurrents">     8000    8000         </param>
         <param name="motorPeakCurrents">        8000    8000         </param>
-        <param name="motorPwmLimit">            3000    3000         </param>
+        <param name="motorPwmLimit">            3360    3360         </param>
     </group>
 
     
@@ -47,12 +47,11 @@
         <param name="maxInt">        3000        3000        </param> -->
 
    <!-- <param name="pos_kp">              -3           5        </param> -->
-	<param name="pos_kp">              -3           1.5      </param>
+	<param name="pos_kp">              -2           1.5      </param>
         <param name="pos_kd">              -0           0        </param>
-        <param name="pos_ki">              -3           5        </param>
-        <!-- limoutput is not more used!!!!! <param name="limOutput">      500        1500        </param> -->
+        <param name="pos_ki">              -5           5        </param>
         <param name="pos_maxOutput">     3360        3360        </param>
-        <param name="pos_maxInt">        3000        1500        </param>
+        <param name="pos_maxInt">        3360        1500        </param>
 
         <param name="pos_shift">            0           0        </param>
         <param name="pos_ko">               0           0        </param>
@@ -67,7 +66,6 @@
         <param name="vel_kp">              -5           5        </param>
         <param name="vel_kd">              -0           0        </param>
         <param name="vel_ki">              -5          50        </param>
-        <!-- limoutput is not more used!!!!! <param name="limOutput">      500         500        </param> -->
         <param name="vel_maxOutput">     3000        3000        </param>
         <param name="vel_maxInt">        3000        3000        </param>
         <param name="vel_shift">            0           0        </param>

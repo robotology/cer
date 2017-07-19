@@ -9,8 +9,6 @@
         <param name="AxisMap">               0                  1               </param>
         <param name="AxisType">              "revolute"         "revolute"      </param>
         <param name="Encoder">               182.044            182.044         </param>
-   <!-- <param name="Gearbox_M2J">          -1                  1               </param>
-        <param name="Gearbox_E2J">           1                  125             </param> -->
         <param name="Gearbox_M2J">          -1                  125             </param>
         <param name="Gearbox_E2J">           1                  1               </param>
         <param name="fullscalePWM">          3360            3360               </param>

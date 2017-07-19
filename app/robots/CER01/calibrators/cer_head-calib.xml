@@ -25,19 +25,19 @@
         <param name="calibrationZero">                    180             180            </param>
         <param name="calibrationDelta">                   0.0             0.0            </param>
 
-   <!-- <param name="calibrationType">                    3               10             </param> 
-        <param name="calibration1">                       0               1500           </param>
-        <param name="calibration2">                       0               0              </param>
+        <!--     <param name="calibrationType">                    3               5              </param> 
+        <param name="calibration1">                       0               1200           </param>
+        <param name="calibration2">                       0               12743          </param>
         <param name="calibration3">                       58072           0              </param> 
         <param name="calibration4">                       0               0              </param>
         <param name="calibration5">                       0               0              </param>
-        <param name="calibrationZero">                    180             70             </param>
-        <param name="calibrationDelta">                   30.0            0.0            </param> -->
+        <param name="calibrationZero">                    180             0              </param>
+        <param name="calibrationDelta">                   0.0             0.0            </param> -->
 
 
         <param name="startupPosition">                    0.0             0.0            </param>
         <param name="startupVelocity">                    10.0            10.0           </param>
-        <param name="startupMaxPwm">                      500             1800           </param>
+        <param name="startupMaxPwm">                      2000            1800           </param>
         <param name="startupPosThreshold">                4               4              </param>
     </group>
 
