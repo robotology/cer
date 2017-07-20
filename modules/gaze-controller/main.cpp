@@ -353,10 +353,8 @@ class Controller : public RFModule
             Matrix Hee;
             solver[frame].fkin(q,Hee);
 
-            Vector pose=Hee.getCol(3).subVector(0,2);
-            Vector oee; oee=dcm2axis(Hee);
-            oee*=oee[3]; oee.pop_back();
-            pose=cat(pose,oee);
+            Vector pose=cat(Hee.getCol(3).subVector(0,2),
+                            dcm2axis(Hee));
 
             Bottle val; val.addList().read(pose);
             state.put(frame,val.get(0));
