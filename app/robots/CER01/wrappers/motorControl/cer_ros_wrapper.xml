@@ -9,7 +9,6 @@
       <param name="joints"> 28 </param>
       
       <paramlist name="networks">
-       
 
         <elem name="head">            0  1   0  1 </elem>  <!-- 2 -->
         <elem name="torso">           2  5   0  3 </elem>  <!-- 4 -->
@@ -25,7 +24,7 @@
       <group name ="ROS">
         <param name="useROS"> true </param>
         <param name="ROS_topicName">  /joint_states </param>
-        <param name="ROS_nodeName">   /cer_ciao </param>
+        <param name="ROS_nodeName">   /cer </param>
       </group>
       
       <action phase="startup" level="5" type="attach">
@@ -33,13 +32,13 @@
    
          <elem name="head">        cer_head_mc_wrapper    </elem>     
          <elem name="torso">       cer_torso_mc_wrapper   </elem>
+         <elem name="base">            cer_mobile_base_mc_wrapper </elem>
 
          <elem name="right_arm">       cer_right_arm_mc_wrapper </elem>
          <elem name="right_hand">      cer_right_hand_mc </elem>
 
          <elem name="left_arm">        cer_left_arm_mc_wrapper </elem>
          <elem name="left_hand">       cer_left_hand_mc </elem>
-         <elem name="base">            cer_mobile_base_mc_wrapper </elem>
 
          </paramlist>
       </action>
