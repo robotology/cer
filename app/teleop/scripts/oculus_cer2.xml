@@ -17,13 +17,13 @@
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /cer/camCalibWithPose/left</parameters>
-    <node>/r1-base</node>
+    <node>/r1-torso</node>
   </module>
 
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /cer/camCalibWithPose/right</parameters>
-    <node>/r1-console-sim</node>
+    <node>/r1-torso</node>
   </module>
 
   <module>
@@ -77,13 +77,13 @@
   <connection>
     <from>/cer/head/state:o</from>
     <to>/cer/camCalibWithPose/right/head_encs/in</to>
-    <protocol>udp</protocol>
+    <protocol>udp+send.portmonitor+type.dll+file.cer2headpose</protocol>
   </connection>
 
   <connection>
     <from>/cer/head/state:o</from>
     <to>/cer/camCalibWithPose/left/head_encs/in</to>
-    <protocol>udp</protocol>
+    <protocol>udp+send.portmonitor+type.dll+file.cer2headpose</protocol>
   </connection>
 
   <connection>
@@ -113,7 +113,7 @@
   <connection>
     <from>/oculus/headpose/orientation:o</from>
     <to>/directPositionControl/cer/head/command:i</to>
-    <protocol>udp</protocol>
+    <protocol>udp+recv.portmonitor+type.dll+file.oculus2cer</protocol>
   </connection>
 
 </application>
