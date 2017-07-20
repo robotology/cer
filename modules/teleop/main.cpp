@@ -311,7 +311,7 @@ public:
     bool updateModule()
     {
         //disclaimer: those static are read only constant value.. (so it's safe for them to be static)
-        Matrix                  m, m_gripper;
+        Matrix                  m(4, 4), m_gripper(4, 4);
         float                   button0, button1;
         HandThread::CommandData data;
         static const string     enum2frameName[HandThread::hand_count] = {leftHandFrame, rightHandFrame};
@@ -361,7 +361,7 @@ public:
                     reset = true;
                 }
 
-                if(!iTf->getTransform(enum2frameName[i], gripper, m_gripper))
+                if((*enum2hands[i]).targetRadius > 0 && !iTf->getTransform(enum2frameName[i], gripper, m_gripper))
                 {
                     yWarning() << "teleop: unable to get transform between" << enum2frameName[i] << gripper;
                     reset = true;
