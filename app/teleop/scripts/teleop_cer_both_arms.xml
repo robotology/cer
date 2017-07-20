@@ -28,6 +28,18 @@
                 <node>r1-base</node>
         </module>
 
+	<module>
+                <name>cer_teleop</name>
+                <parameters>--context OculusTeleop --from teleop.ini</parameters>
+                <node>r1-base</node>
+        </module>
+
+	<module>
+                <name>baseControl</name>
+                <parameters>--context baseControl --from baseCtrl_cer.ini --skip_robot_interface_check</parameters>
+                <node>r1-base</node>
+        </module>
+
 <!----- connections ------>
 
         <connection>
@@ -40,6 +52,30 @@
                 <from>/cer_reaching-controller/right/solver:rpc</from>
                 <to>/cer_reaching-solver/right/rpc</to>
                 <protocol>tcp</protocol>
+        </connection>
+
+	<connection>
+                <from>/cer_reaching-controller/left/state:o</from>
+                <to>/cer_teleop/state_left:i</to>
+                <protocol>udp</protocol>
+        </connection>
+	
+	<connection>
+                <from>/cer_teleop/target_left:o</from>
+                <to>/cer_reaching-controller/left/target:i</to>
+                <protocol>udp</protocol>
+        </connection>
+
+	<connection>
+                <from>/cer_reaching-controller/right/state:o</from>
+                <to>/cer_teleop/state_right:i</to>
+                <protocol>udp</protocol>
+        </connection>
+	
+	<connection>
+                <from>/cer_teleop/target_right:o</from>
+                <to>/cer_reaching-controller/right/target:i</to>
+                <protocol>udp</protocol>
         </connection>
 
 
