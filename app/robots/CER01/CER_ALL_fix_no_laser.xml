@@ -38,9 +38,9 @@
 
      <!-- TRIPODS EQUIVALENTS-->
     <devices file="hardware/motorControl/cer_torso_equivalent-mc.xml" />
-    <devices file="wrappers/motorControl/cer_torso-mc_wrapper.xml" />
     <devices file="hardware/motorControl/cer_left_wrist_equivalent-mc.xml" />
     <devices file="hardware/motorControl/cer_right_wrist_equivalent-mc.xml" />
+    <devices file="wrappers/motorControl/cer_torso-mc_wrapper.xml" />
 
     <!--  FT -->
     <devices file="hardware/FT/cer_left_upper_arm-ems17-strain.xml" />
@@ -52,15 +52,13 @@
     <devices file="wrappers/motorControl/cer_ros_wrapper_fix.xml" />
 
     <!--  CALIBRATORS -->
-    <devices file="calibrators/cer_base-calib.xml" /> 
-    <devices file="calibrators/cer_torso-calib.xml" />
+    <devices file="calibrators/cer_base-calib.xml" />
     <devices file="calibrators/cer_left_arm-calib.xml" />
-    <devices file="calibrators/cer_right_arm-calib.xml" />   
-    <devices file="calibrators/cer_head-calib.xml" />
+    <devices file="calibrators/cer_right_arm-calib.xml" />
     <devices file="calibrators/cer_left_hand-calib.xml" />
     <devices file="calibrators/cer_right_hand-calib.xml" />
-
-
+    <devices file="calibrators/cer_torso-calib.xml" />
+    <devices file="calibrators/cer_head-calib.xml" />
 
 </robot> 
 

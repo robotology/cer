@@ -8,10 +8,9 @@
     <devices file="hardware/motorControl/cer_base-ems21-mc.xml" />
     <devices file="wrappers/motorControl/cer_base-mc_wrapper.xml" />
 
-    <!-- LASER 
-    <devices file="hardware/rpLidar/laser_hw.xml" /> 
+    <!-- LASER -->
+    <devices file="hardware/rpLidar/laserA2_hw.xml" /> 
     <devices file="wrappers/rpLidar/laser_wrapper.xml" /> 
-    -->
 
     <!-- HEAD -->
     <devices file="hardware/motorControl/cer_head-mcp10-mc.xml" />
@@ -43,7 +42,7 @@
     
     <!-- TORSO -->
     <devices file="hardware/motorControl/cer_torso-ems15-mc.xml" />
-    <devices file="wrappers/motorControl/cer_torso_tripod-mc_wrapper.xml" /> 
+    <devices file="wrappers/motorControl/cer_torso_tripod-mc_wrapper.xml" />
 
      <!-- TRIPODS EQUIVALENTS-->
     <devices file="hardware/motorControl/cer_torso_equivalent-mc.xml" />
