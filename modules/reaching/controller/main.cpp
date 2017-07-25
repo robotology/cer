@@ -209,8 +209,8 @@ public:
         string arm_type=rf.check("arm-type",Value("left")).asString();
         orientation_type=rf.check("orientation-type",Value("axis-angle")).asString();
         verbosity=rf.check("verbosity",Value(0)).asInt();
-        stop_threshold_revolute=rf.check("stop-threshold-revolute",Value(0.01)).asDouble();
-        stop_threshold_prismatic=rf.check("stop-threshold-prismatic",Value(0.0001)).asDouble();
+        stop_threshold_revolute=rf.check("stop-threshold-revolute",Value(0.1)).asDouble();
+        stop_threshold_prismatic=rf.check("stop-threshold-prismatic",Value(0.001)).asDouble();
         double T=rf.check("T",Value(2.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
@@ -441,7 +441,7 @@ public:
             txInfo.update();
 
         statePort.setEnvelope(txInfo);
-        statePort.write();
+        statePort.writeStrict();
 
         if (controlling)
         {
@@ -479,9 +479,7 @@ public:
     /****************************************************************/
     bool respond(const Bottle &cmd, Bottle &reply)
     {
-        LockGuard lg(mutex);
         int cmd_0=cmd.get(0).asVocab();
-
         if (cmd.size()==3)
         {
             if (cmd_0==Vocab::encode("set"))
@@ -489,19 +487,29 @@ public:
                 int cmd_1=cmd.get(1).asVocab();
                 if (cmd_1==Vocab::encode("T"))
                 {
+                    mutex.lock();
                     gen->setT(cmd.get(2).asDouble());
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (cmd_1==Vocab::encode("Ts"))
                 {
                     Ts=cmd.get(2).asDouble();
                     Ts=std::max(Ts,MIN_TS);
+
+                    mutex.lock();
                     gen->setTs(Ts);
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (cmd_1==Vocab::encode("verbosity"))
                 {
+                    mutex.lock();
                     verbosity=cmd.get(2).asInt();
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
                 }
             }
@@ -514,24 +522,44 @@ public:
                 if (cmd_1==Vocab::encode("T"))
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addDouble(gen->getT());
+                    mutex.unlock();
                 }
                 else if (cmd_1==Vocab::encode("Ts"))
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addDouble(Ts);
+                    mutex.unlock();
                 }
                 else if (cmd_1==Vocab::encode("verbosity"))
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addInt(verbosity);
+                    mutex.unlock();
                 }
             }
         }
         else if (cmd_0==Vocab::encode("stop"))
         {
+            mutex.lock();
             stopControl();
+            mutex.unlock();
+
             reply.addVocab(Vocab::encode("ack"));
+        }
+        else if (cmd_0==Vocab::encode("done"))
+        {
+            reply.addVocab(Vocab::encode("ack"));
+
+            mutex.lock();
+            reply.addInt(controlling?0:1);
+            mutex.unlock();
         }
 
         if (reply.size()==0)

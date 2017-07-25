@@ -392,7 +392,7 @@ public:
         string robot=rf.check("robot",Value("cer")).asString();
         bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
         verbosity=rf.check("verbosity",Value(0)).asInt();
-        stop_threshold=rf.check("stop-threshold",Value(0.01)).asDouble();
+        stop_threshold=rf.check("stop-threshold",Value(0.1)).asDouble();
         double T=rf.check("T",Value(1.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
@@ -660,7 +660,7 @@ public:
 
         fillState(q,statePort.prepare());
         statePort.setEnvelope(txInfo);
-        statePort.write();
+        statePort.writeStrict();
 
         if (controlling)
         {
@@ -695,9 +695,7 @@ public:
     /****************************************************************/
     bool respond(const Bottle &cmd, Bottle &reply)
     {
-        LockGuard lg(mutex);
         int cmd_0=cmd.get(0).asVocab();
-
         if (cmd.size()==3)
         {
             if (cmd_0==Vocab::encode("set"))
@@ -705,26 +703,39 @@ public:
                 string cmd_1=cmd.get(1).asString();
                 if (cmd_1=="T")
                 {
+                    mutex.lock();
                     gen->setT(cmd.get(2).asDouble());
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (cmd_1=="Ts")
                 {
                     Ts=cmd.get(2).asDouble();
                     Ts=std::max(Ts,MIN_TS);
+
+                    mutex.lock();
                     gen->setTs(Ts);
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (cmd_1=="verbosity")
                 {
+                    mutex.lock();
                     verbosity=cmd.get(2).asInt();
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (cmd_1=="joints-limits::pitch")
                 {
                     if (Bottle *pitchLim=cmd.get(2).asList())
                     {
+                        mutex.lock();
                         applyCustomJointsBounds(pitchLim,NULL);
+                        mutex.unlock();
+
                         reply.addVocab(Vocab::encode("ack"));
                     }
                 }
@@ -732,7 +743,10 @@ public:
                 {
                     if (Bottle *yawLim=cmd.get(2).asList())
                     {
+                        mutex.lock();
                         applyCustomJointsBounds(NULL,yawLim);
+                        mutex.unlock();
+
                         reply.addVocab(Vocab::encode("ack"));
                     }
                 }
@@ -746,22 +760,34 @@ public:
                 if (cmd_1=="T")
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addDouble(gen->getT());
+                    mutex.unlock();
                 }
                 else if (cmd_1=="Ts")
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addDouble(Ts);
+                    mutex.unlock();
                 }
                 else if (cmd_1=="verbosity")
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addInt(verbosity);
+                    mutex.unlock();
                 }
                 else if (cmd_1=="joints-limits::pitch")
                 {
                     Vector pitchLim,yawLim;
+
+                    mutex.lock();
                     getJointsBounds(pitchLim,yawLim);
+                    mutex.unlock();
 
                     reply.addVocab(Vocab::encode("ack"));                    
                     reply.addList().read(pitchLim);
@@ -769,7 +795,10 @@ public:
                 else if (cmd_1=="joints-limits::yaw")
                 {
                     Vector pitchLim,yawLim;
+
+                    mutex.lock();
                     getJointsBounds(pitchLim,yawLim);
+                    mutex.unlock();
 
                     reply.addVocab(Vocab::encode("ack"));                    
                     reply.addList().read(yawLim);
@@ -778,8 +807,19 @@ public:
         }
         else if (cmd_0==Vocab::encode("stop"))
         {
+            mutex.lock();
             stopControl();
+            mutex.unlock();
+
             reply.addVocab(Vocab::encode("ack"));
+        }
+        else if (cmd_0==Vocab::encode("done"))
+        {
+            reply.addVocab(Vocab::encode("ack"));
+
+            mutex.lock();
+            reply.addInt(controlling?0:1);
+            mutex.unlock();
         }
 
         if (reply.size()==0)
