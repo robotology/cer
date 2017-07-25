@@ -524,10 +524,10 @@ public:
     }
 
     /****************************************************************/
-    void onRead(Property &request)
+    bool look(Property &request)
     {
         if (closing)
-            return;
+            return false;
 
         if (verbosity>0)
             yInfo("Received target request: %s",request.toString().c_str());
@@ -642,6 +642,8 @@ public:
             if (verbosity>0)
                 yInfo("Going to: %s",qd.toString(3,3).c_str());
         }
+
+        return doControl;
     }
 
     /****************************************************************/
@@ -804,6 +806,15 @@ public:
                     reply.addList().read(yawLim);
                 }
             }
+            else if (cmd_0==Vocab::encode("look"))
+            {
+                if (Bottle *b=cmd.get(1).asList())
+                {
+                    Property p; b->write(p);
+                    if (look(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+            }
         }
         else if (cmd_0==Vocab::encode("stop"))
         {
@@ -834,7 +845,7 @@ public:
 void TargetPort::onRead(Property &request)
 {
     if (ctrl!=NULL)
-        ctrl->onRead(request);
+        ctrl->look(request);
 }
 
 

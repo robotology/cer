@@ -363,10 +363,10 @@ public:
     }
 
     /****************************************************************/
-    void onRead(Property &target)
+    bool go(Property &target)
     {
         if (closing)
-            return;
+            return false;
 
         if (verbosity>0)
             yInfo("Received target request: %s",target.toString().c_str());
@@ -408,6 +408,8 @@ public:
                             controlling=true;
                             if (verbosity>0)
                                 yInfo("Going to: %s",qd.toString(3,3).c_str());
+
+                            return true;
                         }
                     }
                 }
@@ -417,6 +419,8 @@ public:
         }
         else
             yError("Unable to communicate with the solver");
+
+        return false;
     }
 
     /****************************************************************/
@@ -544,6 +548,15 @@ public:
                     mutex.unlock();
                 }
             }
+            else if (cmd_0==Vocab::encode("go"))
+            {
+                if (Bottle *b=cmd.get(1).asList())
+                {
+                    Property p; b->write(p);
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+            }
         }
         else if (cmd_0==Vocab::encode("stop"))
         {
@@ -574,7 +587,7 @@ public:
 void TargetPort::onRead(Property &target)
 {
     if (ctrl!=NULL)
-        ctrl->onRead(target);
+        ctrl->go(target);
 }
 
 
