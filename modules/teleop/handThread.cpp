@@ -328,7 +328,8 @@ void HandThread::handHandler(const bool hand_grip_switch)
             if (++b1_pressedCount * getPeriod() > 0.5)
             {
 
-                imod->setControlModes(&controlMode);
+                imod->setControlMode(0, controlMode);
+                imod->setControlMode(1, controlMode);
                 handGripStatus = running;
             }
         }
