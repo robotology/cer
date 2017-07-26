@@ -552,7 +552,7 @@ public:
             {
                 if (Bottle *b=cmd.get(1).asList())
                 {
-                    Property p; b->write(p);
+                    Property p(b->toString().c_str());
                     if (go(p))
                         reply.addVocab(Vocab::encode("ack"));
                 }
