@@ -200,14 +200,24 @@ class Controller : public RFModule
     Property prepareSolverOptions(const string &key, const Value &val)
     {
         Bottle b;
-        Bottle &p=b.addList().addList();
-        p.addString(key);
-        p.add(val);
+        Bottle &payLoad=b.addList().addList();
+        payLoad.addString(key);
+        payLoad.add(val);
 
         Property option;
         option.put("parameters",b.get(0));
 
         return option;
+    }
+
+    /****************************************************************/
+    Value parseSolverOptions(const Bottle &rep, const string &key)
+    {
+        Value val;
+        if (Bottle *payLoad=rep.find("parameters").asList())
+            val=payLoad->find(key);
+
+        return val;
     }
 
 public:
@@ -404,7 +414,7 @@ public:
 
             if (reply.get(0).asVocab()==Vocab::encode("ack"))
             {
-                if (reply.size()>1)
+                if ((reply.size()>1) && !reply.check("parameters"))
                 {
                     if (Bottle *payLoad=reply.get(1).asList())
                     {
@@ -600,6 +610,61 @@ public:
                     mutex.lock();
                     reply.addInt(verbosity);
                     mutex.unlock();
+                }
+                else if (cmd_1==Vocab::encode("mode"))
+                {
+                    Bottle req,rep;
+                    req.addVocab(Vocab::encode("get"));
+                    if (solverPort.write(req,rep))
+                    {
+                        Value mode=parseSolverOptions(rep,"mode");
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.add(mode);
+                    }
+                }
+                else if (cmd_1==Vocab::encode("torso_heave"))
+                {
+                    Bottle req,rep;
+                    req.addVocab(Vocab::encode("get"));
+                    if (solverPort.write(req,rep))
+                    {
+                        Value torso_heave=parseSolverOptions(rep,"torso_heave");
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.add(torso_heave);
+                    }
+                }
+                else if (cmd_1==Vocab::encode("lower_arm_heave"))
+                {
+                    Bottle req,rep;
+                    req.addVocab(Vocab::encode("get"));
+                    if (solverPort.write(req,rep))
+                    {
+                        Value lower_arm_heave=parseSolverOptions(rep,"lower_arm_heave");
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.add(lower_arm_heave);
+                    }
+                }
+                else if (cmd_1==Vocab::encode("tol"))
+                {
+                    Bottle req,rep;
+                    req.addVocab(Vocab::encode("get"));
+                    if (solverPort.write(req,rep))
+                    {
+                        Value tol=parseSolverOptions(rep,"tol");
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.add(tol);
+                    }
+                }
+                else if (cmd_1==Vocab::encode("constr_tol"))
+                {
+                    Bottle req,rep;
+                    req.addVocab(Vocab::encode("get"));
+                    if (solverPort.write(req,rep))
+                    {
+                        Value constr_tol=parseSolverOptions(rep,"constr_tol");
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.add(constr_tol);
+                    }
                 }
             }
             else if (cmd_0==Vocab::encode("go"))

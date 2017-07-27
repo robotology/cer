@@ -301,8 +301,8 @@ struct SolverParameters
                      warm_start(warm_start_) { }
 
     /**
-     * Helper to internal state according to a string mode.\n 
-     * The helper does also set suitable tolerance values.
+     * Helper to set the internal state according to a string 
+     * mode.\n The helper does also set suitable tolerance values. 
      *  
      * @param mode  a string that can be a combination of  
      *              ["full_pose"|"xyz_pose"]+["heave"|"no_heave"|"no_torso_no_heave"|"no_torso_heave"]+["forward_diff"|"central_diff"].
@@ -314,6 +314,14 @@ struct SolverParameters
      * @return true/false on success/failure. 
      */
     bool setMode(const std::string &mode);
+
+    /**
+     * Helper to retrieve the string corresponding to the internal 
+     * state.
+     *  
+     * @return the string encoding the internal state. 
+     */
+    std::string getMode() const;
 };
 
 

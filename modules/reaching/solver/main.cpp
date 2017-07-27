@@ -185,6 +185,42 @@ public:
         SolverParameters p=solver.getSolverParameters();
         reply.addVocab(Vocab::encode("nack"));
 
+        if (cmd.size()>0)
+        {
+            if (cmd.get(0).asVocab()==Vocab::encode("get"))
+            {
+                reply.clear();
+                reply.addVocab(Vocab::encode("ack"));
+
+                Bottle &payLoad1=reply.addList();
+                payLoad1.addString("parameters");
+
+                Bottle &payLoad2=payLoad1.addList();
+
+                Bottle &mode=payLoad2.addList();
+                mode.addString("mode");
+                mode.addString(p.getMode());
+
+                Bottle &torso_heave=payLoad2.addList();
+                torso_heave.addString("torso_heave");
+                torso_heave.addDouble(p.torso_heave);
+
+                Bottle &lower_arm_heave=payLoad2.addList();
+                lower_arm_heave.addString("lower_arm_heave");
+                lower_arm_heave.addDouble(p.lower_arm_heave);
+
+                Bottle &tol=payLoad2.addList();
+                tol.addString("tol");
+                tol.addDouble(p.tol);
+
+                Bottle &constr_tol=payLoad2.addList();
+                constr_tol.addString("constr_tol");
+                constr_tol.addDouble(p.constr_tol);
+
+                return true;
+            }
+        }
+        
         if (cmd.check("parameters"))
         {
             if (Bottle *parameters=cmd.find("parameters").asList())
