@@ -196,6 +196,20 @@ class Controller : public RFModule
                (norm(e_prismatic)<stop_threshold_prismatic);
     }
 
+    /****************************************************************/
+    Property prepareSolverOptions(const string &key, const Value &val)
+    {
+        Bottle b;
+        Bottle &p=b.addList().addList();
+        p.addString(key);
+        p.add(val);
+
+        Property option;
+        option.put("parameters",b.get(0));
+
+        return option;
+    }
+
 public:
     /****************************************************************/
     Controller() : gen(NULL)
@@ -408,11 +422,11 @@ public:
                             controlling=true;
                             if (verbosity>0)
                                 yInfo("Going to: %s",qd.toString(3,3).c_str());
-
-                            return true;
                         }
                     }
                 }
+
+                return true;
             }
             else
                 yError("Malformed target type!");
@@ -515,6 +529,46 @@ public:
                     mutex.unlock();
 
                     reply.addVocab(Vocab::encode("ack"));
+                }
+                else if (cmd_1==Vocab::encode("mode"))
+                {
+                    Value mode(cmd.get(2).asString());
+                    Property p=prepareSolverOptions("mode",mode);
+
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+                else if (cmd_1==Vocab::encode("torso_heave"))
+                {
+                    Value torso_heave(cmd.get(2).asDouble());
+                    Property p=prepareSolverOptions("torso_heave",torso_heave);
+
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+                else if (cmd_1==Vocab::encode("lower_arm_heave"))
+                {
+                    Value lower_arm_heave(cmd.get(2).asDouble());
+                    Property p=prepareSolverOptions("lower_arm_heave",lower_arm_heave);
+
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+                else if (cmd_1==Vocab::encode("tol"))
+                {
+                    Value tol(cmd.get(2).asDouble());
+                    Property p=prepareSolverOptions("tol",tol);
+
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+                else if (cmd_1==Vocab::encode("constr_tol"))
+                {
+                    Value constr_tol(cmd.get(2).asDouble());
+                    Property p=prepareSolverOptions("constr_tol",constr_tol);
+
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
                 }
             }
         }
