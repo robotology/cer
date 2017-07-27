@@ -67,9 +67,9 @@ T2.marker_size=2;
 hfig=figure('Name','Arm','Color','w');
 set(hfig,'Toolbar','figure');
 hold on; view([1 1 1]); grid;
-xlim([-0.3 1.3]); xlabel('x [m]');
-ylim([-1.1 1.1]); ylabel('y [m]');
-zlim([-0.2 1.5]); zlabel('z [m]');
+xlim([-0.3 0.7]); xlabel('x [m]');
+ylim([-0.5 0.5]); ylabel('y [m]');
+zlim([-0.2 0.9]); zlabel('z [m]');
 
 hax=get(hfig,'CurrentAxes');
 set(hax,'DataAspectRatio',[1 1 1]);
