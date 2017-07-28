@@ -530,7 +530,13 @@ public:
             return false;
 
         if (verbosity>0)
-            yInfo("Received target request: %s",request.toString().c_str());
+            yInfo("Received request: %s",request.toString().c_str());
+
+        if (request.check("stop"))
+        {
+            stopControl();
+            return true;
+        }
 
         if (request.check("control-frame"))
         {

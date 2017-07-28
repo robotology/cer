@@ -387,27 +387,33 @@ public:
     }
 
     /****************************************************************/
-    bool go(Property &target)
+    bool go(Property &request)
     {
         if (closing)
             return false;
 
         if (verbosity>0)
-            yInfo("Received target request: %s",target.toString().c_str());
+            yInfo("Received request: %s",request.toString().c_str());
 
-        if (!target.check("q"))
+        if (request.check("stop"))
+        {
+            stopControl();
+            return true;
+        }
+
+        if (!request.check("q"))
         {
             Vector q=getEncoders();
             Bottle b; b.addList().read(q);
-            target.put("q",b.get(0));
+            request.put("q",b.get(0));
         }
 
         if (verbosity>0)
-            yInfo("Forwarding request to solver: %s",target.toString().c_str());
+            yInfo("Forwarding request to solver: %s",request.toString().c_str());
 
         Bottle reply;
         bool latch_controlling=controlling;
-        if (solverPort.write(target,reply))
+        if (solverPort.write(request,reply))
         {
             if (verbosity>0)
                 yInfo("Received reply from solver: %s",reply.toString().c_str());
