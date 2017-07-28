@@ -78,7 +78,7 @@ ArmSolver::ArmSolver(const ArmParameters &armParams,
 int ArmSolver::computeMode() const
 {
     return ((slvParameters.full_pose?0x01:0x00) | 
-            ((slvParameters.configuration?0x01:0x00)<<1));
+            (slvParameters.configuration<<1));
 }
 
 
