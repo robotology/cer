@@ -90,6 +90,18 @@
                 <protocol>udp</protocol>
         </connection>
 
+	<connection>
+                <from>/cer_teleop/cmd_left:rpc</from>
+                <to>/cer_reaching-controller/left/rpc</to>
+                <protocol>tcp</protocol>
+        </connection>
+
+	<connection>
+                <from>/cer_teleop/cmd_right:rpc</from>
+                <to>/cer_reaching-controller/right/rpc</to>
+                <protocol>tcp</protocol>
+        </connection>
+
 
 
 </application>
