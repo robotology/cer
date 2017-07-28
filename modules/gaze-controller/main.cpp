@@ -534,6 +534,7 @@ public:
 
         if (request.check("stop"))
         {
+            LockGuard lg(mutex);
             stopControl();
             return true;
         }
