@@ -620,7 +620,7 @@ public:
                 else if (cmd_1==Vocab::encode("mode"))
                 {
                     Bottle req,rep;
-                    req.addVocab(Vocab::encode("get"));
+                    req.addList().addString("get");
                     if (solverPort.write(req,rep))
                     {
                         Value mode=parseSolverOptions(rep,"mode");
@@ -631,7 +631,7 @@ public:
                 else if (cmd_1==Vocab::encode("torso_heave"))
                 {
                     Bottle req,rep;
-                    req.addVocab(Vocab::encode("get"));
+                    req.addList().addString("get");
                     if (solverPort.write(req,rep))
                     {
                         Value torso_heave=parseSolverOptions(rep,"torso_heave");
@@ -642,7 +642,7 @@ public:
                 else if (cmd_1==Vocab::encode("lower_arm_heave"))
                 {
                     Bottle req,rep;
-                    req.addVocab(Vocab::encode("get"));
+                    req.addList().addString("get");
                     if (solverPort.write(req,rep))
                     {
                         Value lower_arm_heave=parseSolverOptions(rep,"lower_arm_heave");
@@ -653,7 +653,7 @@ public:
                 else if (cmd_1==Vocab::encode("tol"))
                 {
                     Bottle req,rep;
-                    req.addVocab(Vocab::encode("get"));
+                    req.addList().addString("get");
                     if (solverPort.write(req,rep))
                     {
                         Value tol=parseSolverOptions(rep,"tol");
@@ -664,7 +664,7 @@ public:
                 else if (cmd_1==Vocab::encode("constr_tol"))
                 {
                     Bottle req,rep;
-                    req.addVocab(Vocab::encode("get"));
+                    req.addList().addString("get");
                     if (solverPort.write(req,rep))
                     {
                         Value constr_tol=parseSolverOptions(rep,"constr_tol");
