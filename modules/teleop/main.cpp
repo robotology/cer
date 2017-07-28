@@ -312,7 +312,7 @@ public:
     {
         //disclaimer: those static are read only constant value.. (so it's safe for them to be static)
         Matrix                  m(4, 4), m_gripper(4, 4);
-        float                   button0, button1;
+        float                   button0, button1, button2;
         HandThread::CommandData data;
         static const string     enum2frameName[HandThread::hand_count] = {leftHandFrame, rightHandFrame};
         static HandThread*      enum2hands[HandThread::hand_count]     = {&left, &right};
@@ -343,7 +343,13 @@ public:
                 double axis0, axis1;
                 bool reset = false;
 
-                if(!iJoypad->getButton(!i * 4 + 0, button0) /*|| !iJoypad->getButton(!i * 4 + 3, button1)*/)
+                if(!iJoypad->getButton(!i * 4 + 0, button0))
+                {
+                    yWarning() << "unable to get buttons state";
+                    reset = true;
+                }
+
+                if (!iJoypad->getButton(!i * 4 + 1, button2))
                 {
                     yWarning() << "unable to get buttons state";
                     reset = true;
@@ -376,6 +382,7 @@ public:
                 data.pose               = m;
                 data.button0            = button0 > 0.3;
                 data.button1            = ctrlMode == VOCAB_CM_POSITION_DIRECT ? (axis0 + axis1)/2 : axis0 - axis1;
+                data.button2            = button2;
                 data.controlMode        = ctrlMode;
                 data.singleButton       = false;
                 data.simultMovRot       = true;

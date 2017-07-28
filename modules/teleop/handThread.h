@@ -21,7 +21,8 @@ public:
     {
         yarp::sig::Matrix pose{4, 4};
         bool              button0{false};
-        double            button1{false};
+        double            button1{ 0 };
+        bool              button2{ false };
         double            targetDistance{0.0};
         int               controlMode{VOCAB_CM_POSITION_DIRECT};
         bool              singleButton{false};
@@ -60,6 +61,7 @@ public:
         criticalSection.absoluteRotation = newdata.absoluteRotation;
         criticalSection.button0          = newdata.button0         ;
         criticalSection.button1          = newdata.button1         ;
+        criticalSection.button2          = newdata.button2         ;
         criticalSection.controlMode      = newdata.controlMode     ;
         criticalSection.pose             = newdata.pose            ;
         criticalSection.simultMovRot     = newdata.simultMovRot    ;
@@ -142,6 +144,7 @@ private:
     Matrix             pose;
     bool               button0;
     double             button1;
+    bool               button2;
     int                controlMode;
     bool               dragTrigger;
     yarp::os::Mutex    mutex;
@@ -156,6 +159,7 @@ private:
     bool               singleButton;
     bool               simultMovRot;
     bool               absoluteRotation;
+    Vector             xd;
 
     //method
     void   printState();
@@ -170,6 +174,7 @@ private:
         pose             = criticalSection.pose;
         button0          = criticalSection.button0;
         button1          = criticalSection.button1;
+        button2          = criticalSection.button2;
         targetDistance   = criticalSection.targetDistance;
         controlMode      = criticalSection.controlMode;
         singleButton     = criticalSection.singleButton;

@@ -93,6 +93,7 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
 
 void HandThread::stopReaching()
 {
+    
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("stop"));
     if (robotCmdPort.write(cmd, reply))
@@ -110,6 +111,7 @@ void HandThread::stopReaching()
 
 void HandThread::goToPose(const Vector &xd, const Vector &od)
 {
+    
     Vector payLoad;
     //payLoad.push_back(0.0); // uncontrolled torso-heave
     //payLoad.push_back(wrist_heave);
@@ -225,6 +227,20 @@ void HandThread::updateGazebo(const Vector& xd, const Vector& od)
     }
 }
 
+inline double getRad(double x, double y)
+{
+    return sqrt(x * x + y * y);
+}
+
+inline Vector mVector(double x, double y, double z)
+{
+    Vector r(3);
+    r[0] = x;
+    r[1] = y;
+    r[2] = z;
+    return r;
+}
+
 void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
 {
     if (dragging_switch)
@@ -251,12 +267,32 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
         }
         else //dragging status == running
         {
-            Vector xd, od;
+            Vector od, Target;
+            //double r;
             Matrix m  = eye(4, 4);
             Matrix H0 = axis2dcm(o0);
             pos       = pose.getCol(3);
             pos.pop_back();
-            xd        = x0 + (pos - pos0);
+
+
+
+            Target = x0 + (pos - pos0);
+            //r      = getRad(cur_x[0], cur_x[1]);
+           
+            if (getRad(Target[0], Target[1]) > 0.35)//|| getRad(Target[0], Target[1]) > getRad(x0[0], x0[1]))
+            {
+                xd = Target;
+            }
+            else 
+            {
+                double t = atan2(Target[1], Target[0]);
+                xd = x0 = mVector(0.35 * cos(t), 0.37 * sin(t), cur_x[2]);
+                pose0 = pose;
+                pos0  = pose.getCol(3);
+                pos0.pop_back();
+            }
+            
+            
             xd.push_back(1);
             H0(0,3)   = x0[0];
             H0(1,3)   = x0[1];
@@ -275,7 +311,24 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
             {
                 od = dcm2axis(m);
                 xd.pop_back();
-                goToPose(xd, od);
+                if (button2)
+                {
+                    xd = cur_x;
+                    pose0.setCol(3, pose.getCol(3));
+                    pos0 = pose.getCol(3);
+                    pos0.pop_back();
+                    
+                    goToPose(cur_x, od);
+                }
+                else
+                {
+                    o0 = od = cur_o;
+                    pose0.setCol(0, pose.getCol(0));
+                    pose0.setCol(1, pose.getCol(1));
+                    pose0.setCol(2, pose.getCol(2));
+                    goToPose(xd, cur_o);
+                }
+                
             }
             else if (reachState)
             {
