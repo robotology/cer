@@ -12,6 +12,12 @@
     </module>
 
     <module>
+        <name>roslaunch</name>
+        <parameters>robotStatePublisher.launch</parameters>
+        <node>r1-base</node>
+    </module>
+
+    <module>
        <name>yarpdev</name>
        <parameters>--context viconTest --from transformServer.ini</parameters>
        <node>r1-console-linux</node>
@@ -31,20 +37,14 @@
 
     <module>
        <name>yarpdev</name>
-       <parameters>--device map2DServer --mapCollection mapsExample</parameters>
+       <parameters>--device map2DServer --mapCollectionContext mapsExample</parameters>
        <node>r1-console-linux</node>
     </module>
 
     <module>
-       <name>yarpdev</name>
-       <parameters>--device locationsServer --local /locationsServer</parameters>
+       <name>localizationServer</name>
+       <parameters>--context localizationServer --from localizationServer.ini</parameters>
        <node>r1-console-linux</node>
-    </module>
-
-    <module>
-        <name>roslaunch</name>
-        <parameters>robotStatePublisher.launch</parameters>
-        <node>r1-base</node>
     </module>
 
     <module>
@@ -62,12 +62,6 @@
     <module>
        <name>yarpview</name>
        <parameters>--name /plannerView:i --out /mapClick:o</parameters>
-       <node>r1-console-windows</node>
-    </module>
-
-    <module>
-       <name>localizationServer</name>
-       <parameters>--context localizationServer --from localizationServer.ini</parameters>
        <node>r1-console-linux</node>
     </module>
 

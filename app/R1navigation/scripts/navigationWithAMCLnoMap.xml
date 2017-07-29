@@ -7,8 +7,14 @@
     <!-- modules -->
     <module>
        <name>roslaunch</name>
-       <parameters>amcl.launch</parameters>
+       <parameters>amcl_map_from_ros.launch</parameters>
        <node>r1-base</node>
+    </module>
+
+    <module>
+        <name>roslaunch</name>
+        <parameters>robotStatePublisher.launch</parameters>
+        <node>r1-base</node>
     </module>
 
     <module>
@@ -36,9 +42,9 @@
     </module>
 
     <module>
-        <name>roslaunch</name>
-        <parameters>robotStatePublisher.launch</parameters>
-        <node>r1-base</node>
+       <name>localizationServer</name>
+       <parameters>--context localizationServer --from localizationServer.ini</parameters>
+       <node>r1-console-linux</node>
     </module>
 
     <module>
@@ -47,11 +53,6 @@
         <node>r1-base</node>
     </module>
     
-    <module>
-       <name>localizationServer</name>
-       <parameters>--context localizationServer --from localizationServer.ini</parameters>
-       <node>r1-console-linux</node>
-    </module>
 
     <!-- connections --> 
     <connection>
