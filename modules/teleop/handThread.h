@@ -140,13 +140,11 @@ private:
     PolyDriver         drvHand;
     IntVector          modes;
     Vector             vels;
-    bool               grabTrigger;
     Matrix             pose;
     bool               button0;
     double             button1;
     bool               button2;
     int                controlMode;
-    bool               dragTrigger;
     yarp::os::Mutex    mutex;
     double             gain;
     double             wrist_heave;

@@ -93,7 +93,11 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
 
 void HandThread::stopReaching()
 {
-    
+    Property& req = robotTargetPort.prepare();
+    req.clear();
+    req.put("stop", Value());
+    robotTargetPort.write();
+
     Bottle cmd, reply;
     cmd.addVocab(Vocab::encode("stop"));
     if (robotCmdPort.write(cmd, reply))
@@ -313,10 +317,12 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
                 xd.pop_back();
                 if (button2)
                 {
-                    xd = cur_x;
+                    
                     pose0.setCol(3, pose.getCol(3));
                     pos0 = pose.getCol(3);
                     pos0.pop_back();
+                    xd = cur_x;
+                    x0 = xd;
                     
                     goToPose(cur_x, od);
                 }
