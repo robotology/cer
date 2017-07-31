@@ -36,8 +36,8 @@ public:
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
         n=x0.length();
-        m=2+2;
-        nnz_jac_g=6+6;
+        m=2+2+1;
+        nnz_jac_g=6+6+2;
         nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
 
@@ -77,6 +77,8 @@ public:
 
         g_l[2]=g_u[2]=0.0;
         g_l[3]=lower_arm.cos_alpha_max; g_u[3]=1.0;
+
+        g_l[4]=cover_shoulder_avoidance[1]; g_u[4]=std::numeric_limits<double>::max();
 
         latch_idx.clear();
         latch_gl.clear();
@@ -223,6 +225,8 @@ public:
         g[2]=e2*e2;
         g[3]=din2.n[2];
 
+        g[4]=-cover_shoulder_avoidance[0]*x[4]+x[5];
+
         latch_x_verifying_alpha(n,x,g);
 
         return true;
@@ -254,6 +258,10 @@ public:
             iRow[9]=3;  jCol[9]=9;
             iRow[10]=3; jCol[10]=10;
             iRow[11]=3; jCol[11]=11;
+
+            // g[4] (cover constraints)
+            iRow[12]=4; jCol[12]=4;
+            iRow[13]=4; jCol[13]=5;
         }
         else
         {
@@ -306,6 +314,10 @@ public:
             values[8]=-2.0*e2*(d_fw.p[2]-din2.p[2])/drho;
             values[11]=(d_fw.n[2]-din2.n[2])/drho;
             x_dx[11]=x[11];
+
+            // g[4]
+            values[12]=-cover_shoulder_avoidance[0];
+            values[13]=1.0;
         }
 
         return true;
@@ -439,6 +451,10 @@ public:
             iRow[9]=3;  jCol[9]=9;
             iRow[10]=3; jCol[10]=10;
             iRow[11]=3; jCol[11]=11;
+
+            // g[4] (cover constraints)
+            iRow[12]=4; jCol[12]=4;
+            iRow[13]=4; jCol[13]=5;
         }
         else
         {
@@ -503,6 +519,10 @@ public:
             values[8]=-e2*(d_fw.p[2]-d_bw.p[2])/drho;
             values[11]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
             x_dx[11]=x[11];
+
+            // g[4]
+            values[12]=-cover_shoulder_avoidance[0];
+            values[13]=1.0;
         }
 
         return true;

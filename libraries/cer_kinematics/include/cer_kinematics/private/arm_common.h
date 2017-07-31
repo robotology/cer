@@ -51,6 +51,8 @@ protected:
     Matrix H,H_,J_,T;
     Vector q;
 
+    Vector cover_shoulder_avoidance;
+
     /****************************************************************/
     TripodState tripod_fkin(const int which, const Ipopt::Number *x,
                             TripodState *internal=NULL)
@@ -140,6 +142,14 @@ public:
         x=x0;
         set_target(eye(4,4));
         q=x0.subVector(3,3+upper_arm.getDOF()-1);
+
+        // limits to prevent shoulder from hitting torso's cover
+        double roll_0=CTRL_DEG2RAD*5.0;  double pitch_0=CTRL_DEG2RAD*0.0;   // [rad]
+        double roll_1=CTRL_DEG2RAD*15.0; double pitch_1=CTRL_DEG2RAD*60.0;  // [rad]
+
+        cover_shoulder_avoidance.resize(2);
+        cover_shoulder_avoidance[0]=(roll_1-roll_0)/(pitch_1-pitch_0);
+        cover_shoulder_avoidance[1]=roll_0;
     }
 
     /****************************************************************/
