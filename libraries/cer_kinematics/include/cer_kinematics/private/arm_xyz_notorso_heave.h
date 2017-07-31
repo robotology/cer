@@ -37,8 +37,8 @@ public:
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
         n=x0.length();
-        m=1;
-        nnz_jac_g=3;
+        m=1+1;
+        nnz_jac_g=3+2;
         nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
 
@@ -75,7 +75,8 @@ public:
         latch_gl.clear();
         latch_gu.clear();
 
-        g_l[0]=lower_arm.cos_alpha_max; g_u[0]=1.0;
+        g_l[0]=lower_arm.cos_alpha_max;     g_u[0]=1.0;
+        g_l[1]=cover_shoulder_avoidance[1]; g_u[1]=std::numeric_limits<double>::max();
 
         latch_idx.push_back(0);
         latch_gl.push_back(g_l[0]);
@@ -91,6 +92,8 @@ public:
         computeQuantities(x,new_x);
 
         g[0]=din2.n[2];
+        g[1]=-cover_shoulder_avoidance[0]*x[4]+x[5];
+
         latch_x_verifying_alpha(n,x,g);
 
         return true;
@@ -107,6 +110,10 @@ public:
             iRow[0]=0; jCol[0]=9;
             iRow[1]=0; jCol[1]=10;
             iRow[2]=0; jCol[2]=11;
+
+            // g[1] (cover constraints)
+            iRow[3]=1; jCol[3]=4;
+            iRow[4]=1; jCol[4]=5;
         }
         else
         {
@@ -133,6 +140,10 @@ public:
             tripod_fkin(2,x_dx,&d_fw);
             values[2]=(d_fw.n[2]-din2.n[2])/drho;
             x_dx[11]=x[11];
+
+            // g[1]
+            values[3]=-cover_shoulder_avoidance[0];
+            values[4]=1.0;
         }
 
         return true;
@@ -161,8 +172,8 @@ public:
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
         n=x0.length();
-        m=1;
-        nnz_jac_g=3;
+        m=1+1;
+        nnz_jac_g=3+2;
         nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
 
@@ -199,7 +210,8 @@ public:
         latch_gl.clear();
         latch_gu.clear();
 
-        g_l[0]=lower_arm.cos_alpha_max; g_u[0]=1.0;
+        g_l[0]=lower_arm.cos_alpha_max;     g_u[0]=1.0;
+        g_l[1]=cover_shoulder_avoidance[1]; g_u[1]=std::numeric_limits<double>::max();
 
         latch_idx.push_back(0);
         latch_gl.push_back(g_l[0]);
@@ -215,6 +227,8 @@ public:
         computeQuantities(x,new_x);
 
         g[0]=din2.n[2];
+        g[1]=-cover_shoulder_avoidance[0]*x[4]+x[5];
+
         latch_x_verifying_alpha(n,x,g);
 
         return true;
@@ -231,6 +245,10 @@ public:
             iRow[0]=0; jCol[0]=9;
             iRow[1]=0; jCol[1]=10;
             iRow[2]=0; jCol[2]=11;
+
+            // g[1] (cover constraints)
+            iRow[3]=1; jCol[3]=4;
+            iRow[4]=1; jCol[4]=5;
         }
         else
         {
@@ -265,6 +283,10 @@ public:
             tripod_fkin(2,x_dx,&d_bw);
             values[2]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
             x_dx[11]=x[11];
+
+            // g[1]
+            values[3]=-cover_shoulder_avoidance[0];
+            values[4]=1.0;
         }
 
         return true;
