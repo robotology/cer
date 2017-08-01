@@ -462,7 +462,8 @@ public:
 
         Matrix Hee;
         double timeStamp;
-        solver.fkin(getEncoders(&timeStamp),Hee);
+        Vector q=getEncoders(&timeStamp);
+        solver.fkin(q,Hee);
 
         Vector &pose=statePort.prepare();
         pose=Hee.getCol(3).subVector(0,2);
@@ -494,7 +495,7 @@ public:
                 iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
                 iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
 
-                if (dist(qd-ref))
+                if (dist(qd-q))
                 {
                     controlling=false;
                     if (verbosity>0)

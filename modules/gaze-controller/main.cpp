@@ -684,7 +684,7 @@ public:
                 setPositionDirectMode(); 
                 iposd->setPositions(ref.data());
 
-                if (norm(qd-ref)<stop_threshold)
+                if (norm(qd-q.subVector(4,5))<stop_threshold)
                 {
                     controlling=false;
                     if (verbosity>0)
