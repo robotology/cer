@@ -392,7 +392,7 @@ public:
         string robot=rf.check("robot",Value("cer")).asString();
         bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
         verbosity=rf.check("verbosity",Value(0)).asInt();
-        stop_threshold=rf.check("stop-threshold",Value(0.1)).asDouble();
+        stop_threshold=rf.check("stop-threshold",Value(1.0)).asDouble();
         double T=rf.check("T",Value(1.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
