@@ -392,7 +392,7 @@ public:
         string robot=rf.check("robot",Value("cer")).asString();
         bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
         verbosity=rf.check("verbosity",Value(0)).asInt();
-        stop_threshold=rf.check("stop-threshold",Value(1.0)).asDouble();
+        stop_threshold=rf.check("stop-threshold",Value(2.0)).asDouble();
         double T=rf.check("T",Value(1.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
@@ -684,11 +684,12 @@ public:
                 setPositionDirectMode(); 
                 iposd->setPositions(ref.data());
 
-                if (norm(qd-q.subVector(4,5))<stop_threshold)
+                Vector q_=q.subVector(4,5);
+                if (norm(qd-q_)<stop_threshold)
                 {
                     controlling=false;
                     if (verbosity>0)
-                        yInfo("Just stopped at: %s",ref.toString(3,3).c_str());
+                        yInfo("Just stopped at: %s",q_.toString(3,3).c_str());
                 }
             }
             else

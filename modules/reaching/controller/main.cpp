@@ -79,14 +79,13 @@ class Controller : public RFModule
     Stamp txInfo;
 
     Mutex mutex;
-    string orientation_type;
     int verbosity;
     bool closing;
     bool controlling;
     double stop_threshold_revolute;
     double stop_threshold_prismatic;
     double Ts;
-    Vector qd;    
+    Vector qd,xd;    
 
     /****************************************************************/
     Vector getEncoders(double *timeStamp=NULL)
@@ -231,9 +230,8 @@ public:
     {
         string robot=rf.check("robot",Value("cer")).asString();
         string arm_type=rf.check("arm-type",Value("left")).asString();
-        orientation_type=rf.check("orientation-type",Value("axis-angle")).asString();
         verbosity=rf.check("verbosity",Value(0)).asInt();
-        stop_threshold_revolute=rf.check("stop-threshold-revolute",Value(1.0)).asDouble();
+        stop_threshold_revolute=rf.check("stop-threshold-revolute",Value(2.0)).asDouble();
         stop_threshold_prismatic=rf.check("stop-threshold-prismatic",Value(0.002)).asDouble();
         double T=rf.check("T",Value(2.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
@@ -326,15 +324,6 @@ public:
         rpcPort.open(("/cer_reaching-controller/"+arm_type+"/rpc").c_str());
         attach(rpcPort);
 
-        transform(orientation_type.begin(),orientation_type.end(),
-                  orientation_type.begin(),::tolower);
-        if ((orientation_type!="axis-angle") && (orientation_type!="rpy"))
-        {
-            yWarning("Unrecognized Orientation Type \"%s\"",orientation_type.c_str());
-            orientation_type="axis-angle";
-        }
-        yInfo("Orientation Type is \"%s\"",orientation_type.c_str()); 
-        
         qd=getEncoders();
         for (size_t i=0; i<qd.length(); i++)
             posDirectMode.push_back(VOCAB_CM_POSITION_DIRECT);
@@ -423,7 +412,10 @@ public:
             {
                 if ((reply.size()>1) && !reply.check("parameters"))
                 {
-                    if (Bottle *payLoad=reply.get(1).asList())
+                    Bottle *payLoadJoints=reply.find("q").asList();
+                    Bottle *payLoadPose=reply.find("x").asList();
+
+                    if ((payLoadJoints!=NULL) && (payLoadPose!=NULL))
                     {
                         LockGuard lg(mutex);
                         // process only if we didn't receive
@@ -431,7 +423,13 @@ public:
                         if (controlling==latch_controlling)
                         {
                             for (size_t i=0; i<qd.length(); i++)
-                                qd[i]=payLoad->get(i).asDouble();
+                                qd[i]=payLoadJoints->get(i).asDouble();
+
+                            if (xd.length()==0)
+                                xd.resize((size_t)payLoadPose->size());
+
+                            for (size_t i=0; i<xd.length(); i++)
+                                xd[i]=payLoadPose->get(i).asDouble();
 
                             if (!controlling)
                                 gen->init(getEncoders());
@@ -468,7 +466,7 @@ public:
         Vector &pose=statePort.prepare();
         pose=Hee.getCol(3).subVector(0,2);
 
-        Vector oee=(orientation_type=="rpy"?dcm2rpy(Hee):dcm2axis(Hee));
+        Vector oee=dcm2axis(Hee);
         pose=cat(pose,oee);
 
         if (timeStamp>=0.0)
@@ -499,7 +497,7 @@ public:
                 {
                     controlling=false;
                     if (verbosity>0)
-                        yInfo("Just stopped at: %s",ref.toString(3,3).c_str());
+                        yInfo("Just stopped at: %s",q.toString(3,3).c_str());
                 }
             }
             else
@@ -617,6 +615,14 @@ public:
 
                     mutex.lock();
                     reply.addInt(verbosity);
+                    mutex.unlock();
+                }
+                else if (cmd_1==Vocab::encode("target"))
+                {
+                    reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
+                    reply.addList().read(xd);
                     mutex.unlock();
                 }
                 else if (cmd_1==Vocab::encode("mode"))

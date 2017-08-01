@@ -299,9 +299,20 @@ public:
             solver.setInitialGuess(q);
             solver.ikin(Hd,q);
 
+            Matrix H; solver.fkin(q,H);
+            Vector x=H.getCol(3).subVector(0,2);
+            x=cat(x,dcm2axis(H));
+
             reply.clear();
             reply.addVocab(Vocab::encode("ack"));
-            reply.addList().read(q);
+
+            Bottle &payLoadJoints=reply.addList();
+            payLoadJoints.addString("q");
+            payLoadJoints.addList().read(q);
+
+            Bottle &payLoadPose=reply.addList();
+            payLoadPose.addString("x");
+            payLoadPose.addList().read(x);
         }
 
         return true;
