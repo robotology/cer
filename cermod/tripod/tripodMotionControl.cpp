@@ -1582,20 +1582,45 @@ bool tripodMotionControl::getControlModesRaw(const int n_joint, const int *joint
 
 bool tripodMotionControl::setControlModeRaw(const int j, const int mode)
 {
-    refreshPositionTargets(mode);
-    return _device.iMode2->setControlMode(j, mode);
+    int m;
+    bool ret = true;
+    _device.iMode2->getControlMode(j, &m);
+    if(m != mode)
+    {
+        refreshPositionTargets(mode);
+        ret = _device.iMode2->setControlMode(j, mode);
+    }
+    return ret;
 }
 
 bool tripodMotionControl::setControlModesRaw(const int n_joint, const int *joints, int *modes)
 {
-    refreshPositionTargets(modes[0]);
-    return _device.iMode2->setControlModes(n_joint, joints, modes);
+    // Using only joint 0 because having different joints in different control
+    // modes is not supported
+    int m;
+    bool ret = true;
+    _device.iMode2->getControlMode(0, &m);
+    if(m != modes[0])
+    {
+        refreshPositionTargets(modes[0]);
+        ret = _device.iMode2->setControlModes(n_joint, joints, modes);
+    }
+    return ret;
 }
 
 bool tripodMotionControl::setControlModesRaw(int *modes)
 {
-    refreshPositionTargets(modes[0]);
-    return _device.iMode2->setControlModes(_njoints, _axisMap, modes);
+    // Using only joint 0 because having different joints in different control
+    // modes is not supported
+    int m;
+    bool ret = true;
+    _device.iMode2->getControlMode(0, &m);
+    if(m != modes[0])
+    {
+        refreshPositionTargets(modes[0]);
+        ret = _device.iMode2->setControlModes(_njoints, _axisMap, modes);
+    }
+    return ret;
 }
 
 //////////////////////// BEGIN EncoderInterface
