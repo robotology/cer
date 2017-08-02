@@ -45,7 +45,7 @@ class TargetPort : public BufferedPort<Property>
     Controller *ctrl;
 
     /****************************************************************/
-    void onRead(Property &target);
+    void onRead(Property &request);
 
 public:
     /****************************************************************/
@@ -85,7 +85,9 @@ class Controller : public RFModule
     double stop_threshold_revolute;
     double stop_threshold_prismatic;
     double Ts;
-    Vector qd,xd;    
+
+    Bottle target;
+    Vector qd,xd;
 
     /****************************************************************/
     Vector getEncoders(double *timeStamp=NULL)
@@ -324,6 +326,15 @@ public:
         rpcPort.open(("/cer_reaching-controller/"+arm_type+"/rpc").c_str());
         attach(rpcPort);
 
+        // prepare target bottle
+        Bottle &payLoadJoints=target.addList();
+        payLoadJoints.addString("q");
+        payLoadJoints.addList();
+
+        Bottle &payLoadPose=target.addList();
+        payLoadPose.addString("x");
+        payLoadPose.addList();
+
         qd=getEncoders();
         for (size_t i=0; i<qd.length(); i++)
             posDirectMode.push_back(VOCAB_CM_POSITION_DIRECT);
@@ -430,6 +441,8 @@ public:
 
                             for (size_t i=0; i<xd.length(); i++)
                                 xd[i]=payLoadPose->get(i).asDouble();
+
+                            target=reply.tail();
 
                             if (!controlling)
                                 gen->init(getEncoders());
@@ -606,7 +619,7 @@ public:
                     reply.addVocab(Vocab::encode("ack"));
 
                     mutex.lock();
-                    reply.addList().read(xd);
+                    reply.addList()=target;
                     mutex.unlock();
                 }
                 else if (cmd_1=="T")
@@ -717,10 +730,10 @@ public:
 
 
 /****************************************************************/
-void TargetPort::onRead(Property &target)
+void TargetPort::onRead(Property &request)
 {
     if (ctrl!=NULL)
-        ctrl->go(target);
+        ctrl->go(request);
 }
 
 
