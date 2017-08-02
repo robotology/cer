@@ -767,7 +767,15 @@ public:
             if (cmd_0==Vocab::encode("get"))
             {
                 string cmd_1=cmd.get(1).asString();
-                if (cmd_1=="T")
+                if (cmd_1=="done")
+                {
+                    reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
+                    reply.addInt(controlling?0:1);
+                    mutex.unlock();
+                }
+                else if (cmd_1=="T")
                 {
                     reply.addVocab(Vocab::encode("ack"));
 
@@ -831,14 +839,6 @@ public:
             mutex.unlock();
 
             reply.addVocab(Vocab::encode("ack"));
-        }
-        else if (cmd_0==Vocab::encode("done"))
-        {
-            reply.addVocab(Vocab::encode("ack"));
-
-            mutex.lock();
-            reply.addInt(controlling?0:1);
-            mutex.unlock();
         }
 
         if (reply.size()==0)

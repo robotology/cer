@@ -518,8 +518,8 @@ public:
         {
             if (cmd_0==Vocab::encode("set"))
             {
-                int cmd_1=cmd.get(1).asVocab();
-                if (cmd_1==Vocab::encode("T"))
+                string cmd_1=cmd.get(1).asString();
+                if (cmd_1=="T")
                 {
                     mutex.lock();
                     gen->setT(cmd.get(2).asDouble());
@@ -527,7 +527,7 @@ public:
 
                     reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (cmd_1==Vocab::encode("Ts"))
+                else if (cmd_1=="Ts")
                 {
                     Ts=cmd.get(2).asDouble();
                     Ts=std::max(Ts,MIN_TS);
@@ -538,7 +538,7 @@ public:
 
                     reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (cmd_1==Vocab::encode("verbosity"))
+                else if (cmd_1=="verbosity")
                 {
                     mutex.lock();
                     verbosity=cmd.get(2).asInt();
@@ -546,7 +546,7 @@ public:
 
                     reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (cmd_1==Vocab::encode("mode"))
+                else if (cmd_1=="mode")
                 {
                     Value mode(cmd.get(2).asString());
                     Property p=prepareSolverOptions("mode",mode);
@@ -554,7 +554,7 @@ public:
                     if (go(p))
                         reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (cmd_1==Vocab::encode("torso_heave"))
+                else if (cmd_1=="torso_heave")
                 {
                     Value torso_heave(cmd.get(2).asDouble());
                     Property p=prepareSolverOptions("torso_heave",torso_heave);
@@ -562,7 +562,7 @@ public:
                     if (go(p))
                         reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (cmd_1==Vocab::encode("lower_arm_heave"))
+                else if (cmd_1=="lower_arm_heave")
                 {
                     Value lower_arm_heave(cmd.get(2).asDouble());
                     Property p=prepareSolverOptions("lower_arm_heave",lower_arm_heave);
@@ -570,7 +570,7 @@ public:
                     if (go(p))
                         reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (cmd_1==Vocab::encode("tol"))
+                else if (cmd_1=="tol")
                 {
                     Value tol(cmd.get(2).asDouble());
                     Property p=prepareSolverOptions("tol",tol);
@@ -578,7 +578,7 @@ public:
                     if (go(p))
                         reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (cmd_1==Vocab::encode("constr_tol"))
+                else if (cmd_1=="constr_tol")
                 {
                     Value constr_tol(cmd.get(2).asDouble());
                     Property p=prepareSolverOptions("constr_tol",constr_tol);
@@ -592,32 +592,16 @@ public:
         {
             if (cmd_0==Vocab::encode("get"))
             {
-                int cmd_1=cmd.get(1).asVocab();
-                if (cmd_1==Vocab::encode("T"))
+                string cmd_1=cmd.get(1).asString();
+                if (cmd_1=="done")
                 {
                     reply.addVocab(Vocab::encode("ack"));
 
                     mutex.lock();
-                    reply.addDouble(gen->getT());
+                    reply.addInt(controlling?0:1);
                     mutex.unlock();
                 }
-                else if (cmd_1==Vocab::encode("Ts"))
-                {
-                    reply.addVocab(Vocab::encode("ack"));
-
-                    mutex.lock();
-                    reply.addDouble(Ts);
-                    mutex.unlock();
-                }
-                else if (cmd_1==Vocab::encode("verbosity"))
-                {
-                    reply.addVocab(Vocab::encode("ack"));
-
-                    mutex.lock();
-                    reply.addInt(verbosity);
-                    mutex.unlock();
-                }
-                else if (cmd_1==Vocab::encode("target"))
+                else if (cmd_1=="target")
                 {
                     reply.addVocab(Vocab::encode("ack"));
 
@@ -625,7 +609,31 @@ public:
                     reply.addList().read(xd);
                     mutex.unlock();
                 }
-                else if (cmd_1==Vocab::encode("mode"))
+                else if (cmd_1=="T")
+                {
+                    reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
+                    reply.addDouble(gen->getT());
+                    mutex.unlock();
+                }
+                else if (cmd_1=="Ts")
+                {
+                    reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
+                    reply.addDouble(Ts);
+                    mutex.unlock();
+                }
+                else if (cmd_1=="verbosity")
+                {
+                    reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
+                    reply.addInt(verbosity);
+                    mutex.unlock();
+                }
+                else if (cmd_1=="mode")
                 {
                     Bottle req,rep;
                     req.addList().addString("get");
@@ -636,7 +644,7 @@ public:
                         reply.add(mode);
                     }
                 }
-                else if (cmd_1==Vocab::encode("torso_heave"))
+                else if (cmd_1=="torso_heave")
                 {
                     Bottle req,rep;
                     req.addList().addString("get");
@@ -647,7 +655,7 @@ public:
                         reply.add(torso_heave);
                     }
                 }
-                else if (cmd_1==Vocab::encode("lower_arm_heave"))
+                else if (cmd_1=="lower_arm_heave")
                 {
                     Bottle req,rep;
                     req.addList().addString("get");
@@ -658,7 +666,7 @@ public:
                         reply.add(lower_arm_heave);
                     }
                 }
-                else if (cmd_1==Vocab::encode("tol"))
+                else if (cmd_1=="tol")
                 {
                     Bottle req,rep;
                     req.addList().addString("get");
@@ -669,7 +677,7 @@ public:
                         reply.add(tol);
                     }
                 }
-                else if (cmd_1==Vocab::encode("constr_tol"))
+                else if (cmd_1=="constr_tol")
                 {
                     Bottle req,rep;
                     req.addList().addString("get");
@@ -698,14 +706,6 @@ public:
             mutex.unlock();
 
             reply.addVocab(Vocab::encode("ack"));
-        }
-        else if (cmd_0==Vocab::encode("done"))
-        {
-            reply.addVocab(Vocab::encode("ack"));
-
-            mutex.lock();
-            reply.addInt(controlling?0:1);
-            mutex.unlock();
         }
 
         if (reply.size()==0)
