@@ -1,5 +1,5 @@
 <application>
-<name>Calib Cameras</name>
+<name>Cameras No Calib</name>
 <dependencies>
 </dependencies> 
 <module>
@@ -7,18 +7,6 @@
       <parameters> --from camera/ServerGrabberDual.ini --split true</parameters>
   <node>r1-torso</node>
 </module>
-
-<module>
-  <name>camCalib</name>
-  <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /icub/camcalib/left</parameters>  
-  <node>r1-console-linux</node>
-</module>
-<module>
-  <name>camCalib</name>
-  <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /icub/camcalib/right</parameters> 
-  <node>r1-console-linux</node>
-</module>
-
 <module>
   <name>yarpview</name>
   <parameters>--name /cer/view/left --x 0 --y 0 --p 50</parameters>
@@ -40,26 +28,15 @@
 
 <connection>
   <from>/cer/cam/left</from>
-  <to>/cer/camcalib/left/in</to>
+  <to>/cer/view/left</to>
   <protocol>mjpeg</protocol>
 </connection>
 
 <connection>
   <from>/cer/cam/right</from>
-  <to>/cer/camcalib/right/in</to>
+  <to>/cer/view/right</to>
   <protocol>mjpeg</protocol>
 </connection>
 
-<connection>
-  <from>/cer/camcalib/left/out</from>
-  <to>/cer/view/left</to>
-  <protocol>udp</protocol>
-</connection>
-
-<connection>
-  <from>/cer/camcalib/right/out</from>
-  <to>/cer/view/right</to>
-  <protocol>udp</protocol>
-</connection>
 </application>
 
