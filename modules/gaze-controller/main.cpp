@@ -240,12 +240,13 @@ class Controller : public RFModule
                   part.asString().c_str(),p.torso.l_min,p.torso.l_max,-p.torso.alpha_max,p.torso.alpha_max,lim(3,0),lim(3,1));
 
             getBounds(drivers[2],lim);
+            part=drivers[2].getValue("remote");
+
             for (int i=0; i<2; i++)
             {
                 chain[1+i].setMin((M_PI/180.0)*lim(i,0));
                 chain[1+i].setMax((M_PI/180.0)*lim(i,1));
 
-                part=drivers[2].getValue("remote");
                 yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
                       part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
                       (180.0/M_PI)*chain[1+i].getMax());
