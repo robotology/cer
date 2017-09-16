@@ -363,7 +363,7 @@ class Controller : public RFModule
             if (frame==control_frame)
             {
                 Vector ang(2);
-                Vector z=Hee.getCol(2).subVector(0,2);
+                Vector z=Hee.getCol(2);
                 ang[0]=(180.0/M_PI)*atan2(z[1],z[0]);
                 ang[1]=(180.0/M_PI)*atan2(z[2],z[0]);
 
