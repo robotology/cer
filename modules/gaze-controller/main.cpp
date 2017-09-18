@@ -559,7 +559,7 @@ public:
         if ((target_type!="cartesian") && (target_type!="angular") && (target_type!="image"))
             yError("Unrecognized target type \"%s\"!",target_type.c_str());
         else if (target_location==NULL)
-            yWarning("Missing \"target-location\" option!");
+            yError("Missing \"target-location\" option!");
         else if (target_type=="cartesian")
         {
             if (target_location->size()>=3)
@@ -572,7 +572,7 @@ public:
                 doControl=true;
             }
             else
-                yError("Provided too few Cartesian coordinates!");
+                yError("Missing Cartesian coordinates!");
         }
         else if (target_type=="angular")
         {
@@ -586,7 +586,9 @@ public:
 
                 Matrix Hee;
                 Vector q0(6,0.0);
+                mutex.lock();
                 solver[control_frame].fkin(q0,Hee);
+                mutex.unlock();
 
                 Vector xc(4,0.0);
                 xc[2]=xc[3]=1.0;
@@ -598,7 +600,7 @@ public:
                 doControl=true;
             }
             else
-                yError("Provided too few angular coordinates!");
+                yError("Missing angular coordinates!");
         }
         else if (target_type=="image")
         {
@@ -620,7 +622,9 @@ public:
 
                     Matrix Hee;
                     q=getEncoders();
+                    mutex.lock();
                     solver[image].fkin(q,Hee);
+                    mutex.unlock();
 
                     Vector xc=intrinsincs[image]*p;
                     xc[3]=1.0;
@@ -631,7 +635,7 @@ public:
                     doControl=true;
                 }
                 else
-                    yError("Provided too few image coordinates!");
+                    yError("Missing image coordinates!");
             }
         }
         else
