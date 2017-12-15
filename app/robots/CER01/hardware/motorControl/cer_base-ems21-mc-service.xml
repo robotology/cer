@@ -17,7 +17,7 @@
                 <param name="type">                 foc         </param> 
                 <group name="PROTOCOL">
                     <param name="major">            1           </param>    
-                    <param name="minor">            5           </param>     
+                    <param name="minor">            6           </param>     
                 </group>                    
                 <group name="FIRMWARE">
                     <param name="major">            0           </param>    
@@ -39,7 +39,7 @@
                     <param name="port">             CAN1:4:0            CAN1:2:0            CONN:none       CONN:none    </param>
                     <param name="position">         atmotor             atmotor             none            none        </param> 
                     <param name="resolution">       -14400              14400               0               0           </param>
-                    <param name="numofnoisebits">      0                0                   0               0           </param>  
+                    <param name="tolerance">           0                0                   0               0           </param>  
                 </group>        
                 
                 <group name="ENCODER2">
@@ -47,7 +47,7 @@
                     <param name="port">             CONN:none           CONN:none           CONN:none       CONN:none   </param>
                     <param name="position">         none                none                none            none        </param>
                     <param name="resolution">          0                0                   0               0           </param>
-                    <param name="numofnoisebits">      0                0                   0               0           </param>  
+                    <param name="tolerance">           0                0                   0               0           </param>  
                 </group> 
  
             </group>    

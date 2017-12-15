@@ -56,6 +56,10 @@
         <param name="stiffness">       0      0           </param>    
         <param name="damping">         0      0           </param>    
     </group>
+    
+    <group name="OTHER_CONTROL_PARAMETERS">
+        <param name="deadZone">        2.20    2.20        </param>
+	</group>
 	
   </device>
 </devices>
