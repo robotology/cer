@@ -223,7 +223,7 @@ class Controller : public RFModule
 
 public:
     /****************************************************************/
-    Controller() : gen(NULL)
+    Controller() : gen(NULL), closing(false), controlling(false)
     {
     }
 
@@ -346,8 +346,7 @@ public:
         arm.upper_arm.setAllConstraints(false);
         solver.setArmParameters(arm);
 
-        gen=new minJerkTrajGen(qd,Ts,T);
-        closing=controlling=false;        
+        gen=new minJerkTrajGen(qd,Ts,T);        
 
         return true;
     }

@@ -375,7 +375,7 @@ class Controller : public RFModule
 
 public:
     /****************************************************************/
-    Controller() : gen(NULL)
+    Controller() : gen(NULL), closing(false), controlling(false)
     {
         avFrames=HeadParameters::getTypes();
         for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
@@ -488,7 +488,6 @@ public:
         getIntrinsics(rf_cameras);
 
         gen=new minJerkTrajGen(qd,Ts,T);
-        closing=controlling=false;
 
         return true;
     }
