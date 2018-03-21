@@ -40,7 +40,7 @@ protected:
     Vector xd;
 
     Vector latch_x;
-    VectorOf<int> latch_idx;
+    vector<int> latch_idx;
     Vector latch_gl,latch_gu;
 
     Vector zL,zU;

@@ -16,6 +16,7 @@
 */
 
 #include <string>
+#include <vector>
 #include <set>
 #include <map>
 #include <cmath>
@@ -71,8 +72,8 @@ class Controller : public RFModule
     IPositionControl2* ipos;
     IPositionDirect*   iposd;
 
-    VectorOf<int> posDirectMode;
-    VectorOf<int> curMode;
+    vector<int> posDirectMode;
+    vector<int> curMode;
 
     map<string,HeadSolver> solver;
     map<string,Matrix> intrinsincs;
@@ -162,7 +163,7 @@ class Controller : public RFModule
     /****************************************************************/
     void getCurrentMode()
     {
-        imod->getControlModes(&curMode[0]);
+        imod->getControlModes(curMode.data());
     }
 
     /****************************************************************/
@@ -182,7 +183,7 @@ class Controller : public RFModule
         {
             if (curMode[i]!=posDirectMode[i])
             {
-                imod->setControlModes(&posDirectMode[0]);
+                imod->setControlModes(posDirectMode.data());
                 break;
             }
         }        

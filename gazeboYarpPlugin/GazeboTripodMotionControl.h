@@ -369,7 +369,7 @@ private:
     yarp::os::Stamp m_lastTimestamp; /**< timestamp, updated with simulation time at each onUpdate call */
 
     yarp::sig::Vector amp;
-    yarp::sig::VectorOf<JointType> m_jointTypes;
+    std::vector<JointType> m_jointTypes;
 
     //Desired Control variables
     yarp::sig::Vector m_referenceElongations;   /**< desired reference positions as elongations. [Meters]*/

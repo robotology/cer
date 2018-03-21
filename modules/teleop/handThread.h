@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 #include <yarp/sig/Matrix.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/sig/Vector.h>
@@ -92,7 +93,7 @@ private:
     typedef yarp::os::BufferedPort<yarp::os::Property>           PropertyPort;
     typedef yarp::os::BufferedPort<yarp::sig::Vector>            VectorPort;
     typedef yarp::sig::Vector                                    Vector;
-    typedef yarp::sig::VectorOf<int>                             IntVector;
+    typedef std::vector<int>                                     IntVector;
     typedef yarp::os::RpcClient                                  RpcClient;
     typedef yarp::dev::IVelocityControl                          IVelocityControl;
     typedef yarp::dev::IPositionDirect                           IPositionDirect;

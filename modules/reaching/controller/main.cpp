@@ -16,6 +16,7 @@
 */
 
 #include <string>
+#include <vector>
 #include <algorithm>
 
 #include <yarp/os/all.h>
@@ -60,14 +61,14 @@ public:
 class Controller : public RFModule
 {
     PolyDriver         drivers[4];
-    VectorOf<int>      jointsIndexes[4];
+    vector<int>        jointsIndexes[4];
     IControlMode2*     imod[4];
     IEncodersTimed*    ienc[4];
     IPositionControl2* ipos[4];
     IPositionDirect*   iposd[4];
     
-    VectorOf<int> posDirectMode;
-    VectorOf<int> curMode;
+    vector<int> posDirectMode;
+    vector<int> curMode;
 
     ArmSolver solver;
     minJerkTrajGen* gen;
@@ -123,10 +124,10 @@ class Controller : public RFModule
     /****************************************************************/
     void getCurrentMode()
     {
-        imod[0]->getControlModes(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&curMode[0]);
-        imod[1]->getControlModes(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&curMode[3]);
-        imod[2]->getControlModes(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&curMode[4]);
-        imod[3]->getControlModes(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&curMode[9]);
+        imod[0]->getControlModes((int)jointsIndexes[0].size(),jointsIndexes[0].data(),&curMode[0]);
+        imod[1]->getControlModes((int)jointsIndexes[1].size(),jointsIndexes[1].data(),&curMode[3]);
+        imod[2]->getControlModes((int)jointsIndexes[2].size(),jointsIndexes[2].data(),&curMode[4]);
+        imod[3]->getControlModes((int)jointsIndexes[3].size(),jointsIndexes[3].data(),&curMode[9]);
     }
 
     /****************************************************************/
@@ -145,7 +146,7 @@ class Controller : public RFModule
         {
             if (curMode[i]!=posDirectMode[i])
             {
-                imod[0]->setControlModes(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&posDirectMode[0]);
+                imod[0]->setControlModes((int)jointsIndexes[0].size(),jointsIndexes[0].data(),&posDirectMode[0]);
                 break;
             }
         }
@@ -154,7 +155,7 @@ class Controller : public RFModule
         {
             if (curMode[i]!=posDirectMode[i])
             {
-                imod[1]->setControlModes(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&posDirectMode[3]);
+                imod[1]->setControlModes((int)jointsIndexes[1].size(),jointsIndexes[1].data(),&posDirectMode[3]);
                 break;
             }
         }
@@ -163,7 +164,7 @@ class Controller : public RFModule
         {
             if (curMode[i]!=posDirectMode[i])
             {
-                imod[2]->setControlModes(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&posDirectMode[4]);
+                imod[2]->setControlModes((int)jointsIndexes[2].size(),jointsIndexes[2].data(),&posDirectMode[4]);
                 break;
             }
         }
@@ -172,7 +173,7 @@ class Controller : public RFModule
         {
             if (curMode[i]!=posDirectMode[i])
             {
-                imod[3]->setControlModes(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&posDirectMode[9]);
+                imod[3]->setControlModes((int)jointsIndexes[3].size(),jointsIndexes[3].data(),&posDirectMode[9]);
                 break;
             }
         }
@@ -184,7 +185,7 @@ class Controller : public RFModule
     void stopControl()
     {        
         for (int i=0; i<4; i++)
-            ipos[i]->stop(jointsIndexes[i].size(),jointsIndexes[i].getFirst());
+            ipos[i]->stop((int)jointsIndexes[i].size(),jointsIndexes[i].data());
         controlling=false;
     }
 
@@ -500,10 +501,10 @@ public:
             if (areJointsHealthy())
             {
                 setPositionDirectMode(); 
-                iposd[0]->setPositions(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&ref[0]);
-                iposd[1]->setPositions(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&ref[3]);
-                iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
-                iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
+                iposd[0]->setPositions((int)jointsIndexes[0].size(),jointsIndexes[0].data(),&ref[0]);
+                iposd[1]->setPositions((int)jointsIndexes[1].size(),jointsIndexes[1].data(),&ref[3]);
+                iposd[2]->setPositions((int)jointsIndexes[2].size(),jointsIndexes[2].data(),&ref[4]);
+                iposd[3]->setPositions((int)jointsIndexes[3].size(),jointsIndexes[3].data(),&ref[9]);
 
                 if (dist(qd-q))
                 {

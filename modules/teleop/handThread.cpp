@@ -477,7 +477,7 @@ void HandThread::threadRelease()
         modes[i] = VOCAB_CM_POSITION;
     }
 
-    imod->setControlModes(modes.getFirst());
+    imod->setControlModes(modes.data());
 
     robotTargetPort.interrupt();
     robotTargetPort.close();
