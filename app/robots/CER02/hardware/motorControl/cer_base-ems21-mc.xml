@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+
+<devices robot="CER01" build="1">
+  <device name="cer_mobile_base_mc" type="embObjMotionControl">
+      <params file="general.xml" />
+      <params file="hardware/electronics/cer_base-ems21-eln.xml" />
+      <params file="hardware/mechanicals/cer_base-ems21-mec.xml" />
+      <params file="hardware/motorControl/cer_base-ems21-mc-service.xml" />
+
+    <group name="LIMITS">
+        <param name="jntPosMax">              0          0        </param>
+        <param name="jntPosMin">              0          0        </param>
+        <param name="jntVelMax">              360       360       </param>
+        <param name="motorOverloadCurrents">  15000   15000       </param>
+        <param name="motorNominalCurrents">   10000   10000       </param>
+        <param name="motorPeakCurrents">      15000   15000       </param>
+        <param name="motorPwmLimit">          1000    1000       </param>  
+   </group>
+   
+   
+    <group name="TIMEOUTS">
+        <param name="velocity">               100       100       </param>
+    </group>
+
+
+    <group name="CONTROLS">
+       
+       <param name="positionControl">  JOINT_POS_VEL_CTRL     JOINT_POS_VEL_CTRL    </param> 
+       <param name="velocityControl">  none                   none                  </param> 
+       <param name="torqueControl">    none                   none                  </param>
+        <param name="currentPid">      2FOC_FEEDBACK          2FOC_FEEDBACK         </param> 
+    </group>
+
+
+    <group name="JOINT_POS_VEL_CTRL">
+    <param name="controlLaw">    PidPos_withInnerVelPid </param> 
+        <param name="controlUnits">  machine_units </param> 
+        <param name="pos_kp">               5           5      </param>       
+        <param name="pos_kd">               0           0      </param>       
+        <param name="pos_ki">               0           0      </param>      
+        <param name="pos_limOutput">     1000        1000      </param>   
+        <param name="pos_maxOutput">     1000        1000      </param>    
+        <param name="pos_maxInt">           0           0      </param>   
+        <param name="pos_shift">            0           0      </param>   
+        <param name="pos_ko">               0           0      </param>   
+        <param name="pos_stictionUp">       0           0      </param>   
+        <param name="pos_stictionDwn">      0           0      </param>   
+        <param name="pos_kff">              1           1      </param>   
+        <param name="vel_kp">              12          12      </param>       
+        <param name="vel_kd">               0           0      </param>       
+        <param name="vel_ki">              16          16      </param>     
+        <param name="vel_limOutput">    32000       32000      </param>   
+        <param name="vel_maxOutput">    32000       32000      </param>   
+        <param name="vel_maxInt">       32000       32000      </param>   
+        <param name="vel_shift">           10          10      </param>   
+        <param name="vel_ko">               0           0      </param>   
+        <param name="vel_stictionUp">       0           0      </param>   
+        <param name="vel_stictionDwn">      0           0      </param>   
+        <param name="vel_kff">              0           0      </param>   
+    </group>
+
+
+    <group name="IMPEDANCE">
+        <param name="stiffness">       0      0    </param>    
+        <param name="damping">         0      0    </param>    
+    </group>
+    
+    <group name="2FOC_FEEDBACK">
+        <param name="controlLaw">       limitscurrent            </param> 
+        <param name="controlUnits">     metric_units             </param> 
+        <param name="cur_kp">              8           8         </param>       
+        <param name="cur_kd">              0           0         </param>       
+        <param name="cur_ki">              2           2         </param>
+        <param name="cur_shift">           10          10        </param>
+        <param name="cur_maxOutput">       32000       32000     </param>                 
+        <param name="cur_maxInt">          32000       32000     </param> 
+        <param name="cur_ko">               0            0       </param>       
+        <param name="cur_stictionUp">       0            0       </param>       
+        <param name="cur_stictionDwn">      0            0       </param>   
+        <param name="cur_kff">              0            0       </param>            
+    </group>
+
+    <group name="OTHER_CONTROL_PARAMETERS">
+    	<param name="deadZone"> 0.0495 0.0495 </param>
+    </group>
+
+  </device>
+</devices>
+
