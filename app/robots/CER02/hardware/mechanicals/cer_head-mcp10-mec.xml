@@ -6,21 +6,22 @@
         <param name="MotioncontrolVersion">  4 </param>
         <param name="Joints">                2  </param> 
         <param name="AxisName">              "neck_pitch_joint" "neck_yaw_joint" </param>
-        <param name="AxisMap">               0                  1               </param>
-        <param name="AxisType">              "revolute"         "revolute"      </param>
-        <param name="Encoder">               182.044            182.044         </param>
-        <param name="Gearbox_M2J">          -1                  125             </param>
-        <param name="Gearbox_E2J">           1                  1               </param>
-        <param name="fullscalePWM">          3360            3360               </param>
-        <param name="ampsToSensor">          1000.0          1000.0             </param>
-        <param name="MotorType">             "DC"               "DC"            </param>
-        <param name="useMotorSpeedFbk">      1                   1              </param>        
+        <param name="AxisMap">               0                  1                </param>
+        <param name="AxisType">              "revolute"         "revolute"       </param>
+        <param name="Encoder">               182.044            182.044          </param>
+        <param name="Gearbox_M2J">          -1                  125              </param>
+        <param name="Gearbox_E2J">           1                  1                </param>
+        <param name="fullscalePWM">          3360            3360                </param>
+        <param name="ampsToSensor">          1000.0          1000.0              </param>
+        <param name="MotorType">             "DC"               "DC"             </param>
+        <param name="useMotorSpeedFbk">      1                   1               </param>        
         <param name="Verbose">               0   </param>
     </group>
     
     <group name="LIMITS">
-        <param name="hardwareJntPosMax">       35                70            </param>
-        <param name="hardwareJntPosMin">       -25              -45            </param>
+        <param name="hardwareJntPosMax">        49.97             51           </param>
+        <param name="hardwareJntPosMin">       -30.04            -51           </param>
+        
         <param name="rotorPosMin">              0                 0            </param>
         <param name="rotorPosMax">              0                 0            </param>
     </group>

@@ -11,8 +11,8 @@
       <params file="hardware/motorControl/cer_head-mcp10-mc-service.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                35      70            </param>
-        <param name="jntPosMin">                -25    -45            </param>
+        <param name="jntPosMax">                48      49           </param>
+        <param name="jntPosMin">               -28     -49           </param>
         <param name="jntVelMax">                50      50           </param>
         <param name="motorOverloadCurrents">    5000    5000         </param>
         <param name="motorNominalCurrents">     8000    8000         </param>
@@ -22,7 +22,7 @@
 
     
      <group name="TIMEOUTS">
-        <param name="velocity">             100           100         </param>
+        <param name="velocity">             100           100        </param>
     </group>
 
 
@@ -36,22 +36,14 @@
     
     
     <group name="JOINT_PID_V1">
-	    <param name="controlLaw">    Pid_inPos_outPwm       </param> 
-        <param name="controlUnits">  machine_units           </param>
+	    <param name="controlLaw">    Pid_inPos_outPwm            </param> 
+        <param name="controlUnits">  machine_units               </param>
 
-   <!-- <param name="kp">              -3           3        </param>
-        <param name="kd">              -0           0        </param>
-        <param name="ki">             -30          30        </param>
-        <param name="limOutput">      500         500        </param>
-        <param name="maxOutput">     3000        3000        </param>
-        <param name="maxInt">        3000        3000        </param> -->
-
-   <!-- <param name="pos_kp">              -3           5        </param> -->
-	<param name="pos_kp">              -2           1.5      </param>
-        <param name="pos_kd">              -0           0        </param>
-        <param name="pos_ki">              -5           5        </param>
+	    <param name="pos_kp">               2          -1.5      </param>
+        <param name="pos_kd">               0           0        </param>
+        <param name="pos_ki">               1          -5        </param>
         <param name="pos_maxOutput">     3360        3360        </param>
-        <param name="pos_maxInt">        3360        1500        </param>
+        <param name="pos_maxInt">        1000        1500        </param>
 
         <param name="pos_shift">            0           0        </param>
         <param name="pos_ko">               0           0        </param>
@@ -61,8 +53,8 @@
     </group>
 
     <group name="VEL_CONTROL">
-	<param name="controlLaw">    Pid_inVel_outPwm            </param>
-        <param name="controlUnits">  machine_units           </param>
+	    <param name="controlLaw">    Pid_inVel_outPwm            </param>
+        <param name="controlUnits">  machine_units               </param>
         <param name="vel_kp">              -5           5        </param>
         <param name="vel_kd">              -0           0        </param>
         <param name="vel_ki">              -5          50        </param>

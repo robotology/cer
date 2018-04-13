@@ -6,13 +6,13 @@
 <devices robot="CER01" build="1">
   <device name="cer_left_lower_arm_mc" type="embObjMotionControl">
       <params file="general.xml" />
-      <params file="hardware/electronics/cer_left_lower_arm-mcp18-eln.xml" />
-      <params file="hardware/mechanicals/cer_left_lower_arm-mcp18-mec.xml" />
-      <params file="hardware/motorControl/cer_left_lower_arm-mcp18-mc-service.xml" />
+      <params file="hardware/electronics/cer_left_lower_arm-mcp8-eln.xml" />
+      <params file="hardware/mechanicals/cer_left_lower_arm-mcp8-mec.xml" />
+      <params file="hardware/motorControl/cer_left_lower_arm-mcp8-mc-service.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                  0.12     0.12    0.12     80     </param>
-        <param name="jntPosMin">                  0        0       0        -80    </param>
+        <param name="jntPosMax">                  0.12     0.12    0.12     89     </param>
+        <param name="jntPosMin">                  0        0       0       -89    </param>
         <param name="jntVelMax">                  0.02     0.02    0.02     3000   </param>
         <param name="motorOverloadCurrents">      10000    10000   10000    10000   </param>
         <param name="motorNominalCurrents">       5000     5000    5000     5000   </param>
@@ -36,7 +36,7 @@
     <group name="JOINT_PID_V1">
         <param name="controlLaw">    Pid_inPos_outPwm </param> 
         <param name="controlUnits">  machine_units </param> 
-        <param name="pos_kp">                    20         20         20       0.7    </param>       
+        <param name="pos_kp">                   -20        -20        -20       0.7    </param>       
         <param name="pos_kd">                    0          0          0        0      </param>       
         <param name="pos_ki">                    0          0          0        0      </param>       
         <!-- deprecated <param name="pos_limOutput">             1500       1500       1500     2000   </param>       -->

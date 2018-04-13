@@ -9,9 +9,8 @@
       <params file="hardware/motorControl/cer_left_shoulder-ems5-mc-service.xml" />
 
     <group name="LIMITS">
-    <!--    <param name="jntPosMax">                  85            70      </param>   no covers -->
-        <param name="jntPosMax">                      55            50      </param>
-        <param name="jntPosMin">                     -25             5      </param>
+        <param name="jntPosMax">                      85            85      </param>
+        <param name="jntPosMin">                     -70             5      </param>
         <param name="motorOverloadCurrents">          5000          5000    </param>
         <param name="motorNominalCurrents">           2500          2500    </param>
         <param name="motorPeakCurrents">              5000          5000    </param>

@@ -11,4 +11,3 @@
     <!--  CALIBRATORS -->
     <devices file="calibrators/cer_head-calib.xml" />
 </robot> 
-

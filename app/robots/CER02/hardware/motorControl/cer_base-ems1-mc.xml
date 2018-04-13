@@ -81,7 +81,7 @@
     </group>
 
     <group name="OTHER_CONTROL_PARAMETERS">
-    	<param name="deadZone"> 0.0495 0.0495 </param>
+    	<param name="deadZone"> 0.025 0.025 </param>
     </group>
 
   </device>

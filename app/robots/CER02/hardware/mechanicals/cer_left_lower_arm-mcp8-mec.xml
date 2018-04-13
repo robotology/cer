@@ -6,7 +6,7 @@
         <param name="MotioncontrolVersion">  4 </param>
         <param name="Joints">                4  </param> 
         <param name="AxisName">              "l_wrist_tripod_0" "l_wrist_tripod_1" "l_wrist_tripod_2" "l_wrist_pronosupination_joint"  </param>
-        <param name="AxisMap">               2                  0                  1                  3                        </param>
+        <param name="AxisMap">               0                  1                  2                  3                        </param>
         <param name="AxisType">              "prismatic"        "prismatic"        "prismatic"        "revolute"               </param>
         <param name="Encoder">               56333.333          56333.333          56333.333          182.044                  </param>
         <param name="Gearbox_M2J">               1                  1                  1                  1                    </param>
@@ -19,8 +19,8 @@
     </group>
     
     <group name="LIMITS">
-        <param name="hardwareJntPosMax">          0.12     0.12    0.12     80     </param>
-        <param name="hardwareJntPosMin">          0        0       0        -80    </param>
+        <param name="hardwareJntPosMax">          0.125    0.125   0.125    90     </param>
+        <param name="hardwareJntPosMin">         -0.005   -0.005  -0.005   -90     </param>
         <param name="rotorPosMin">                0        0       0        0      </param>
         <param name="rotorPosMax">                0        0       0        0      </param>
     </group>

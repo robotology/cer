@@ -16,24 +16,14 @@
     </group>                                                                      
 
     <group name="CALIBRATION">                                                    
-        <param name="calibrationType">                    3               3              </param>
-        <param name="calibration1">                       0               0              </param>
+        <param name="calibrationType">                    12              12             </param>
+        <param name="calibration1">                       35932           32366          </param>
         <param name="calibration2">                       0               0              </param>
-        <param name="calibration3">                       58252           24954          </param> 
+        <param name="calibration3">                       0               0              </param> 
         <param name="calibration4">                       0               0              </param>
         <param name="calibration5">                       0               0              </param>
-        <param name="calibrationZero">                    180             180            </param>
+        <param name="calibrationZero">                    0               0              </param>
         <param name="calibrationDelta">                   0.0             0.0            </param>
-
-        <!--     <param name="calibrationType">                    3               5              </param> 
-        <param name="calibration1">                       0               1200           </param>
-        <param name="calibration2">                       0               12743          </param>
-        <param name="calibration3">                       58072           0              </param> 
-        <param name="calibration4">                       0               0              </param>
-        <param name="calibration5">                       0               0              </param>
-        <param name="calibrationZero">                    180             0              </param>
-        <param name="calibrationDelta">                   0.0             0.0            </param> -->
-
 
         <param name="startupPosition">                    0.0             0.0            </param>
         <param name="startupVelocity">                    10.0            10.0           </param>

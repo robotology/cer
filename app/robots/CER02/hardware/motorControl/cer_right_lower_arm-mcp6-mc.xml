@@ -6,15 +6,15 @@
 <devices robot="CER01" build="1">
   <device name="cer_right_lower_arm_mc" type="embObjMotionControl">
       <params file="general.xml" />
-      <params file="hardware/electronics/cer_right_lower_arm-mcp20-eln.xml" />
-      <params file="hardware/mechanicals/cer_right_lower_arm-mcp20-mec.xml" />
-      <params file="hardware/motorControl/cer_right_lower_arm-mcp20-mc-service.xml" />
+      <params file="hardware/electronics/cer_right_lower_arm-mcp6-eln.xml" />
+      <params file="hardware/mechanicals/cer_right_lower_arm-mcp6-mec.xml" />
+      <params file="hardware/motorControl/cer_right_lower_arm-mcp6-mc-service.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                  0.12     0.12    0.12     80     </param>
-        <param name="jntPosMin">                  0        0       0        -80    </param>
+        <param name="jntPosMax">                  0.12     0.12    0.12     89     </param>
+        <param name="jntPosMin">                  0        0       0       -89     </param>
         <param name="jntVelMax">                  0.02     0.02    0.02     3000   </param>
-        <param name="motorOverloadCurrents">      10000    10000   10000    10000   </param>
+        <param name="motorOverloadCurrents">      10000    10000   10000    10000  </param>
         <param name="motorNominalCurrents">       5000     5000    5000     5000   </param>
         <param name="motorPeakCurrents">          5000     5000    5000     5000   </param>
         <param name="motorPwmLimit">              3360     3360    3360     3360   </param>  
@@ -37,10 +37,9 @@
     <group name="JOINT_PID_V1">
         <param name="controlLaw">    Pid_inPos_outPwm </param> 
         <param name="controlUnits">  machine_units    </param> 
-        <param name="pos_kp">               20         20         20      -0.7    </param>       
+        <param name="pos_kp">              -20        -20        -20      -0.7    </param>       
         <param name="pos_kd">               0          0          0        0      </param>       
         <param name="pos_ki">               0          0          0        0      </param>       
-        <!--limoutput is deprecated!!!!!  <param name="limOutput">             1500       1500       1500     2000   </param>      -->
         <param name="pos_maxOutput">        3000       3000       3000     2000   </param>          
         <param name="pos_maxInt">           0          0          0        0      </param>       
         <param name="pos_shift">            0          0          0        0      </param>       
@@ -56,7 +55,6 @@
         <param name="vel_kp">                    20         20         20      -0.7    </param>       
         <param name="vel_kd">                    0          0          0        0      </param>       
         <param name="vel_ki">                    0          0          0        0      </param>       
-        <!-- <param name="limOutput">             1500       1500       1500     2000   </param>     --> 
         <param name="vel_maxOutput">             3000       3000       3000     2000   </param>          
         <param name="vel_maxInt">                0          0          0        0      </param>       
         <param name="vel_shift">                 0          0          0        0      </param>       
@@ -87,6 +85,10 @@
     <group name="IMPEDANCE">
         <param name="stiffness">       0      0      0      0     </param>    
         <param name="damping">         0      0      0      0     </param>    
+    </group>
+	
+	<group name="OTHER_CONTROL_PARAMETERS">
+        <param name="deadZone"> 0.00002   0.00002   0.00002   0.0055   </param>
     </group>
 	
   </device>

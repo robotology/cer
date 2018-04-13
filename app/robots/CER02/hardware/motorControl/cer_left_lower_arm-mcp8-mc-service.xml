@@ -18,7 +18,7 @@
 
                 <group name="ACTUATOR">                 
                     <param name="type">             pwm                 pwm                 pwm                 pwm                     </param>
-                    <param name="port">             CONN:P2             CONN:P4             CONN:P5             CONN:P3                 </param>
+                    <param name="port">             CONN:P3             CONN:P2             CONN:P4             CONN:P5                 </param>
                 </group>
                 
                 <group name="ENCODER1">  
@@ -30,12 +30,11 @@
                 </group>        
                 
                 <group name="ENCODER2">
-                    <!-- <param name="type">             roie                roie                roie                none                    </param> -->
                     <param name="type">             qenc                qenc                qenc                none                    </param>
-                    <param name="port">             CONN:P2             CONN:P4             CONN:P5             CONN:none               </param>
+                    <param name="port">             CONN:P3             CONN:P2             CONN:P4             CONN:none               </param>
                     <param name="position">         atmotor             atmotor             atmotor             none                    </param>
-                     <param name="resolution">      65535               65535               65535               0                       </param>
-                    <param name="tolerance">        0                   0                   0               0                       </param>  
+                    <param name="resolution">       65535               65535               65535               0                       </param>
+                    <param name="tolerance">        0                   0                   0                   0                       </param>  
                 </group>  
             </group>    
             
@@ -44,6 +43,9 @@
            
     </group>
     
+    <group name="OTHER_CONTROL_PARAMETERS">
+        <param name="deadZone"> 0.00002   0.00002   0.00002   0.0055   </param>
+    </group>
   
 </params>
 

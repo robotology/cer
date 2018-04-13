@@ -3,27 +3,26 @@
 
 <params robot="CER01" build="1">
     <group name="GENERAL">
-        <param name="MotioncontrolVersion">     4             </param>
-        <param name="Joints">                   2             </param> 
-        <param name="AxisMap">                  0             1           </param>
+        <param name="MotioncontrolVersion">     4                                      </param>
+        <param name="Joints">                   2                                      </param> 
+        <param name="AxisMap">                  0                      1               </param>
         <param name="AxisName">                 "r_shoulder_yaw_joint" "r_elbow_joint" </param>
-        <param name="AxisType">                 "revolute"    "revolute"  </param>
-        <param name="Encoder">                  182.044       182.044     </param>
-        <param name="Gearbox_M2J">              38           -100.0       </param>
-        <param name="Gearbox_E2J">              1             1           </param>
-        <param name="useMotorSpeedFbk">         1             1           </param>
-        <param name="fullscalePWM">             32000         32000       </param>
-        <param name="ampsToSensor">             1000.0        1000.0      </param>
-        <param name="MotorType">                "BLL_MECAP"   "BLL_MECAP" </param>
+        <param name="AxisType">                 "revolute"             "revolute"      </param>
+        <param name="Encoder">                  182.044                182.044         </param>
+        <param name="Gearbox_M2J">              159.438                159.438         </param>
+        <param name="Gearbox_E2J">              1                      1               </param>
+        <param name="useMotorSpeedFbk">         1                      1               </param>
+        <param name="fullscalePWM">             32000                  32000           </param>
+        <param name="ampsToSensor">             1000.0                 1000.0          </param>
+        <param name="MotorType">                "BLL_MECAP"            "BLL_MECAP"     </param>
         <param name="Verbose">                  0             </param>
     </group>
     
     <group name="LIMITS">
-    <!--    <param name="jntPosMax">                 85        95         </param>   no covers -->
-        <param name="hardwareJntPosMax">             85        95         </param>
-        <param name="hardwareJntPosMin">            -85         5         </param>
-        <param name="rotorPosMin">                    0         0         </param> 
-        <param name="rotorPosMax">                    0         0         </param>
+        <param name="hardwareJntPosMax">             90       100       </param>
+        <param name="hardwareJntPosMin">            -90         0       </param>
+        <param name="rotorPosMin">                    0         0       </param> 
+        <param name="rotorPosMax">                    0         0       </param>
     </group>
 
     <group name="2FOC">
@@ -33,7 +32,7 @@
         <param name="HasRotorEncoderIndex">  0             0             </param>
         <param name="HasSpeedEncoder">       0             0             </param>
         <param name="RotorIndexOffset">      0             0             </param>
-        <param name="MotorPoles">            8             8             </param>
+        <param name="MotorPoles">            16            16            </param>
     </group>
 
  <group name="COUPLINGS"> 
@@ -64,10 +63,10 @@
     <group name="JOINTSET_CFG"> 
         <param name= "numberofsets"> 2 </param>
         <group name="JOINTSET_0">
-            <param name="listofjoints">  0            </param>
-            <param name="constraint">    none          </param>
-            <param name="param1">        0             </param>
-            <param name="param2">        0             </param>
+            <param name="listofjoints">   0             </param>
+            <param name="constraint">     none          </param>
+            <param name="param1">         0             </param>
+            <param name="param2">         0             </param>
         </group> 
         <group name="JOINTSET_1">
             <param name="listofjoints">   1             </param>

@@ -10,7 +10,7 @@
         <group name="ETH_BOARD_PROPERTIES">
             <param name="IpAddress">                10.0.1.8                </param>
             <param name="IpPort">                   12345                   </param>
-            <param name="Type">                     ems4                    </param>
+            <param name="Type">                     mc4plus                 </param>
             <param name="maxSizeRXpacket">          768                     </param>
             <param name="maxSizeROP">               384                     </param>
         </group>
