@@ -11,7 +11,7 @@
       <params file="hardware/motorControl/cer_left_hand-mcp9-mc-service.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                140     110           </param>
+        <param name="jntPosMax">                120     130           </param>
         <param name="jntPosMin">                0       0             </param>
         <param name="jntVelMax">                150     150           </param>
         <param name="motorOverloadCurrents">    5000    5000          </param>
@@ -36,11 +36,11 @@
 	<group name="JOINT_PID_V1">
     <param name="controlLaw">    Pid_inPos_outPwm </param> 
         <param name="controlUnits">  metric_units           </param> 
-        <param name="pos_kp">             -100         100        </param>       
+        <param name="pos_kp">             -200         200        </param>       
         <param name="pos_kd">                0           0        </param>       
-        <param name="pos_ki">              -50          50        </param>         
-        <param name="pos_maxOutput">      2500        2500        </param>          
-        <param name="pos_maxInt">          500         500        </param>       
+        <param name="pos_ki">             -100         100        </param>         
+        <param name="pos_maxOutput">      3360        3360        </param>          
+        <param name="pos_maxInt">         1000        1000        </param>       
         <param name="pos_shift">             0           0        </param>       
         <param name="pos_ko">                0           0        </param>       
         <param name="pos_stictionUp">        0           0        </param>       

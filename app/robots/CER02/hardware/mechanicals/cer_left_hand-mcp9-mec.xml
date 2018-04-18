@@ -19,10 +19,10 @@
     </group>
 
     <group name="LIMITS">
-        <param name="hardwareJntPosMax">        140               110           </param>
-        <param name="hardwareJntPosMin">        0                 0             </param>
-        <param name="rotorPosMin">              0                 0             </param>
-        <param name="rotorPosMax">              0                 0             </param>
+        <param name="hardwareJntPosMax">        125               135             </param>
+        <param name="hardwareJntPosMin">         -5                -5             </param>
+        <param name="rotorPosMin">                0                 0             </param>
+        <param name="rotorPosMax">                0                 0             </param>
     </group>
     
     <group name="COUPLINGS"> 
@@ -43,7 +43,7 @@
        
         <param name ="matrixE2J">  
            -1.000   1.000   0.000   0.000   0.000   0.000
-            0.000   0.000   0.000  -1.000   1.000   0.000
+            0.000   0.000   0.000   1.000  -1.000   0.000
             0.000   0.000   0.000   0.000   0.000   0.000
             0.000   0.000   0.000   0.000   0.000   0.000   
         </param>

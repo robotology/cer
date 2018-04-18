@@ -17,11 +17,11 @@
 
     <group name="CALIBRATION">                                                    
         <param name="calibrationType">                       11              11          </param>
-        <param name="calibration1">                       32968            9812          </param>
-        <param name="calibration2">                       60748           25395          </param>
-        <param name="calibration3">                        2967           17057          </param>
+        <param name="calibration1">                       21968           27216          </param>
+        <param name="calibration2">                       38240           35024          </param>
+        <param name="calibration3">                        2960           36464          </param>
         <param name="calibration4">                       36000           32000          </param>
-        <param name="calibration5">                        1500           -1500          </param>
+        <param name="calibration5">                       -1500            1500          </param>
         <param name="calibrationZero">                        0               0          </param>        
         <param name="calibrationDelta">                       0               0          </param>
         <param name="startupPosition">                     30.0            30.0          </param>
@@ -45,6 +45,3 @@
 	</device>
 </devices>
 
-        <param name="calibration1">                      -1500            1500           </param>
-        <param name="calibration3">                       64225           16766          </param>
-        <param name="calibration4">                        8829             728          </param>
