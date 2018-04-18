@@ -14,7 +14,7 @@
         <param name="motorOverloadCurrents">          3000      3000       </param>
         <param name="motorNominalCurrents">           2000      2000       </param>
         <param name="motorPeakCurrents">              4000      4000       </param>
-        <param name="jntVelMax">                      100       100         </param>
+        <param name="jntVelMax">                      90        90         </param>
         <param name="motorPwmLimit">                  32000     32000      </param>    
     </group>
 
@@ -45,9 +45,9 @@
         <param name="pos_stictionUp">       0         0      </param>       
         <param name="pos_stictionDwn">      0         0      </param>     
         <param name="pos_kff">              1         1      </param>   
-        <param name="vel_kp">               50        1500   </param>       
+        <param name="vel_kp">               12        12     </param>       
         <param name="vel_kd">               0         0      </param>       
-        <param name="vel_ki">               0         0      </param>       
+        <param name="vel_ki">               16        16     </param>       
         <param name="vel_maxOutput">        0         0      </param>                 
         <param name="vel_maxInt">           0         0      </param>       
         <param name="vel_shift">            10        10     </param>       
