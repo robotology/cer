@@ -9,7 +9,7 @@
         <param name="AxisName">                 "r_shoulder_yaw_joint" "r_elbow_joint" </param>
         <param name="AxisType">                 "revolute"             "revolute"      </param>
         <param name="Encoder">                  182.044                182.044         </param>
-        <param name="Gearbox_M2J">              159.438                159.438         </param>
+        <param name="Gearbox_M2J">             -159.438                159.438         </param>
         <param name="Gearbox_E2J">              1                      1               </param>
         <param name="useMotorSpeedFbk">         1                      1               </param>
         <param name="fullscalePWM">             32000                  32000           </param>

@@ -39,7 +39,7 @@
                     <param name="port">             CONN:P8             CONN:P6
                                </param>
                     <param name="position">         atjoint             atjoint           </param> 
-                    <param name="resolution">       -4096              -4096              </param>
+                    <param name="resolution">       4096               -4096              </param>
                     <param name="tolerance">        0.703               0.703             </param>  
                 </group>        
                 
