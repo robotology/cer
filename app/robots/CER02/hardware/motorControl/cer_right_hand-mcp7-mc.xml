@@ -36,7 +36,8 @@
      
     <group name="JOINT_PID_V1">
     <param name="controlLaw">    Pid_inPos_outPwm </param> 
-        <param name="controlUnits">  metric_units           </param> 
+        <param name="fbkControlUnits">     metric_units              </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="pos_kp">            -200         200        </param>       
         <param name="pos_kd">               0           0        </param>       
         <param name="pos_ki">            -100         100        </param>       

@@ -37,14 +37,13 @@
     
     <group name="JOINT_PID_V1">
 	    <param name="controlLaw">    Pid_inPos_outPwm            </param> 
-        <param name="controlUnits">  machine_units               </param>
-
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
 	    <param name="pos_kp">               2          -1.5      </param>
         <param name="pos_kd">               0           0        </param>
         <param name="pos_ki">               1          -5        </param>
         <param name="pos_maxOutput">     3360        3360        </param>
         <param name="pos_maxInt">        1000        1500        </param>
-
         <param name="pos_shift">            0           0        </param>
         <param name="pos_ko">               0           0        </param>
         <param name="pos_stictionUp">       0           0        </param>
@@ -54,7 +53,8 @@
 
     <group name="VEL_CONTROL">
 	    <param name="controlLaw">    Pid_inVel_outPwm            </param>
-        <param name="controlUnits">  machine_units               </param>
+        <param name="fbkControlUnits">     machine_units         </param> 
+        <param name="outputControlUnits">  machine_units         </param>
         <param name="vel_kp">              -5           5        </param>
         <param name="vel_kd">              -0           0        </param>
         <param name="vel_ki">              -5          50        </param>
