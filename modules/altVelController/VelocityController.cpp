@@ -81,7 +81,7 @@ public:
 
 	void modePosition(int part)
 	{
-		for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setPositionMode(j);
+		for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, VOCAB_CM_POSITION);
 	}
 
 	void modeDirect(int part)
@@ -91,7 +91,7 @@ public:
 
 	void modeVelocity(int part)
 	{
-		for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setVelocityMode(j);
+		for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, VOCAB_CM_VELOCITY);
 	}
 
 	static const char *R1PartName[NUM_R1_PARTS];
