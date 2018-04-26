@@ -25,6 +25,10 @@
     <devices file="hardware/motorControl/cer_left_wrist_equivalent-mc.xml" />
     <devices file="wrappers/motorControl/cer_left_wrist_tripod-mc_wrapper.xml" />
     <devices file="wrappers/motorControl/cer_left_arm_no_hand-mc_wrapper.xml" />
+    
+    <!-- LEFT HAND -->
+    <devices file="hardware/motorControl/cer_left_hand-mcp9-mc.xml" />
+    <devices file="wrappers/motorControl/cer_left_hand-mc_wrapper.xml" />
    
     <!-- RIGHT ARM -->
     <devices file="hardware/motorControl/cer_right_shoulder-ems4-mc.xml" />
@@ -33,6 +37,10 @@
     <devices file="hardware/motorControl/cer_right_wrist_equivalent-mc.xml" />
     <devices file="wrappers/motorControl/cer_right_wrist_tripod-mc_wrapper.xml" />
     <devices file="wrappers/motorControl/cer_right_arm_no_hand-mc_wrapper.xml" />
+    
+    <!-- RIGHT HAND -->
+    <devices file="hardware/motorControl/cer_right_hand-mcp7-mc.xml" />
+    <devices file="wrappers/motorControl/cer_right_hand-mc_wrapper.xml" />
 
     <!-- HEAD -->
     <devices file="hardware/motorControl/cer_head-mcp10-mc.xml" />
@@ -43,6 +51,7 @@
     <devices file="calibrators/cer_left_arm_no_hand-calib.xml" />
     <devices file="calibrators/cer_right_arm_no_hand-calib.xml" />
     <devices file="calibrators/cer_head-calib.xml" />
-    <devices file="calibrators/cer_base-calib.xml" />
-    
+    <devices file="calibrators/cer_base-calib.xml" /> 
+    <devices file="calibrators/cer_left_hand-calib.xml" />
+    <devices file="calibrators/cer_right_hand-calib.xml" />
 </robot> 
