@@ -4,6 +4,10 @@
 <robot name="CER01" build="1" portprefix="cer">
     <params file="hardware/electronics/pc104.xml" />
 
+    <!-- LASER -->
+    <devices file="hardware/rpLidar/laserA2_hw.xml" /> 
+    <devices file="wrappers/rpLidar/laser_wrapper.xml" /> 
+
     <!-- BASE -->
     <devices file="hardware/motorControl/cer_base-ems1-mc.xml" />
     <devices file="wrappers/motorControl/cer_base-mc_wrapper.xml" />
