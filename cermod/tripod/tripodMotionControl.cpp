@@ -521,9 +521,11 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
 //
     ImplementControlLimits2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementPositionDirect::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
-//     ImplementOpenLoopControl::initialize(_njoints, _axisMap);
+    double* tmpOnes = new double[_njoints]; for (int i = 0; i < _njoints; i++) { tmpOnes[i] = 1.0; }
+    ImplementPWMControl::initialize(_njoints, _axisMap, tmpOnes);
+    delete[] tmpOnes;
     ImplementInteractionMode::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
-//     ImplementMotor::initialize(_njoints, _axisMap);
+    ImplementMotor::initialize(_njoints, _axisMap);
 
    /*
     *  Init the IK library somehow if needed
@@ -2162,9 +2164,10 @@ bool tripodMotionControl::setRefDutyCyclesRaw(const double *v)
     return ret;
 }
 
-bool tripodMotionControl::getRefDutyCycleRaw(int j, double *out)
+bool tripodMotionControl::getRefDutyCycleRaw(int j, double *ref)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    *ref = std::nan("");
+    return true;
 }
 
 bool tripodMotionControl::getRefDutyCyclesRaw(double *outs)
@@ -2179,7 +2182,8 @@ bool tripodMotionControl::getRefDutyCyclesRaw(double *outs)
 
 bool tripodMotionControl::getDutyCycleRaw(int j, double *out)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    *out = std::nan("");
+    return true;
 }
 
 bool tripodMotionControl::getDutyCyclesRaw(double *outs)
@@ -2194,17 +2198,24 @@ bool tripodMotionControl::getDutyCyclesRaw(double *outs)
 
 bool tripodMotionControl::getNumberOfMotorsRaw(int* num)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    *num = _njoints;
+    return true;
 }
 
 bool tripodMotionControl::getTemperatureRaw(int m, double* val)
 {
-    return NOT_YET_IMPLEMENTED("getTemperatureRaw");
+    *val = std::nan("");
+    return true;
 }
 
 bool tripodMotionControl::getTemperaturesRaw(double *vals)
 {
-    return NOT_YET_IMPLEMENTED("getTemperaturesRaw");
+    bool ret = true;
+    for (int j = 0; j< _njoints; j++)
+    {
+        ret &= getTemperatureRaw(j, &vals[j]);
+    }
+    return ret;
 }
 
 bool tripodMotionControl::getTemperatureLimitRaw(int m, double *temp)
