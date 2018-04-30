@@ -424,7 +424,9 @@ tripodMotionControl::tripodMotionControl() :
     ImplementAmplifierControl<tripodMotionControl,IAmplifierControl>(this),
 //     ImplementOpenLoopControl(this),
     ImplementInteractionMode(this),
-//     ImplementMotor(this),
+    ImplementRemoteVariables(this),
+    ImplementMotor(this),
+    ImplementPWMControl(this),
     _mutex(1)
 //     ,SAFETY_THRESHOLD(2.0)
 {
@@ -1080,12 +1082,6 @@ bool tripodMotionControl::setOffsetRaw(int j, double v)
 //    Velocity control interface raw  //
 ////////////////////////////////////////
 
-bool tripodMotionControl::setVelocityModeRaw()
-{
-    // I guess this is too dangerous to be used with this device.
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
-}
-
 bool tripodMotionControl::velocityMoveRaw(int j, double sp)
 {
     // I guess this is too dangerous to be used with this device.
@@ -1124,11 +1120,6 @@ bool tripodMotionControl::getAxes(int *ax)
 {
     *ax=_njoints;
     return _device.isConfigured();
-}
-
-bool tripodMotionControl::setPositionModeRaw()
-{
-    return false;
 }
 
 bool tripodMotionControl::positionMoveRaw(int j, double ref)
@@ -1531,36 +1522,6 @@ bool tripodMotionControl::stopRaw(const int n_joint, const int *joints)
 ///////////// END Position Control INTERFACE  //////////////////
 
 // ControlMode
-bool tripodMotionControl::setPositionModeRaw(int j)
-{
-    return DEPRECATED("setPositionModeRaw");
-}
-
-bool tripodMotionControl::setVelocityModeRaw(int j)
-{
-    return DEPRECATED("setVelocityModeRaw");
-}
-
-bool tripodMotionControl::setTorqueModeRaw(int j)
-{
-    return DEPRECATED("setTorqueModeRaw");
-}
-
-bool tripodMotionControl::setImpedancePositionModeRaw(int j)
-{
-    return DEPRECATED("setImpedancePositionModeRaw");
-}
-
-bool tripodMotionControl::setImpedanceVelocityModeRaw(int j)
-{
-    return DEPRECATED("setImpedanceVelocityModeRaw");
-}
-
-bool tripodMotionControl::setOpenLoopModeRaw(int j)
-{
-    return DEPRECATED("setOpenLoopModeRaw");
-}
-
 bool tripodMotionControl::getControlModeRaw(int j, int *v)
 {
     return _device.iMode2->getControlMode(j,v);
@@ -1811,7 +1772,8 @@ bool tripodMotionControl::disableAmpRaw(int j)
 
 bool tripodMotionControl::getCurrentRaw(int j, double *value)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    *value = std::nan("");
+    return true;
 }
 
 bool tripodMotionControl::getCurrentsRaw(double *vals)
@@ -2020,31 +1982,8 @@ bool tripodMotionControl::velocityMoveRaw(const int n_joint, const int *joints, 
     return NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
 
-bool tripodMotionControl::setVelPidRaw(int j, const Pid &pid)
-{
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
-}
-
-bool tripodMotionControl::setVelPidsRaw(const Pid *pids)
-{
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
-}
-
-bool tripodMotionControl::getVelPidRaw(int j, Pid *pid)
-{
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
-}
-
-bool tripodMotionControl::getVelPidsRaw(Pid *pids)
-{
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
-}
 
 // PositionDirect Interface
-bool tripodMotionControl::setPositionDirectModeRaw()
-{
-    return DEPRECATED("setPositionDirectModeRaw");
-}
 
 bool tripodMotionControl::setPositionRaw(int j, double ref)
 {
@@ -2170,56 +2109,85 @@ bool tripodMotionControl::setInteractionModesRaw(yarp::dev::InteractionModeEnum*
     return _device.iInteract->setInteractionModes(_njoints, _axisMap, modes);
 }
 
-#if 0
-//
-// OPENLOOP interface
-//
-bool tripodMotionControl::setOpenLoopModeRaw()
+bool tripodMotionControl::getRemoteVariableRaw(yarp::os::ConstString key, yarp::os::Bottle& val)
 {
-    return DEPRECATED("setOpenLoopModeRaw");
+    val.clear();
+    //if (key == "encoders")
+    //{
+    //    Bottle& r = val.addList(); for (int i = 0; i < _njoints; i++) { r.addDouble(_measureConverter->posA2E(1.0, i)); }
+    //    return true;
+    //}
+    yWarning("getRemoteVariable(): Unknown variable %s", key.c_str());
+    return false;
 }
 
-bool tripodMotionControl::setRefOutputRaw(int j, double v)
+bool tripodMotionControl::setRemoteVariableRaw(yarp::os::ConstString key, const yarp::os::Bottle& val)
+{
+    string s1 = val.toString();
+    if (val.size() != _njoints)
+    {
+        yWarning("setRemoteVariable(): Protocol error %s", s1.c_str());
+        return false;
+    }
+
+    //if (key == "kinematic_mj")
+    //{
+    //    yWarning("setRemoteVariable(): Impossible to set kinematic_mj parameter at runtime.");
+    //    return false;
+    //}
+    yWarning("setRemoteVariable(): Unknown variable %s", key.c_str());
+    return false;
+}
+
+bool tripodMotionControl::getRemoteVariablesListRaw(yarp::os::Bottle* listOfKeys)
+{
+    listOfKeys->clear();
+//    listOfKeys->addString("encoders");
+    return true;
+}
+
+
+bool tripodMotionControl::setRefDutyCycleRaw(int j, double v)
 {
     return NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
 
-bool tripodMotionControl::setRefOutputsRaw(const double *v)
+bool tripodMotionControl::setRefDutyCyclesRaw(const double *v)
 {
     bool ret = true;
     for(int j=0; j<_njoints; j++)
     {
-        ret = ret && setRefOutputRaw(j, v[j]);
+        ret = ret && setRefDutyCycleRaw(j, v[j]);
     }
     return ret;
 }
 
-bool tripodMotionControl::getRefOutputRaw(int j, double *out)
+bool tripodMotionControl::getRefDutyCycleRaw(int j, double *out)
 {
     return NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
 
-bool tripodMotionControl::getRefOutputsRaw(double *outs)
+bool tripodMotionControl::getRefDutyCyclesRaw(double *outs)
 {
     bool ret = true;
     for(int j=0; j<_njoints; j++)
     {
-        ret = ret && getRefOutputRaw(j, &outs[j]);
+        ret = ret && getRefDutyCycleRaw(j, &outs[j]);
     }
     return ret;
 }
 
-bool tripodMotionControl::getOutputRaw(int j, double *out)
+bool tripodMotionControl::getDutyCycleRaw(int j, double *out)
 {
     return NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
 
-bool tripodMotionControl::getOutputsRaw(double *outs)
+bool tripodMotionControl::getDutyCyclesRaw(double *outs)
 {
     bool ret = true;
     for(int j=0; j< _njoints; j++)
     {
-        ret &= getOutputRaw(j, &outs[j]);
+        ret &= getDutyCycleRaw(j, &outs[j]);
     }
     return ret;
 }
@@ -2249,15 +2217,6 @@ bool tripodMotionControl::setTemperatureLimitRaw(int m, const double temp)
     return NOT_YET_IMPLEMENTED("setTemperatureLimitRaw");
 }
 
-bool tripodMotionControl::getMotorOutputLimitRaw(int m, double *limit)
-{
-    return NOT_YET_IMPLEMENTED("getMotorOutputLimitRaw");
-}
 
-bool tripodMotionControl::setMotorOutputLimitRaw(int m, const double limit)
-{
-    return NOT_YET_IMPLEMENTED("setMotorOutputLimitRaw");
-}
-#endif
 
 // eof
