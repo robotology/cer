@@ -4,20 +4,20 @@
 
   <module>
     <name>yarpdev</name>
-    <parameters>--device grabber --subdevice usbCamera --d /dev/video0 --width 1280 --height 480 --name /cer/cam/cameras --framerate 30</parameters>
-    <node>/r1-torso</node>
+    <parameters>--device grabberDual --subdevice usbCamera --d /dev/video0 --width 1280 --height 480 --name /cer/cam/cameras --framerate 30</parameters>
+    <node>/r1-torso2</node>
   </module>
 
   <module>
     <name>dualCamCalib</name>
     <parameters>--context cameraCalibration --from cerEyes_640x480.ini --dual --name /cer/camcalib/cameras</parameters>
-    <node>/r1-torso</node>
+    <node>/r1-torso2</node>
   </module>
 
   <module>
     <name>imageSplitter</name>
     <parameters>--remote /cer/camcalib/cameras/out:o --nameLeft /cer/cam/right:o --nameRight /cer/cam/left:o --carrier shmem</parameters>
-    <node>/r1-torso</node>
+    <node>/r1-torso2</node>
   </module>
 
   <module>
@@ -29,7 +29,7 @@
   <module>
     <name>positionDirectControl</name>
     <parameters>--robot cer --part head --joints "(0 1)"</parameters>
-    <node>/r1-torso</node>
+    <node>/r1-torso2</node>
   </module>
 
   <module>

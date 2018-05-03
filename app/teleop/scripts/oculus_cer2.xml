@@ -1,11 +1,11 @@
 <application>
-  <name>Oculus CER</name>
+  <name>Oculus CER V2</name>
   <dependencies></dependencies>
 
   <module>
     <name>yarpdev</name>
     <parameters>--device grabberDual --split true --subdevice usbCamera --d /dev/video0 --width 1280 --height 480 --name /cer/cam/cameras --framerate 30</parameters>
-    <node>/r1-torso</node>
+    <node>/r1-torso2</node>
   </module>
 
   <module>
@@ -17,24 +17,24 @@
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /cer/camCalibWithPose/left</parameters>
-    <node>/r1-torso</node>
+    <node>/r1-torso2</node>
   </module>
 
   <module>
     <name>camCalibWithPose</name>
     <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /cer/camCalibWithPose/right</parameters>
-    <node>/r1-torso</node>
+    <node>/r1-torso2</node>
   </module>
 
   <module>
     <name>positionDirectControl</name>
     <parameters>--robot cer --part head --joints "(0 1)"</parameters>
-    <node>/r1-torso</node>
+    <node>/r1-torso2</node>
   </module>
 
   <module>
     <name>yarpdev</name>
-    <parameters>--device transformServer --ROS "(enable_ros_subscriber true)" "(enable_ros_publisher true)"</parameters>
+    <parameters>--device FrameTransformServer --ROS "(enable_ros_subscriber true)" "(enable_ros_publisher true)"</parameters>
     <node>/r1-base</node>
   </module>
 
