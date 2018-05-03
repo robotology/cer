@@ -19,7 +19,7 @@ if(ENABLE_faceExpressionImage)
 
 
     file(GLOB folder_source main.cpp faceExpressionImage.cpp)
-    file(GLOB folder_header faceExpressionImage.h)
+    file(GLOB folder_header faceExpressionImage.hpp)
 
     source_group("Source Files" FILES ${folder_source})
     source_group("Header Files" FILES ${folder_header})
