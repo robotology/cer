@@ -54,4 +54,10 @@
     <devices file="calibrators/cer_base-calib.xml" /> 
     <devices file="calibrators/cer_left_hand-calib.xml" />
     <devices file="calibrators/cer_right_hand-calib.xml" />
+
+    <!-- SKIN-->
+    <devices file="hardware/skin/left_hand-mc9-skin.xml" />
+    <devices file="wrappers/skin/left_arm-skin_wrapper.xml" />
+    <devices file="hardware/skin/right_hand-mc7-skin.xml" />
+    <devices file="wrappers/skin/right_arm-skin_wrapper.xml" />
 </robot> 
