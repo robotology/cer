@@ -307,6 +307,8 @@ bool BlinkThread::threadInit()
     yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
     img.setExternal(faceRest.data, faceWidth, faceHeight);
     port.writeStrict();
+
+    return true;
 }
 
 void BlinkThread::run()
@@ -367,6 +369,8 @@ bool BlinkThread::updateBars(float percentage)
     // Right side
     blinkBar(Rect(0, 0, barWidth, hearBar0_len)).  copyTo  (face(cv::Rect(hearBarR0_x, faceHeight - hearBar0_y - hearBar0_len, barWidth, hearBar0_len)));
     blinkBar(Rect(0, 0, barWidth, hearBar1_len)).  copyTo  (face(cv::Rect(hearBarR1_x, faceHeight - hearBar1_y - hearBar1_len, barWidth, hearBar1_len)));
+
+    return true;
 }
 
 bool BlinkThread::updateBlink(int index)
@@ -377,6 +381,7 @@ bool BlinkThread::updateBlink(int index)
 
     // Add nose
     noseBar.copyTo(face(cv::Rect(noseBar0_x, noseBar0_y, noseBar.cols, noseBar.rows)));
+    return true;
 }
 
 
