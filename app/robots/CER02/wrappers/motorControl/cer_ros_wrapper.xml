@@ -34,10 +34,10 @@
          <elem name="torso">       cer_torso_mc_wrapper   </elem>
          <elem name="base">            cer_mobile_base_mc_wrapper </elem>
 
-         <elem name="right_arm">       cer_right_arm_mc_wrapper </elem>
+         <elem name="right_arm">       cer_right_arm_no_hand_mc_wrapper </elem>
          <elem name="right_hand">      cer_right_hand_mc </elem>
 
-         <elem name="left_arm">        cer_left_arm_mc_wrapper </elem>
+         <elem name="left_arm">        cer_left_arm_no_hand_mc_wrapper </elem>
          <elem name="left_hand">       cer_left_hand_mc </elem>
 
          </paramlist>

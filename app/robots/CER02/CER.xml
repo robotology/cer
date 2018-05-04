@@ -60,4 +60,7 @@
     <devices file="wrappers/skin/left_arm-skin_wrapper.xml" />
     <devices file="hardware/skin/right_hand-mc7-skin.xml" />
     <devices file="wrappers/skin/right_arm-skin_wrapper.xml" />
+
+    <!--  ROS -->
+    <devices file="wrappers/motorControl/cer_ros_wrapper.xml" />
 </robot> 
