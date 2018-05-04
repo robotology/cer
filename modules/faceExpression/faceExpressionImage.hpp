@@ -15,6 +15,8 @@
 
 #define VOCAB_AUDIO_START       VOCAB4('a','s','t','a')
 #define VOCAB_AUDIO_STOP        VOCAB4('a','s','t','o')
+#define VOCAB_TALK_START        VOCAB4('t','s','t','a')
+#define VOCAB_TALK_STOP         VOCAB4('t','s','t','o')
 #define VOCAB_BLINK             VOCAB4('b','l','i','n')
 #define VOCAB_RESET             VOCAB3('r','s','t')
 
@@ -61,12 +63,15 @@ public:
 
     void activateBlink(bool activate);
     void activateBars (bool activate);
+    void activateTalk (bool activate);
 
     bool updateBars(float percentage);
     bool updateBlink(int index);
+    cv::Mat updateTalk();
 
     bool doBlink;
     bool doBars;
+    bool doTalk;
 
 private:
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >  &port;

@@ -1,3 +1,4 @@
+#include <cmath>
 #include "faceExpressionImage.hpp"
 
 #include <opencv2/core/core.hpp>
@@ -5,6 +6,7 @@
 
 #include <yarp/os/Time.h>
 #include <yarp/os/Searchable.h>
+#include <yarp/math/Rand.h>
 
 
 #define BLINK_STEP_NUM  10
@@ -14,6 +16,7 @@
 using namespace cv;
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::math;
 
 FaceExpressionImageModule::FaceExpressionImageModule() :    th(0.2, imagePort),
                                                             imagePath(""),
@@ -137,6 +140,19 @@ bool FaceExpressionImageModule::respond(const Bottle& command, Bottle& reply)
         }
         break;
 
+        case VOCAB_TALK_START:
+        {
+            th.activateTalk(true);
+        }
+        break;
+
+        case VOCAB_TALK_STOP:
+        {
+            th.activateTalk(false);
+            th.step();
+        }
+        break;
+
         case VOCAB_BLINK:
         {
             th.activateBlink(true);
@@ -201,7 +217,7 @@ bool FaceExpressionImageModule::updateModule()
         shall_blink = 0;
     }
 
-    if(th.doBlink || th.doBars)
+    if(th.doBlink || th.doBars || th.doTalk)
         th.step();
 
     if(doubleBlink)
@@ -228,7 +244,7 @@ BlinkThread::BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig:
                                                 blackBar(32, 1, CV_8UC3, cv::Scalar(0,0,0)),
                                                 face(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
                                                 faceRest(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
-                                                index(0), doBlink(false), doBars(false)
+                                                index(0), doBlink(false), doBars(false), doTalk(false)
 {
     indexes[ 0] = 0;
     indexes[ 1] = 1;
@@ -253,6 +269,8 @@ BlinkThread::BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig:
     delays[ 8] = 0.065;
     delays[ 9] = 0.065;
     delays[10] = 0.065;
+
+    Rand::init();
 }
 
 void BlinkThread::afterStart(bool s) { }
@@ -260,6 +278,11 @@ void BlinkThread::afterStart(bool s) { }
 void BlinkThread::activateBars(bool activate)
 {
     doBars = activate;
+}
+
+void BlinkThread::activateTalk(bool activate)
+{
+    doTalk = activate;
 }
 
 void BlinkThread::activateBlink(bool activate)
@@ -342,7 +365,15 @@ void BlinkThread::run()
         }
 
         yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
-        img.setExternal(face.data, faceWidth, faceHeight);
+        if(doTalk)
+        {
+            Mat face_=updateTalk();
+            img.setExternal(face_.data, faceWidth, faceHeight);
+        }
+        else
+        {
+            img.setExternal(face.data, faceWidth, faceHeight);
+        }
         port.writeStrict();
 
         if(doBlink)
@@ -384,6 +415,19 @@ bool BlinkThread::updateBlink(int index)
     return true;
 }
 
+Mat BlinkThread::updateTalk()
+{
+    Mat face_=face.clone();
+    int pixels=faceHeight/2;
+    int y=(int)(0.9*faceHeight);
+    for (int x=(faceWidth-pixels)>>1; x<(faceWidth+pixels)>>1; x++)
+    {
+        face_.at<cv::Vec3b>(y+round(Rand::scalar(-1,1)),x)[0]=0;
+        face_.at<cv::Vec3b>(y+round(Rand::scalar(-1,1)),x)[1]=255;
+        face_.at<cv::Vec3b>(y+round(Rand::scalar(-1,1)),x)[2]=0;
+    }
+    return face_;
+}
 
 void BlinkThread::threadRelease()
 {
