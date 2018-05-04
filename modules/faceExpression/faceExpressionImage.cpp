@@ -419,7 +419,7 @@ Mat BlinkThread::updateTalk()
 {
     Mat face_=face.clone();
     int pixels=faceHeight/2;
-    int y=(int)(0.9*faceHeight);
+    int y=(int)(0.95*faceHeight);
     for (int x=(faceWidth-pixels)>>1; x<(faceWidth+pixels)>>1; x++)
     {
         face_.at<cv::Vec3b>(y+round(Rand::scalar(-1,1)),x)[0]=0;
