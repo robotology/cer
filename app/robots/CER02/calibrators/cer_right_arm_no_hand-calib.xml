@@ -17,7 +17,7 @@
                                                                                                                                 
 <group name="CALIBRATION">                                                                                                      
 <param name="calibrationType">                    12         12        12         12         10      8          8          8             </param>
-<param name="calibration1">                      -7273       31647    -64063      13311     -250     1500       1500       1500          </param>
+<param name="calibration1">                      -7273       31647    -64063      13311     -400     1500       1500       1500          </param>
 <param name="calibration2">                       0          0         0          0          0       700        700        700           </param>
 <param name="calibration3">                       0          0         0          0          0       0          0          0             </param>
 <param name="calibration4">                       0          0         0          0          0       0          0          0             </param>
@@ -25,13 +25,13 @@
 <param name="calibrationZero">                    0          0         0          0          90      0          0          0             </param>
 <param name="calibrationDelta">                   0          0         0          0          0       0          0          0             </param>
                                                                                            
-<param name="startupPosition">                   -10         10       -15         35         0.0     0.03       0.0        0.0           </param>
+<param name="startupPosition">                   -10         20       -10         35         0.0     0.03       0.0        0.0           </param>
 <param name="startupVelocity">                    10         10        10         10         10      0.007      10         10            </param>
 <param name="startupMaxPwm">                      32000      32000     32000      32000      2000    2000       2000       2000          </param>
 <param name="startupPosThreshold">                2          2         2          2          2       0.002      2          2             </param>
 </group>
 
-		<param name="CALIB_ORDER">(0 1) (2 3) (4) (5 6 7)</param> 
+		<param name="CALIB_ORDER">(0 1 2) (3) (4) (5 6 7)</param> 
 
 		<action phase="startup" level="10" type="calibrate">
 		    <param name="target">cer_right_arm_no_hand_mc_wrapper</param>

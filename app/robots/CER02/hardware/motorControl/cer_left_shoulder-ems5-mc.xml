@@ -10,7 +10,7 @@
 
     <group name="LIMITS">
         <param name="jntPosMax">                      85            85      </param>
-        <param name="jntPosMin">                     -70             5      </param>
+        <param name="jntPosMin">                     -70             2      </param>
         <param name="motorOverloadCurrents">          5000          5000    </param>
         <param name="motorNominalCurrents">           2500          2500    </param>
         <param name="motorPeakCurrents">              5000          5000    </param>
