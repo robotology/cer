@@ -418,13 +418,14 @@ bool BlinkThread::updateBlink(int index)
 Mat BlinkThread::updateTalk()
 {
     Mat face_=face.clone();
-    int pixels=faceHeight/2;
-    int y=(int)(0.95*faceHeight);
+    int pixels=faceHeight>>1;
+    int y=faceHeight-2;
     for (int x=(faceWidth-pixels)>>1; x<(faceWidth+pixels)>>1; x++)
     {
-        face_.at<cv::Vec3b>(y+round(Rand::scalar(-1,1)),x)[0]=0;
-        face_.at<cv::Vec3b>(y+round(Rand::scalar(-1,1)),x)[1]=255;
-        face_.at<cv::Vec3b>(y+round(Rand::scalar(-1,1)),x)[2]=0;
+        int y_=y+round(Rand::scalar(-1,1));
+        face_.at<cv::Vec3b>(y_,x)[0]=0;
+        face_.at<cv::Vec3b>(y_,x)[1]=255;
+        face_.at<cv::Vec3b>(y_,x)[2]=0;
     }
     return face_;
 }
