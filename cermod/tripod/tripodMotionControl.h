@@ -242,6 +242,8 @@ private:
     int     *_axisMap;                              /** axis remapping lookup-table */
     double  *_angleToEncoder;                    /** angle conversion factor, if any */
     double  *_encodersStamp;                    /** keep information about acquisition time for encoders read */
+    
+    double mRadius;
 
     double *_limitsMin;                         /** joint limits, max*/
     double *_limitsMax;                         /** joint limits, min*/

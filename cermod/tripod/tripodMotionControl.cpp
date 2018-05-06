@@ -180,6 +180,7 @@ bool HW_deviceHelper::isConfigured()
 
 bool tripodMotionControl::tripod_user2HW(yarp::sig::Vector &user, yarp::sig::Vector &robot)
 {
+#if USE_IKIN_IPOPT
     // The caller must use mutex or private data
     yAssert(user.length()>=3);
     
@@ -191,6 +192,42 @@ bool tripodMotionControl::tripod_user2HW(yarp::sig::Vector &user, yarp::sig::Vec
     Rd=_baseTransformation*Rd;
 
     return solver.ikin(Rd,robot);
+#else
+    // The caller must use mutex or private data
+    yAssert(user.length()>=3);
+    
+    //Vector ypr(3,0.0);
+    //double &zd=user[0];                                     // heave
+    //ypr[1]=_baseTransformation(0,0)*(M_PI/180.0)*user[1];   // pitch
+    //ypr[2]=_baseTransformation(1,1)*(M_PI/180.0)*user[2];   // roll
+
+    static const double SQRT3(sqrt(3.0));
+
+    double heave = user[0];
+    double pitch = _baseTransformation(0,0)*(M_PI/180.0)*user[1];
+    double roll  = _baseTransformation(1,1)*(M_PI/180.0)*user[2];
+
+    double cp = cos(pitch);
+    double v1 = sin(pitch);
+
+    double v2 = -cp*sin(roll);
+    double v3 =  cp*cos(roll);
+
+    double ld2 = (v1*v2) / (1.0 + v3);
+    ld2 = 1.0 - ld2*ld2;
+
+    double LcosT = mRadius / v3;
+
+    robot[0] = heave - v1*LcosT*(1.5*sqrt(ld2 - v2*v2) - 0.5*sqrt(ld2 - v1*v1));
+
+    double A = 3.0*v1*LcosT + 2.0*robot[0];
+    double B = SQRT3*v2*LcosT;
+
+    robot[2] = 0.5*(A+B);
+    robot[1] = 0.5*(A-B);
+	
+    return true;
+#endif
 }
 
 bool tripodMotionControl::tripod_HW2user(yarp::sig::Vector &robot, yarp::sig::Vector &user)
@@ -766,6 +803,8 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
         return false;
     else
         radius = xtmp.get(1).asDouble();
+
+    mRadius = radius;
 
     // max limit
         if (!extractGroup(tripod_description, xtmp, "Max_el","The minimum elongation ([m]).", 1))
