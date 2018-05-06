@@ -1,0 +1,42 @@
+<application>
+<name>Depth Display</name>
+<dependencies>
+</dependencies> 
+
+<module>
+  <name>yarpdev</name>
+      <parameters> --from sensors/RealSense_conf.ini </parameters>
+  <node>r1-torso1</node>
+</module>
+
+<module>
+  <name>RGBD2pointCloud</name>
+  <parameters>--remoteImagePort /depthCamera/rgbImage:o --remoteDepthPort /depthCamera/depthImage:o --rgb_mjpeg</parameters>
+  <node>r1-console-linux</node>
+</module>
+
+<module>
+  <name>yarpview</name>
+  <parameters>--name /view/rgb:i</parameters>
+  <node>r1-console-linux</node>
+</module>
+<module>
+  <name>yarpview</name>
+  <parameters>--name /view/depth:i</parameters>
+  <node>r1-console-linux</node>
+</module>
+
+<connection>
+  <from>/depthCamera/rgbImage:o</from>
+  <to> /view/rgb:i</to>
+  <protocol>mjpeg</protocol>
+</connection>
+
+<connection>
+  <from>/depthCamera/depthImage:o</from>
+  <to>/view/depth:i</to>
+  <protocol>udp+recv.portmonitor+type.dll+file.depthimage</protocol>
+</connection>
+
+</application>
+
