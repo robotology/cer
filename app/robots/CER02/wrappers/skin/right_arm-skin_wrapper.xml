@@ -4,11 +4,11 @@
 <devices robot="CER01" build="1">
 	<device name="right_hand_skin_wrapper" type="skinWrapper">
 		<param name="period">       20  				</param>
-		<param name="total_taxels"> 36					</param>
+		<param name="total_taxels"> 156					</param>
 		<param name="device">       skinWrapper				</param>
 		
 		<paramlist name="ports">
-		  <elem name="right_hand_skin"> 	0 35 0 35	</elem>
+		  <elem name="right_hand_skin"> 	0 155 0 155	</elem>
 		</paramlist>
 		
 		<action phase="startup" level="5" type="attach">
