@@ -1,16 +1,11 @@
 <application>
 <name>robotJoystickControl_application</name>
 
-<dependencies>	
-cerSrv
-</dependencies>
-
-
 <!-- module -->
 <module>
    <name>robotJoystickControl</name>
-   <parameters></parameters>
-   <node>cer-base</node>
+   <parameters>--skip_robot_interface_check  --motors_enabled</parameters>
+   <node>r1-base</node>
 </module>
 
 <!-- joystick input -->

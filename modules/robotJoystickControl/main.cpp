@@ -71,9 +71,9 @@ public:
         Property ctrl_options;
 
         ConstString configFile = rf.findFile("from");
-        if (configFile == "") //--from torsoJoystickControl.ini
+        if (configFile == "") //--from robotJoystickControl.ini
         {
-            yWarning("Cannot find .ini configuration file. By default I'm searching for torsoJoystickControl.ini");
+            yWarning("Cannot find .ini configuration file. By default I'm searching for robotJoystickControl.ini");
             //return false;
         }
         else
@@ -210,24 +210,36 @@ public:
 
     virtual bool   updateModule()
     { 
+        robot_status robstatus;
+        static int life_counter = 0;
+        char text[1000];
+        int off = sprintf(text, "* Life: %4d", life_counter);
         if (control_thr)
         {
             control_thr->printStats();
-            int status = control_thr->get_status();
-            if (status < 0)
+            robstatus = control_thr->get_status();
+            if (robstatus.status < 0)
             {
                 yError() << "Fatal error, closing";
                 control_thr->stop();
                 return false;
             }
+            snprintf(text+off, 1000, " left_arm %8.3f %8.3f %8.3f right_arm %8.3f %8.3f %8.3f, %d",
+                robstatus.left_arm_xyz[0],
+                robstatus.left_arm_xyz[1],
+                robstatus.left_arm_xyz[2],
+                robstatus.right_arm_xyz[0],
+                robstatus.right_arm_xyz[1],
+                robstatus.right_arm_xyz[2],
+                robstatus.controlling
+            );
         }
         else
         {
             yDebug("* Motor thread:not running");
         }
 
-        static int life_counter=0;
-        yDebug( "* Life: %d\n", life_counter);
+        yDebug() << text;
         life_counter++;
 
         return true;

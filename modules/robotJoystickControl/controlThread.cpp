@@ -121,6 +121,9 @@ void ControlThread::updateRVIZ(const Vector &xd, const Vector &od)
 
 void ControlThread::reachingHandler(string arm_type, const bool b, const Vector &pos, const Vector &rpy)
 {
+    ///yDebug() << "reaching handler";
+    //return;
+
     Vector xd(4, 0.0);
     xd[0] = (pos[0]);
     xd[1] = (pos[1]);
@@ -179,8 +182,8 @@ void ControlThread::saturate(double& v, double sat_lim)
 #define AXIS_DUMMY              0
 #define AXIS_L_SHIFT            4
 #define AXIS_R_SHIFT            6
-#define AXIS_LEFT_HORIZONTAL    9
-#define AXIS_LEFT_VERTICAL      2
+#define AXIS_LEFT_HORIZONTAL    2
+#define AXIS_LEFT_VERTICAL      1
 #define AXIS_RIGHT_HORIZONTAL   3
 #define AXIS_RIGHT_VERTICAL     5
 #define AXIS_DIGITAL_HORIZONTAL 7
@@ -206,7 +209,7 @@ void ControlThread::option4(double* axis)
         if (val1 > 0.1 || val1 < -0.1) velMoveHandler(val1>0, hand_joints, 50.0, interface_left_hand_iCmd, interface_left_hand_iVel);
 
         double val2 = axis[AXIS_RIGHT_HORIZONTAL];   //torso yaw
-        if (val2 > 0.1 || val2 < -0.1) velMoveHandler(val2>0, torso_yaw, 15.0, interface_torso_equiv_iCmd, interface_torso_equiv_iVel);
+        if (val2 > 80 || val2 < -80) velMoveHandler(val2>0, torso_yaw, 15.0, interface_torso_equiv_iCmd, interface_torso_equiv_iVel);
     }
 }
 
@@ -214,11 +217,11 @@ void ControlThread::option3(double* axis)
 {
     //right_arm
     double val0 = axis[AXIS_RIGHT_VERTICAL];     //right_arm u/d
-    double val3 = axis[AXIS_RIGHT_HORIZONTAL];   //right_arm l/r
-    double val1 = axis[AXIS_DIGITAL_HORIZONTAL]; //right_arm f/b
-    double val4 = axis[AXIS_LEFT_HORIZONTAL];    //right_arm rot u/d
-    double val5 = axis[AXIS_LEFT_VERTICAL];      //right_arm rot l/r
-    double val2 = axis[AXIS_DIGITAL_VERTICAL];   //right_arm rot f/b
+    double val1 = axis[AXIS_RIGHT_HORIZONTAL];   //right_arm l/r
+    double val2 = axis[AXIS_DIGITAL_HORIZONTAL]; //right_arm f/b
+    double val3 = axis[AXIS_LEFT_HORIZONTAL];    //right_arm rot u/d
+    double val4 = axis[AXIS_LEFT_VERTICAL];      //right_arm rot l/r
+    double val5 = axis[AXIS_DIGITAL_VERTICAL];   //right_arm rot f/b
     saturate(val0, 100);
     saturate(val1, 100);
     saturate(val2, 100);
@@ -226,12 +229,12 @@ void ControlThread::option3(double* axis)
     saturate(val4, 100);
     saturate(val5, 100);
 
-    double gain_0 = 0.00005;
-    double gain_1 = -0.00005;
-    double gain_2 = 0.00005;
-    double gain_3 = 0.0001;
-    double gain_4 = 0.0001;
-    double gain_5 = 0.0001;
+    double gain_0 = 0.000025;
+    double gain_1 = 0.000025;
+    double gain_2 = 0.000025;
+    double gain_3 = 0.00005;
+    double gain_4 = 0.00005;
+    double gain_5 = 0.00005;
 
     current_xyz_right[0] += val0 * gain_0;
     current_xyz_right[1] += val1 * gain_1;
@@ -246,11 +249,11 @@ void ControlThread::option2(double* axis)
 {
     //left_arm
     double val0 = axis[AXIS_RIGHT_VERTICAL];     //left_arm u/d
-    double val3 = axis[AXIS_RIGHT_HORIZONTAL];   //left_arm l/r
-    double val1 = axis[AXIS_DIGITAL_HORIZONTAL]; //left_arm f/b
-    double val4 = axis[AXIS_LEFT_HORIZONTAL];    //left_arm rot u/d
-    double val5 = axis[AXIS_LEFT_VERTICAL];      //left_arm rot l/r
-    double val2 = axis[AXIS_DIGITAL_VERTICAL];   //left_arm rot f/b
+    double val1 = axis[AXIS_RIGHT_HORIZONTAL];   //left_arm l/r
+    double val2 = axis[AXIS_DIGITAL_HORIZONTAL]; //left_arm f/b
+    double val3 = axis[AXIS_LEFT_HORIZONTAL];    //left_arm rot u/d
+    double val4 = axis[AXIS_LEFT_VERTICAL];      //left_arm rot l/r
+    double val5 = axis[AXIS_DIGITAL_VERTICAL];   //left_arm rot f/b
     saturate(val0, 100);
     saturate(val1, 100);
     saturate(val2, 100);
@@ -265,12 +268,12 @@ void ControlThread::option2(double* axis)
     static double ry;
     static double rz;
 
-    double gain_0 = 0.00005;
-    double gain_1 = -0.00005;
-    double gain_2 = 0.00005;
-    double gain_3 = 0.0001;
-    double gain_4 = 0.0001;
-    double gain_5 = 0.0001;
+    double gain_0 = 0.000025;
+    double gain_1 = 0.000025;
+    double gain_2 = 0.000025;
+    double gain_3 = 0.00005;
+    double gain_4 = 0.00005;
+    double gain_5 = 0.00005;
 
     current_xyz_left[0] += val0 * gain_0;
     current_xyz_left[1] += val1 * gain_1;
@@ -349,10 +352,9 @@ void ControlThread::option1(double* axis)
         b.clear();
         b.addInt(3);
         b.addDouble(val5); //x_lin_speed
-        b.addDouble(val4); //y_lin_speed
+        b.addDouble(0.0); //y_lin_speed
         b.addDouble(val3); //ang_speed
-        //b.addDouble(val6); //
-        b.addDouble(50.0); //gain
+        b.addDouble(100.0); //gain
         robotCmdPort_base.write();
     }
 }
@@ -421,6 +423,11 @@ void ControlThread::getCartesianArmPositions()
     }
 }
 
+#define LEFT_AND_RIGHT_BUTTONS_PUSHED (fabs(axis[AXIS_L_SHIFT]) > 10 && fabs(axis[AXIS_R_SHIFT]) > 10)
+#define LEFT_BUTTON_PUSHED            (fabs(axis[AXIS_L_SHIFT]) > 10 && fabs(axis[AXIS_R_SHIFT]) < 10)
+#define RIGHT_BUTTON_PUSHED           (fabs(axis[AXIS_L_SHIFT]) < 10 && fabs(axis[AXIS_R_SHIFT]) > 10)
+#define NO_BUTTONS_PUSHED             (fabs(axis[AXIS_L_SHIFT]) < 10 && fabs(axis[AXIS_R_SHIFT]) < 10)
+
 //------------------------------------------------------------------------------------------------
 void ControlThread::run()
 {
@@ -428,6 +435,10 @@ void ControlThread::run()
     double pidout_angular_speed = 0;
     double pidout_direction     = 0;
     double axis[20];
+    static int lb = 0;
+    static int lo = 0;
+    static int ro = 0;
+    static int no = 0;
 
     if (first_run)
     {
@@ -444,9 +455,9 @@ void ControlThread::run()
             if      (bl == 0 && br != 0) yWarning("Cartesian controller left arm not ready yet");
             else if (bl != 0 && br == 0) yWarning("Cartesian controller right arm not ready yet");
             else if (bl == 0 && br == 0) yWarning("Cartesian controller left arm and right arm not ready yet");
-            if (timeout >= 10)
+            if (timeout >= 30)
             {
-                yError() << "Unable to connect to catesian controller, terminating....";
+                yError() << "Unable to connect to cartesian controller, terminating....";
                 error_status = true;
                 return;
             }
@@ -466,31 +477,37 @@ void ControlThread::run()
             axis[j] = b->get(j).asDouble();
         }
 
-        if (fabs(axis[AXIS_L_SHIFT]) > 10 && fabs(axis[AXIS_R_SHIFT]) > 10)
+        if (LEFT_AND_RIGHT_BUTTONS_PUSHED) { lb++; lo = 0; ro = 0; no = 0; }
+        else if (LEFT_BUTTON_PUSHED)       { lb=0; lo++;   ro = 0; no = 0; }
+        else if (RIGHT_BUTTON_PUSHED)      { lb=0; lo = 0; ro++  ; no = 0; }
+        else if (NO_BUTTONS_PUSHED)        { lb=0; lo = 0; ro = 0; no++;   }
+
+        controlling = 0;
+        if (LEFT_AND_RIGHT_BUTTONS_PUSHED && lb>10)
         {
+            controlling = 1;
             option1(axis);
             getCartesianArmPositions();
             return;
         }
-        else if (fabs(axis[AXIS_L_SHIFT]) > 10 && fabs(axis[AXIS_R_SHIFT])<10)
+        else if (LEFT_BUTTON_PUSHED && lo>10)
         {
+            controlling = 2;
             option2(axis);
             return;
         }
-        else if (fabs(axis[AXIS_L_SHIFT]) < 10 && fabs(axis[AXIS_R_SHIFT])>10)
+        else if (RIGHT_BUTTON_PUSHED && ro>10)
         {
+            controlling = 3;
             option3(axis);
             return;
         }
-        else if (fabs(axis[AXIS_L_SHIFT]) < 10 && fabs(axis[AXIS_R_SHIFT])<10)
+        else if (NO_BUTTONS_PUSHED && no>10)
         {
-            option4(axis);
+            controlling = 4;
+            option4(axis); //hands and torso yaw
             getCartesianArmPositions();
             return;
-        }
-        else
-        {
-            yDebug() << "Should never reach here!";
         }
     }
     else 
@@ -508,10 +525,26 @@ void ControlThread::printStats()
    // yDebug()<<stats.str();
 }
 
-int ControlThread::get_status()
+
+robot_status ControlThread::get_status()
 {
-    if (error_status) return -1;
-    return 0;
+    robot_status current_status;
+    if (first_run == false)
+    {
+        current_status.controlling = controlling;
+        current_status.left_arm_xyz = current_xyz_left;
+        current_status.right_arm_xyz = current_xyz_right;
+    }
+
+    if (error_status)
+    {
+        current_status.status = -1;
+    }
+    else
+    {
+        current_status.status = 0;
+    }
+    return current_status;
 }
 
 bool ControlThread::threadInit()
@@ -837,8 +870,6 @@ void ControlThread::goToPose(string arm_type, const Vector &xd, const Vector &od
     Vector payLoad;
     double torso_heave = 0.07;
     double wrist_heave = 0.02;
-    payLoad.push_back(torso_heave);
-    payLoad.push_back(wrist_heave);
     payLoad = cat(payLoad, xd);
     payLoad = cat(payLoad, od_);
 
@@ -848,7 +879,8 @@ void ControlThread::goToPose(string arm_type, const Vector &xd, const Vector &od
     Bottle params;
     Bottle &bLoad = params.addList().addList();
     bLoad.addString("mode");
-    string mode = "full_pose+no_torso_no_heave";
+    //string mode = "full_pose+no_torso_no_heave";
+    string mode = "xyz_pose+no_torso_no_heave+no_torso_heave"; //no_torso_heave
     bLoad.addString(mode);
 
     if (arm_type == "left_arm")

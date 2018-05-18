@@ -37,6 +37,16 @@ using namespace yarp::dev;
 #define MAX_ANGULAR_VEL 24.0 // maximum angular velocity (deg/s)
 
 
+struct robot_status
+{
+    int status;
+    int controlling;
+    yarp::sig::Vector         left_arm_xyz;
+    yarp::sig::Vector         right_arm_xyz;
+public:
+    robot_status() { left_arm_xyz.resize(3); right_arm_xyz.resize(3); }
+};
+
 class ControlThread : public yarp::os::RateThread
 {
 private:
@@ -63,6 +73,7 @@ protected:
     string                    localName;
     bool                      first_run;
     bool                      error_status;
+    int                       controlling;
 
     //connection to the robot
     RpcClient                 robotCmdPort_larm;
@@ -121,7 +132,7 @@ public:
     virtual void afterStart(bool s);
     virtual void run();
     
-    void printStats();
+private:
     void goToPose(string arm_type, const yarp::sig::Vector &xd, const yarp::sig::Vector &od);
     void velMoveHandler(const bool b, std::vector<int> joints, double speed, IControlMode2* imod, IVelocityControl* ivel);
     void reachingHandler(string arm_type, const bool b, const yarp::sig::Vector &pos, const yarp::sig::Vector &rpy);
@@ -134,7 +145,9 @@ public:
     void option3(double* axis);
     void option4(double* axis);
 
-    int get_status();
+public:
+    robot_status get_status();
+    void printStats();
 };
 
 #endif
