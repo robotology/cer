@@ -138,7 +138,7 @@ private:
     void reachingHandler(string arm_type, const bool b, const yarp::sig::Vector &pos, const yarp::sig::Vector &rpy);
     void saturate(double& v, double sat_lim);
     void updateRVIZ(const yarp::sig::Vector &xd, const yarp::sig::Vector &od);
-    void getCartesianArmPositions();
+    void getCartesianArmPositions(bool blocking);
 
     void option1(double* axis);
     void option2(double* axis);

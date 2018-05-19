@@ -319,6 +319,7 @@ void ControlThread::option1(double* axis)
 
 
     //torso control
+    #if 0
     if (motors_enabled)
     {
         int mods[3];
@@ -344,6 +345,7 @@ void ControlThread::option1(double* axis)
         torso_vels[2] = torso_velC;
         interface_torso_tripod_iVel->velocityMove(torso_vels);
     }
+    #endif
 
     //base control
     if (motors_enabled)
@@ -359,10 +361,10 @@ void ControlThread::option1(double* axis)
     }
 }
 
-void ControlThread::getCartesianArmPositions()
+void ControlThread::getCartesianArmPositions(bool blocking)
 {
-    Bottle *sl = this->robotStatusPort_larm.read(true);
-    Bottle *sr = this->robotStatusPort_rarm.read(true);
+    Bottle *sl = this->robotStatusPort_larm.read(blocking);
+    Bottle *sr = this->robotStatusPort_rarm.read(blocking);
 
     if (sl)
     {
@@ -464,7 +466,7 @@ void ControlThread::run()
         }
         while (bl==0 || br==0);
 
-        getCartesianArmPositions();
+        getCartesianArmPositions(true);
         first_run = false;
         yInfo() << "...done";
     }
@@ -487,7 +489,7 @@ void ControlThread::run()
         {
             controlling = 1;
             option1(axis);
-            getCartesianArmPositions();
+            getCartesianArmPositions(false);
             return;
         }
         else if (LEFT_BUTTON_PUSHED && lo>10)
@@ -506,7 +508,7 @@ void ControlThread::run()
         {
             controlling = 4;
             option4(axis); //hands and torso yaw
-            getCartesianArmPositions();
+            getCartesianArmPositions(false);
             return;
         }
     }
