@@ -313,14 +313,19 @@ void ControlThread::option1(double* axis)
     val2 = val2*gain_2;
     val4 = val4*gain_4;
 
-    double torso_velA = val2 + val0 + 0;
-    double torso_velB = val2 - val0 / 2 + val1 / 1.732050808;
-    double torso_velC = val2 - val0 / 2 - val1 / 1.732050808;
+    //double torso_velA = val2 + val0 + 0;
+    //double torso_velB = val2 - val0 / 2 + val1 / 1.732050808;
+    //double torso_velC = val2 - val0 / 2 - val1 / 1.732050808;
+    double torso_velA = val2;// + val0 + 0;
+    double torso_velB = val2;// - val0 / 2 + val1 / 1.732050808;
+    double torso_velC = val2;// - val0 / 2 - val1 / 1.732050808;
 
 
     //torso control
-    #if 0
-    if (motors_enabled)
+    if (motors_enabled &&
+    fabs(torso_velA) >  0.001 &&
+    fabs(torso_velB) >  0.001 &&
+    fabs(torso_velC) >  0.001)
     {
         int mods[3];
         interface_torso_tripod_iCmd->getControlModes(mods);
@@ -345,7 +350,7 @@ void ControlThread::option1(double* axis)
         torso_vels[2] = torso_velC;
         interface_torso_tripod_iVel->velocityMove(torso_vels);
     }
-    #endif
+    
 
     //base control
     if (motors_enabled)

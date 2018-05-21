@@ -7,7 +7,7 @@
     <!-- modules --> 	
     <module>
         <name>baseControl</name>
-        <parameters>--context baseControl --from baseCtrl_cer.ini --joystick_connect --skip_robot_interface_check</parameters>
+        <parameters>--context baseControl --from baseCtrl_cer.ini  --skip_robot_interface_check</parameters>
         <node>r1-base</node>
     </module>
 
@@ -17,5 +17,11 @@
         <node>r1-base</node>
     </module>
 		
+   <connection>
+	   <from>/robotJoystickControl/base/cmd:o</from>
+	   <to>/baseControl/joystick1:i</to>
+	   <protocol>tcp</protocol>
+   </connection>
+
 </application>
 

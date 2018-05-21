@@ -27,7 +27,7 @@
 <!-- mobile base output connection -->
 <connection>
 	<from>/robotJoystickControl/base/cmd:o</from>
-	<to>/baseControl/joystick:i</to>
+	<to>/baseControl/joystick1:i</to>
 	<protocol>tcp</protocol>
 </connection>
 
