@@ -36,7 +36,7 @@ using namespace iCub::ctrl;
 class Controller : public RFModule
 {
     PolyDriver driver;
-    IControlMode2    *imod;
+    IControlMode     *imod;
     IControlLimits   *ilim;
     IEncodersTimed   *ienc;
     IPositionControl *ipos;
@@ -59,17 +59,17 @@ public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        string robot=rf.check("robot",Value("cer")).asString().c_str();
-        string part=rf.check("part",Value("left_upper_arm")).asString().c_str();
-        type=rf.check("type",Value("stairs")).asString().c_str();
+        string robot=rf.check("robot",Value("cer")).asString();
+        string part=rf.check("part",Value("left_upper_arm")).asString();
+        type=rf.check("type",Value("stairs")).asString();
         joint=rf.check("joint",Value(0)).asInt();
         Ts=rf.check("Ts",Value(0.01)).asDouble();
         T=rf.check("T",Value(4.0)).asDouble();
 
         Property option;
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/"+part).c_str());
-        option.put("local",("/cer_log_joint/"+part).c_str()); 
+        option.put("remote","/"+robot+"/"+part);
+        option.put("local","/cer_log_joint/"+part); 
         if (!driver.open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/"+part).c_str());

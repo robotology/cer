@@ -66,11 +66,11 @@ public:
 /****************************************************************/
 class Controller : public RFModule
 {
-    PolyDriver         drivers[3];
-    IEncodersTimed*    ienc[3];
-    IControlMode2*     imod;
-    IPositionControl2* ipos;
-    IPositionDirect*   iposd;
+    PolyDriver        drivers[3];
+    IEncodersTimed*   ienc[3];
+    IControlMode*     imod;
+    IPositionControl* ipos;
+    IPositionDirect*  iposd;
 
     vector<int> posDirectMode;
     vector<int> curMode;
@@ -410,7 +410,7 @@ public:
         Property option;
 
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/torso_tripod").c_str());
+        option.put("remote","/"+robot+"/torso_tripod");
         option.put("local","/cer_gaze-controller/torso_tripod"); 
         if (!drivers[0].open(option))
         {
@@ -421,7 +421,7 @@ public:
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/torso").c_str());
+        option.put("remote","/"+robot+"/torso");
         option.put("local","/cer_gaze-controller/torso");
         if (!drivers[1].open(option))
         {
@@ -432,7 +432,7 @@ public:
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/head").c_str());
+        option.put("remote","/"+robot+"/head");
         option.put("local","/cer_gaze-controller/head");
         option.put("writeStrict","on");
         if (!drivers[2].open(option))
@@ -483,7 +483,7 @@ public:
         }
 
         ResourceFinder rf_cameras;
-        rf_cameras.setDefaultContext(cameras_context.c_str());
+        rf_cameras.setDefaultContext(cameras_context);
         rf_cameras.setDefaultConfigFile(cameras_file.c_str());
         rf_cameras.configure(0,NULL);
         getIntrinsics(rf_cameras);

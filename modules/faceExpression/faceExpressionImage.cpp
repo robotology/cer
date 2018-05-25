@@ -1,4 +1,5 @@
 #include <cmath>
+#include <string>
 #include "faceExpressionImage.hpp"
 
 #include <opencv2/core/core.hpp>
@@ -30,13 +31,13 @@ bool FaceExpressionImageModule::configure(ResourceFinder &rf)
     // Check input params
     if(!rf.check("path"))
     {
-        ConstString imagePath_test = rf.findFileByName("images/blink_1.bmp");
+        string imagePath_test = rf.findFileByName("images/blink_1.bmp");
         size_t last = imagePath_test.rfind("/");
         imagePath = imagePath_test.substr(0, last);
     }
     else
     {
-        imagePath = rf.find(ConstString("path")).asString();
+        imagePath = rf.find("path").asString();
     }
 
     // Open ports
@@ -58,18 +59,18 @@ bool FaceExpressionImageModule::configure(ResourceFinder &rf)
     }
 
     // Load basic images
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_1.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_2.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_3.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_4.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_5.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_6.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_1.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_2.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_3.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_4.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_5.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_6.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
 
     // Load image for bars
-    th.blinkBar = imread(yarp::os::ConstString(imagePath + "/happyBar.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+    th.blinkBar = imread(std::string(imagePath + "/happyBar.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
 
     // Load image for 'nose' bar
-    th.noseBar = cv::imread(yarp::os::ConstString(imagePath + "/noseBar.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+    th.noseBar = cv::imread(std::string(imagePath + "/noseBar.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
     th.noseBar0_len = th.noseBar.cols;
 
     // Verify all images are loaded correctly

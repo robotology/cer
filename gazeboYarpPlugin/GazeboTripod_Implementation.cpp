@@ -5,6 +5,8 @@
 *
 */
 
+#include <string>
+
 #include "GazeboTripodMotionControl.h"
 #include <yarp/os/LogStream.h>
 
@@ -13,10 +15,10 @@ using namespace cer::dev;
 
 
     // AXIS IAxisInfo
-bool GazeboTripodMotionControl::getAxisName(int axis, yarp::os::ConstString& name)
+bool GazeboTripodMotionControl::getAxisName(int axis, std::string& name)
 {
     if (axis < 0 || axis >= (int)m_numberOfJoints) return false;
-    name =  yarp::os::ConstString(controlboard_joint_names.at(axis));
+    name =  std::string(controlboard_joint_names.at(axis));
     return true;
 }
 

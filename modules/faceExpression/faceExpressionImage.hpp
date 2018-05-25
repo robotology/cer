@@ -87,7 +87,7 @@ private:
     yarp::os::Port          rpcPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >    imagePort;
 
-    yarp::os::ConstString   imagePath;
+    std::string imagePath;
 
     float period_percent;
     float blink_per_minute;

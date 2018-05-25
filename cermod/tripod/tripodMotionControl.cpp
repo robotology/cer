@@ -909,10 +909,10 @@ bool tripodMotionControl::close()
 }
 
 
-bool tripodMotionControl::getAxisName(int axis, yarp::os::ConstString& name)
+bool tripodMotionControl::getAxisName(int axis, std::string& name)
 {
     if (axis < 0 || axis >=  _njoints) return false;
-    name = yarp::os::ConstString(_jointNames[axis]);
+    name = std::string(_jointNames[axis]);
     return true;
 }
 
@@ -2150,7 +2150,7 @@ bool tripodMotionControl::setInteractionModesRaw(yarp::dev::InteractionModeEnum*
     return _device.iInteract->setInteractionModes(_njoints, _axisMap, modes);
 }
 
-bool tripodMotionControl::getRemoteVariableRaw(yarp::os::ConstString key, yarp::os::Bottle& val)
+bool tripodMotionControl::getRemoteVariableRaw(std::string key, yarp::os::Bottle& val)
 {
     val.clear();
     //if (key == "encoders")
@@ -2162,7 +2162,7 @@ bool tripodMotionControl::getRemoteVariableRaw(yarp::os::ConstString key, yarp::
     return false;
 }
 
-bool tripodMotionControl::setRemoteVariableRaw(yarp::os::ConstString key, const yarp::os::Bottle& val)
+bool tripodMotionControl::setRemoteVariableRaw(std::string key, const yarp::os::Bottle& val)
 {
     string s1 = val.toString();
     if (val.size() != _njoints)

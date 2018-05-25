@@ -370,7 +370,7 @@ public:
   typedef yarp::os::idl::BottleStyle<visualization_msgs_Marker> bottleStyle;
 
   // Give source text for class, ROS will need this
-  yarp::os::ConstString getTypeText() {
+  std::string getTypeText() {
     return "# See http://www.ros.org/wiki/rviz/DisplayTypes/Marker and http://www.ros.org/wiki/rviz/Tutorials/Markers%3A%20Basic%20Shapes for more information on using this message with rviz\n\
 \n\
 uint8 ARROW=0\n\

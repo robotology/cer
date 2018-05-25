@@ -28,9 +28,9 @@ using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
 
-typedef vector<IVelocityControl2*> IVelVector;
-typedef vector<IControlMode2*>     ICtrlModVec;
-typedef vector<IEncoders*>         IEncVec;
+typedef vector<IVelocityControl*> IVelVector;
+typedef vector<IControlMode*>     ICtrlModVec;
+typedef vector<IEncoders*>        IEncVec;
 
 class TeleOp: public RFModule
 {

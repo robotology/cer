@@ -163,13 +163,13 @@ private:
     yarp::os::Port          rpcPort;
     ImagePort               imagePort;      // receive images to be displayed
 
-    yarp::os::ConstString   rootPath;
-    yarp::os::ConstString   deviceFileName;
+    std::string             rootPath;
+    std::string             deviceFileName;
 
     int _rate;
     yarp::os::Semaphore     mutex;
     yarp::sig::FlexImage    image;
-    yarp::os::ConstString   sensorId;
+    std::string             sensorId;
 
     int fd;                 // file descriptor for device file
     auxdisp_regs_t          gen_reg;

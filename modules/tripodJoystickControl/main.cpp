@@ -73,7 +73,7 @@ public:
         //reads the configuration file
         Property ctrl_options;
 
-        ConstString configFile = rf.findFile("from");
+        string configFile = rf.findFile("from");
         if (configFile == "") //--from torsoJoystickControl.ini
         {
             yWarning("Cannot find .ini configuration file. By default I'm searching for torsoJoystickControl.ini");

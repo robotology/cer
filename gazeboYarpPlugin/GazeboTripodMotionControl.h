@@ -109,7 +109,7 @@ public:
 
 
     // AXIS IAxisInfo
-    virtual bool getAxisName(int axis, yarp::os::ConstString& name);
+    virtual bool getAxisName(int axis, std::string& name);
     virtual bool getJointType(int axis, yarp::dev::JointTypeEnum& type);
 
     //ENCODERS

@@ -15,6 +15,8 @@
  * Public License for more details
 */
 
+#include <string>
+
 #include <yarp/os/Time.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/RFModule.h>
@@ -31,87 +33,87 @@ using namespace cer::robot_model::self_collision;
 class SelfCollisionThread : public yarp::os::Thread
 {
 public:
-	SelfCollisionThread(yarp::os::ConstString name, int robot_type);
+    SelfCollisionThread(std::string name, int robot_type);
 
     virtual bool threadInit();
     virtual void run();
     virtual void threadRelease();
     virtual void onStop();
 
-	bool freeSpace()
-	{
-		return bFreeSpace;
-	}
+    bool freeSpace()
+    {
+        return bFreeSpace;
+    }
 
 protected:
-	SelfCollisionLib collisionCheck;
+    SelfCollisionLib collisionCheck;
 
-	yarp::os::ConstString robotName;
+    std::string robotName;
 
-	bool bFreeSpace;
+    bool bFreeSpace;
 
-	yarp::os::BufferedPort<yarp::sig::Vector> portCheckI;
-	yarp::os::BufferedPort<yarp::sig::Vector> portMarginO;
-	yarp::os::BufferedPort<yarp::sig::Matrix> portJacobianO;
+    yarp::os::BufferedPort<yarp::sig::Vector> portCheckI;
+    yarp::os::BufferedPort<yarp::sig::Vector> portMarginO;
+    yarp::os::BufferedPort<yarp::sig::Matrix> portJacobianO;
 };
 
-SelfCollisionThread::SelfCollisionThread(yarp::os::ConstString name, int robot_type) : Thread(), robotName(name), collisionCheck(robot_type)
+SelfCollisionThread::SelfCollisionThread(std::string name, int robot_type) : Thread(), robotName(name), collisionCheck(robot_type)
 {
-	bFreeSpace = true;
+    bFreeSpace = true;
 }
 
 bool SelfCollisionThread::threadInit()
 {
-	if (!collisionCheck.isOk()) return false;
+    if (!collisionCheck.isOk()) return false;
 
-	portCheckI.open(yarp::os::ConstString("/") + robotName + "/self/check:i");
-	portMarginO.open(yarp::os::ConstString("/") + robotName + "/self/margin:o");
-	portJacobianO.open(yarp::os::ConstString("/") + robotName + "/self/jacobian:o");
+    portCheckI.open("/" + robotName + "/self/check:i");
+    portMarginO.open("/" + robotName + "/self/margin:o");
+    portJacobianO.open("/" + robotName + "/self/jacobian:o");
 
     return true;
 }
 
 void SelfCollisionThread::onStop()
 {
-	portCheckI.interrupt();
-	portMarginO.interrupt();
-	portJacobianO.interrupt();
+    portCheckI.interrupt();
+    portMarginO.interrupt();
+    portJacobianO.interrupt();
 }
 
 void SelfCollisionThread::threadRelease()
 {
-	portCheckI.interrupt();
-	portMarginO.interrupt();
-	portJacobianO.interrupt();
+    portCheckI.interrupt();
+    portMarginO.interrupt();
+    portJacobianO.interrupt();
 
-	portCheckI.close();
-	portMarginO.close();
-	portJacobianO.close();
+    portCheckI.close();
+    portMarginO.close();
+    portJacobianO.close();
 }
 
 void SelfCollisionThread::run()
 {
-	while (isRunning())
-	{
-		yarp::sig::Vector *qnext = portCheckI.read();
+    while (isRunning())
+    {
+        yarp::sig::Vector *qnext = portCheckI.read();
 
-		if (isStopping()) return;
+        if (isStopping()) return;
 
-		if (!qnext) continue;
+        if (!qnext) continue;
 
-		yarp::sig::Vector *margin = (portMarginO.getOutputCount() > 0) ? &(portMarginO.prepare()) : NULL;
+        yarp::sig::Vector *margin = (portMarginO.getOutputCount() > 0) ? &(portMarginO.prepare()) : NULL;
 
-		yarp::sig::Matrix *jacobian = (portJacobianO.getOutputCount() > 0) ? &(portJacobianO.prepare()) : NULL;
+        yarp::sig::Matrix *jacobian = (portJacobianO.getOutputCount() > 0) ? &(portJacobianO.prepare()) : NULL;
 
-		if (margin || jacobian)
-		{
-			bFreeSpace = collisionCheck.checkNextConfiguration(*qnext, margin, jacobian);
+        if (margin || jacobian)
+        {
+            bFreeSpace = collisionCheck.checkNextConfiguration(*qnext, margin, jacobian);
 
-			if (margin) portMarginO.writeStrict();
+            if (margin) portMarginO.writeStrict();
 
-			if (jacobian) portJacobianO.writeStrict();
-		}
-	}
+            if (jacobian) portJacobianO.writeStrict();
+        }
+    }
 }
 
 
@@ -120,91 +122,91 @@ void SelfCollisionThread::run()
 class SelfCollisionModule : public yarp::os::RFModule
 {
 public:
-	SelfCollisionModule()
-	{
-		selfCollisionThread = NULL;
-	}
+    SelfCollisionModule()
+    {
+        selfCollisionThread = NULL;
+    }
 
-	~SelfCollisionModule()
-	{
-		if (selfCollisionThread) delete selfCollisionThread;
-	}
+    ~SelfCollisionModule()
+    {
+        if (selfCollisionThread) delete selfCollisionThread;
+    }
 
-	double getPeriod(){ return 1.0; }
+    double getPeriod(){ return 1.0; }
 
-	bool configure(yarp::os::ResourceFinder &rf)
-	{
-		if (!rf.check("model") || !rf.check("name"))
-		{
-			printf("usage:\nselfCollision --name <myname> --model <R1 | iCub | iCub3>\n");
-			return false;
-		}
+    bool configure(yarp::os::ResourceFinder &rf)
+    {
+        if (!rf.check("model") || !rf.check("name"))
+        {
+            printf("usage:\nselfCollision --name <myname> --model <R1 | iCub | iCub3>\n");
+            return false;
+        }
 
-		yarp::os::ConstString sRobotType = rf.find("model").asString();
-		yarp::os::ConstString sRobotName = rf.find("name").asString();
+        std::string sRobotType = rf.find("model").asString();
+        std::string sRobotName = rf.find("name").asString();
 
-		if (sRobotType == "R1")
-			selfCollisionThread = new SelfCollisionThread(sRobotName, SelfCollisionLib::R1_MODEL);
-		else if (sRobotType == "iCub")
-			selfCollisionThread = new SelfCollisionThread(sRobotName, SelfCollisionLib::ICUB_MODEL);
-		else if (sRobotType == "iCub3")
-			selfCollisionThread = new SelfCollisionThread(sRobotName, SelfCollisionLib::ICUB3_MODEL);
-		else 		
-		{
-			printf("Usage:\nselfCollision --name <myname> --model <R1 | iCub | iCub3>\n");
-			return false;
-		}
+        if (sRobotType == "R1")
+            selfCollisionThread = new SelfCollisionThread(sRobotName, SelfCollisionLib::R1_MODEL);
+        else if (sRobotType == "iCub")
+            selfCollisionThread = new SelfCollisionThread(sRobotName, SelfCollisionLib::ICUB_MODEL);
+        else if (sRobotType == "iCub3")
+            selfCollisionThread = new SelfCollisionThread(sRobotName, SelfCollisionLib::ICUB3_MODEL);
+        else        
+        {
+            printf("Usage:\nselfCollision --name <myname> --model <R1 | iCub | iCub3>\n");
+            return false;
+        }
 
-		if (!selfCollisionThread->start())
-		{
-			printf("Thread could not start, aborting.\n");
-			return false;
-		}
+        if (!selfCollisionThread->start())
+        {
+            printf("Thread could not start, aborting.\n");
+            return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	bool updateModule()
-	{
-		if (selfCollisionThread->freeSpace())
-		{
-			printf("freespace\n");
-		}
-		else
-		{
-			printf("COLLISION\n");
-		}
+    bool updateModule()
+    {
+        if (selfCollisionThread->freeSpace())
+        {
+            printf("freespace\n");
+        }
+        else
+        {
+            printf("COLLISION\n");
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	bool interruptModule()
-	{
-		selfCollisionThread->stop();
+    bool interruptModule()
+    {
+        selfCollisionThread->stop();
 
-		return true;
-	}
+        return true;
+    }
 
 protected:
-	SelfCollisionThread *selfCollisionThread;
+    SelfCollisionThread *selfCollisionThread;
 };
 
 
 
 int main(int argc, char** argv)
 {
-	yarp::os::Network yarp;
+    yarp::os::Network yarp;
 
-	//argc = 5;
-	//char* fargv[] = {"selfCollision","--name", "r1", "--model","R1"};
+    //argc = 5;
+    //char* fargv[] = {"selfCollision","--name", "r1", "--model","R1"};
 
-	yarp::os::ResourceFinder rf;
-	rf.setVerbose(true);
-	rf.configure(argc, argv);
+    yarp::os::ResourceFinder rf;
+    rf.setVerbose(true);
+    rf.configure(argc, argv);
 
-	SelfCollisionModule module;
+    SelfCollisionModule module;
 
-	module.runModule(rf);
+    module.runModule(rf);
 
-	return 0;
+    return 0;
 }

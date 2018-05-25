@@ -74,7 +74,7 @@ std::string FaceDisplayServer::getId()
 bool FaceDisplayServer::open(yarp::os::Searchable &config)
 {
     Property params;
-    yarp::os::ConstString   rpcPortName, imagePortName;
+    std::string   rpcPortName, imagePortName;
 
     params.fromString(config.toString().c_str());
     yTrace() << "FaceDisplayServer params are: " << config.toString();
@@ -156,32 +156,32 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
 
     // Load all required pieces of image
     bool ok = true;
-    imgHappyEye  = cv::imread(yarp::os::ConstString(rootPath + "/runtime/happyEye.bmp").c_str(),  CV_LOAD_IMAGE_COLOR);
-    imgHappyBars = cv::imread(yarp::os::ConstString(rootPath + "/runtime/happyBars.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
-    imgSadEye    = cv::imread(yarp::os::ConstString(rootPath + "/runtime/sadEye.bmp").c_str(),    CV_LOAD_IMAGE_UNCHANGED);
-    imgSadBars   = cv::imread(yarp::os::ConstString(rootPath + "/runtime/sadBars.bmp").c_str(),   CV_LOAD_IMAGE_UNCHANGED);
+    imgHappyEye  = cv::imread(std::string(rootPath + "/runtime/happyEye.bmp").c_str(),  CV_LOAD_IMAGE_COLOR);
+    imgHappyBars = cv::imread(std::string(rootPath + "/runtime/happyBars.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+    imgSadEye    = cv::imread(std::string(rootPath + "/runtime/sadEye.bmp").c_str(),    CV_LOAD_IMAGE_UNCHANGED);
+    imgSadBars   = cv::imread(std::string(rootPath + "/runtime/sadBars.bmp").c_str(),   CV_LOAD_IMAGE_UNCHANGED);
 
     if(imgHappyEye.empty() )
     {
-        yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/happyEye.bmp") << "image";
+        yError() << "FaceDisplayServer: Failed loading " << std::string(rootPath + "/runtime/happyEye.bmp") << "image";
         ok = false;
     }
 
     if(imgHappyBars.empty() )
     {
-        yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/happyBars.bmp") << "image";
+        yError() << "FaceDisplayServer: Failed loading " << std::string(rootPath + "/runtime/happyBars.bmp") << "image";
         ok = false;
     }
 
     if(imgSadEye.empty() )
     {
-        yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/sadEye.bmp") << "image";
+        yError() << "FaceDisplayServer: Failed loading " << std::string(rootPath + "/runtime/sadEye.bmp") << "image";
         ok = false;
     }
 
     if(imgSadBars.empty() )
     {
-        yError() << "FaceDisplayServer: Failed loading " << yarp::os::ConstString(rootPath + "/runtime/sadBars.bmp") << "image";
+        yError() << "FaceDisplayServer: Failed loading " << std::string(rootPath + "/runtime/sadBars.bmp") << "image";
         ok = false;
     }
 
@@ -279,17 +279,17 @@ void FaceDisplayServer::run()
         // preload the images
         IplImage *img[10];
 
-        img[0] = cvLoadImage(yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_01.bmp").c_str(), 1);
-        img[1] = cvLoadImage(yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_02.bmp").c_str(), 1);
-        img[2] = cvLoadImage(yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_03.bmp").c_str(), 1);
-        img[3] = cvLoadImage(yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_03_clean.bmp").c_str(), 1);
-        img[4] = cvLoadImage(yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_04.bmp").c_str(), 1);
+        img[0] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_01.bmp").c_str(), 1);
+        img[1] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_02.bmp").c_str(), 1);
+        img[2] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_03.bmp").c_str(), 1);
+        img[3] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_03_clean.bmp").c_str(), 1);
+        img[4] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_04.bmp").c_str(), 1);
 
-        img[5] = cvLoadImage(yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_05.bmp").c_str(), 1);
-        img[6] = cvLoadImage(yarp::os::ConstString(rootPath + "/Anger.bmp").c_str(), 1);
-        img[7] = cvLoadImage(yarp::os::ConstString(rootPath + "/balette.bmp").c_str(), 1);
-        img[8] = cvLoadImage(yarp::os::ConstString(rootPath + "/CCPP2.bmp").c_str(), 1);
-        img[9] = cvLoadImage(yarp::os::ConstString(rootPath + "/CCPP4.bmp").c_str(), 1);
+        img[5] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_05.bmp").c_str(), 1);
+        img[6] = cvLoadImage(std::string(rootPath + "/Anger.bmp").c_str(), 1);
+        img[7] = cvLoadImage(std::string(rootPath + "/balette.bmp").c_str(), 1);
+        img[8] = cvLoadImage(std::string(rootPath + "/CCPP2.bmp").c_str(), 1);
+        img[9] = cvLoadImage(std::string(rootPath + "/CCPP4.bmp").c_str(), 1);
 
 
         // Convert into BGR
@@ -389,10 +389,10 @@ void FaceDisplayServer::run()
     if(selfTest == 3)
     {
         bool toggleImage = false;
-        cv::Mat image_1  = cv::imread(yarp::os::ConstString(rootPath + "/fra.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
-        cv::Mat image_2  = cv::imread(yarp::os::ConstString(rootPath + "/homer.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+        cv::Mat image_1  = cv::imread(std::string(rootPath + "/fra.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+        cv::Mat image_2  = cv::imread(std::string(rootPath + "/homer.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
 
-        cv::Mat image_tmp   = cv::imread(yarp::os::ConstString(rootPath + "/homer.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+        cv::Mat image_tmp   = cv::imread(std::string(rootPath + "/homer.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
 
 
         cv::cvtColor(image_1,image_1,CV_BGR2RGB);
@@ -556,7 +556,7 @@ void FaceDisplayServer::run()
     imgHappyEye.copyTo(face(cv::Rect(re_offset_x, re_offset_y, currentEye->cols, currentEye->rows)));
 
     // save to file for debugging purpose
-    // cv::imwrite(yarp::os::ConstString(rootPath + "/runtime/runtime-HappyEye.bmp").c_str(), face);
+    // cv::imwrite(std::string(rootPath + "/runtime/runtime-HappyEye.bmp").c_str(), face);
 
     mutex.wait();
     if(-1 == ::write(fd, face.data, faceSize) )
@@ -578,7 +578,7 @@ void FaceDisplayServer::run()
         // The support of strings is probably gonna be dropped in the final version.
         if(command.get(0).isString())
         {
-            yarp::os::ConstString cmd = command.get(0).asString();
+            std::string cmd = command.get(0).asString();
 
             if(cmd == "up")    { moveUp--;    /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveUp<min_offset_y) moveUp=min_offset_y; }
             if(cmd == "down")  { moveUp++;    /*faceExpression=FACE_EXPR;*/ action = VOCAB_SET; type=VOCAB_MOVE; if(moveUp>max_offset_y) moveUp=max_offset_y; }
@@ -588,30 +588,30 @@ void FaceDisplayServer::run()
             yDebug() << "moveUp " << moveUp << "moveRight " << moveRight << "max_offset_y" << max_offset_y;
 
             yTrace() << "cmd is:" << cmd;
-            if(cmd == yarp::os::ConstString("set"))
+            if(cmd == std::string("set"))
             {
                 yTrace() << "GOT SET";
 
                 action = VOCAB_SET;
-                if(command.get(1).asString() == yarp::os::ConstString("face"))
+                if(command.get(1).asString() == std::string("face"))
                 {
                     type = VOCAB_FACE;
                     if(command.get(2).isString())
                     {
-                        if(command.get(2).asString() == yarp::os::ConstString("hap"))
+                        if(command.get(2).asString() == std::string("hap"))
                         {
                             faceExpression=FACE_EXPR;
                             param = VOCAB_FACE_HAPPY;
                         }
                         else
-                        if(command.get(2).asString() == yarp::os::ConstString("sad"))
+                        if(command.get(2).asString() == std::string("sad"))
                         {
                             yDebug() << "got sad";
                             faceExpression=FACE_EXPR;
                             param = VOCAB_FACE_SAD;
                         }
                         else
-                        if(command.get(2).asString() == yarp::os::ConstString("warn"))
+                        if(command.get(2).asString() == std::string("warn"))
                         {
                             yDebug() << "got warn";
                             faceExpression=IMAGE_EXPR;
@@ -628,7 +628,7 @@ void FaceDisplayServer::run()
                 }
                 else
                 {
-                    if(command.get(1).asString() == yarp::os::ConstString("file"))
+                    if(command.get(1).asString() == std::string("file"))
                     {
                         type = VOCAB_FILE;
                     }
@@ -641,13 +641,13 @@ void FaceDisplayServer::run()
                     }
                 }
             }
-            if(command.get(0).asString() == yarp::os::ConstString("get"))
+            if(command.get(0).asString() == std::string("get"))
             {
                 action = VOCAB_GET;
-                if(command.get(1).asString() == yarp::os::ConstString("face"))
+                if(command.get(1).asString() == std::string("face"))
                     type = VOCAB_FACE;
 
-                else if(command.get(1).asString() == yarp::os::ConstString("file"))
+                else if(command.get(1).asString() == std::string("file"))
                     type = VOCAB_FILE;
                 else
                 {
@@ -690,7 +690,7 @@ void FaceDisplayServer::run()
                         {
                             case VOCAB_FACE_HAPPY:
                             {
-//                                 snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_04.bmp").c_str());
+//                                 snprintf(imageFileName, 255, "%s", std::string(rootPath + "/RobotE_PNG_80x32_16bit_04.bmp").c_str());
                                 currentEye  = &imgHappyEye;
                                 currentBars = &imgHappyBars;
                                 faceExpression = FACE_EXPR;
@@ -699,7 +699,7 @@ void FaceDisplayServer::run()
 
                             case VOCAB_FACE_SAD:
                             {
-//                                 snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/RobotE_PNG_80x32_16bit_02.bmp").c_str());
+//                                 snprintf(imageFileName, 255, "%s", std::string(rootPath + "/RobotE_PNG_80x32_16bit_02.bmp").c_str());
                                 currentEye  = &imgSadEye;
                                 currentBars = &imgSadBars;
                                 faceExpression = FACE_EXPR;
@@ -708,7 +708,7 @@ void FaceDisplayServer::run()
 
                             case VOCAB_FACE_WARNING:
                             {
-                                snprintf(imageFileName, 255, "%s", yarp::os::ConstString(rootPath + "/bar2.bmp").c_str());
+                                snprintf(imageFileName, 255, "%s", std::string(rootPath + "/bar2.bmp").c_str());
                                 faceExpression = IMAGE_EXPR;
                             }
                             break;
@@ -812,7 +812,7 @@ void FaceDisplayServer::run()
                     currentEye->copyTo(face(cv::Rect(re_offset_x+moveRight, re_offset_y+moveUp, currentEye->cols, currentEye->rows)));
 
                     // for debugging only
-                    // cv::imwrite(yarp::os::ConstString(rootPath + "/runtime/runtime-HappyEye_"+yarp::os::Value(moveRight).toString()+"_"+yarp::os::Value(moveUp).toString()+".bmp").c_str(), face);
+                    // cv::imwrite(std::string(rootPath + "/runtime/runtime-HappyEye_"+yarp::os::Value(moveRight).toString()+"_"+yarp::os::Value(moveUp).toString()+".bmp").c_str(), face);
                     currentFace = &face;
                 }
                 break;

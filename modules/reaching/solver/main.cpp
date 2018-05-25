@@ -49,8 +49,8 @@ class IKSolver : public RFModule
     {
         Property option;
         option.put("device","remote_controlboard");
-        option.put("remote",remote.c_str());
-        option.put("local",local.c_str());
+        option.put("remote",remote);
+        option.put("local",local);
 
         PolyDriver driver;
         if (driver.open(option))
@@ -154,7 +154,7 @@ public:
                 return false;
 
         q.resize(3+solver.getArmParameters().upper_arm.getDOF()+3,0.0);
-        rpcPort.open(("/cer_reaching-solver/"+arm_type+"/rpc").c_str());
+        rpcPort.open("/cer_reaching-solver/"+arm_type+"/rpc");
         attach(rpcPort);
 
         return true;

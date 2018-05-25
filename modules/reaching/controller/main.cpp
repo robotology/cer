@@ -60,12 +60,12 @@ public:
 /****************************************************************/
 class Controller : public RFModule
 {
-    PolyDriver         drivers[4];
-    vector<int>        jointsIndexes[4];
-    IControlMode2*     imod[4];
-    IEncodersTimed*    ienc[4];
-    IPositionControl2* ipos[4];
-    IPositionDirect*   iposd[4];
+    PolyDriver        drivers[4];
+    vector<int>       jointsIndexes[4];
+    IControlMode*     imod[4];
+    IEncodersTimed*   ienc[4];
+    IPositionControl* ipos[4];
+    IPositionDirect*  iposd[4];
     
     vector<int> posDirectMode;
     vector<int> curMode;
@@ -243,48 +243,48 @@ public:
         Property option;
 
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/torso_tripod").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso_tripod").c_str());
+        option.put("remote","/"+robot+"/torso_tripod");
+        option.put("local","/cer_reaching-controller/"+arm_type+"/torso_tripod");
         option.put("writeStrict","on");
         if (!drivers[0].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/torso_tripod").c_str());
+            yError("Unable to connect to %s","/"+robot+"/torso_tripod");
             close();
             return false;
         }
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/torso").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso").c_str());
+        option.put("remote","/"+robot+"/torso");
+        option.put("local","/cer_reaching-controller/"+arm_type+"/torso");
         option.put("writeStrict","on");
         if (!drivers[1].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/torso").c_str());
+            yError("Unable to connect to %s","/"+robot+"/torso");
             close();
             return false;
         }
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/"+arm_type+"_arm").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_arm").c_str());
+        option.put("remote","/"+robot+"/"+arm_type+"_arm");
+        option.put("local","/cer_reaching-controller/"+arm_type+"/"+arm_type+"_arm");
         option.put("writeStrict","on");
         if (!drivers[2].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_arm").c_str());
+            yError("Unable to connect to %s","/"+robot+"/"+arm_type+"_arm");
             close();
             return false;
         }
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_wrist_tripod").c_str());
+        option.put("remote","/"+robot+"/"+arm_type+"_wrist_tripod");
+        option.put("local","/cer_reaching-controller/"+arm_type+"/"+arm_type+"_wrist_tripod");
         option.put("writeStrict","on");
         if (!drivers[3].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
+            yError("Unable to connect to %s","/"+robot+"/"+arm_type+"_wrist_tripod");
             close();
             return false;
         }
@@ -317,14 +317,14 @@ public:
         jointsIndexes[3].push_back(1);
         jointsIndexes[3].push_back(2);
 
-        statePort.open(("/cer_reaching-controller/"+arm_type+"/state:o").c_str());
-        solverPort.open(("/cer_reaching-controller/"+arm_type+"/solver:rpc").c_str());
+        statePort.open("/cer_reaching-controller/"+arm_type+"/state:o");
+        solverPort.open("/cer_reaching-controller/"+arm_type+"/solver:rpc");
 
-        targetPort.open(("/cer_reaching-controller/"+arm_type+"/target:i").c_str());
+        targetPort.open("/cer_reaching-controller/"+arm_type+"/target:i");
         targetPort.setController(this);
         targetPort.useCallback();
 
-        rpcPort.open(("/cer_reaching-controller/"+arm_type+"/rpc").c_str());
+        rpcPort.open("/cer_reaching-controller/"+arm_type+"/rpc");
         attach(rpcPort);
 
         // prepare target bottle

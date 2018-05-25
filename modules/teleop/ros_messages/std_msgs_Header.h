@@ -104,7 +104,7 @@ public:
   typedef yarp::os::idl::BottleStyle<std_msgs_Header> bottleStyle;
 
   // Give source text for class, ROS will need this
-  yarp::os::ConstString getTypeText() {
+  std::string getTypeText() {
     return "uint32 seq\n\
 time stamp\n\
 string frame_id";

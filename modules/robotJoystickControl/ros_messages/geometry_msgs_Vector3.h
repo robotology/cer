@@ -105,7 +105,7 @@ public:
   typedef yarp::os::idl::BottleStyle<geometry_msgs_Vector3> bottleStyle;
 
   // Give source text for class, ROS will need this
-  yarp::os::ConstString getTypeText() {
+  std::string getTypeText() {
     return "float64 x\n\
 float64 y\n\
 float64 z";

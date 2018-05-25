@@ -8,6 +8,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <math.h>
+#include <string>
 #include <rtf/TestAssert.h>
 #include <yarp/rtf/TestAsserter.h>
 #include <rtf/dll/Plugin.h>
@@ -66,10 +67,10 @@ bool TripodTest::setup(yarp::os::Property& property)
     yTrace() << "\nParameters are:\n\t" << property.toString();
 
     // read param from config file
-    yarp::os::ConstString portPrefix("/tripodTest");
-    yarp::os::ConstString robotName = property.check(yarp::os::ConstString("robotName"), yarp::os::Value("cer")).asString();
-    double pos_tolerance = property.check(yarp::os::ConstString("posTolerance"), DEFAULT_POS_THRESHOLD).asDouble();
-    double vel_tolerance = property.check(yarp::os::ConstString("velTolerance"), DEFAULT_VEL_THRESHOLD).asDouble();
+    std::string portPrefix("/tripodTest");
+    std::string robotName = property.check("robotName", yarp::os::Value("cer")).asString();
+    double pos_tolerance = property.check("posTolerance", DEFAULT_POS_THRESHOLD).asDouble();
+    double vel_tolerance = property.check("velTolerance", DEFAULT_VEL_THRESHOLD).asDouble();
     mutualPosTolerance = pos_tolerance;
 
     // initialize device

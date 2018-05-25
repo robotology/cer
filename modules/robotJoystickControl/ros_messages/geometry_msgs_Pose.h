@@ -87,7 +87,7 @@ public:
   typedef yarp::os::idl::BottleStyle<geometry_msgs_Pose> bottleStyle;
 
   // Give source text for class, ROS will need this
-  yarp::os::ConstString getTypeText() {
+  std::string getTypeText() {
     return "geometry_msgs/Point position\n\
 geometry_msgs/Quaternion orientation\n================================================================================\n\
 MSG: geometry_msgs/Point\n\

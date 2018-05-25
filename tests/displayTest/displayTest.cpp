@@ -8,6 +8,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <math.h>
+#include <string>
 #include <rtf/TestAssert.h>
 #include <rtf/dll/Plugin.h>
 #include <yarp/os/Network.h>
@@ -40,8 +41,8 @@ bool DisplayTest::setup(yarp::os::Property& property)
     yTrace() << "\nParameters are:\n\t" << property.toString();
 
     // read param from config file
-    yarp::os::ConstString local  = property.check("local",  yarp::os::Value("/displayTest")).asString();
-    yarp::os::ConstString remote = property.check("remote", yarp::os::Value("/robot/faceDisplay")).asString();
+    std::string local  = property.check("local",  yarp::os::Value("/displayTest")).asString();
+    std::string remote = property.check("remote", yarp::os::Value("/robot/faceDisplay")).asString();
 
     // initialize device
     yarp::os::Property prop;

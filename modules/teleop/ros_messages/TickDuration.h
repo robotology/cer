@@ -90,7 +90,7 @@ public:
   typedef yarp::os::idl::BottleStyle<TickDuration> bottleStyle;
 
   // Give source text for class, ROS will need this
-  yarp::os::ConstString getTypeText() {
+  std::string getTypeText() {
     return "";
   }
 

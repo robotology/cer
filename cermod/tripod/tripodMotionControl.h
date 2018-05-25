@@ -314,10 +314,10 @@ public:
 
     bool refreshEncoders(double *times);
     Semaphore               semaphore;
-    yarp::os::ConstString   deviceDescription;
+    std::string   deviceDescription;
 
     /////////   Axis info INTERFACE   /////////
-    virtual bool getAxisName(int axis, yarp::os::ConstString& name) override;
+    virtual bool getAxisName(int axis, std::string& name) override;
     virtual bool getJointType(int axis, yarp::dev::JointTypeEnum& type) override;
 #if 0
     /////////   PID INTERFACE   /////////
@@ -428,8 +428,8 @@ public:
     ///////////////////////// END MotorEncoder Interface
 
     //////////////////////// BEGIN RemoteVariables Interface
-    virtual bool getRemoteVariableRaw(yarp::os::ConstString key, yarp::os::Bottle& val) override;
-    virtual bool setRemoteVariableRaw(yarp::os::ConstString key, const yarp::os::Bottle& val) override;
+    virtual bool getRemoteVariableRaw(std::string key, yarp::os::Bottle& val) override;
+    virtual bool setRemoteVariableRaw(std::string key, const yarp::os::Bottle& val) override;
     virtual bool getRemoteVariablesListRaw(yarp::os::Bottle* listOfKeys)  override;
     ///////////////////////// END RemoteVariables Interface
 

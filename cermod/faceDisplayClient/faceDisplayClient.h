@@ -56,8 +56,8 @@ class cer::dev::FaceDisplayClient:  public yarp::dev::DeviceDriver,
 protected:
     yarp::os::Port rpcPort;
     yarp::os::BufferedPort<yarp::sig::FlexImage>  imagePort;
-    yarp::os::ConstString local;
-    yarp::os::ConstString remote;
+    std::string local;
+    std::string remote;
     std::string deviceId;
     std::string portName;
     int _rate;
