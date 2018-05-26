@@ -104,8 +104,6 @@ void ControlThread::printStats()
 
 bool ControlThread::threadInit()
 {
-    Time::turboBoost();
-
     Property prop;
     if (!m_rf.check("RGBD_SENSOR_CLIENT"))
     {

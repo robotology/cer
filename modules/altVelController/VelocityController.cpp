@@ -940,8 +940,6 @@ public:
 
     virtual bool configure(yarp::os::ResourceFinder &rf)
     {
-        yarp::os::Time::turboBoost();
-
         mRobotThread = new R1ControlModule();
 
         if (!mRobotThread->start())

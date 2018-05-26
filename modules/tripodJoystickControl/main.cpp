@@ -60,8 +60,6 @@ public:
         string remoteName;
         string localName;
 
-        Time::turboBoost();
-
         // get params from the RF
         ctrlName = rf.check("local", Value("tripodJoystickControl")).asString();
         robotName = rf.check("robot", Value("cer")).asString();

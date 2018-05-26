@@ -53,8 +53,6 @@ public:
 
     virtual bool configure(ResourceFinder &rf)
     {
-        Time::turboBoost();
-
         //set the thread rate
         int rate = rf.check("rate",Value(10)).asInt();
         yInfo("baseCtrl thread rate: %d ms.",rate);
