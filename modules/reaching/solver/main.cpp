@@ -265,7 +265,7 @@ public:
 
         if (Bottle *payLoad=cmd.find("q").asList())
         {
-            int len=std::min(payLoad->size(),(int)q.length());
+            int len=std::min(payLoad->size(),q.length());
             for (int i=0; i<len; i++)
                 q[i]=payLoad->get(i).asDouble();
 
