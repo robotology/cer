@@ -11,6 +11,7 @@
 #ifndef CER_CIRCULAR_BUFFER_H
 #define CER_CIRCULAR_BUFFER_H
 
+#include <iostream>
 
 //----------------------------------------------------------------------------------
 template <class T>

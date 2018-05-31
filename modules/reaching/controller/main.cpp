@@ -248,7 +248,7 @@ public:
         option.put("writeStrict","on");
         if (!drivers[0].open(option))
         {
-            yError("Unable to connect to %s","/"+robot+"/torso_tripod");
+            yError("Unable to connect to %s",string("/"+robot+"/torso_tripod").c_str());
             close();
             return false;
         }
@@ -260,7 +260,7 @@ public:
         option.put("writeStrict","on");
         if (!drivers[1].open(option))
         {
-            yError("Unable to connect to %s","/"+robot+"/torso");
+            yError("Unable to connect to %s",string("/"+robot+"/torso").c_str());
             close();
             return false;
         }
@@ -272,7 +272,7 @@ public:
         option.put("writeStrict","on");
         if (!drivers[2].open(option))
         {
-            yError("Unable to connect to %s","/"+robot+"/"+arm_type+"_arm");
+            yError("Unable to connect to %s",string("/"+robot+"/"+arm_type+"_arm").c_str());
             close();
             return false;
         }
@@ -284,7 +284,7 @@ public:
         option.put("writeStrict","on");
         if (!drivers[3].open(option))
         {
-            yError("Unable to connect to %s","/"+robot+"/"+arm_type+"_wrist_tripod");
+            yError("Unable to connect to %s",string("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
             close();
             return false;
         }

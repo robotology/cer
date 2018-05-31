@@ -63,7 +63,7 @@ public:
     yarp::dev::IEncodersTimed        *iJntEnc;
     yarp::dev::IMotorEncoders        *iMotEnc;
     yarp::dev::IAmplifierControl     *amp;
-    yarp::dev::IControlLimits2       *lim2;
+    yarp::dev::IControlLimits        *lim;
     yarp::dev::IControlCalibration   *calib;
     yarp::dev::IControlCalibration2  *calib2;
     yarp::dev::ITorqueControl        *iTorque;
@@ -190,7 +190,7 @@ class cer::dev::tripodMotionControl:    public DeviceDriver,
                                         public IMultipleWrapper,
                                         public IAxisInfo,
                                         public IControlCalibration2Raw,
-                                        public ImplementControlCalibration2<tripodMotionControl, IControlCalibration2>,
+                                        public ImplementControlCalibration<tripodMotionControl, IControlCalibration2>,
                                         public IEncodersTimedRaw,
                                         public ImplementEncodersTimed,
                                         public IMotorEncodersRaw,
@@ -203,8 +203,8 @@ class cer::dev::tripodMotionControl:    public DeviceDriver,
                                         public ImplementVelocityControl2,
                                         public IControlMode2Raw,
                                         public ImplementControlMode2,
-                                        public IControlLimits2Raw,
-                                        public ImplementControlLimits2,
+                                        public IControlLimitsRaw,
+                                        public ImplementControlLimits,
                                         public IAmplifierControlRaw,
                                         public ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>,
 //                                         public IImpedanceControlRaw,
@@ -379,7 +379,7 @@ public:
 
     // calibration2raw
     virtual bool setCalibrationParametersRaw(int axis, const CalibrationParameters& params) override;
-    virtual bool calibrate2Raw(int axis, unsigned int type, double p1, double p2, double p3) override;
+    virtual bool calibrateRaw(int axis, unsigned int type, double p1, double p2, double p3) override;
     virtual bool doneRaw(int j) override;
 
     // ControlMode
@@ -500,7 +500,7 @@ public:
 
     // PositionDirect Interface
     bool setPositionRaw(int j, double ref) override;
-    bool setPositionsRaw(const int n_joint, const int *joints, double *refs) override;
+    bool setPositionsRaw(const int n_joint, const int *joints, const double *refs) override;
     bool setPositionsRaw(const double *refs) override;
 
     // InteractionMode interface

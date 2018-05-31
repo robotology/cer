@@ -34,7 +34,7 @@ HW_deviceHelper::HW_deviceHelper() : pid(NULL),
                                      iJntEnc(NULL),
                                      iMotEnc(NULL),
                                      amp(NULL),
-                                     lim2(NULL),
+                                     lim(NULL),
                                      calib(NULL),
                                      calib2(NULL),
                                      iTorque(NULL),
@@ -65,7 +65,7 @@ void HW_deviceHelper::detach()
     iJntEnc = NULL;
     iMotEnc = NULL;
     amp = NULL;
-    lim2 = NULL;
+    lim = NULL;
     calib = NULL;
     calib2 = NULL;
     iTorque = NULL;
@@ -98,7 +98,7 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
         subdevice->view(vel);
         subdevice->view(vel2);
         subdevice->view(amp);
-        subdevice->view(lim2);
+        subdevice->view(lim);
         subdevice->view(calib);
         subdevice->view(calib2);
         subdevice->view(info);
@@ -448,7 +448,7 @@ bool tripodMotionControl::dealloc()
 }
 
 tripodMotionControl::tripodMotionControl() :
-    ImplementControlCalibration2<tripodMotionControl, IControlCalibration2>(this),
+    ImplementControlCalibration<tripodMotionControl, IControlCalibration2>(this),
 //     ImplementPidControl(this),
 //     ImplementVelocityControl<tripodMotionControl, IVelocityControl>(this),
     ImplementEncodersTimed(this),
@@ -456,7 +456,7 @@ tripodMotionControl::tripodMotionControl() :
     ImplementVelocityControl2(this),
     ImplementControlMode2(this),
     ImplementMotorEncoders(this),
-    ImplementControlLimits2(this),
+    ImplementControlLimits(this),
     ImplementPositionDirect(this),
     ImplementAmplifierControl<tripodMotionControl,IAmplifierControl>(this),
 //     ImplementOpenLoopControl(this),
@@ -546,7 +546,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
     // data on yarp in meters
 
     //  INIT ALL INTERFACES
-    ImplementControlCalibration2<tripodMotionControl, IControlCalibration2>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+    ImplementControlCalibration<tripodMotionControl, IControlCalibration2>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementEncodersTimed::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementMotorEncoders::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementPositionControl2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
@@ -556,7 +556,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
     ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementVelocityControl2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
 //
-    ImplementControlLimits2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+    ImplementControlLimits::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementPositionDirect::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     double* tmpOnes = new double[_njoints]; for (int i = 0; i < _njoints; i++) { tmpOnes[i] = 1.0; }
     ImplementPWMControl::initialize(_njoints, _axisMap, tmpOnes);
@@ -898,8 +898,8 @@ bool tripodMotionControl::close()
     ImplementVelocityControl2::uninitialize();
 //     ImplementPidControl::uninitialize();
     ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>::uninitialize();
-    ImplementControlCalibration2<tripodMotionControl, IControlCalibration2>::uninitialize();
-    ImplementControlLimits2::uninitialize();
+    ImplementControlCalibration<tripodMotionControl, IControlCalibration2>::uninitialize();
+    ImplementControlLimits::uninitialize();
     ImplementPositionDirect::uninitialize();
 //     ImplementOpenLoopControl::uninitialize();
     ImplementInteractionMode::uninitialize();
@@ -1144,7 +1144,7 @@ bool tripodMotionControl::setCalibrationParametersRaw(int j, const CalibrationPa
     return _device.calib2->setCalibrationParameters(j, params);
 }
 
-bool tripodMotionControl::calibrate2Raw(int j, unsigned int type, double p1, double p2, double p3)
+bool tripodMotionControl::calibrateRaw(int j, unsigned int type, double p1, double p2, double p3)
 {
     return _device.calib2->calibrate2(j, type, p1, p2, p3);
 }
@@ -2055,7 +2055,7 @@ bool tripodMotionControl::setPositionRaw(int j, double ref)
     return _device.posDir->setPositions(_njoints, _axisMap, _robotRef_positions.data());
 }
 
-bool tripodMotionControl::setPositionsRaw(const int n_joint, const int *joints, double *refs)
+bool tripodMotionControl::setPositionsRaw(const int n_joint, const int *joints, const double *refs)
 {
     if(n_joint == 0)
         return true;
