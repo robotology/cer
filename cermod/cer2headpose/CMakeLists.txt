@@ -9,7 +9,6 @@ yarp_prepare_plugin(cer2headpose TYPE Cer2HeadPose
                                  CATEGORY portmonitor)
 
 if(ENABLE_cermod_cer2headpose)
-  include_directories(${YARP_INCLUDE_DIRS})
 
   yarp_install(FILES cer2headpose.ini
                COMPONENT runtime

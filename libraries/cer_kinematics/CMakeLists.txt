@@ -29,8 +29,7 @@ source_group("Source Files" FILES ${sources})
 
 include_directories(${PROJECT_SOURCE_DIR}/include
                     ${IPOPT_INCLUDE_DIRS}
-                    ${ICUB_INCLUDE_DIRS}
-                    ${YARP_INCLUDE_DIRS})
+                    ${ICUB_INCLUDE_DIRS})
 
 add_definitions(${IPOPT_DEFINITIONS} -D_USE_MATH_DEFINES)
 add_library(${PROJECT_NAME} ${headers_private} ${headers} ${sources})

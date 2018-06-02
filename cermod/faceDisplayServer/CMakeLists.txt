@@ -19,7 +19,7 @@ IF (ENABLE_faceDisplayServer)
   endif(NOT OpenCV_FOUND)
 
 
-  include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${YARP_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIR})
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR} ${OPENCV_INCLUDE_DIR})
 
   yarp_add_plugin(faceDisplayServer faceDisplayServer.cpp faceDisplayServer.h)
   TARGET_LINK_LIBRARIES(faceDisplayServer ${YARP_LIBRARIES} ${OpenCV_LIBRARIES})

@@ -19,7 +19,6 @@ get_property(RobotModelLib_INCLUDE_DIRS
              PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
-include_directories(${YARP_INCLUDE_DIRS})
 include_directories(${R1ModelLib_INCLUDE_DIRS})
 include_directories(${RobotModelLib_INCLUDE_DIRS})
 

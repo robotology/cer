@@ -14,7 +14,6 @@ if(ENABLE_cermod_tripodMotionControl)
                  TARGET cer_kinematics
                  PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-                        ${YARP_INCLUDE_DIRS}
                         ${cer_kinematics_INCLUDE_DIRS})
 
     yarp_add_plugin(tripodMotionControl tripodMotionControl.h tripodMotionControl.cpp)

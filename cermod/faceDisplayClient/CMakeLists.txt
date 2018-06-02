@@ -9,7 +9,7 @@ yarp_prepare_plugin(faceDisplayClient
 
  IF (ENABLE_faceDisplayClient)
 
-    INCLUDE_DIRECTORIES(${YARP_INCLUDE_DIRS} ${ACE_INCLUDE_DIRS})
+    INCLUDE_DIRECTORIES(${ACE_INCLUDE_DIRS})
     INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../faceDisplayServer)
 
     yarp_add_plugin(faceDisplayClient faceDisplayClient.cpp faceDisplayClient.h)

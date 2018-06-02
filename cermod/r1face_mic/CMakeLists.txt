@@ -12,8 +12,7 @@ yarp_prepare_plugin(r1face_mic
 
 if(ENABLE_cermod_r1face_mic)
 
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-                        ${YARP_INCLUDE_DIRS})
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     yarp_add_plugin(r1face_mic r1face_mic.h r1face_mic.cpp CircularBuffer.h CircularBuffer.cpp)
 

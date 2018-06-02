@@ -34,7 +34,6 @@ if(GAZEBO_TRIPOD_PLUGIN)
                PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
 
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-                      ${YARP_INCLUDE_DIRS}
                       ${Boost_INCLUDE_DIRS}
                       ${GAZEBO_INCLUDE_DIRS}
                       ${GazeboYarpPlugins_INCLUDE_DIRS}

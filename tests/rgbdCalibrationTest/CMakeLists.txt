@@ -15,7 +15,6 @@ source_group("Source Files" FILES ${folder_source})
 source_group("Header Files" FILES ${folder_header})
 
 include_directories(${GSL_INCLUDE_DIRS}
-                    ${YARP_INCLUDE_DIRS}
                     ${ICUB_INCLUDE_DIRS})
 
 add_executable(${PROJECTNAME} ${folder_source} ${folder_header})

@@ -9,7 +9,6 @@ yarp_prepare_plugin(oculus2cer TYPE Oculus2Cer
                                CATEGORY portmonitor)
 
 if(ENABLE_cermod_oculus2cer)
-  include_directories(${YARP_INCLUDE_DIRS})
 
   yarp_install(FILES oculus2cer.ini
                COMPONENT runtime

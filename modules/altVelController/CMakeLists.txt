@@ -20,8 +20,7 @@ get_property(RobotModelLib_INCLUDE_DIRS
              TARGET RobotModelLib
              PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
 			 
-include_directories(${YARP_INCLUDE_DIRS}
-                    ${SDL_INCLUDE_DIR}
+include_directories(${SDL_INCLUDE_DIR}
                     ${R1ControlLib_INCLUDE_DIRS}
                     ${RobotControlLib_INCLUDE_DIRS}
                     ${R1ModelLib_INCLUDE_DIRS}

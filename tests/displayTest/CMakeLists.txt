@@ -16,7 +16,6 @@ find_package(YARP REQUIRED)
 # add include directories
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${RTF_INCLUDE_DIRS}
-                    ${YARP_INCLUDE_DIRS}
                     ${YARP_HELPERS_INCLUDE_DIR}
                     ${OPENCV_INCLUDE_DIR})
 
