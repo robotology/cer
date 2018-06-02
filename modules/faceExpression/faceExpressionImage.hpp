@@ -8,7 +8,7 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
 
@@ -20,7 +20,7 @@
 #define VOCAB_BLINK             VOCAB4('b','l','i','n')
 #define VOCAB_RESET             VOCAB3('r','s','t')
 
-class BlinkThread : public yarp::os::RateThread
+class BlinkThread : public yarp::os::PeriodicThread
 {
 public:
     BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >  &imagePort);

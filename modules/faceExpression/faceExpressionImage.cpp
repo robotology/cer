@@ -231,7 +231,7 @@ bool FaceExpressionImageModule::updateModule()
 
 
 BlinkThread::BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >  &imagePort):
-                                                RateThread(_period),
+                                                PeriodicThread((double)_period/1000.0),
                                                 port(imagePort),
                                                 barWidth  ( 1),
                                                 eyeWidth  (21),

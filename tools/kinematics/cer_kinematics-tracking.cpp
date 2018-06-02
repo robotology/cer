@@ -33,7 +33,7 @@ using namespace cer::kinematics;
 
 
 /****************************************************************/
-class Target : public RateThread
+class Target : public PeriodicThread
 {
     mutable Mutex mutex;
     Vector c,xd;
@@ -66,7 +66,7 @@ class Target : public RateThread
 
 public:
     /****************************************************************/
-    Target() : RateThread(10), c(7,0.0), xd(7,0.0), f(0.1), R(0.1), cnt(0)
+    Target() : PeriodicThread(0.01), c(7,0.0), xd(7,0.0), f(0.1), R(0.1), cnt(0)
     {
         c[0]=0.35;
         c[4]=1.0;
@@ -78,7 +78,7 @@ public:
     void setOptions(const Property &options)
     {
         if (options.check("Ts"))
-            setRate((int)(1000.0*options.find("Ts").asDouble()));
+            setPeriod(options.find("Ts").asDouble());
 
         if (options.check("f"))
             f=options.find("f").asDouble();

@@ -9,7 +9,7 @@
 #define DISPLAY_TEST_H
 
 #include <yarp/sig/Image.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/BufferedPort.h>
 

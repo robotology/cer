@@ -41,15 +41,15 @@ struct inputData {
 };
 
 
-R1faceMic::R1faceMic(): RateThread(0),
-                            shift(8),
-                            recording(false),
-                            channels(HW_STEREO_CHANNELS),
-                            samplingRate(SAMPLING_RATE),
-                            dev_fd(-1),
-                            chunkSize(CHUNK_SIZE),
-                            deviceFile("/dev/micif_dev"),
-                            rawBuffer(nullptr)
+R1faceMic::R1faceMic(): PeriodicThread(0),
+                        shift(8),
+                        recording(false),
+                        channels(HW_STEREO_CHANNELS),
+                        samplingRate(SAMPLING_RATE),
+                        dev_fd(-1),
+                        chunkSize(CHUNK_SIZE),
+                        deviceFile("/dev/micif_dev"),
+                        rawBuffer(nullptr)
 
 {
     tmpData     = new inputData;

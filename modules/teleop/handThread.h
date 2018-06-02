@@ -1,7 +1,7 @@
 #include <string>
 #include <vector>
 #include <yarp/sig/Matrix.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/Bottle.h>
@@ -15,7 +15,7 @@
 #include "ros_messages/visualization_msgs_MarkerArray.h"
 #include "yarp/os/LockGuard.h"
 
-class HandThread : public yarp::os::RateThread
+class HandThread : public yarp::os::PeriodicThread
 {
 public:
     struct CommandData
@@ -47,7 +47,7 @@ public:
     };
 
     //method
-    HandThread(TeleOp_hand hand) : RateThread(10), arm_type(hand){}
+    HandThread(TeleOp_hand hand) : PeriodicThread(0.01), arm_type(hand){}
     virtual      ~HandThread(){}
 
     yarp::sig::Matrix getMatrix()

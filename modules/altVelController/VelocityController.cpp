@@ -29,7 +29,7 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Thread.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Port.h>
@@ -334,7 +334,7 @@ void R1Driver::setVel(cer::robot_model::Matrix &qdot)
     pVelCtrl[HEAD]->velocityMove(vel);
 }
 
-class R1ControlModule : public yarp::os::RateThread
+class R1ControlModule : public yarp::os::PeriodicThread
 {
 public:
     R1ControlModule();
@@ -392,7 +392,7 @@ protected:
 };
 
 
-R1ControlModule::R1ControlModule() : RateThread(int(PERIOD*1000.0)), qfbk(22) ,mDriver("/cer")
+R1ControlModule::R1ControlModule() : PeriodicThread(PERIOD), qfbk(22) ,mDriver("/cer")
 {
     r1Model = new R1Model();
     r1Ctrl = new R1Controller(r1Model);

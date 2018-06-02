@@ -47,7 +47,7 @@ public:
     robot_status() { left_arm_xyz.resize(3); right_arm_xyz.resize(3); }
 };
 
-class ControlThread : public yarp::os::RateThread
+class ControlThread : public yarp::os::PeriodicThread
 {
 private:
     Property            ctrl_options;

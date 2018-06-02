@@ -10,7 +10,7 @@
 
 #include "CircularBuffer.h"
 #include <yarp/sig/Sound.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/ServiceInterfaces.h>
 #include <yarp/dev/AudioGrabberInterfaces.h>
@@ -43,10 +43,10 @@ struct inputData;
  *
  */
 
-class cer::dev::R1faceMic:      public yarp::os::RateThread,
-                                public yarp::dev::IService,
-                                public yarp::dev::DeviceDriver,
-                                public yarp::dev::IAudioGrabberSound
+class cer::dev::R1faceMic : public yarp::os::PeriodicThread,
+                            public yarp::dev::IService,
+                            public yarp::dev::DeviceDriver,
+                            public yarp::dev::IAudioGrabberSound
 {
 public:
     // Constructor used by yarp factory
