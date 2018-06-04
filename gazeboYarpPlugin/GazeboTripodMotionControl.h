@@ -23,7 +23,7 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/ControlBoardInterfacesImpl.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
-#include <yarp/dev/IControlMode2.h>
+#include <yarp/dev/IControlMode.h>
 #include <yarp/dev/IInteractionMode.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/Time.h>
@@ -76,12 +76,12 @@ namespace gazebo {
 
 class cer::dev::GazeboTripodMotionControl:
     public yarp::dev::DeviceDriver,
-    public yarp::dev::IPositionControl2,
-    public yarp::dev::IVelocityControl2,
+    public yarp::dev::IPositionControl,
+    public yarp::dev::IVelocityControl,
     public yarp::dev::IEncodersTimed,
-    public yarp::dev::IControlLimits2,
+    public yarp::dev::IControlLimits,
     public yarp::dev::IInteractionMode,
-    public yarp::dev::IControlMode2,
+    public yarp::dev::IControlMode,
     public yarp::dev::ITorqueControl,
     public yarp::dev::IPositionDirect,
 //     public yarp::dev::IImpedanceControl,
@@ -147,7 +147,7 @@ public:
     virtual bool checkMotionDone(bool* flag);
     virtual bool setPositionMode();
 
-    // Position Control 2
+    // Position Control
     virtual bool positionMove(const int n_joint, const int* joints, const double* refs);
     virtual bool relativeMove(const int n_joint, const int* joints, const double* deltas);
     virtual bool checkMotionDone(const int n_joint, const int* joints, bool* flags);
@@ -163,8 +163,8 @@ public:
         // IPOSITION DIRECT
     virtual bool setPositionDirectMode();
     virtual bool setPosition(int j, double ref);
-    virtual bool setPositions(const int n_joint, const int *joints, double *refs);
     virtual bool setPositions(const double *refs);
+    virtual bool setPositions(const int n_joint, const int *joints, const double *refs);
 
     /// @arg spds [deg/sec]
     virtual bool setRefSpeeds(const double *spds);

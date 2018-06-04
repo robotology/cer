@@ -555,7 +555,7 @@ bool GazeboTripodMotionControl::setPosition(int j, double ref)
     return false;
 }
 
-bool GazeboTripodMotionControl::setPositions(const int n_joint, const int *joints, double *refs)
+bool GazeboTripodMotionControl::setPositions(const int n_joint, const int *joints, const double *refs)
 {
     for (int i = 0; i < n_joint; i++)
     {
