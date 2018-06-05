@@ -368,8 +368,8 @@ void BlinkThread::run()
         yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
         if(doTalk)
         {
-            Mat face_=updateTalk();
-            img.setExternal(face_.data, faceWidth, faceHeight);
+            updateTalk();
+            img.setExternal(faceMouth.data, faceWidth, faceHeight);
         }
         else
         {
@@ -416,19 +416,18 @@ bool BlinkThread::updateBlink(int index)
     return true;
 }
 
-Mat BlinkThread::updateTalk()
+void BlinkThread::updateTalk()
 {
-    Mat face_=face.clone();
+    face.copyTo(faceMouth);
     int pixels=faceHeight>>1;
     int y=faceHeight-2;
     for (int x=(faceWidth-pixels)>>1; x<(faceWidth+pixels)>>1; x++)
     {
         int y_=y+round(Rand::scalar(-1,1));
-        face_.at<cv::Vec3b>(y_,x)[0]=0;
-        face_.at<cv::Vec3b>(y_,x)[1]=255;
-        face_.at<cv::Vec3b>(y_,x)[2]=0;
+        faceMouth.at<cv::Vec3b>(y_,x)[0]=0;
+        faceMouth.at<cv::Vec3b>(y_,x)[1]=255;
+        faceMouth.at<cv::Vec3b>(y_,x)[2]=0;
     }
-    return face_;
 }
 
 void BlinkThread::threadRelease()

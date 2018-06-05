@@ -27,6 +27,7 @@ public:
 
     cv::Mat                 face;
     cv::Mat                 faceRest;
+    cv::Mat                 faceMouth;
     cv::Mat                 noseBar;
     cv::Mat                 blinkBar;
     cv::Mat                 blackBar;
@@ -67,7 +68,7 @@ public:
 
     bool updateBars(float percentage);
     bool updateBlink(int index);
-    cv::Mat updateTalk();
+    void updateTalk();
 
     bool doBlink;
     bool doBars;
