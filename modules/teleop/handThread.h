@@ -12,8 +12,8 @@
 #include <yarp/os/Searchable.h>
 #include <yarp/os/Mutex.h>
 #include <yarp/os/Publisher.h>
-#include "ros_messages/visualization_msgs_MarkerArray.h"
-#include "yarp/os/LockGuard.h"
+#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
+#include <yarp/os/LockGuard.h>
 
 class HandThread : public yarp::os::PeriodicThread
 {
@@ -101,7 +101,7 @@ private:
     typedef yarp::dev::IControlMode2                             IControlMode2;
     typedef yarp::dev::IEncoders                                 IEncoders;
     typedef yarp::dev::PolyDriver                                PolyDriver;
-    typedef yarp::os::Publisher<visualization_msgs_MarkerArray>  MarkerArrayPort;
+    typedef yarp::os::Publisher<yarp::rosmsg::visualization_msgs::MarkerArray>  MarkerArrayPort;
     typedef std::vector<ctrlRange>                               vecCtrlRanges;
     typedef yarp::sig::Matrix                                    Matrix;
 

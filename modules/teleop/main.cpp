@@ -20,7 +20,7 @@
 #include <yarp/dev/IJoypadController.h>
 #include "ParamParser.h"
 #include "handThread.h"
-#include "ros_messages/visualization_msgs_Marker.h"
+#include <yarp/rosmsg/visualization_msgs/Marker.h>
 
 using namespace std;
 using namespace yarp::os;

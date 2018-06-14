@@ -170,8 +170,8 @@ void HandThread::updateRVIZ(const Vector &xd, const Vector &od)
         sec_part = 0;
     }
 
-    visualization_msgs_MarkerArray& markerarray = rosPublisherPort.prepare();
-    visualization_msgs_Marker       marker;
+    yarp::rosmsg::visualization_msgs::MarkerArray& markerarray = rosPublisherPort.prepare();
+    yarp::rosmsg::visualization_msgs::Marker       marker;
 
     markerarray.markers.clear();
 
@@ -179,8 +179,8 @@ void HandThread::updateRVIZ(const Vector &xd, const Vector &od)
     marker.header.stamp.sec  = (yarp::os::NetUint32)sec_part;
     marker.header.stamp.nsec = (yarp::os::NetUint32)nsec_part;
     marker.ns                = "cer-teleop_namespace";
-    marker.type              = visualization_msgs_Marker::CYLINDER;
-    marker.action            = visualization_msgs_Marker::ADD;
+    marker.type              = yarp::rosmsg::visualization_msgs::Marker::CYLINDER;
+    marker.action            = yarp::rosmsg::visualization_msgs::Marker::ADD;
 
     //center
     Quaternion q;

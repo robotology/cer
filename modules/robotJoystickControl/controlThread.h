@@ -26,12 +26,13 @@
 #include <iCub/ctrl/pids.h>
 #include <string>
 #include <math.h>
-#include "ros_messages/visualization_msgs_Marker.h"
-#include "ros_messages/visualization_msgs_MarkerArray.h"
+#include <yarp/rosmsg/visualization_msgs/Marker.h>
+#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::rosmsg;
 
 #define MAX_LINEAR_VEL  0.4  // maximum linear  velocity (m/s)
 #define MAX_ANGULAR_VEL 24.0 // maximum angular velocity (deg/s)
@@ -64,7 +65,7 @@ protected:
     PolyDriver                *driver_left_hand;
     PolyDriver                *driver_right_hand;
 
-    Publisher<visualization_msgs_MarkerArray> rosPublisherPort;
+    Publisher<visualization_msgs::MarkerArray> rosPublisherPort;
     Node *rosNode;
 
     BufferedPort<Bottle>      port_joystick_control;

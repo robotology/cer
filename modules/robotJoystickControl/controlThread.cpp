@@ -26,6 +26,7 @@
 
 using namespace yarp::sig;
 using namespace yarp::math;
+using namespace yarp::rosmsg;
 
 void ControlThread::updateRVIZ(const Vector &xd, const Vector &od)
 {
@@ -43,15 +44,15 @@ void ControlThread::updateRVIZ(const Vector &xd, const Vector &od)
         sec_part = 0;
     }
 
-    visualization_msgs_MarkerArray& markerarray = rosPublisherPort.prepare();
+    visualization_msgs::MarkerArray& markerarray = rosPublisherPort.prepare();
     markerarray.markers.clear();
-    visualization_msgs_Marker marker;
+    visualization_msgs::Marker marker;
     marker.header.frame_id = "mobile_base_body_link";
     marker.header.stamp.sec = (yarp::os::NetUint32) sec_part;
     marker.header.stamp.nsec = (yarp::os::NetUint32) nsec_part;
     marker.ns = "cer-teleop_namespace";
-    marker.type = visualization_msgs_Marker::SPHERE;
-    marker.action = visualization_msgs_Marker::ADD;
+    marker.type = visualization_msgs::Marker::SPHERE;
+    marker.action = visualization_msgs::Marker::ADD;
 
     //center
     Quaternion q;
