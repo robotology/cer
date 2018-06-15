@@ -105,21 +105,31 @@ bool GazeboTripodMotionControl::getEncoderSpeed(int j, double* sp)
 
 bool GazeboTripodMotionControl::getEncoderSpeeds(double* spds)
 {
-//     return NOT_YET_IMPLEMENTED("getEncoderSpeeds");
-    return false;
+    if(nullptr == spds) return false;
+
+    for(int i=0; i< m_numberOfJoints; i++)
+        spds[i] = std::nan("");
+    return true;
 }
 
 
-bool GazeboTripodMotionControl::getEncoderAcceleration(int j, double* spds)
+bool GazeboTripodMotionControl::getEncoderAcceleration(int j, double* acc)
 {
-//     return NOT_YET_IMPLEMENTED("getEncoderAcceleration");
+    if (acc && j >= 0 && j < (int)m_numberOfJoints) {
+        *acc = std::nan("");
+        return true;
+    }
     return false;
 }
 
 bool GazeboTripodMotionControl::getEncoderAccelerations(double* accs)
 {
-//     return NOT_YET_IMPLEMENTED("getEncoderAccelerations");
-    return false;
+    if(nullptr == accs) return false;
+
+    for(int i=0; i< m_numberOfJoints; i++)
+        accs[i] = std::nan("");
+    
+    return true;
 }
 
 
