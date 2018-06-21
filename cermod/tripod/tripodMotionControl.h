@@ -29,7 +29,7 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/ControlBoardInterfacesImpl.h>
-#include <yarp/dev/ControlBoardInterfacesImpl.inl>
+#include <yarp/dev/ControlBoardInterfacesImpl-inl.h>
 
 #include <cer_kinematics/tripod.h>
 
