@@ -2,15 +2,14 @@
 # Author: Ugo Pattacini
 # email:  ugo.pattacini@iit.it
 
-cmake_minimum_required(VERSION 2.8.9)
+cmake_minimum_required(VERSION 3.5)
 project(cer_kinematics-tools)
 
 get_property(cer_kinematics_INCLUDE_DIRS
              TARGET cer_kinematics
              PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
 
-include_directories(${ICUB_INCLUDE_DIRS}
-                    ${cer_kinematics_INCLUDE_DIRS})
+include_directories(${cer_kinematics_INCLUDE_DIRS})
 
 add_definitions(-D_USE_MATH_DEFINES)
 add_executable(cer_kinematics-tripod    cer_kinematics-tripod.cpp)

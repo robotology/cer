@@ -20,8 +20,8 @@ get_property(RobotModelLib_INCLUDE_DIRS
              PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
 			 
 include_directories(${ICUB_INCLUDE_DIRS}
-				          	${R1ModelLib_INCLUDE_DIRS}
-					          ${RobotModelLib_INCLUDE_DIRS}
+				    ${R1ModelLib_INCLUDE_DIRS}
+					${RobotModelLib_INCLUDE_DIRS}
                     ${SelfCollisionLib_INCLUDE_DIRS})
 
 file(GLOB folder_source *.cpp)
