@@ -5,12 +5,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(cer_kinematics-tools)
 
-get_property(cer_kinematics_INCLUDE_DIRS
-             TARGET cer_kinematics
-             PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
-
-include_directories(${cer_kinematics_INCLUDE_DIRS})
-
 add_definitions(-D_USE_MATH_DEFINES)
 add_executable(cer_kinematics-tripod    cer_kinematics-tripod.cpp)
 add_executable(cer_kinematics-forward   cer_kinematics-forward.cpp)

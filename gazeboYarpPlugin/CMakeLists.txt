@@ -29,15 +29,10 @@ if(GAZEBO_TRIPOD_PLUGIN)
   set(gazeboTripod_headers    GazeboYarpTripod.h
                               GazeboTripodMotionControl.h )
 
-  get_property(cer_kinematics_INCLUDE_DIRS
-               TARGET cer_kinematics
-               PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
-
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                       ${Boost_INCLUDE_DIRS}
                       ${GAZEBO_INCLUDE_DIRS}
                       ${GazeboYarpPlugins_INCLUDE_DIRS}
-                      ${cer_kinematics_INCLUDE_DIRS}
                       ${CMAKE_CURRENT_SOURCE_DIR}/../cermod/tripod)
 
   link_directories(${GAZEBO_LIBRARY_DIRS})

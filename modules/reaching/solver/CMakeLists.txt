@@ -4,11 +4,6 @@
 
 project(cer_reaching-solver)
 
-get_property(cer_kinematics_INCLUDE_DIRS
-             TARGET cer_kinematics
-             PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
-
-include_directories(${cer_kinematics_INCLUDE_DIRS})
 add_definitions(-D_USE_MATH_DEFINES)
 add_executable(${PROJECT_NAME} main.cpp)
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} cer_kinematics)

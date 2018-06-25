@@ -27,11 +27,12 @@ set(sources         src/helpers.cpp
 source_group("Header Files" FILES ${headers_private} ${headers})
 source_group("Source Files" FILES ${sources})
 
-include_directories(${PROJECT_SOURCE_DIR}/include
-                    ${IPOPT_INCLUDE_DIRS})
-
 add_definitions(${IPOPT_DEFINITIONS} -D_USE_MATH_DEFINES)
 add_library(${PROJECT_NAME} ${headers_private} ${headers} ${sources})
+
+target_include_directories(${PROJECT_NAME} PUBLIC  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+                                                   "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>"
+                                           PRIVATE ${IPOPT_INCLUDE_DIRS})
 
 set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${IPOPT_LINK_FLAGS}")
 target_link_libraries(${PROJECT_NAME} ctrlLib iKin ${YARP_LIBRARIES} ${IPOPT_LIBRARIES})
@@ -41,7 +42,3 @@ yarp_install(TARGETS ${PROJECT_NAME}
              COMPONENT Runtime
              LIBRARY DESTINATION  ${CMAKE_INSTALL_LIBDIR}
              ARCHIVE DESTINATION  ${CMAKE_INSTALL_LIBDIR})
-
-set_property(TARGET ${PROJECT_NAME}
-             PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include
-                                                          ${ICUB_INCLUDE_DIRS})
