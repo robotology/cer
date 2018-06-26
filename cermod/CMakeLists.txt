@@ -1,5 +1,3 @@
-include(YarpPlugin)
-
 #########################################
 # Prepare plugin library cermod
 #########################################
