@@ -13,12 +13,12 @@
 #include <yarp/os/ResourceFinder.h>
 
 
-#define VOCAB_AUDIO_START       VOCAB4('a','s','t','a')
-#define VOCAB_AUDIO_STOP        VOCAB4('a','s','t','o')
-#define VOCAB_TALK_START        VOCAB4('t','s','t','a')
-#define VOCAB_TALK_STOP         VOCAB4('t','s','t','o')
-#define VOCAB_BLINK             VOCAB4('b','l','i','n')
-#define VOCAB_RESET             VOCAB3('r','s','t')
+#define VOCAB_AUDIO_START       yarp::os::createVocab('a','s','t','a')
+#define VOCAB_AUDIO_STOP        yarp::os::createVocab('a','s','t','o')
+#define VOCAB_TALK_START        yarp::os::createVocab('t','s','t','a')
+#define VOCAB_TALK_STOP         yarp::os::createVocab('t','s','t','o')
+#define VOCAB_BLINK             yarp::os::createVocab('b','l','i','n')
+#define VOCAB_RESET             yarp::os::createVocab('r','s','t')
 
 class BlinkThread : public yarp::os::PeriodicThread
 {
