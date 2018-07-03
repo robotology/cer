@@ -6,14 +6,14 @@ option(GAZEBO_TRIPOD_PLUGIN "Compile Gazebo Yarp Plugin to control the tripod de
 
 if(GAZEBO_TRIPOD_PLUGIN)
   find_package(Gazebo)
-  find_package(GazeboYarpPlugins)
+  find_package(GazeboYARPPlugins)
 
   if(NOT Gazebo_FOUND)
     message(SEND_ERROR "Gazebo was not found therefore Gazebo plugins cannot be compiled.")
     return()
   endif()
 
-  if(NOT GazeboYarpPlugins_FOUND)
+  if(NOT GazeboYARPPlugins_FOUND)
     message(SEND_ERROR "Gazebo YARP Plugins was not found therefore Gazebo plugins cannot be compiled.")
     return()
   endif()
@@ -32,14 +32,13 @@ if(GAZEBO_TRIPOD_PLUGIN)
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                       ${Boost_INCLUDE_DIRS}
                       ${GAZEBO_INCLUDE_DIRS}
-                      ${GazeboYarpPlugins_INCLUDE_DIRS}
                       ${CMAKE_CURRENT_SOURCE_DIR}/../cermod/tripod)
 
   link_directories(${GAZEBO_LIBRARY_DIRS})
   add_definitions(-D_USE_MATH_DEFINES)
   add_library(gazeboTripod ${gazeboTripod_source} ${gazeboTripod_headers})
 
-  target_link_libraries(gazeboTripod GazeboYarpPlugins::singleton
+  target_link_libraries(gazeboTripod GazeboYARPPlugins::gazebo_yarp_singleton
                                      cer_kinematics
                                      ${YARP_LIBRARIES}
                                      ${GAZEBO_LIBRARIES}
