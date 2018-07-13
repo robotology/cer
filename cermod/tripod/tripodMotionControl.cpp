@@ -448,9 +448,9 @@ bool tripodMotionControl::dealloc()
 }
 
 tripodMotionControl::tripodMotionControl() :
-    ImplementControlCalibration<tripodMotionControl, IControlCalibration2>(this),
+    ImplementControlCalibration(this),
 //     ImplementPidControl(this),
-//     ImplementVelocityControl<tripodMotionControl, IVelocityControl>(this),
+//     ImplementVelocityControl(this),
     ImplementEncodersTimed(this),
     ImplementPositionControl2(this),
     ImplementVelocityControl2(this),
@@ -546,7 +546,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
     // data on yarp in meters
 
     //  INIT ALL INTERFACES
-    ImplementControlCalibration<tripodMotionControl, IControlCalibration2>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+    ImplementControlCalibration::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementEncodersTimed::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementMotorEncoders::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementPositionControl2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
@@ -894,11 +894,11 @@ bool tripodMotionControl::close()
     ImplementEncodersTimed::uninitialize();
     ImplementMotorEncoders::uninitialize();
     ImplementPositionControl2::uninitialize();
-//     ImplementVelocityControl<tripodMotionControl, IVelocityControl>::uninitialize();
+//     ImplementVelocityControl::uninitialize();
     ImplementVelocityControl2::uninitialize();
 //     ImplementPidControl::uninitialize();
     ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>::uninitialize();
-    ImplementControlCalibration<tripodMotionControl, IControlCalibration2>::uninitialize();
+    ImplementControlCalibration::uninitialize();
     ImplementControlLimits::uninitialize();
     ImplementPositionDirect::uninitialize();
 //     ImplementOpenLoopControl::uninitialize();
@@ -1144,14 +1144,14 @@ bool tripodMotionControl::setCalibrationParametersRaw(int j, const CalibrationPa
     return _device.calib2->setCalibrationParameters(j, params);
 }
 
-bool tripodMotionControl::calibrateRaw(int j, unsigned int type, double p1, double p2, double p3)
+bool tripodMotionControl::calibrateAxisWithParamsRaw(int j, unsigned int type, double p1, double p2, double p3)
 {
-    return _device.calib2->calibrate2(j, type, p1, p2, p3);
+    return _device.calib2->calibrateAxisWithParams(j, type, p1, p2, p3);
 }
 
-bool tripodMotionControl::doneRaw(int axis)
+bool tripodMotionControl::calibrationDoneRaw(int axis)
 {
-    return _device.calib2->done(axis);
+    return _device.calib2->calibrationDone(axis);
 }
 
 ////////////////////////////////////////

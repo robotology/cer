@@ -190,7 +190,7 @@ class cer::dev::tripodMotionControl:    public DeviceDriver,
                                         public IMultipleWrapper,
                                         public IAxisInfo,
                                         public IControlCalibration2Raw,
-                                        public ImplementControlCalibration<tripodMotionControl, IControlCalibration2>,
+                                        public ImplementControlCalibration,
                                         public IEncodersTimedRaw,
                                         public ImplementEncodersTimed,
                                         public IMotorEncodersRaw,
@@ -379,8 +379,8 @@ public:
 
     // calibration2raw
     virtual bool setCalibrationParametersRaw(int axis, const CalibrationParameters& params) override;
-    virtual bool calibrateRaw(int axis, unsigned int type, double p1, double p2, double p3) override;
-    virtual bool doneRaw(int j) override;
+    virtual bool calibrateAxisWithParamsRaw(int axis, unsigned int type, double p1, double p2, double p3) override;
+    virtual bool calibrationDoneRaw(int j) override;
 
     // ControlMode
     virtual bool getControlModeRaw(int j, int *v) override;
