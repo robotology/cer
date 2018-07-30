@@ -76,7 +76,7 @@ class Controller : public RFModule
     vector<int> curMode;
 
     map<string,HeadSolver> solver;
-    map<string,Matrix> intrinsincs;
+    map<string,Matrix> intrinsics;
     minJerkTrajGen* gen;
     
     BufferedPort<Property> statePort;
@@ -123,7 +123,7 @@ class Controller : public RFModule
                     K(1,2)=group.find("cy").asDouble();
                     
                     yInfo("%s",K.toString(3,3).c_str());
-                    intrinsincs[camera]=pinv(K.transposed()).transposed(); 
+                    intrinsics[camera]=pinv(K.transposed()).transposed(); 
                     ok=true;
                 }
             }
@@ -607,7 +607,7 @@ public:
             string image=request.check("image",Value("left")).asString();
             if (avFrames.find(image)==avFrames.end())
                 yError("Unrecognized image type \"%s\"!",image.c_str());
-            else if (intrinsincs.find(image)==intrinsincs.end())
+            else if (intrinsics.find(image)==intrinsics.end())
                 yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
             else 
             {                    
@@ -626,7 +626,7 @@ public:
                     solver[image].fkin(q,Hee);
                     mutex.unlock();
 
-                    Vector xc=intrinsincs[image]*p;
+                    Vector xc=intrinsics[image]*p;
                     xc[3]=1.0;
 
                     xd=Hee*xc;
