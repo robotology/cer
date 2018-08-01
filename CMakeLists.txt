@@ -6,7 +6,9 @@
 # A test executable called "cermoddev" will also be produced.
 
 cmake_minimum_required(VERSION 3.5)
-project(cer)
+project(CER LANGUAGES CXX C VERSION 1.0.0)
+
+set(VARS_PREFIX "CER")
 
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 11)
@@ -38,8 +40,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
-set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "cer is always built with dynamic plugins")
-yarp_configure_external_installation(cer WITH_PLUGINS)
+set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "${PROJECT_NAME} is always built with dynamic plugins")
+yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
 
 include(AddInstallRPATHSupport)
 
@@ -68,4 +70,13 @@ if(CER_COMPILE_TESTS)
   add_subdirectory(tests)
 endif()
 
+include(InstallBasicPackageFiles)
+install_basic_package_files(${PROJECT_NAME} VARS_PREFIX ${VARS_PREFIX}
+                                            VERSION ${${VARS_PREFIX}_VERSION}
+                                            COMPATIBILITY AnyNewerVersion
+                                            TARGETS_PROPERTY ${VARS_PREFIX}_TARGETS
+                                            DEPENDENCIES "YARP 3.1 REQUIRED COMPONENTS OS sig dev math rosmsg"
+                                            NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+
+include(AddUninstallTarget)
 
