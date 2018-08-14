@@ -29,7 +29,6 @@
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/ControlBoardInterfacesImpl.h>
-#include <yarp/dev/ControlBoardInterfacesImpl-inl.h>
 
 #include <cer_kinematics/tripod.h>
 
@@ -57,20 +56,17 @@ public:
 
     yarp::dev::IPidControl           *pid;
     yarp::dev::IPositionControl      *pos;
-    yarp::dev::IPositionControl2     *pos2;
     yarp::dev::IVelocityControl      *vel;
-    yarp::dev::IVelocityControl2     *vel2;
     yarp::dev::IEncodersTimed        *iJntEnc;
     yarp::dev::IMotorEncoders        *iMotEnc;
     yarp::dev::IAmplifierControl     *amp;
     yarp::dev::IControlLimits        *lim;
     yarp::dev::IControlCalibration   *calib;
-    yarp::dev::IControlCalibration2  *calib2;
+    yarp::dev::IControlCalibration   *calib2;
     yarp::dev::ITorqueControl        *iTorque;
     yarp::dev::IImpedanceControl     *iImpedance;
     yarp::dev::IPWMControl           *iPWM;
     yarp::dev::IControlMode          *iMode;
-    yarp::dev::IControlMode2         *iMode2;
     yarp::dev::IAxisInfo             *info;
     yarp::dev::IPositionDirect       *posDir;
     yarp::dev::IInteractionMode      *iInteract;
@@ -206,11 +202,11 @@ class cer::dev::tripodMotionControl:    public DeviceDriver,
                                         public IControlLimitsRaw,
                                         public ImplementControlLimits,
                                         public IAmplifierControlRaw,
-                                        public ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>,
+                                        public ImplementAmplifierControl,
 //                                         public IImpedanceControlRaw,
 //                                         public IPidControlRaw,
 //                                         public ImplementPidControl,
-//                                         public ImplementVelocityControl<tripodMotionControl, IVelocityControl>,
+//                                         public ImplementVelocityControl,
                                         public IPositionDirectRaw,
                                         public ImplementPositionDirect,
                                         public IInteractionModeRaw,

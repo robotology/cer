@@ -28,9 +28,7 @@ using namespace yarp::math;
 
 HW_deviceHelper::HW_deviceHelper() : pid(NULL),
                                      pos(NULL),
-                                     pos2(NULL),
                                      vel(NULL),
-                                     vel2(NULL),
                                      iJntEnc(NULL),
                                      iMotEnc(NULL),
                                      amp(NULL),
@@ -41,7 +39,6 @@ HW_deviceHelper::HW_deviceHelper() : pid(NULL),
                                      iImpedance(NULL),
                                      iPWM(NULL),
                                      iMode(NULL),
-                                     iMode2(NULL),
                                      info(NULL),
                                      posDir(NULL),
                                      iInteract(NULL),
@@ -59,9 +56,7 @@ void HW_deviceHelper::detach()
     configured = false;
     pid = NULL;
     pos = NULL;
-    pos2 = NULL;
     vel = NULL;
-    vel2 = NULL;
     iJntEnc = NULL;
     iMotEnc = NULL;
     amp = NULL;
@@ -72,7 +67,6 @@ void HW_deviceHelper::detach()
     iImpedance = NULL;
     iPWM = NULL;
     iMode = NULL;
-    iMode2 = NULL;
     info = NULL;
     posDir = NULL;
     iInteract = NULL;
@@ -93,10 +87,8 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
     {
         subdevice->view(pid);
         subdevice->view(pos);
-        subdevice->view(pos2);
         subdevice->view(posDir);
         subdevice->view(vel);
-        subdevice->view(vel2);
         subdevice->view(amp);
         subdevice->view(lim);
         subdevice->view(calib);
@@ -105,7 +97,6 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
         subdevice->view(iTorque);
         subdevice->view(iImpedance);
         subdevice->view(iMode);
-        subdevice->view(iMode2);
         subdevice->view(iPWM);
         subdevice->view(iJntEnc);
         subdevice->view(iMotEnc);
@@ -119,7 +110,7 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
         return false;
     }
 
-    if ( ((iMode==0) || (iMode2==0)) && (_subDevVerbose ))
+    if ((iMode==0) && (_subDevVerbose ))
         yWarning() << "tripodMotionControl:  Warning iMode not valid interface";
 
     if ((iTorque==0) && (_subDevVerbose))
@@ -146,7 +137,7 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
     int deviceJoints=0;
 
     // checking minimum set of intefaces required
-    if( ! (pos || pos2) ) // One of the 2 is enough, therefore if both are missing I raise an error
+    if( !pos) // One of the 2 is enough, therefore if both are missing I raise an error
     {
         yError("tripodMotionControl: neither IPositionControl nor IPositionControl2 interface was not found in the attached subdevice. Quitting");
         return false;
@@ -162,8 +153,6 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
     int tmp;
     if(pos)
         pos->getAxes(&tmp);
-    if(pos2)
-        pos2->getAxes(&tmp);
 
     yarp::sig::Vector tmp_encs; tmp_encs.resize(tmp);
     // TODO: if it takes too many cycles to get valid encoder values, warn the user
@@ -458,7 +447,7 @@ tripodMotionControl::tripodMotionControl() :
     ImplementMotorEncoders(this),
     ImplementControlLimits(this),
     ImplementPositionDirect(this),
-    ImplementAmplifierControl<tripodMotionControl,IAmplifierControl>(this),
+    ImplementAmplifierControl(this),
 //     ImplementOpenLoopControl(this),
     ImplementInteractionMode(this),
     ImplementRemoteVariables(this),
@@ -552,8 +541,8 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
     ImplementPositionControl2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
 //     ImplementPidControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementControlMode2::initialize(_njoints, _axisMap);
-//     ImplementVelocityControl<tripodMotionControl, IVelocityControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
-    ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+//     ImplementVelocityControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+    ImplementAmplifierControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementVelocityControl2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
 //
     ImplementControlLimits::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
@@ -897,7 +886,7 @@ bool tripodMotionControl::close()
 //     ImplementVelocityControl::uninitialize();
     ImplementVelocityControl2::uninitialize();
 //     ImplementPidControl::uninitialize();
-    ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>::uninitialize();
+    ImplementAmplifierControl::uninitialize();
     ImplementControlCalibration::uninitialize();
     ImplementControlLimits::uninitialize();
     ImplementPositionDirect::uninitialize();
@@ -907,7 +896,6 @@ bool tripodMotionControl::close()
     dealloc();
     return true;
 }
-
 
 bool tripodMotionControl::getAxisName(int axis, std::string& name)
 {
@@ -1188,10 +1176,10 @@ bool tripodMotionControl::positionMoveRaw(int j, double ref)
         compute_speeds(_robotRef_positions, _lastRobot_encoders);
         // all joints may need to move in order to achieve the new requested position
         // even if only one user virtual joint has got new reference.
-        ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+        ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
     }
 
-    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1225,8 +1213,8 @@ bool tripodMotionControl::positionMoveRaw(const double *refs)
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference.
-    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
-    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+    ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1262,8 +1250,8 @@ bool tripodMotionControl::relativeMoveRaw(int j, double delta)
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference.
-    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
-    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+    ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1300,8 +1288,8 @@ bool tripodMotionControl::relativeMoveRaw(const double *deltas)
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference.
-    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
-    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+    ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1393,7 +1381,7 @@ bool tripodMotionControl::getRefAccelerationRaw(int j, double *acc)
 
 bool tripodMotionControl::getRefAccelerationsRaw(double *accs)
 {
-    return _device.pos2->getRefAccelerations(_njoints, _axisMap, accs);
+    return _device.pos->getRefAccelerations(_njoints, _axisMap, accs);
 }
 
 bool tripodMotionControl::stopRaw(int j)
@@ -1471,8 +1459,8 @@ bool tripodMotionControl::positionMoveRaw(const int n_joint, const int *joints, 
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference.
-    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
-    ret &= _device.pos2->positionMove(_njoints, _axisMap, _robotRef_positions.data());
+    ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap, _robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1516,8 +1504,8 @@ bool tripodMotionControl::relativeMoveRaw(const int n_joint, const int *joints, 
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference.
-    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
-    ret &= _device.pos2->positionMove(_njoints, _axisMap, _robotRef_positions.data());
+    ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap, _robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1525,7 +1513,7 @@ bool tripodMotionControl::relativeMoveRaw(const int n_joint, const int *joints, 
 
 bool tripodMotionControl::checkMotionDoneRaw(const int n_joint, const int *joints, bool *flag)
 {
-    return _device.pos2->checkMotionDone(n_joint, joints, flag);
+    return _device.pos->checkMotionDone(n_joint, joints, flag);
 }
 
 bool tripodMotionControl::setRefSpeedsRaw(const int n_joint, const int *joints, const double *spds)
@@ -1553,19 +1541,19 @@ bool tripodMotionControl::getRefSpeedsRaw(const int n_joint, const int *joints, 
 
 bool tripodMotionControl::getRefAccelerationsRaw(const int n_joint, const int *joints, double *accs)
 {
-    return _device.pos2->getRefAccelerations(n_joint, joints, accs);
+    return _device.pos->getRefAccelerations(n_joint, joints, accs);
 }
 
 bool tripodMotionControl::stopRaw(const int n_joint, const int *joints)
 {
-    return _device.pos2->stop(n_joint, joints);
+    return _device.pos->stop(n_joint, joints);
 }
 ///////////// END Position Control INTERFACE  //////////////////
 
 // ControlMode
 bool tripodMotionControl::getControlModeRaw(int j, int *v)
 {
-    return _device.iMode2->getControlMode(j,v);
+    return _device.iMode->getControlMode(j,v);
 }
 
 // IControl Mode 2
@@ -1573,24 +1561,24 @@ bool tripodMotionControl::getControlModesRaw(int* v)
 {
     bool ret = true;
     for(int i=0; i<_njoints; i++)
-        ret &= _device.iMode2->getControlMode(i, &v[i]);
+        ret &= _device.iMode->getControlMode(i, &v[i]);
     return ret;
 }
 
 bool tripodMotionControl::getControlModesRaw(const int n_joint, const int *joints, int *modes)
 {
-    return _device.iMode2->getControlModes(n_joint, joints, modes);
+    return _device.iMode->getControlModes(n_joint, joints, modes);
 }
 
 bool tripodMotionControl::setControlModeRaw(const int j, const int mode)
 {
     int m;
     bool ret = true;
-    _device.iMode2->getControlMode(j, &m);
+    _device.iMode->getControlMode(j, &m);
     if(m != mode)
     {
         refreshPositionTargets(mode);
-        ret = _device.iMode2->setControlMode(j, mode);
+        ret = _device.iMode->setControlMode(j, mode);
     }
     return ret;
 }
@@ -1601,11 +1589,11 @@ bool tripodMotionControl::setControlModesRaw(const int n_joint, const int *joint
     // modes is not supported
     int m;
     bool ret = true;
-    _device.iMode2->getControlMode(0, &m);
+    _device.iMode->getControlMode(0, &m);
     if(m != modes[0])
     {
         refreshPositionTargets(modes[0]);
-        ret = _device.iMode2->setControlModes(n_joint, joints, modes);
+        ret = _device.iMode->setControlModes(n_joint, joints, modes);
     }
     return ret;
 }
@@ -1616,11 +1604,11 @@ bool tripodMotionControl::setControlModesRaw(int *modes)
     // modes is not supported
     int m;
     bool ret = true;
-    _device.iMode2->getControlMode(0, &m);
+    _device.iMode->getControlMode(0, &m);
     if(m != modes[0])
     {
         refreshPositionTargets(modes[0]);
-        ret = _device.iMode2->setControlModes(_njoints, _axisMap, modes);
+        ret = _device.iMode->setControlModes(_njoints, _axisMap, modes);
     }
     return ret;
 }
