@@ -14,7 +14,6 @@
 
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
-#include <gazebo/math/Angle.hh>
 
 #include <yarp/os/LogStream.h>
 #include <yarp/sig/Vector.h>
@@ -197,7 +196,11 @@ bool GazeboTripodMotionControl::close()
     std::cout << "Closing device " << deviceName  << std::endl;
     //unbinding events
     if (this->m_updateConnection.get()) {
+#if (GAZEBO_MAJOR_VERSION >= 9)
+        this->m_updateConnection.reset();
+#else
         gazebo::event::Events::DisconnectWorldUpdateBegin (this->m_updateConnection);
+#endif
         this->m_updateConnection = gazebo::event::ConnectionPtr();
     }
 
@@ -216,7 +219,11 @@ bool GazeboTripodMotionControl::gazebo_init()
     assert(m_robot);
     if (!m_robot) return false;
 
+#if (GAZEBO_MAJOR_VERSION >= 9)
+     this->m_robotRefreshPeriod = (unsigned)(this->m_robot->GetWorld()->Physics()->GetUpdatePeriod() * 1000.0);
+#else
     this->m_robotRefreshPeriod = (unsigned)(this->m_robot->GetWorld()->GetPhysicsEngine()->GetUpdatePeriod() * 1000.0);
+#endif
     if (!setJointNames()) return false;
 
     m_numberOfJoints = m_jointNames.size();
@@ -300,7 +307,11 @@ bool GazeboTripodMotionControl::gazebo_init()
     gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboTripodMotionControl::onUpdate, this, _1));
 
     m_gazeboNode = gazebo::transport::NodePtr(new gazebo::transport::Node);
+    #if (GAZEBO_MAJOR_VERSION >= 9)
+    m_gazeboNode->Init(this->m_robot->GetWorld()->Name());
+    #else
     m_gazeboNode->Init(this->m_robot->GetWorld()->GetName());
+    #endif
     m_jointCommandPublisher = m_gazeboNode->Advertise<gazebo::msgs::JointCmd>(std::string("~/") + this->m_robot->GetName() + "/joint_cmd");
 
     _T_controller = 1;
@@ -431,7 +442,11 @@ void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info
     // Sensing position & torque
     for (unsigned int jnt_cnt = 0; jnt_cnt < m_jointPointers.size(); jnt_cnt++) {
     //TODO: consider multi-dof joint ?
+        #if (GAZEBO_MAJOR_VERSION >= 9)
+        m_positions[jnt_cnt] = convertGazeboToUser(jnt_cnt, m_jointPointers[jnt_cnt]->Position(0));
+        #else
         m_positions[jnt_cnt] = convertGazeboToUser(jnt_cnt, m_jointPointers[jnt_cnt]->GetAngle(0));
+        #endif
         m_velocities[jnt_cnt] = convertGazeboToUser(jnt_cnt, m_jointPointers[jnt_cnt]->GetVelocity(0));
         m_torques[jnt_cnt] = m_jointPointers[jnt_cnt]->GetForce(0u);
     }
@@ -485,8 +500,13 @@ void GazeboTripodMotionControl::setMinMaxPos()
 {
     for(unsigned int i = 0; i < m_numberOfJoints; ++i)
     {
+        #if (GAZEBO_MAJOR_VERSION >= 9)
+        m_jointLimits[i].max = convertGazeboToUser(i, m_jointPointers[i]->UpperLimit(0));
+        m_jointLimits[i].min = convertGazeboToUser(i, m_jointPointers[i]->LowerLimit(0));
+        #else
         m_jointLimits[i].max = convertGazeboToUser(i, m_jointPointers[i]->GetUpperLimit(0));
         m_jointLimits[i].min = convertGazeboToUser(i, m_jointPointers[i]->GetLowerLimit(0));
+        #endif
    }
 }
 
@@ -749,7 +769,7 @@ void GazeboTripodMotionControl::sendImpPositionsToGazebo ( Vector &dess )
         sendImpPositionToGazebo(i, dess[i]);
 }
 
-double GazeboTripodMotionControl::convertGazeboToUser(int joint, gazebo::math::Angle value)
+double GazeboTripodMotionControl::convertGazeboToUser(int joint, ignition::math::Angle value)
 {
     double newValue = 0;
     switch(m_jointTypes[joint])
