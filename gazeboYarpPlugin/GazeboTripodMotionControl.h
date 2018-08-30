@@ -37,7 +37,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <gazebo/math/Angle.hh>
+#include <ignition/math/Angle.hh>
 
 namespace cer {
     namespace dev {
@@ -450,7 +450,7 @@ private:
      * \param value Raw value read from Gazebo function like 'GetAngle'
      * \return value in user units
      */
-    double convertGazeboToUser(int joint, gazebo::math::Angle value);
+    double convertGazeboToUser(int joint, ignition::math::Angle value);
     double convertGazeboToUser(int joint, double value);
     double *convertGazeboToUser(double *values);
     double convertGazeboGainToUserGain(int joint, double value);
