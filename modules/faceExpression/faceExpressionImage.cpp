@@ -100,7 +100,7 @@ bool FaceExpressionImageModule::configure(ResourceFinder &rf)
     // Quit if something wrong!!
     if(!ok) return false;
 
-    // Check for oprtional params
+    // Check for optional params
     th.hearBar0_x       = rf.check("hearBar0_x",      Value( 1), "horizontal offset from left border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
     th.hearBar0_y       = rf.check("hearBar0_y",      Value( 6), "vertical offset from bottom border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
     th.hearBar0_minLen  = rf.check("hearBar0_minLen", Value( 3), "minimum length  of outer ear bar").asInt();
@@ -162,7 +162,15 @@ bool FaceExpressionImageModule::respond(const Bottle& command, Bottle& reply)
 
         case VOCAB_RESET:
         {
+			th.activateDraw(true);
             th.threadRelease();
+        }
+        break;
+
+        case VOCAB_BLACK_RESET:
+        {
+            th.activateDraw(false);
+            th.blackReset();
         }
         break;
 
@@ -245,7 +253,7 @@ BlinkThread::BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig:
                                                 blackBar(32, 1, CV_8UC3, cv::Scalar(0,0,0)),
                                                 face(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
                                                 faceRest(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
-                                                index(0), doBlink(false), doBars(false), doTalk(false)
+                                                index(0), doBlink(false), doBars(false), doTalk(false), doDraw(true)
 {
     indexes[ 0] = 0;
     indexes[ 1] = 1;
@@ -278,17 +286,23 @@ void BlinkThread::afterStart(bool s) { }
 
 void BlinkThread::activateBars(bool activate)
 {
+    mutex.lock();
     doBars = activate;
+    mutex.unlock();
 }
 
 void BlinkThread::activateTalk(bool activate)
 {
+    mutex.lock();
     doTalk = activate;
+    mutex.unlock();
 }
 
 void BlinkThread::activateBlink(bool activate)
 {
+    mutex.lock();
     doBlink = activate;
+    mutex.unlock();
 }
 
 bool BlinkThread::threadInit()
@@ -337,6 +351,12 @@ bool BlinkThread::threadInit()
 
 void BlinkThread::run()
 {
+	if (doDraw==false)
+	{
+		return;
+	}
+	
+    mutex.lock();
     // Compute hear bars sizes
     // Left side
     float percentage = 0.5;
@@ -381,6 +401,8 @@ void BlinkThread::run()
             yarp::os::Time::delay(delays[index]);
     }
     while(doBlink);
+    
+    mutex.unlock();
 }
 
 bool BlinkThread::updateBars(float percentage)
@@ -432,8 +454,27 @@ void BlinkThread::updateTalk()
 
 void BlinkThread::threadRelease()
 {
+    mutex.lock();
     yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
     img.setExternal(faceRest.data, faceWidth, faceHeight);
     port.writeStrict();
+    mutex.unlock();
 }
 
+void BlinkThread::activateDraw(bool activate)
+{
+    mutex.lock();
+    doDraw = activate;
+    mutex.unlock();
+}
+
+void BlinkThread::blackReset()
+{
+    mutex.lock();
+    cv::Mat faceBlack(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0, 0, 0));
+    yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
+    img.setExternal(faceBlack.data, faceWidth, faceHeight);
+    port.writeStrict();
+    yarp::os::Time::delay(0.5);
+    mutex.unlock();
+}

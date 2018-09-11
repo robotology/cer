@@ -19,6 +19,7 @@
 #define VOCAB_TALK_STOP         yarp::os::createVocab('t','s','t','o')
 #define VOCAB_BLINK             yarp::os::createVocab('b','l','i','n')
 #define VOCAB_RESET             yarp::os::createVocab('r','s','t')
+#define VOCAB_BLACK_RESET       yarp::os::createVocab('b','l','c','k')
 
 class BlinkThread : public yarp::os::PeriodicThread
 {
@@ -56,29 +57,32 @@ public:
     int hearBar0_len;
     int hearBar1_len;
 
-    bool configure(yarp::os::ResourceFinder &_rf, yarp::os::Property options);
-    bool threadInit();
-    void threadRelease();
-    void afterStart(bool s);
-    void run();
+    bool threadInit()  override;
+    void threadRelease()  override;
+    void afterStart(bool s)  override;
+    void run() override;
 
     void activateBlink(bool activate);
     void activateBars (bool activate);
     void activateTalk (bool activate);
+    void activateDraw (bool activate);
 
     bool updateBars(float percentage);
     bool updateBlink(int index);
     void updateTalk();
+    void blackReset();
 
     bool doBlink;
     bool doBars;
     bool doTalk;
+    bool doDraw;
 
 private:
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >  &port;
     int index;
     int indexes[11];
     float delays[11];
+    yarp::os::Mutex mutex;
 };
 
 class FaceExpressionImageModule: public yarp::os::RFModule
