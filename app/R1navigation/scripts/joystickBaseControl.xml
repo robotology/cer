@@ -18,9 +18,9 @@
     </module>
 		
    <connection>
-	   <from>/robotJoystickControl/base/cmd:o</from>
+	   <from>/joystickCtrl:o</from>
 	   <to>/baseControl/joystick1:i</to>
-	   <protocol>tcp</protocol>
+	   <protocol>udp</protocol>
    </connection>
 
 </application>
