@@ -253,6 +253,7 @@ BlinkThread::BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig:
                                                 blackBar(32, 1, CV_8UC3, cv::Scalar(0,0,0)),
                                                 face(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
                                                 faceRest(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
+                                                faceBlack(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0, 0, 0)),
                                                 index(0), doBlink(false), doBars(false), doTalk(false), doDraw(true)
 {
     indexes[ 0] = 0;
@@ -471,10 +472,8 @@ void BlinkThread::activateDraw(bool activate)
 void BlinkThread::blackReset()
 {
     mutex.lock();
-    cv::Mat faceBlack(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0, 0, 0));
     yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
     img.setExternal(faceBlack.data, faceWidth, faceHeight);
     port.writeStrict();
-    yarp::os::Time::delay(0.5);
     mutex.unlock();
 }

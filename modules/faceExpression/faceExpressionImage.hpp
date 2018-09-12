@@ -28,6 +28,7 @@ public:
 
     cv::Mat                 face;
     cv::Mat                 faceRest;
+    cv::Mat                 faceBlack;
     cv::Mat                 faceMouth;
     cv::Mat                 noseBar;
     cv::Mat                 blinkBar;
