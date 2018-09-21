@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE robot PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+
+<robot name="CER01" build="1" portprefix="cer">
+    <params file="hardware/electronics/pc104.xml" />
+
+    <!-- MOBILE BASE 
+    <devices file="hardware/motorControl/cer_base-ems21-mc.xml" />
+    <devices file="wrappers/motorControl/cer_base-mc_wrapper.xml" />
+-->
+    <!-- LASER -->
+    <devices file="hardware/rpLidar/laserA2_hw_back.xml" /> 
+    <devices file="wrappers/rpLidar/laser_back_wrapper.xml" /> 
+
+    <devices file="hardware/rpLidar/laserA2_hw_front.xml" /> 
+    <devices file="wrappers/rpLidar/laser_front_wrapper.xml" /> 
+
+    <devices file="hardware/rpLidar/laserA2_hw_ultimate.xml" /> 
+    <devices file="wrappers/rpLidar/laser_ultimate_wrapper.xml" /> 
+
+</robot> 
+

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<devices>
+  <device name="cerUltimateLaserWrapper" type="Rangefinder2DWrapper">
+
+      <param name="period"> 10 </param>
+      <param name="name">   /cer/laserUltimate:o       </param>
+
+      <action phase="startup" level="6" type="attach">
+         <paramlist name="networks">
+            <elem name="cer_laser">  cerPiero </elem>
+         </paramlist>
+      </action>
+
+      <group name ="ROS">
+         <param name ="useROS"> true </param>
+         <param name ="ROS_nodeName"> /cer-laserUltimate </param>
+         <param name ="ROS_topicName"> /laserUltimate </param>
+         <param name ="frame_id"> /mobile_base_double_lidar </param>
+      </group>
+
+      <action phase="shutdown" level="5" type="detach" />
+  </device>
+</devices>
