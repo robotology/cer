@@ -557,9 +557,10 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
     {
         double tmp;
         int newindex;
-        if(dataFront[i]!= INFINITY)
+	//When hardware has problems gives me 0.0 value, so I exclude it
+        if( (dataFront[i]!= INFINITY)&& (dataFront[i]!=0.0))
             calculate(i, dataFront[i], true, newindex, tmp);
-        else if(dataBack[i] != INFINITY)
+        else if((dataBack[i] != INFINITY)&& (dataBack[i]!=0.0))
             calculate(i, dataBack[i], false, newindex, tmp);
         else
         {
