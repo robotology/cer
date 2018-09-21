@@ -1,39 +1,32 @@
 /*
- * Copyright (C) 2006-2018 Istituto Italiano di Tecnologia (IIT)
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ * Copyright (C) 2013-2015 Fondazione Istituto Italiano di Tecnologia RBCS & iCub Facility & ADVR
+ * Authors: see AUTHORS file.
+ * CopyPolicy: Released under the terms of the LGPLv2.1 or any later version, see LGPL.TXT or LGPL3.TXT
  */
 
-#ifndef CER_DOUBLE_LIDAR_H
-#define CER_DOUBLE_LIDAR_H
+#ifndef DOUBLELASERDEVICE_HH
+#define DOUBLELASERDEVICE_HH
+
+#include <yarp/os/Property.h>
+#include <yarp/dev/Drivers.h>
+#include <yarp/dev/DeviceDriver.h>
+#include <yarp/sig/Vector.h>
+#include <yarp/os/Time.h>
+#include <yarp/os/Semaphore.h>
+#include <yarp/os/Stamp.h>
+#include <yarp/dev/IRangefinder2D.h>
+#include <yarp/dev/Wrapper.h>
+
+#include <boost/shared_ptr.hpp>
+
+
 
 #include <string>
-
-#include <yarp/os/PeriodicThread.h>
-#include <yarp/os/Semaphore.h>
-#include <yarp/dev/ControlBoardInterfaces.h>
-#include <yarp/dev/IRangefinder2D.h>
-#include <yarp/dev/PolyDriver.h>
-#include <yarp/sig/Vector.h>
-#include <yarp/dev/SerialInterfaces.h>
+#include <functional>
+#include <unordered_map>
 #include <vector>
 
-using namespace yarp::os;
-using namespace yarp::dev;
 
-typedef unsigned char byte;
 
 namespace cer {
     namespace dev {
@@ -41,69 +34,54 @@ namespace cer {
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------
-struct Range_t
+struct Point3d_t
 {
-    double min;
-    double max;
+    double x;
+    double y;
+    double z;
 };
 
-//---------------------------------------------------------------------------------------------------------------
-
-class cer::dev::cerDoubleLidar : public PeriodicThread, public yarp::dev::IRangefinder2D, public DeviceDriver
+class LaserCfg_t
 {
-
-protected:
-    yarp::os::Mutex       m_mutex;
-    int                   m_sensorsNum;
-    int                   m_buffer_life;
-    double                m_min_angle;
-    double                m_max_angle;
-    double                m_min_distance;
-    double                m_max_distance;
-    double                m_resolution;
-    bool                  m_clip_max_enable;
-    bool                  m_clip_min_enable;
-    bool                  m_do_not_clip_infinity_enable;
-    int                   m_pwm_val;
-    std::vector <Range_t> m_range_skip_vector;
-    std::string           m_info;
-    Device_status         m_device_status;
-    yarp::sig::Vector     m_laser_data;
-
 public:
-    cerDoubleLidar(double period = 0.01) : PeriodicThread(period),
-        m_sensorsNum(0),
-        m_buffer_life(0),
-        m_min_angle(0.0),
-        m_max_angle(0.0),
-        m_min_distance(0.0),
-        m_max_distance(0.0),
-        m_resolution(0.0),
-        m_clip_max_enable(false),
-        m_clip_min_enable(false),
-        m_do_not_clip_infinity_enable(false),
-        m_pwm_val(0),
-        m_device_status(DEVICE_OK_STANBY)
-    {}
+    enum Laser{front=0, back=1};
+    Laser laser;
+    Point3d_t pose;
+    std::string fileCfgName;
+    std::string sensorName;
+    std::string typeOfDevice; //currntly not used
+    LaserCfg_t(Laser l){laser=l;}
+    bool loadConfig(yarp::os::Searchable& config);
 
+};
 
-    ~cerDoubleLidar()
-    {
-    }
-
-    virtual bool open(yarp::os::Searchable& config) override;
-    virtual bool close() override;
-    virtual bool threadInit() override;
-    virtual void threadRelease() override;
-    virtual void run() override;
-
+class cer::dev::cerDoubleLidar :
+    public yarp::dev::DeviceDriver,
+    public yarp::dev::IRangefinder2D,
+    public yarp::dev::IMultipleWrapper
+{
 public:
+
+    cerDoubleLidar();
+    virtual ~cerDoubleLidar();
+
+
+    /**
+     * Yarp interfaces start here
+     */
+
+    bool open(yarp::os::Searchable& config);
+    bool close();
+    
+    //IMultipleWrapper interface
+    bool attachAll(const yarp::dev::PolyDriverList &p) override;
+    bool detachAll() override;
+    
     //IRangefinder2D interface
     virtual bool getRawData(yarp::sig::Vector &data) override;
-    virtual bool getLaserMeasurement(std::vector<LaserMeasurementData> &data) override;
+    virtual bool getLaserMeasurement(std::vector<yarp::dev::LaserMeasurementData> &data) override;
     virtual bool getDeviceStatus     (Device_status &status) override;
-    virtual bool getDeviceInfo       (std::string &device_info) override;
+    virtual bool getDeviceInfo       (std::string &device_info) override; //
     virtual bool getDistanceRange    (double& min, double& max) override;
     virtual bool setDistanceRange    (double min, double max) override;
     virtual bool getScanLimits        (double& min, double& max) override;
@@ -113,6 +91,30 @@ public:
     virtual bool getScanRate         (double& rate) override;
     virtual bool setScanRate         (double rate) override;
 
+private:
+
+    void calculate(int sensNum, double distance, bool front, int &newSensNum, double &newdistance);
+    bool verifyLasersConfigurations(void);
+    bool getLasersInterfaces(void);
+    bool createLasersDevices(void);
+    
+    yarp::dev::PolyDriver * m_driver_laserFront;
+    yarp::dev::IRangefinder2D* m_dev_laserFront;
+
+    yarp::dev::PolyDriver * m_driver_laserBack;
+    yarp::dev::IRangefinder2D* m_dev_laserBack;
+    
+    int m_samples;
+    double m_resolution;
+    bool m_inited;
+    bool m_onSimulator; //if true the device looks for front and back laser devices in gazebo, else creates them
+
+    
+    yarp::os::Mutex       m_mutex; //MI SERVE??????
+
+    LaserCfg_t m_lFrontCfg;
+    LaserCfg_t m_lBackCfg;
+
 };
 
-#endif
+#endif //GAZEBOYARP_CONTROLBOARDDRIVER_HH
