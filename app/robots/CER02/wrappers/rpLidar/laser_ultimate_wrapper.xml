@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <devices>
-  <device name="cerUltimateLaserWrapper" type="Rangefinder2DWrapper">
+  <device name="cerLaserUltimateWrapper" type="Rangefinder2DWrapper">
 
       <param name="period"> 10 </param>
       <param name="name">   /cer/laserUltimate:o       </param>
 
       <action phase="startup" level="6" type="attach">
          <paramlist name="networks">
-            <elem name="cer_laser">  cerPiero </elem>
+            <elem name="cer_laser">  cerLaserUltimate </elem>
          </paramlist>
       </action>
 

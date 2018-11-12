@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <devices>
-  <device name="cerBackLaserWrapper" type="Rangefinder2DWrapper">
+  <device name="cerLaserBackWrapper" type="Rangefinder2DWrapper">
 
       <param name="period"> 10 </param>
       <param name="name">   /cer/laserBack:o       </param>

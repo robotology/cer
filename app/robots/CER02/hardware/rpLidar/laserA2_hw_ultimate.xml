@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>    
 
 <devices>
-    <device name="cerPiero" type="cerDoubleLidar">  
+    <device name="cerLaserUltimate" type="cerDoubleLidar">  
        <!--  <param name="subdevice">    rpLidar </param>    -->
 	<group name="LASERFRONT-CFG">
             <param name="sensorName">     L_Front          </param>
@@ -25,18 +25,3 @@
     </device>
 </devices>
 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
- 
