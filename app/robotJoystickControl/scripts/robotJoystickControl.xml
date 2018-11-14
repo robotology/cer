@@ -3,11 +3,24 @@
 
 <!-- module -->
 <module>
+    <name>joystickCtrl</name>
+    <parameters>--context joystickCtrl --from cer_linux.ini</parameters>
+    <node>r1-base</node>
+</module>
+
+<module>
+    <name>baseControl</name>
+    <parameters>--context baseControl --from baseCtrl_cer.ini  --skip_robot_interface_check</parameters>
+    <node>r1-base</node>
+</module>
+
+<module>
    <name>robotJoystickControl</name>
    <parameters>--skip_robot_interface_check  --motors_enabled</parameters>
    <node>r1-base</node>
 </module>
 
+    
 <!-- joystick input -->
 <connection>
 	<from>/joystickCtrl:o</from>
