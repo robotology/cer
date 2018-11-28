@@ -66,9 +66,24 @@ bool GazeboTripodMotionControl::tripod_client2Sim(yarp::sig::Vector &client, yar
 
 bool GazeboTripodMotionControl::tripod_Sim2client(yarp::sig::Vector &sim, yarp::sig::Vector &client)
 {
-    // The caller must use mutex or private data
+#ifndef _GAZEBO_PLUGIN_USES_IKIN_
     client = m_referenceElongations;
     return true;
+#else
+    Vector ypr;
+    ypr[0] = 0.0;
+    ypr[1] = sim[1];
+    ypr[2] = sim[2];
+
+    // The caller must use mutex or private data
+    Matrix H = ypr2dcm(ypr);
+    // primo 0, altri 2 sim
+    Vector axis = dcm2axis(H);
+    if(solver.ikin(sim[0], axis, client) )
+        return true;
+    else
+        return false;
+#endif
 }
 
 bool GazeboTripodMotionControl::extractGroup(Bottle &input, Bottle &out, const std::string &key1, const std::string &txt, int size)
