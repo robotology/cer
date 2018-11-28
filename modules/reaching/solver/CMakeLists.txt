@@ -6,6 +6,6 @@ project(cer_reaching-solver)
 
 add_definitions(-D_USE_MATH_DEFINES)
 add_executable(${PROJECT_NAME} main.cpp)
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} cer_kinematics)
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ctrlLib iKin cer_kinematics)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 

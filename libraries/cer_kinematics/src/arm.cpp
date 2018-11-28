@@ -102,7 +102,6 @@ bool ArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
 
     Ipopt::SmartPtr<ArmFullNoHeaveNLP_ForwardDiff> nlp=new ArmFullNoHeaveNLP_ForwardDiff(*this);
     H=nlp->fkin(q,frame);
-
     return true;
 }
 

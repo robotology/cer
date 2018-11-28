@@ -24,6 +24,7 @@
 #include <yarp/sig/all.h>
 #include <yarp/math/Math.h>
 
+#include <iCub/ctrl/math.h>
 #include <iCub/iKin/iKinFwd.h>
 #include <cer_kinematics/arm.h>
 
@@ -32,6 +33,7 @@ using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
+using namespace iCub::ctrl;
 using namespace iCub::iKin;
 using namespace cer::kinematics;
 
@@ -91,8 +93,8 @@ class IKSolver : public RFModule
             p.torso.alpha_max=fabs(lim(1,1));
 
             iKinChain &chain=*p.upper_arm.asChain();
-            chain[0].setMin((M_PI/180.0)*lim(3,0));
-            chain[0].setMax((M_PI/180.0)*lim(3,1));
+            chain[0].setMin(CTRL_DEG2RAD*lim(3,0));
+            chain[0].setMax(CTRL_DEG2RAD*lim(3,1));
 
             yInfo("limits of %s part: heave=[%g,%g] [m], [pitch,roll]=[%g,%g] [deg], yaw=[%g,%g] [deg]",
                   ("/"+robot+"/torso").c_str(),p.torso.l_min,p.torso.l_max,
@@ -106,13 +108,13 @@ class IKSolver : public RFModule
             iKinChain &chain=*p.upper_arm.asChain(); 
             for (int i=0; i<5; i++)
             {
-                chain[1+i].setMin((M_PI/180.0)*lim(i,0)); 
-                chain[1+i].setMax((M_PI/180.0)*lim(i,1));
+                chain[1+i].setMin(CTRL_DEG2RAD*lim(i,0)); 
+                chain[1+i].setMax(CTRL_DEG2RAD*lim(i,1));
 
                 yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
                       ("/"+robot+"/"+arm_type+"_arm").c_str(),i,
-                      (180.0/M_PI)*chain[1+i].getMin(),
-                      (180.0/M_PI)*chain[1+i].getMax());
+                      CTRL_RAD2DEG*chain[1+i].getMin(),
+                      CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
             p.lower_arm.l_min=lim(5,0);

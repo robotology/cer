@@ -28,6 +28,7 @@
 #include <yarp/math/Math.h>
 #include <yarp/math/SVD.h>
 
+#include <iCub/ctrl/math.h>
 #include <iCub/ctrl/minJerkCtrl.h>
 #include <iCub/iKin/iKinFwd.h>
 #include <cer_kinematics/head.h>
@@ -233,8 +234,8 @@ class Controller : public RFModule
             p.torso.l_max=lim(0,1);
             p.torso.alpha_max=fabs(lim(1,1));
 
-            chain[0].setMin((M_PI/180.0)*lim(3,0));
-            chain[0].setMax((M_PI/180.0)*lim(3,1));
+            chain[0].setMin(CTRL_DEG2RAD*lim(3,0));
+            chain[0].setMax(CTRL_DEG2RAD*lim(3,1));
 
             part=drivers[1].getValue("remote");
             yInfo("limits of %s part: heave=[%g,%g] [m], [pitch,roll]=[%g,%g] [deg], yaw=[%g,%g] [deg]",
@@ -245,12 +246,12 @@ class Controller : public RFModule
 
             for (int i=0; i<2; i++)
             {
-                chain[1+i].setMin((M_PI/180.0)*lim(i,0));
-                chain[1+i].setMax((M_PI/180.0)*lim(i,1));
+                chain[1+i].setMin(CTRL_DEG2RAD*lim(i,0));
+                chain[1+i].setMax(CTRL_DEG2RAD*lim(i,1));
 
                 yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                      part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
-                      (180.0/M_PI)*chain[1+i].getMax());
+                      part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                      CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
             s.setHeadParameters(p);
@@ -265,12 +266,12 @@ class Controller : public RFModule
         iKinChain &chain=*p.head.asChain();
 
         pitchLim.resize(2);
-        pitchLim[0]=(180.0/M_PI)*chain[1].getMin();
-        pitchLim[1]=(180.0/M_PI)*chain[1].getMax();
+        pitchLim[0]=CTRL_RAD2DEG*chain[1].getMin();
+        pitchLim[1]=CTRL_RAD2DEG*chain[1].getMax();
 
         yawLim.resize(2);
-        yawLim[0]=(180.0/M_PI)*chain[2].getMin();
-        yawLim[1]=(180.0/M_PI)*chain[2].getMax();
+        yawLim[0]=CTRL_RAD2DEG*chain[2].getMin();
+        yawLim[1]=CTRL_RAD2DEG*chain[2].getMax();
     }
 
     /****************************************************************/
@@ -296,7 +297,7 @@ class Controller : public RFModule
                 {
                     double val=pitchLim->get(0).asDouble();
                     val=std::min(std::max(val,pitchPhy[0]),pitchPhy[1]);
-                    chain[1+i].setMin((M_PI/180.0)*val);
+                    chain[1+i].setMin(CTRL_DEG2RAD*val);
                     doPrint=true;
                 }
 
@@ -304,14 +305,14 @@ class Controller : public RFModule
                 {
                     double val=pitchLim->get(1).asDouble();
                     val=std::min(std::max(val,pitchPhy[0]),pitchPhy[1]);
-                    chain[1+i].setMax((M_PI/180.0)*val);
+                    chain[1+i].setMax(CTRL_DEG2RAD*val);
                     doPrint=true;
                 }
 
                 if (doPrint)
                     yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                          part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
-                          (180.0/M_PI)*chain[1+i].getMax());
+                          part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                          CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
             i++;
@@ -322,7 +323,7 @@ class Controller : public RFModule
                 {
                     double val=yawLim->get(0).asDouble();
                     val=std::min(std::max(val,yawPhy[0]),yawPhy[1]);
-                    chain[1+i].setMin((M_PI/180.0)*val);
+                    chain[1+i].setMin(CTRL_DEG2RAD*val);
                     doPrint=true;
                 }
 
@@ -330,14 +331,14 @@ class Controller : public RFModule
                 {
                     double val=yawLim->get(1).asDouble();
                     val=std::min(std::max(val,yawPhy[0]),yawPhy[1]);
-                    chain[1+i].setMax((M_PI/180.0)*val);
+                    chain[1+i].setMax(CTRL_DEG2RAD*val);
                     doPrint=true;
                 }
 
                 if (doPrint)
                     yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                          part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
-                          (180.0/M_PI)*chain[1+i].getMax());
+                          part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                          CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
             s.setHeadParameters(p);
@@ -365,8 +366,8 @@ class Controller : public RFModule
             {
                 Vector ang(2);
                 Vector z=Hee.getCol(2);
-                ang[0]=(180.0/M_PI)*atan2(z[1],z[0]);
-                ang[1]=(180.0/M_PI)*atan2(z[2],z[0]);
+                ang[0]=CTRL_RAD2DEG*atan2(z[1],z[0]);
+                ang[1]=CTRL_RAD2DEG*atan2(z[2],z[0]);
 
                 Bottle val; val.addList().read(ang);
                 state.put("angular",val.get(0));
@@ -579,10 +580,10 @@ public:
             if (target_location->size()>=2)
             {
                 Vector azi(4,0.0); azi[2]=1.0;
-                azi[3]=(M_PI/180.0)*target_location->get(0).asDouble();
+                azi[3]=CTRL_DEG2RAD*target_location->get(0).asDouble();
 
                 Vector ele(4,0.0); ele[1]=-1.0;
-                ele[3]=(M_PI/180.0)*target_location->get(1).asDouble();
+                ele[3]=CTRL_DEG2RAD*target_location->get(1).asDouble();
 
                 Matrix Hee;
                 Vector q0(6,0.0);
