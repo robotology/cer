@@ -24,12 +24,6 @@ set(sources         src/helpers.cpp
                     src/arm.cpp
                     src/head.cpp)
 
-option(GAZEBO_TRIPOD_USES_IKIN "Use iKin to compute tripod simulation" OFF)
-
-if(GAZEBO_TRIPOD_USES_IKIN)
-    add_compile_definitions(_GAZEBO_TRIPOD_USES_IKIN_)
-endif()
-
 source_group("Header Files" FILES ${headers_private} ${headers})
 source_group("Source Files" FILES ${sources})
 

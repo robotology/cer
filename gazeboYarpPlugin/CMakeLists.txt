@@ -18,6 +18,11 @@ if(GAZEBO_TRIPOD_PLUGIN)
     return()
   endif()
 
+  option(GAZEBO_TRIPOD_USES_IKIN "Use iKin to compute tripod simulation" OFF)
+  if(GAZEBO_TRIPOD_USES_IKIN)
+    add_definitions(-D_GAZEBO_TRIPOD_USES_IKIN_)
+  endif()
+
   # Add Gazebo CXX flags, to support Gazebo 6 reckless dependency on C++11
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
