@@ -70,7 +70,7 @@ bool GazeboTripodMotionControl::tripod_Sim2client(yarp::sig::Vector &sim, yarp::
     client = m_referenceElongations;
     return true;
 #else
-    Vector ypr;
+    Vector ypr(3);
     ypr[0] = 0.0;
     ypr[1] = sim[1];
     ypr[2] = sim[2];
