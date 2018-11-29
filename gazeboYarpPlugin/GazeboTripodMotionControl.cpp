@@ -66,7 +66,7 @@ bool GazeboTripodMotionControl::tripod_client2Sim(yarp::sig::Vector &client, yar
 
 bool GazeboTripodMotionControl::tripod_Sim2client(yarp::sig::Vector &sim, yarp::sig::Vector &client)
 {
-#ifndef _GAZEBO_PLUGIN_USES_IKIN_
+#ifndef _GAZEBO_TRIPOD_USES_IKIN_
     client = m_referenceElongations;
     return true;
 #else
