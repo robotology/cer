@@ -66,23 +66,19 @@ bool GazeboTripodMotionControl::tripod_client2Sim(yarp::sig::Vector &client, yar
 
 bool GazeboTripodMotionControl::tripod_Sim2client(yarp::sig::Vector &sim, yarp::sig::Vector &client)
 {
-#ifndef _GAZEBO_TRIPOD_USES_IKIN_
-    client = m_referenceElongations;
-    return true;
-#else
-    Vector ypr(3);
-    ypr[0] = 0.0;
-    ypr[1] = sim[1];
-    ypr[2] = sim[2];
-
     // The caller must use mutex or private data
-    Matrix H = ypr2dcm(ypr);
-    // primo 0, altri 2 sim
-    Vector axis = dcm2axis(H);
-    if(solver.ikin(sim[0], axis, client) )
-        return true;
-    else
-        return false;
+#ifdef _GAZEBO_TRIPOD_USES_IKIN_
+    Vector ypr(3);
+    ypr[0]=0.0;
+    ypr[1]=(M_PI/180.0)*sim[1];
+    ypr[2]=(M_PI/180.0)*sim[2];
+
+    Matrix H=SE3inv(_baseTransformation)*ypr2dcm(ypr);
+    Vector axis=dcm2axis(H);
+    return solver.ikin(sim[0],axis,client);
+#else
+    client=m_referenceElongations;
+    return true;
 #endif
 }
 
