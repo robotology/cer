@@ -27,9 +27,6 @@
 
 #include <cer_kinematics/tripod.h>
 
-#define MODE_HPR    "hpr"
-#define MODE_ZD_UD  "zd+ud"
-
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
