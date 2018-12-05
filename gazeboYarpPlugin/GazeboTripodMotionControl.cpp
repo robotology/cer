@@ -249,6 +249,7 @@ bool GazeboTripodMotionControl::gazebo_init()
     m_torques.resize(m_numberOfJoints); m_torques.zero();
     m_trajectoryGenerationReferenceSpeed.resize(m_numberOfJoints);
     m_referencePositions.resize(m_numberOfJoints);
+    m_decoded_elong.resize(m_numberOfJoints);
     m_oldReferencePositions.resize(m_numberOfJoints);
     m_referenceElongations.resize(m_numberOfJoints);
     m_trajectoryGenerationReferencePosition.resize(m_numberOfJoints);
@@ -276,6 +277,7 @@ bool GazeboTripodMotionControl::gazebo_init()
     m_velocities.zero();
     m_trajectoryGenerationReferenceSpeed.zero();
     m_referencePositions.zero();
+    m_decoded_elong.zero();
     m_referenceElongations.zero();
     m_trajectoryGenerationReferencePosition.zero();
     m_trajectoryGenerationReferenceAcceleraton.zero();
@@ -504,7 +506,12 @@ void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info
             }
         }
     }
-    tripod_Sim2client(m_last_measJointPos, m_last_motorElongat);
+
+    // calling 'tripod_Sim2client' function here somehow messes-up with 
+    // the movement of the plugins, both elongations and user-space. 
+    // TODO: This has to be investigate further.
+    //
+    // tripod_Sim2client(tmp, m_decoded_elong);
 }
 
 void GazeboTripodMotionControl::setMinMaxPos()

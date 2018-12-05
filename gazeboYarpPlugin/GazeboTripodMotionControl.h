@@ -365,6 +365,7 @@ private:
     yarp::sig::Vector m_torques; /**< joint torques [Netwon Meters] */
     yarp::sig::Vector m_last_measJointPos;  /** encoder reading zeroed */
     yarp::sig::Vector m_last_motorElongat;  /** encoder reading zeroed */
+    yarp::sig::Vector m_decoded_elong;      /** helper variable to store elongations to be written on yarp port*/
 
     yarp::os::Stamp m_lastTimestamp; /**< timestamp, updated with simulation time at each onUpdate call */
 

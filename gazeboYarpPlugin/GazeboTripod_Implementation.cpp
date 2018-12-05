@@ -35,7 +35,8 @@ bool GazeboTripodMotionControl::getEncoder(int j, double* v)
 {
     if (v && j >= 0 && j < (int)m_numberOfJoints)
     {
-        *v = m_last_motorElongat[j];
+        tripod_Sim2client(m_last_measJointPos, m_decoded_elong);
+        *v = m_decoded_elong[j];
         return true;
     }
     return false;
@@ -43,9 +44,11 @@ bool GazeboTripodMotionControl::getEncoder(int j, double* v)
 
 bool GazeboTripodMotionControl::getEncoders(double* encs)
 {
+    tripod_Sim2client(m_last_measJointPos, m_decoded_elong);
+
     if (!encs) return false;
     for(int j=0; j<m_numberOfJoints; j++)
-        encs[j] =  m_last_motorElongat[j];
+        encs[j] =  m_decoded_elong[j];
     return true;
 }
 
