@@ -142,21 +142,15 @@ bool GazeboTripodMotionControl::getEncodersTimed(double* encs, double* time)
     double my_time = m_lastTimestamp.getTime();
     for (unsigned int i = 0; i <m_numberOfJoints; ++i)
     {
-        encs[i] = m_last_motorElongat[i];
         time[i] = my_time;
     }
-    return true;
+    return getEncoders(encs);
 }
 
 bool GazeboTripodMotionControl::getEncoderTimed(int j, double* encs, double* time)
 {
-    if (time && encs && j >= 0 && j < (int)m_numberOfJoints)
-    {
-        *encs = m_last_motorElongat[j];
-        *time = m_lastTimestamp.getTime();
-        return true;
-    }
-    return false;
+    *time = m_lastTimestamp.getTime();
+    return getEncoder(j, encs);
 }
 
 
