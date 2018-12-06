@@ -51,6 +51,7 @@ bool GazeboTripodMotionControl::tripod_client2Sim(yarp::sig::Vector &client, yar
     Matrix H;
     if (solver.fkin(client,H))
     {
+        // get the heave irrespective of the frame
         Matrix H_=SE3inv(_baseTransformation)*H;
         Vector ypr=dcm2ypr(H);
 
