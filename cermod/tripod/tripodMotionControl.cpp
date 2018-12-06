@@ -214,7 +214,7 @@ bool tripodMotionControl::tripod_user2HW(yarp::sig::Vector &user, yarp::sig::Vec
 
     robot[2] = 0.5*(A+B);
     robot[1] = 0.5*(A-B);
-	
+    
     return true;
 #endif
 }
@@ -597,7 +597,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
             {
                  yError() << "tripodMotionControl: error while attachig polyDriverDevice";
                  return false;
-	    }
+        }
 
             initKinematics();
             useRemoteCB = true;

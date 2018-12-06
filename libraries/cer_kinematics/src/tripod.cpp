@@ -434,7 +434,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         yInfo()<<" *** Tripod Solver:     u [rad] = ("<<d.u.toString(4,4)<<")";
         yInfo()<<" *** Tripod Solver:       p [m] = ("<<d.p.toString(4,4)<<")";
         yInfo()<<" *** Tripod Solver:   e_u [rad] ="<<norm(e_u);
-        yInfo()<<" *** Tripod Solver:     e_z [m] ="<<fabs(zd-d.p[2]);
+        yInfo()<<" *** Tripod Solver:     e_z [m] ="<<fabs(zd-din.p[2]);
         yInfo()<<" *** Tripod Solver: alpha [deg] ="<<CTRL_RAD2DEG*acos(din.n[2]);
         yInfo()<<" *** Tripod Solver:     dt [ms] ="<<1000.0*(t1-t0);
         yInfo()<<" *** Tripod Solver ******************************";
@@ -465,6 +465,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
 bool TripodSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 {
     yAssert((Hd.rows()==4)&&(Hd.cols()==4));
+    // get the heave irrespective of the frame
     Matrix Hd_=SE3inv(parameters.T0)*Hd;
     return ikin(Hd_(2,3),dcm2axis(Hd),q,exit_code);
 }
