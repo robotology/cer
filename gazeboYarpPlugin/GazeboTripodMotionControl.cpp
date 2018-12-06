@@ -71,8 +71,8 @@ bool GazeboTripodMotionControl::tripod_Sim2client(yarp::sig::Vector &sim, yarp::
 #ifdef _GAZEBO_TRIPOD_USES_IKIN_
     Vector ypr(3);
     ypr[0]=0.0;
-    ypr[1]=(M_PI/180.0)*sim[1];
-    ypr[2]=(M_PI/180.0)*sim[2];
+    ypr[1]=-(M_PI/180.0)*sim[2];
+    ypr[2]=-(M_PI/180.0)*sim[1];
 
     Matrix H=SE3inv(_baseTransformation)*ypr2dcm(ypr);
     Vector axis=dcm2axis(H);
