@@ -79,10 +79,15 @@ public:
         
         iKinChain &chain=*params.head.asChain();
         size_t l2=std::min((size_t)chain.getDOF(),len-3);
+        Vector q0_deg=this->q0;
         for (size_t i=0; i<l2; i++)
-            this->q0[3+i]=std::max(chain[i].getMin(),std::min(chain[i].getMax(),CTRL_DEG2RAD*q0[3+i]));
+        {
+            size_t j=i+3;
+            this->q0[j]=std::max(chain[i].getMin(),std::min(chain[i].getMax(),CTRL_DEG2RAD*q0[j]));
+            q0_deg[j]=CTRL_RAD2DEG*this->q0[j];
+        }
 
-        slv.fkin(this->q0,T,2);
+        slv.fkin(q0_deg,T,2);
     }
 
     /****************************************************************/
