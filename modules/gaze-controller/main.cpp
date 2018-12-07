@@ -489,6 +489,8 @@ public:
         rf_cameras.configure(0,NULL);
         getIntrinsics(rf_cameras);
 
+        for (auto &s:solver)
+            s.second.setVerbosity(verbosity);
         gen=new minJerkTrajGen(qd,Ts,T);
 
         return true;
@@ -740,6 +742,8 @@ public:
                 {
                     mutex.lock();
                     verbosity=cmd.get(2).asInt();
+                    for (auto &s:solver)
+                        s.second.setVerbosity(verbosity);
                     mutex.unlock();
 
                     reply.addVocab(Vocab::encode("ack"));

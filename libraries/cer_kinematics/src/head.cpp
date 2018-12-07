@@ -324,7 +324,7 @@ bool HeadSolver::ikin(const Vector &xd, Vector &q, int *exit_code)
     if (verbosity>0)
     {
         yInfo()<<" *** Head Solver ******************************";
-        yInfo()<<" *** Head Solver:             head ="<<headParameters.head.getType();
+        yInfo()<<" *** Head Solver:             type ="<<headParameters.head.getType();
         yInfo()<<" *** Head Solver:          tol [*] ="<<slvParameters.tol;
         yInfo()<<" *** Head Solver:   constr_tol [*] ="<<slvParameters.constr_tol;
         yInfo()<<" *** Head Solver:     max_iter [#] ="<<slvParameters.max_iter;
