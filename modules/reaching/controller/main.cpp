@@ -393,7 +393,7 @@ public:
             return false;
 
         if (verbosity>0)
-            yInfo("Received request: %s",request.toString().c_str());
+            yInfo("Received [go] request: %s",request.toString().c_str());
 
         if (request.check("stop"))
         {
@@ -454,6 +454,45 @@ public:
                     }
                 }
 
+                return true;
+            }
+            else
+                yError("Malformed target type!");
+        }
+        else
+            yError("Unable to communicate with the solver");
+
+        return false;
+    }
+
+    /****************************************************************/
+    bool ask(Property &request, Bottle &reply)
+    {
+        if (closing)
+            return false;
+
+        if (verbosity>0)
+            yInfo("Received [ask] request: %s",request.toString().c_str());
+
+        if (!request.check("q"))
+        {
+            Vector q=getEncoders();
+            Bottle b; b.addList().read(q);
+            request.put("q",b.get(0));
+        }
+
+        if (verbosity>0)
+            yInfo("Forwarding request to solver: %s",request.toString().c_str());
+
+        reply.clear();
+        if (solverPort.write(request,reply))
+        {
+            if (verbosity>0)
+                yInfo("Received reply from solver: %s",reply.toString().c_str());
+
+            if (reply.get(0).asVocab()==Vocab::encode("ack"))
+            {
+                reply=reply.tail();
                 return true;
             }
             else
@@ -709,6 +748,19 @@ public:
                     Property p(b->toString().c_str());
                     if (go(p))
                         reply.addVocab(Vocab::encode("ack"));
+                }
+            }
+            else if (cmd_0==Vocab::encode("ask"))
+            {
+                if (Bottle *b=cmd.get(1).asList())
+                {
+                    Property p(b->toString().c_str());
+                    Bottle payLoad;
+                    if (ask(p,payLoad))
+                    {
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.append(payLoad);
+                    }
                 }
             }
         }
