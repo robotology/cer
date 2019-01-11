@@ -12,8 +12,8 @@ source_group("Source Files" FILES ${sources})
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
-add_definitions(-D_USE_MATH_DEFINES)
 add_library(${PROJECT_NAME} ${headers} ${sources})
+target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_link_libraries(${PROJECT_NAME})
 
 # Add install target

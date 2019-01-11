@@ -16,6 +16,7 @@
 */
 
 #include <cstdio>
+#include <cmath>
 #include <string>
 
 #include <yarp/os/all.h>

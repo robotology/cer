@@ -19,20 +19,16 @@ if(GAZEBO_TRIPOD_PLUGIN)
   endif()
 
   option(GAZEBO_TRIPOD_USES_IKIN "Use iKin to compute tripod simulation" OFF)
-  if(GAZEBO_TRIPOD_USES_IKIN)
-    add_definitions(-D_GAZEBO_TRIPOD_USES_IKIN_)
-  endif()
 
   # Add Gazebo CXX flags, to support Gazebo 6 reckless dependency on C++11
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
+  set(gazeboTripod_source  GazeboYarpTripod.cpp
+                           GazeboTripodMotionControl.cpp
+                           GazeboTripod_Implementation.cpp)
 
-  set(gazeboTripod_source     GazeboYarpTripod.cpp
-                              GazeboTripodMotionControl.cpp
-                              GazeboTripod_Implementation.cpp)
-
-  set(gazeboTripod_headers    GazeboYarpTripod.h
-                              GazeboTripodMotionControl.h )
+  set(gazeboTripod_headers GazeboYarpTripod.h
+                           GazeboTripodMotionControl.h )
 
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                       ${Boost_INCLUDE_DIRS}
@@ -40,8 +36,11 @@ if(GAZEBO_TRIPOD_PLUGIN)
                       ${CMAKE_CURRENT_SOURCE_DIR}/../cermod/tripod)
 
   link_directories(${GAZEBO_LIBRARY_DIRS})
-  add_definitions(-D_USE_MATH_DEFINES)
   add_library(gazeboTripod ${gazeboTripod_source} ${gazeboTripod_headers})
+  target_compile_definitions(gazeboTripod PRIVATE _USE_MATH_DEFINES)
+  if(GAZEBO_TRIPOD_USES_IKIN)
+    target_compile_definitions(gazeboTripod PRIVATE _GAZEBO_TRIPOD_USES_IKIN_)
+  endif()
 
   target_link_libraries(gazeboTripod GazeboYARPPlugins::gazebo_yarp_singleton
                                      cer_kinematics

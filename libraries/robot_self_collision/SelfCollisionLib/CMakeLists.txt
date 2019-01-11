@@ -22,8 +22,8 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${R1ModelLib_INCLUDE_DIRS})
 include_directories(${RobotModelLib_INCLUDE_DIRS})
 
-add_definitions(-D_USE_MATH_DEFINES)
 add_library(${PROJECT_NAME} ${headers} ${sources})
+target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_link_libraries(${PROJECT_NAME} RobotModelLib R1ModelLib ${YARP_LIBRARIES})
 
 # Add install target
