@@ -37,7 +37,8 @@
 
     <group name="JOINT_PID_V1">
     <param name="controlLaw">    Pid_inPos_outPwm </param> 
-        <param name="controlUnits">  machine_units </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="pos_kp">            3000        3000       3000          0     </param>       
         <param name="pos_kd">               0           0          0          0     </param>       
         <param name="pos_ki">            5000        5000       5000          0     </param>       
@@ -55,7 +56,8 @@
     
     <group name="JOINT_POS_VEL_CTRL">
 	<param name="controlLaw">    PidPos_withInnerVelPid </param> 
-        <param name="controlUnits">  machine_units </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="pos_kp">               0           0          0          5     </param>       
         <param name="pos_kd">               0           0          0          0     </param>       
         <param name="pos_ki">               0           0          0          0     </param>       
@@ -83,7 +85,8 @@
 
     <group name="VEL_CTRL">
 	<param name="controlLaw">    Pid_inVel_outPwm </param> 
-        <param name="controlUnits">  machine_units </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="vel_kp">          3000        3000       3000          1280  </param>       
         <param name="vel_kd">             0           0          0          6144  </param>       
         <param name="vel_ki">          5000        5000       5000          1     </param>       
@@ -99,7 +102,8 @@
     
     <group name="JOINT_TRQ_VEL_CTRL">
         <param name="controlLaw">    PidTrq_withInnerVelPid                   </param> 
-        <param name="controlUnits">  metric_units                             </param>         
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>     
         <param name="trq_kp">              0          0          0          0     </param>       
         <param name="trq_kd">              0          0          0          0     </param>       
         <param name="trq_ki">              0          0          0          0     </param>       
@@ -128,7 +132,8 @@
 
     <group name="2FOC_FEEDBACK">
         <param name="controlLaw">       limitscurrent                                  </param> 
-        <param name="controlUnits">     metric_units                                   </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="cur_kp">              8           8           8           8       </param>       
         <param name="cur_kd">              0           0           0           0       </param>       
         <param name="cur_ki">              2           2           2           2       </param>

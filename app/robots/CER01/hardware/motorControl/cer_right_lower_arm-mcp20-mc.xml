@@ -36,7 +36,8 @@
 
     <group name="JOINT_PID_V1">
         <param name="controlLaw">    Pid_inPos_outPwm </param> 
-        <param name="controlUnits">  machine_units    </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="pos_kp">               20         20         20      -0.7    </param>       
         <param name="pos_kd">               0          0          0        0      </param>       
         <param name="pos_ki">               0          0          0        0      </param>       
@@ -52,7 +53,8 @@
 
     <group name="VEL_CTRL">
         <param name="controlLaw">    Pid_inVel_outPwm </param> 
-        <param name="controlUnits">  machine_units </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="vel_kp">                    20         20         20      -0.7    </param>       
         <param name="vel_kd">                    0          0          0        0      </param>       
         <param name="vel_ki">                    0          0          0        0      </param>       
@@ -68,7 +70,8 @@
 
     <group name="MOTOR_PID_WITH_FRICTION_V1">
         <param name="controlLaw">    Pid_inTrq_outPwm               </param> 
-        <param name="controlUnits">  metric_units                             </param>         
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>     
         <param name="trq_kp">              0          0          0          0     </param>       
         <param name="trq_kd">              0          0          0          0     </param>       
         <param name="trq_ki">              0          0          0          0     </param>       

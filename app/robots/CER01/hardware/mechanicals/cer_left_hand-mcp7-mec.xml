@@ -3,7 +3,7 @@
 
 <params robot="CER01" build="1">
     <group name="GENERAL">
-        <param name="MotioncontrolVersion">  4 </param>
+        <param name="MotioncontrolVersion">  5 </param>
         <param name="Joints">                2  </param> 
         <param name="AxisName">              "l_palm"           "l_thumb"       </param>
         <param name="AxisMap">               0                  1               </param>
@@ -20,7 +20,7 @@
 
     <group name="LIMITS">
         <param name="hardwareJntPosMax">        140               110           </param>
-        <param name="hardwareJntPosMin">        0                 0             </param>
+        <param name="hardwareJntPosMin">        -4                -2            </param>
         <param name="rotorPosMin">              0                 0             </param>
         <param name="rotorPosMax">              0                 0             </param>
     </group>
@@ -47,7 +47,6 @@
             0.000   0.000   0.000   0.000   0.000   0.000
             0.000   0.000   0.000   0.000   0.000   0.000   
         </param>
-                
     </group>   
 
     <group name="JOINTSET_CFG"> 

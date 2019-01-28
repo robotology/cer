@@ -18,7 +18,7 @@
          <param name ="ROS_nodeName"> /cer-left_arm_FT </param>
          <param name ="ROS_topicName"> /left_arm_FT </param>
          <param name ="frame_id"> /l_clavicle_link  </param>
-         <param name ="ROS_msgType"> geometry_msgs/WrenchedStamped </param>
+         <param name ="ROS_msgType"> geometry_msgs/WrenchStamped </param>
       </group>
 
 		<action phase="shutdown" level="5" type="detach" />
