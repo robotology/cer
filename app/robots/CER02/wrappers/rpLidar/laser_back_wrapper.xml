@@ -3,11 +3,11 @@
   <device name="cerLaserBackWrapper" type="Rangefinder2DWrapper">
 
       <param name="period"> 10 </param>
-      <param name="name">   /cer/laserBack:o       </param>
+      <param name="name">   /cer/laser/back:o       </param>
 
       <action phase="startup" level="5" type="attach">
          <paramlist name="networks">
-            <elem name="cer_laser">  cerLaserBack </elem>
+            <elem name="cer_laser">  cer_laser_back_device </elem>
          </paramlist>
       </action>
 

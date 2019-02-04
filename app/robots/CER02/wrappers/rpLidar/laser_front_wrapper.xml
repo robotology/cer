@@ -3,11 +3,11 @@
   <device name="cerLaserFrontWrapper" type="Rangefinder2DWrapper">
 
       <param name="period"> 10 </param>
-      <param name="name">   /cer/laser:o       </param>
+      <param name="name">   /cer/laser/front:o       </param>
 
       <action phase="startup" level="5" type="attach">
          <paramlist name="networks">
-            <elem name="cer_laser">  cerLaserFront </elem>
+            <elem name="cer_laser">  cer_laser_front_device </elem>
          </paramlist>
       </action>
 
