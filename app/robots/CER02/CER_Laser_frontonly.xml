@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE robot PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
 
@@ -9,14 +10,12 @@
     <devices file="wrappers/motorControl/cer_base-mc_wrapper.xml" />
 -->
     <!-- LASER -->
-    <devices file="hardware/rpLidar/laserA2_hw_back.xml" /> 
-    <devices file="wrappers/rpLidar/laser_back_wrapper.xml" /> 
+
 
     <devices file="hardware/rpLidar/laserA2_hw_front.xml" /> 
     <devices file="wrappers/rpLidar/laser_front_wrapper.xml" /> 
 
-    <devices file="hardware/rpLidar/laserA2_hw_double.xml" /> 
-    <devices file="wrappers/rpLidar/laser_double_wrapper.xml" /> 
+
 
 </robot> 
 
