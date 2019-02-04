@@ -37,7 +37,7 @@
   </joint>
   <link name="mobile_base_lidar_B"/>
   <joint name="mobile_base_lidar_B_fixed_joint" type="fixed">
-    <origin xyz="-0.085 0 0.031" rpy="0 0 0"/>
+    <origin xyz="-0.085 0 0.031" rpy="0 0 3.14"/>
     <parent link="mobile_base_body_link"/>
     <child link="mobile_base_lidar_B"/>
     <dynamics damping="0.1"/>
