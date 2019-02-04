@@ -34,11 +34,12 @@ namespace cer {
     }
 }
 
-struct Point3d_t
+struct LaserPose_t
 {
     double x;
     double y;
     double z;
+    double theta;
 };
 
 class LaserCfg_t
@@ -46,7 +47,7 @@ class LaserCfg_t
 public:
     enum Laser{front=0, back=1};
     Laser laser;
-    Point3d_t pose;
+    LaserPose_t pose;
     std::string fileCfgName;
     std::string sensorName;
     std::string typeOfDevice; //currntly not used
@@ -93,7 +94,7 @@ public:
 
 private:
 
-    void calculate(int sensNum, double distance, bool front, int &newSensNum, double &newdistance);
+    void calculate(int sensNum, double distance, int &newSensNum, double &newdistance, double x_off, double y_off, double t_off);
     bool verifyLasersConfigurations(void);
     bool getLasersInterfaces(void);
     bool createLasersDevices(void);

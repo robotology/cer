@@ -23,18 +23,27 @@ bool LaserCfg_t::loadConfig(yarp::os::Searchable& config)
 {
     std::string key;
     if(laser==front)
-    {key="LASERFRONT-CFG";}
+    {
+		key="LASERFRONT-CFG";
+    }
     else
-    {key="LASERBACK-CFG";}
-
+    {
+		key="LASERBACK-CFG";
+    }
+    
     yarp::os::Searchable& l_config = config.findGroup(key);
     if (l_config.check("pose")==false) {yError() << "cerDoubleLidar: missing pose"; return false; }
     Bottle & b_pose = l_config.findGroup("pose");
-    if(b_pose.size()!= 4)
-        yError() << "cerDoubleLidar: wrong size of pose";
-    pose.x = b_pose.get(1).asDouble();
-    pose.y = b_pose.get(2).asDouble();
-    pose.z = b_pose.get(3).asDouble();
+    if(b_pose.size()!= 5)
+    {
+		    yError() << "cerDoubleLidar: wrong size of pose ("<<b_pose.size()<<"). It should be <x y x theta>";
+		    return false; 
+    }
+    pose.x = b_pose.get(1).asFloat64();
+    pose.y = b_pose.get(2).asFloat64();
+    pose.z = b_pose.get(3).asFloat64();
+    pose.theta = b_pose.get(4).asFloat64();
+
 
     if (l_config.check("file")==false) {yError() << "cerDoubleLidar: missing file"; return false; }
     Bottle & b_filename = l_config.findGroup("file");
@@ -46,7 +55,7 @@ bool LaserCfg_t::loadConfig(yarp::os::Searchable& config)
 
 
     //DEBUG
-    yError() << key << pose.x << pose.y << pose.z << fileCfgName << sensorName;
+    yDebug() << key << "x:" << pose.x << "y:" << pose.y << "z:" << pose.z << "t:" << pose.theta << fileCfgName << sensorName;
 
     return true;
 
@@ -77,7 +86,7 @@ bool cerDoubleLidar::getLasersInterfaces(void)
     }
     else
     {
-        yError() << "****cerDoubleLidar: finded laserFront device. OK";
+        yInfo() << "****cerDoubleLidar: laserFront device found. OK";
     }
 
     if(m_driver_laserBack == nullptr)
@@ -87,7 +96,7 @@ bool cerDoubleLidar::getLasersInterfaces(void)
     }
     else
     {
-        yError() << "****cerDoubleLidar: finded laserBack device. OK";
+        yInfo() << "****cerDoubleLidar: laserBack device found. OK";
     }
 
     if(!m_driver_laserFront->view(m_dev_laserFront))
@@ -97,7 +106,7 @@ bool cerDoubleLidar::getLasersInterfaces(void)
     }
     else
     {
-        yError() << "****cerDoubleLidar: get interface of laser front. OK";
+        yInfo() << "****cerDoubleLidar: get interface of laser front. OK";
     }
 
 
@@ -109,7 +118,7 @@ bool cerDoubleLidar::getLasersInterfaces(void)
     }
     else
     {
-        yError() << "****cerDoubleLidar: get interface of laser Back. OK";
+        yInfo() << "****cerDoubleLidar: get interface of laser Back. OK";
     }
 
     return true;
@@ -119,7 +128,7 @@ bool cerDoubleLidar::attachAll(const PolyDriverList &p)
 {
     if(p.size()!=2)
     {
-        yError() << "cerDoubleLidar attach whin wrong num of drivers";
+        yError() << "cerDoubleLidar attach with wrong num of drivers";
         return false;
     }
 
@@ -211,14 +220,21 @@ bool cerDoubleLidar::open(yarp::os::Searchable& config)
     yarp::os::LockGuard guard(m_mutex);
 
     if(!m_lFrontCfg.loadConfig(config))
-            return false;
-    if(!m_lBackCfg.loadConfig(config))
+    {
         return false;
+    }
+    yDebug() << "x:" << m_lFrontCfg.pose.x << "y:" << m_lFrontCfg.pose.y << "z:" << m_lFrontCfg.pose.z << "t:" << m_lFrontCfg.pose.theta << m_lBackCfg.sensorName;
+
+    if(!m_lBackCfg.loadConfig(config))
+    {
+	    return false;
+    }
+    yDebug() << "x:" << m_lBackCfg.pose.x << "y:" << m_lBackCfg.pose.y << "z:" << m_lBackCfg.pose.z << "t:" << m_lBackCfg.pose.theta << m_lBackCfg.sensorName;
 
     //currently if z values differs, than return error
     if(m_lFrontCfg.pose.z != m_lBackCfg.pose.z)
     {
-        yError() << "cerDoubleLidar: poses of laser front and back have differnt z values";
+        yError() << "cerDoubleLidar: poses of laser front and back have different z values";
         return false;
     }
 
@@ -459,79 +475,36 @@ static inline double convertAngle_rad2degree(double angle)
 }
 
 
-void cerDoubleLidar::calculate(int sensNum, double distance, bool front, int &newSensNum, double &newdistance)
+void cerDoubleLidar::calculate(int sensNum, double distance, int &newSensNum, double &newdistance, double x_off, double y_off, double t_off)
 {
     //calculate the input angle in degree
     double angle_input = (sensNum*m_resolution);
+    double angle_rad = convertAngle_degree2rad(angle_input);
 
-    //converto fro user pace to hw space and to rad
-    double hw_input_angle = convertAngle_user2Hw(angle_input);
-    double angle_rad = convertAngle_degree2rad(hw_input_angle);
+#ifdef DO_NOTHING_DEBUG
+    x_off=0;
+    y_off=0;
+    t_off=0;
+#endif 
 
     //calculate vertical and horizontal components of input angle
-    double Ay = std::abs(sin(angle_rad)*distance);
-    double Ax = std::abs(cos(angle_rad)*distance);
+    double Ay = (sin(angle_rad+t_off)*distance);
+    double Ax = (cos(angle_rad+t_off)*distance);
 
     //calculate vertical and horizontal components of new angle with offset.
-    //Note: sum laserpose.x to Ay is not an error! its dipend on the orienattion of axis.
-    //I'm not sure about the use of abs in  std::abs(m_laserFrontPose.y). to be tested.
-    double By, Bx;
-    if(front)
-    {
-        By = Ay + std::abs(m_lFrontCfg.pose.x);
-        Bx = Ax + std::abs(m_lFrontCfg.pose.y);
-    }
-    else
-    {
-        By = Ay + std::abs(m_lBackCfg.pose.x);
-        Bx = Ax + std::abs(m_lBackCfg.pose.y);
-    }
-
-    double betarad = atan(By/Bx);
-    double beta = convertAngle_rad2degree(betarad);
-
-    //atan has codominio = (-PI/2 , PI/2), but since the input is only >0 than the atan output is in (0, PI/2).
-    //Now I need to normalize the angle according to the input angle.
-    double beta2;
-
-    if(hw_input_angle>=90.0 && hw_input_angle<180)
-        beta2=180-beta;
-    else if(hw_input_angle >=180 && hw_input_angle <270)
-        beta2= beta+180;
-    else if(hw_input_angle >=270)
-        beta2=360-beta;
-    else
-        beta2=beta;
-
-
-    //now I check the difference between the input angle and the calculated angle in order to understand if I need to change the slot (sensorNum)
-    double diff=beta2-hw_input_angle;
-    newSensNum= sensNum+ round(diff);
-    if(newSensNum>=m_samples)
-    {
-        newSensNum = newSensNum-m_samples;
-        yError() << "cerDoubleLidar::calculate...something stange has been happened";
-    }
-
+    double By = Ay + y_off;
+    double Bx = Ax + x_off;
+    
+    double betarad = atan2(By,Bx); //the output is -pi +pi
+    double beta2 = convertAngle_rad2degree(betarad); //the output is -180 +180
+    
+    //compute the new slot
+    newSensNum= (double)(beta2/m_resolution);
+    if (newSensNum > 720) newSensNum-= 720;
+    if (newSensNum < 0)   newSensNum+= 720;
+    
+    //compute the distance
     newdistance = std::sqrt((Bx*Bx)+(By*By));
-
-
-//     //------debug stuff----
-//     std::string res= "==>OK";
-//     if(std::abs(diff)>m_resolution)
-//         res="==> change slot!!!";
-//
-//     std::string laser="front";
-//     if(!front)
-//         laser="back";
-//     //yError() << laser << "ANGLE_in=" << angle_input << "ANGLE=" << angle << "BETA="<<beta  <<"BETA2=" << beta2 <<  "  angle2=" <<angle2 << "DIFF="<< diff<<  res;
-//
-//     double beta3 = convertAngle_hw2user(beta2);
-//
-//     //newSensNum=round(beta3/m_resolution); per semplificare i calcoli la calcolo cosi:
-//
-//     yError() << laser << "INPUT_A=" <<angle_input << "("<<sensNum<<")"<< "ORIGINAL_D=" << distance<< "ORIGINAL_A=" << hw_input_angle << "NEW_DIST="<< newdistance << "NEW_ang=" << beta2  << "OUPUT_A="<< beta3 << "sensnum=" << newSensNum << "DIFF=" << diff <<  res;
-//
 
 }
 
@@ -542,9 +515,12 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
     yarp::os::LockGuard guard(m_mutex);
 
     if(!m_inited)
-        return false;
+    {
+		return false;
+	}
     yarp::sig::Vector dataFront;
     yarp::sig::Vector dataBack;
+    
     //if(out.size() != m_samples)
         out.resize(m_samples, INFINITY);
     
@@ -555,19 +531,25 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
     
     for(int i=0; i<m_samples; i++)
     {
-        double tmp;
+         out[i] = INFINITY;
+    }
+
+    for(int i=0; i<m_samples; i++)
+    {
+        double newvalue;
         int newindex;
-	//When hardware has problems gives me 0.0 value, so I exclude it
-        if( (dataFront[i]!= INFINITY)&& (dataFront[i]!=0.0))
-            calculate(i, dataFront[i], true, newindex, tmp);
-        else if((dataBack[i] != INFINITY)&& (dataBack[i]!=0.0))
-            calculate(i, dataBack[i], false, newindex, tmp);
-        else
+       
+        //When hardware has problems, it gives me 0.0, so I skip it
+        if((dataFront[i]!= INFINITY)&& (dataFront[i]!=0.0))
         {
-            tmp = INFINITY;
-            newindex = i;
-        }
-        out[newindex] = tmp;
+			    calculate(i, dataFront[i], newindex, newvalue, m_lFrontCfg.pose.x, m_lFrontCfg.pose.y, m_lFrontCfg.pose.theta);
+			    out[newindex] = newvalue;
+	    }
+        if((dataBack[i] != INFINITY)&& (dataBack[i]!=0.0))
+        {
+                calculate(i, dataBack[i], newindex, newvalue, m_lBackCfg.pose.x, m_lBackCfg.pose.y, m_lBackCfg.pose.theta);
+                out[newindex] = newvalue;
+	    }
     }
     
     return true;
@@ -575,6 +557,10 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
 
 bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
 {
+	yError() << "getLaserMeasurement ot yet implemented";
+	return false;
+	
+	//Some transformation is missing in the following piece of code
     yarp::os::LockGuard guard(m_mutex);
     
     if(!m_inited)
