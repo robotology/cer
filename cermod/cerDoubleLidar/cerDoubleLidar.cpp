@@ -19,16 +19,16 @@ using namespace yarp::sig;
 using namespace yarp::dev;
 using namespace cer::dev;
 
-bool LaserCfg_t::loadConfig(yarp::os::Searchable& config)
+bool cerDoubleLidar::LaserCfg_t::loadConfig(yarp::os::Searchable& config)
 {
     std::string key;
     if(laser==front)
     {
-		key="LASERFRONT-CFG";
+        key="LASERFRONT-CFG";
     }
     else
     {
-		key="LASERBACK-CFG";
+        key="LASERBACK-CFG";
     }
     
     yarp::os::Searchable& l_config = config.findGroup(key);
@@ -36,8 +36,8 @@ bool LaserCfg_t::loadConfig(yarp::os::Searchable& config)
     Bottle & b_pose = l_config.findGroup("pose");
     if(b_pose.size()!= 5)
     {
-		    yError() << "cerDoubleLidar: wrong size of pose ("<<b_pose.size()<<"). It should be <x y x theta>";
-		    return false; 
+        yError() << "cerDoubleLidar: wrong size of pose ("<<b_pose.size()<<"). It should be <x y x theta>";
+        return false; 
     }
     pose.x = b_pose.get(1).asFloat64();
     pose.y = b_pose.get(2).asFloat64();
@@ -218,7 +218,8 @@ bool cerDoubleLidar::createLasersDevices(void)
 bool cerDoubleLidar::open(yarp::os::Searchable& config)
 {
     yarp::os::LockGuard guard(m_mutex);
-
+    yDebug() << "cerDoubleLidar::open()";
+    
     if(!m_lFrontCfg.loadConfig(config))
     {
         return false;
@@ -227,7 +228,7 @@ bool cerDoubleLidar::open(yarp::os::Searchable& config)
 
     if(!m_lBackCfg.loadConfig(config))
     {
-	    return false;
+        return false;
     }
     yDebug() << "x:" << m_lBackCfg.pose.x << "y:" << m_lBackCfg.pose.y << "z:" << m_lBackCfg.pose.z << "t:" << m_lBackCfg.pose.theta << m_lBackCfg.sensorName;
 
@@ -516,8 +517,8 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
 
     if(!m_inited)
     {
-		return false;
-	}
+        return false;
+    }
     yarp::sig::Vector dataFront;
     yarp::sig::Vector dataBack;
     
@@ -542,14 +543,14 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
         //When hardware has problems, it gives me 0.0, so I skip it
         if((dataFront[i]!= INFINITY)&& (dataFront[i]!=0.0))
         {
-			    calculate(i, dataFront[i], newindex, newvalue, m_lFrontCfg.pose.x, m_lFrontCfg.pose.y, m_lFrontCfg.pose.theta);
-			    out[newindex] = newvalue;
-	    }
+            calculate(i, dataFront[i], newindex, newvalue, m_lFrontCfg.pose.x, m_lFrontCfg.pose.y, m_lFrontCfg.pose.theta);
+            out[newindex] = newvalue;
+        }
         if((dataBack[i] != INFINITY)&& (dataBack[i]!=0.0))
         {
                 calculate(i, dataBack[i], newindex, newvalue, m_lBackCfg.pose.x, m_lBackCfg.pose.y, m_lBackCfg.pose.theta);
                 out[newindex] = newvalue;
-	    }
+        }
     }
     
     return true;
@@ -557,10 +558,10 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
 
 bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
 {
-	yError() << "getLaserMeasurement ot yet implemented";
-	return false;
-	
-	//Some transformation is missing in the following piece of code
+    yError() << "getLaserMeasurement ot yet implemented";
+    return false;
+    
+    //Some transformation is missing in the following piece of code
     yarp::os::LockGuard guard(m_mutex);
     
     if(!m_inited)

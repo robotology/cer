@@ -34,35 +34,34 @@ namespace cer {
     }
 }
 
-struct LaserPose_t
-{
-    double x;
-    double y;
-    double z;
-    double theta;
-};
-
-class LaserCfg_t
-{
-public:
-    enum Laser{front=0, back=1};
-    Laser laser;
-    LaserPose_t pose;
-    std::string fileCfgName;
-    std::string sensorName;
-    std::string typeOfDevice; //currntly not used
-    LaserCfg_t(Laser l){laser=l;}
-    bool loadConfig(yarp::os::Searchable& config);
-
-};
-
 class cer::dev::cerDoubleLidar :
     public yarp::dev::DeviceDriver,
     public yarp::dev::IRangefinder2D,
     public yarp::dev::IMultipleWrapper
 {
-public:
+    struct LaserPose_t
+    {
+       double x;
+       double y;
+       double z;
+       double theta;
+    };
 
+    class LaserCfg_t
+    {
+       public:
+       enum Laser{front=0, back=1};
+       Laser laser;
+       LaserPose_t pose;
+       std::string fileCfgName;
+       std::string sensorName;
+       std::string typeOfDevice; //currently not used
+       LaserCfg_t(Laser l){laser=l;}
+       bool loadConfig(yarp::os::Searchable& config);
+    };
+
+
+public:
     cerDoubleLidar();
     virtual ~cerDoubleLidar();
 
