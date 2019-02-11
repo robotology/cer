@@ -13,7 +13,6 @@
 #include <unistd.h>
 
 #include "r1face_mic.h"
-#include "CircularBuffer.h"
 #include <yarp/os/Time.h>
 #include <yarp/os/Value.h>
 #include <yarp/os/LogStream.h>
@@ -49,11 +48,21 @@ R1faceMic::R1faceMic(): PeriodicThread(0),
                         dev_fd(-1),
                         chunkSize(CHUNK_SIZE),
                         deviceFile("/dev/micif_dev"),
-                        rawBuffer(nullptr)
-
+                        rawBuffer(nullptr),
+                        selected_chan(-1),
+                        userChannelsNum(8)
 {
     tmpData     = new inputData;
+    
+#if CARDE
     inputBuffer = new CircularBuffer<inputData>(BUFFER_SIZE);
+#else
+    const size_t _channels = HW_STEREO_CHANNELS * STEREO;
+    const size_t _samples = BUFFER_SIZE * CHUNK_SIZE;
+    const size_t _depth = 4;
+    yarp::dev::AudioBufferSize size (_samples, _channels, _depth);
+    inputBuffer = new CircularAudioBuffer_32t("r1_face_mic",size);
+#endif
 }
 
 R1faceMic::~R1faceMic()
@@ -70,6 +79,18 @@ bool R1faceMic::open(yarp::os::Searchable &params)
         deviceFile = params.find("audioDevice").asString();
 
     shift = params.check("shift", yarp::os::Value(8)).asInt();
+
+    bool singleChannel = params.check("channel");
+    if (singleChannel)
+    {
+        selected_chan = params.find("channel").asInt32();
+        if ((selected_chan <= 0) || (selected_chan >= HW_STEREO_CHANNELS))
+        {
+            yError() << "Requested channel do not exists. Available channels are from 0 to " << HW_STEREO_CHANNELS - 2;
+            return false;
+        }
+        userChannelsNum = 1;
+    }
 
     dev_fd = ::open(deviceFile.c_str(), O_RDONLY);
     if (dev_fd < 0)
@@ -116,7 +137,10 @@ void R1faceMic::run()
         return;
     }
 
-    inputBuffer->write(*tmpData);
+    for (size_t i = 0; i < TOT_SAMPLES; i++)
+    {
+        inputBuffer->write(tmpData->data[i]);
+    }
 }
 
 void R1faceMic::threadRelease()
@@ -130,20 +154,19 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound)
     // Extract channels from acquired buffer and
     // manipulate them to get meaningful information
 
-    while(inputBuffer->size() < 5 && recording)
+    while(inputBuffer->size().getSamples() < 5*CHUNK_SIZE && recording)
     {
         yarp::os::SystemClock::delaySystem(0.01);
     }
 
-    int chunksInBuffer = inputBuffer->size();
-    sound.resize(chunkSize * chunksInBuffer, channels-1);
+    int chunksInBuffer = inputBuffer->size().getSamples()/ chunkSize;
+    sound.resize(inputBuffer->size().getSamples(), userChannelsNum);
     sound.setFrequency(samplingRate);
     sound.clear();
-
+    
+    /*
     int16_t   tmp  =0;
     inputData tmpChunk;
-
-
     for(int chunk=0; chunk < chunksInBuffer; chunk++)
     {
         tmpChunk = inputBuffer->read();
@@ -161,6 +184,30 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound)
             {
                 tmp = rawBuffer[ch+j] >> shift;
                 sound.set(tmp, sx+ (chunk*chunkSize), ch-1);
+            }
+        }
+    }
+    */
+
+    ////////////////////////////////
+    size_t sample_counter = 0;
+    size_t buffer_size = inputBuffer->size().getSamples();
+    for (size_t sample_counter =0; sample_counter< buffer_size; sample_counter++)
+    {
+        for (size_t skip = 0; skip < 9 + 1; skip++)
+        {
+            int32_t dummy = inputBuffer->read();
+        }
+        for (size_t chan = 0; chan < 8; chan++)
+        {
+            int32_t value = inputBuffer->read();
+            if (selected_chan == -1)
+            {
+                sound.set(value, sample_counter, chan);
+            }
+            else if (selected_chan == chan)
+            {
+                sound.set(value, sample_counter, 0);
             }
         }
     }
@@ -197,3 +244,22 @@ bool R1faceMic::stopService()
     return false;
 }
 
+bool R1faceMic::getRecordingAudioBufferMaxSize(yarp::dev::AudioBufferSize& size)
+{
+    size = this->inputBuffer->getMaxSize();
+    return true;
+}
+
+
+bool R1faceMic::getRecordingAudioBufferCurrentSize(yarp::dev::AudioBufferSize& size)
+{
+    size = this->inputBuffer->size();
+    return true;
+}
+
+
+bool R1faceMic::resetRecordingAudioBuffer()
+{
+    inputBuffer->clear();
+    return true;
+}
