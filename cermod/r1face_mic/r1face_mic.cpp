@@ -8,9 +8,17 @@
  */
 
 #include <fcntl.h>
-#include <sys/ioctl.h>
 #include <string.h>
+
+#ifdef WIN32
+#define SIMULATE_ONLY
+#pragma message ("WARNING: r1face_mic device is implemented on Linux only, r1face_mic will be simulated on WIN32")
+#endif
+
+#ifndef  SIMULATE_ONLY
+#include <sys/ioctl.h>
 #include <unistd.h>
+#endif
 
 #include "r1face_mic.h"
 #include <yarp/os/Time.h>
@@ -18,13 +26,13 @@
 #include <yarp/os/LogStream.h>
 
 
-#define STEREO              2
-#define HW_STEREO_CHANNELS  9
-#define SAMPLING_RATE       16000
-#define CHUNK_SIZE          512             // Got from HW specifications, do not change it!!
+#define STEREO              2      // Got from HW specifications, do not change it!!
+#define HW_STEREO_CHANNELS  9      // Got from HW specifications, do not change it!!
+#define SAMPLING_RATE       16000  // Got from HW specifications, do not change it!!
+#define CHUNK_SIZE          512    // Got from HW specifications, do not change it!!
 #define TOT_SAMPLES         ((HW_STEREO_CHANNELS * STEREO) * CHUNK_SIZE)
 
-#define BUFFER_SIZE         50
+#define BUFFER_SIZE         100    //chosen by user
 
 // Low level driver configurations
 #define MAGIC_NUM           100
@@ -84,7 +92,7 @@ bool R1faceMic::open(yarp::os::Searchable &params)
     if (singleChannel)
     {
         selected_chan = params.find("channel").asInt32();
-        if ((selected_chan <= 0) || (selected_chan >= HW_STEREO_CHANNELS))
+        if ((selected_chan < 0) || (selected_chan >= HW_STEREO_CHANNELS))
         {
             yError() << "Requested channel do not exists. Available channels are from 0 to " << HW_STEREO_CHANNELS - 2;
             return false;
@@ -92,6 +100,7 @@ bool R1faceMic::open(yarp::os::Searchable &params)
         userChannelsNum = 1;
     }
 
+#ifndef  SIMULATE_ONLY
     dev_fd = ::open(deviceFile.c_str(), O_RDONLY);
     if (dev_fd < 0)
     {
@@ -101,6 +110,7 @@ bool R1faceMic::open(yarp::os::Searchable &params)
 
     ioctl(dev_fd, IOCTL_SETBURST,   chunkSize);
     ioctl(dev_fd, IOCTL_SAMPLERATE, 16000);    // Actually this ioctl seems not to work... it sample at 16KHz anyway
+#endif
 
     yDebug() << "Input configuration is " << params.toString();
     yInfo()  << "R1faceMic device opened, starting thread";
@@ -117,7 +127,9 @@ bool R1faceMic::close()
 
 bool R1faceMic::threadInit()
 {
-    recording = true;
+    //better not to start the recording here!
+    //you may get buffer overrun if you do not call getSound() quickly enough
+    //startRecording();
     return true;
 }
 
@@ -130,17 +142,26 @@ void R1faceMic::run()
         return;
     }
 
+#ifndef SIMULATE_ONLY
     // Just acquire raw data and place them in the buffer as fast as possible
     if (::read(dev_fd, tmpData->data, CHUNK_SIZE * HW_STEREO_CHANNELS * STEREO * sizeof(int32_t)) < 0)
     {
         yError() << "R1 face microphones: error reading data from HW";
         return;
     }
+#endif
 
     for (size_t i = 0; i < TOT_SAMPLES; i++)
     {
         inputBuffer->write(tmpData->data[i]);
     }
+
+//#define DEBUG_BUFFER_SIZE
+#ifdef  DEBUG_BUFFER_SIZE
+    yDebug() << inputBuffer->size().getBufferElements() << "/" << inputBuffer->getMaxSize().getBufferElements() << "Buffer Elements";
+
+    yDebug() << inputBuffer->size().getSamples()<< "/" << inputBuffer->getMaxSize().getSamples() << "Samples";
+#endif
 }
 
 void R1faceMic::threadRelease()
@@ -150,49 +171,32 @@ void R1faceMic::threadRelease()
 
 bool R1faceMic::getSound(yarp::sig::Sound& sound)
 {
-    ///////////////////////////////////////////////
-    // Extract channels from acquired buffer and
-    // manipulate them to get meaningful information
+    if (recording == false)
+    {
+        startRecording();
+    }
 
     while(inputBuffer->size().getSamples() < 5*CHUNK_SIZE && recording)
     {
-        yarp::os::SystemClock::delaySystem(0.01);
+#ifdef  DEBUG_BUFFER_SIZE
+        yDebug() << "&&&&&" << inputBuffer->size().getSamples() << "/" << 5 * CHUNK_SIZE << "Samples";
+#endif
+        yarp::os::SystemClock::delaySystem(0.005);
     }
 
+    //prepare the sound
     int chunksInBuffer = inputBuffer->size().getSamples()/ chunkSize;
-    sound.resize(inputBuffer->size().getSamples(), userChannelsNum);
+    size_t samplesInBuffer = inputBuffer->size().getSamples();
+    sound.resize(samplesInBuffer, userChannelsNum);
     sound.setFrequency(samplingRate);
     sound.clear();
     
-    /*
-    int16_t   tmp  =0;
-    inputData tmpChunk;
-    for(int chunk=0; chunk < chunksInBuffer; chunk++)
-    {
-        tmpChunk = inputBuffer->read();
-        rawBuffer =  tmpChunk.data;
-
-        int ch = 0;     // stereo channel, from 0 to 9
-        int j  = 9;     // selector to choose right channels only. Jumps of (channels * STEREO)
-                        // for all data until the chunk is over
-        int sx = 0;     // sample inside the chunk, goes from 0 to chunkSize
-
-        // Only right channels are connected to a microphone, so skip left channels
-        for (j=9; j< chunkSize *(channels * STEREO); j+=(channels * STEREO), sx++)
-        {
-            for (ch=1; ch<HW_STEREO_CHANNELS; ch++)     // skip the ch0, we don't like it
-            {
-                tmp = rawBuffer[ch+j] >> shift;
-                sound.set(tmp, sx+ (chunk*chunkSize), ch-1);
-            }
-        }
-    }
-    */
-
-    ////////////////////////////////
+    ///////////////////////////////////////////////
+    // Extract channels from acquired buffer and
+    // manipulate them to get meaningful information
+    ///////////////////////////////////////////////
     size_t sample_counter = 0;
-    size_t buffer_size = inputBuffer->size().getSamples();
-    for (size_t sample_counter =0; sample_counter< buffer_size; sample_counter++)
+    for (size_t sample_counter =0; sample_counter< samplesInBuffer; sample_counter++)
     {
         for (size_t skip = 0; skip < 9 + 1; skip++)
         {
@@ -211,17 +215,26 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound)
             }
         }
     }
+//#define DEBUG_BUFFER_SIZE
+#ifdef  DEBUG_BUFFER_SIZE
+    yDebug() << "sound size"<< sound.getSamples();
+    //yDebug() << inputBuffer->size().getBufferElements() << "/" << inputBuffer->getMaxSize().getBufferElements() << "Buffer Elements";
+
+     yDebug() << inputBuffer->size().getSamples() << "/" << inputBuffer->getMaxSize().getSamples() << "Samples";
+#endif
     return true;
 }
 
 bool R1faceMic::startRecording()
 {
+    inputBuffer->clear();
     recording = true;
     return true;
 }
 
 bool R1faceMic::stopRecording()
 {
+    inputBuffer->clear();
     recording = false;
     return true;
 }
