@@ -86,7 +86,7 @@ bool R1faceMic::open(yarp::os::Searchable &params)
     if(params.check("audioDevice") && params.find("audioDevice").isString())
         deviceFile = params.find("audioDevice").asString();
 
-    shift = params.check("shift", yarp::os::Value(8)).asInt();
+    shift = params.check("shift", yarp::os::Value(6)).asInt();
 
     bool singleChannel = params.check("channel");
     if (singleChannel)
@@ -204,14 +204,15 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound)
         }
         for (size_t chan = 0; chan < 8; chan++)
         {
-            int32_t value = inputBuffer->read();
+            int32_t value24 = inputBuffer->read();
+            int16_t value16 = value24 >> shift;
             if (selected_chan == -1)
             {
-                sound.set(value, sample_counter, chan);
+                sound.set(value16, sample_counter, chan);
             }
             else if (selected_chan == chan)
             {
-                sound.set(value, sample_counter, 0);
+                sound.set(value16, sample_counter, 0);
             }
         }
     }
