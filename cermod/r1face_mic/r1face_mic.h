@@ -118,6 +118,7 @@ private:
     std::string deviceFile;
     int selected_chan;
     int userChannelsNum;
+    size_t record_waiting_counter;
 
     int32_t                     *rawBuffer;
     inputData                   *tmpData;

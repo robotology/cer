@@ -70,6 +70,7 @@ R1faceMic::R1faceMic(): PeriodicThread(0),
     const size_t _depth = 4;
     yarp::dev::AudioBufferSize size (_samples, _channels, _depth);
     inputBuffer = new CircularAudioBuffer_32t("r1_face_mic",size);
+    record_waiting_counter=0;
 #endif
 }
 
@@ -182,7 +183,13 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound)
         yDebug() << "&&&&&" << inputBuffer->size().getSamples() << "/" << 5 * CHUNK_SIZE << "Samples";
 #endif
         yarp::os::SystemClock::delaySystem(0.005);
+        record_waiting_counter++;
+        if (record_waiting_counter>200 && inputBuffer->size().getSamples()==0) 
+        {
+            yError() << "Buffer size still empty after 10 seconds";
+        }
     }
+    record_waiting_counter=0;
 
     //prepare the sound
     int chunksInBuffer = inputBuffer->size().getSamples()/ chunkSize;
