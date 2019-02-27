@@ -85,7 +85,7 @@ public:
      * @param sound the sound to be filled
      * @return true/false upon success/failure
      */
-    virtual bool getSound(yarp::sig::Sound& sound) override;
+    virtual bool getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, size_t max_number_of_samples, double max_samples_timeout_s) override;
 
     /**
      * Start the recording.

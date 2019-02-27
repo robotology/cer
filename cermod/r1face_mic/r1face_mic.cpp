@@ -170,31 +170,52 @@ void R1faceMic::threadRelease()
     stopRecording();
 }
 
-bool R1faceMic::getSound(yarp::sig::Sound& sound)
+bool R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, size_t max_number_of_samples, double max_samples_timeout_s)
 {
     if (recording == false)
     {
         startRecording();
     }
 
-    while(inputBuffer->size().getSamples() < 5*CHUNK_SIZE && recording)
+    if (max_number_of_samples < min_number_of_samples)
     {
-#ifdef  DEBUG_BUFFER_SIZE
-        yDebug() << "&&&&&" << inputBuffer->size().getSamples() << "/" << 5 * CHUNK_SIZE << "Samples";
-#endif
-        yarp::os::SystemClock::delaySystem(0.005);
-        record_waiting_counter++;
-        if (record_waiting_counter>200 && inputBuffer->size().getSamples()==0) 
-        {
-            yError() << "Buffer size still empty after 10 seconds";
-        }
+        yError() << "max_number_of_samples must be greater than min_number_of_samples!";
+        return false;
     }
-    record_waiting_counter=0;
+    if (max_number_of_samples > this->inputBuffer->getMaxSize().getSamples())
+    {
+        yWarning() << "max_number_of_samples bigger than the internal audio buffer! It will be truncated to:" << this->inputBuffer->getMaxSize().getSamples();
+        max_number_of_samples = this->inputBuffer->getMaxSize().getSamples();
+    }
 
-    //prepare the sound
-    int chunksInBuffer = inputBuffer->size().getSamples()/ chunkSize;
-    size_t samplesInBuffer = inputBuffer->size().getSamples();
-    sound.resize(samplesInBuffer, userChannelsNum);
+    //forcing device capabilities
+    min_number_of_samples = 5 * CHUNK_SIZE;
+
+    size_t buff_size = 0;
+    double start_time = yarp::os::Time::now();
+    double debug_time = yarp::os::Time::now();
+    do
+    {
+        buff_size = inputBuffer->size().getSamples();
+        if (buff_size > max_number_of_samples) break;
+        if (buff_size > min_number_of_samples && yarp::os::Time::now() - start_time > max_samples_timeout_s) break;
+
+        if (yarp::os::Time::now() - debug_time > 1.0)
+        {
+            debug_time = yarp::os::Time::now();
+            yDebug() << "R1faceMic::getSound() Buffer size is " << buff_size << "/" << max_number_of_samples << " after 1s";
+        }
+
+        yarp::os::SystemClock::delaySystem(0.005);
+    } while (true);
+
+    //prepare the sound data struct
+    size_t samples_to_be_copied = buff_size;
+    if (samples_to_be_copied > max_number_of_samples) samples_to_be_copied = max_number_of_samples;
+    if (sound.getChannels() != userChannelsNum && sound.getSamples() != samples_to_be_copied)
+    {
+        sound.resize(samples_to_be_copied, userChannelsNum);
+    }
     sound.setFrequency(samplingRate);
     sound.clear();
     
@@ -203,7 +224,7 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound)
     // manipulate them to get meaningful information
     ///////////////////////////////////////////////
     size_t sample_counter = 0;
-    for (size_t sample_counter =0; sample_counter< samplesInBuffer; sample_counter++)
+    for (size_t sample_counter =0; sample_counter< samples_to_be_copied; sample_counter++)
     {
         for (size_t skip = 0; skip < 9 + 1; skip++)
         {
