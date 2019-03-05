@@ -24,7 +24,9 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Value.h>
 #include <yarp/os/LogStream.h>
+#include <yarp/os/LockGuard.h>
 
+#define SLEEP_TIME 0.005f
 
 #define STEREO              2      // Got from HW specifications, do not change it!!
 #define HW_STEREO_CHANNELS  9      // Got from HW specifications, do not change it!!
@@ -41,6 +43,7 @@
 
 using namespace cer::dev;
 using namespace yarp::dev;
+using namespace yarp::os;
 
 
 struct inputData {
@@ -50,7 +53,7 @@ struct inputData {
 
 R1faceMic::R1faceMic(): PeriodicThread(0),
                         shift(8),
-                        recording(false),
+                        m_isRecording(false),
                         channels(HW_STEREO_CHANNELS),
                         samplingRate(SAMPLING_RATE),
                         dev_fd(-1),
@@ -120,7 +123,7 @@ bool R1faceMic::open(yarp::os::Searchable &params)
 
 bool R1faceMic::close()
 {
-    recording = false;
+    m_isRecording = false;
     stop();
     return true;
 }
@@ -137,7 +140,7 @@ bool R1faceMic::threadInit()
 void R1faceMic::run()
 {
     // when not recording, do nothing
-    if(!recording)
+    if(!m_isRecording)
     {
         yarp::os::Time::delay(0.01);
         return;
@@ -172,11 +175,28 @@ void R1faceMic::threadRelease()
 
 bool R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, size_t max_number_of_samples, double max_samples_timeout_s)
 {
-    if (recording == false)
+    //check for something_to_record
     {
-        startRecording();
+#ifdef AUTOMATIC_REC_START
+        if (m_isRecording == false)
+        {
+            this->startRecording();
+        }
+#else
+        double debug_time = yarp::os::Time::now();
+        while (m_isRecording == false)
+        {
+            if (yarp::os::Time::now() - debug_time > 5.0)
+            {
+                yInfo() << "getSound() is currently waiting. Use ::startRecording() to start the audio stream";
+                debug_time = yarp::os::Time::now();
+            }
+            yarp::os::SystemClock::delaySystem(SLEEP_TIME);
+        }
+#endif
     }
 
+    //check on input parameters
     if (max_number_of_samples < min_number_of_samples)
     {
         yError() << "max_number_of_samples must be greater than min_number_of_samples!";
@@ -199,6 +219,7 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, 
         buff_size = inputBuffer->size().getSamples();
         if (buff_size > max_number_of_samples) break;
         if (buff_size > min_number_of_samples && yarp::os::Time::now() - start_time > max_samples_timeout_s) break;
+        if (m_isRecording == false) { break; }
 
         if (yarp::os::Time::now() - debug_time > 1.0)
         {
@@ -256,15 +277,26 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, 
 
 bool R1faceMic::startRecording()
 {
+    if (m_isRecording == true) return true;
+    LockGuard lock(m_mutex);
+    m_isRecording = true;
+#ifdef BUFFER_AUTOCLEAR
     inputBuffer->clear();
-    recording = true;
+#endif
+    m_isRecording = true;
+    yInfo() << "R1faceMic started recording";
     return true;
 }
 
 bool R1faceMic::stopRecording()
 {
+    if (m_isRecording == false) return true;
+    LockGuard lock(m_mutex);
+    m_isRecording = false;
+#ifdef BUFFER_AUTOCLEAR
     inputBuffer->clear();
-    recording = false;
+#endif
+    yInfo() << "R1faceMic stopped recording";
     return true;
 }
 
@@ -288,6 +320,7 @@ bool R1faceMic::stopService()
 
 bool R1faceMic::getRecordingAudioBufferMaxSize(yarp::dev::AudioBufferSize& size)
 {
+    //no lock guard is needed here
     size = this->inputBuffer->getMaxSize();
     return true;
 }
@@ -295,6 +328,7 @@ bool R1faceMic::getRecordingAudioBufferMaxSize(yarp::dev::AudioBufferSize& size)
 
 bool R1faceMic::getRecordingAudioBufferCurrentSize(yarp::dev::AudioBufferSize& size)
 {
+    //no lock guard is needed here
     size = this->inputBuffer->size();
     return true;
 }
@@ -302,6 +336,8 @@ bool R1faceMic::getRecordingAudioBufferCurrentSize(yarp::dev::AudioBufferSize& s
 
 bool R1faceMic::resetRecordingAudioBuffer()
 {
+    LockGuard lock(m_mutex);
     inputBuffer->clear();
+    yDebug() << "R1faceMic::resetRecordingAudioBuffer";
     return true;
 }

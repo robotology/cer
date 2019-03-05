@@ -110,7 +110,7 @@ public:
 private:
 
     int  shift;
-    bool recording;
+    bool m_isRecording;
     int  channels;
     int  samplingRate;
     int  dev_fd;
@@ -119,6 +119,7 @@ private:
     int selected_chan;
     int userChannelsNum;
     size_t record_waiting_counter;
+    yarp::os::Mutex m_mutex;
 
     int32_t                     *rawBuffer;
     inputData                   *tmpData;
