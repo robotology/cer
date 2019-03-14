@@ -28,6 +28,7 @@ target_link_libraries(${PROJECT_NAME} RobotModelLib R1ModelLib ${YARP_LIBRARIES}
 
 # Add install target
 yarp_install(TARGETS ${PROJECT_NAME}
+             EXPORT ${VARS_PREFIX}
              COMPONENT Runtime
              LIBRARY DESTINATION  ${CMAKE_INSTALL_LIBDIR}
              ARCHIVE DESTINATION  ${CMAKE_INSTALL_LIBDIR})
