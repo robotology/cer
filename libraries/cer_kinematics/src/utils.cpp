@@ -73,7 +73,7 @@ struct CER_TORSO : public TripodParameters
 struct CER_LOWER_ARM : public TripodParameters
 {
     /****************************************************************/
-    CER_LOWER_ARM() : TripodParameters(0.018,0.0,0.13,30.0) { }
+    CER_LOWER_ARM() : TripodParameters(0.018,0.0,0.13,25.0) { }
 };
 
 
