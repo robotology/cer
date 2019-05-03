@@ -28,6 +28,11 @@ if(NOT IPOPT_FOUND)
     message(WARNING "IPOPT library was not found, some kinematics module will not be available.")
 endif()
 
+find_package(OpenCV)
+if(NOT OpenCV_FOUND)
+    message(WARNING "OpenCV library was not found, some mobile kinematics module will not be available.")
+endif()
+
 if(NOT WIN32)
     option(CER_SHARED_LIBRARY "Compile shared libraries rather than static libraries" ON)
     if(CER_SHARED_LIBRARY)
@@ -54,6 +59,9 @@ add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"               
 
 if(IPOPT_FOUND)
     add_subdirectory(libraries/cer_kinematics)
+    if(OpenCV_FOUND)
+        add_subdirectory(libraries/cer_mobile_kinematics)
+    endif()
 endif()
 
 add_subdirectory(libraries/cer_kinematics_alt)

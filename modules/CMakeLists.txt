@@ -5,6 +5,9 @@
 if(IPOPT_FOUND)
     add_subdirectory(reaching)
     add_subdirectory(gaze-controller)
+    if(OpenCV_FOUND)
+        add_subdirectory(mobile-reaching)
+    endif()
 endif()
 
 add_subdirectory(altVelController)
