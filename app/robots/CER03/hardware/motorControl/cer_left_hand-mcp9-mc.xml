@@ -3,7 +3,7 @@
 
  <!-- Initialization file for EMS 10 - CER hand, 2 dof -->
 
-<devices robot="CER01" build="1">
+<devices robot="CERSN002" build="1">
   <device name="cer_left_hand_mc" type="embObjMotionControl">
       <params file="general.xml" />
       <params file="hardware/electronics/cer_left_hand-mcp9-eln.xml" />
@@ -37,9 +37,9 @@
     <param name="controlLaw">    Pid_inPos_outPwm </param> 
         <param name="fbkControlUnits">     metric_units              </param> 
         <param name="outputControlUnits">  machine_units             </param> 
-        <param name="pos_kp">             -200         200        </param>       
+        <param name="pos_kp">                0           0        </param>       
         <param name="pos_kd">                0           0        </param>       
-        <param name="pos_ki">             -100         100        </param>         
+        <param name="pos_ki">                0           0        </param>         
         <param name="pos_maxOutput">      3360        3360        </param>          
         <param name="pos_maxInt">         1000        1000        </param>       
         <param name="pos_shift">             0           0        </param>       
