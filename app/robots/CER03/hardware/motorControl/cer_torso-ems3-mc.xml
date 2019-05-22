@@ -11,8 +11,8 @@
       <params file="hardware/motorControl/cer_torso-ems3-mc-service.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                0.15    0.15         0.15       360     </param>
-        <param name="jntPosMin">               -0.04   -0.04        -0.04      -360     </param>
+        <param name="jntPosMax">                0.15    0.15         0.15       30     </param>
+        <param name="jntPosMin">               -0.04   -0.04        -0.04      -30     </param>
         <param name="jntVelMax">                0.05    0.05         0.05    30000     </param>
         <param name="motorOverloadCurrents">    5000    5000         5000     5000     </param>
         <param name="motorNominalCurrents">     2500    2500         2500     2500     </param>
