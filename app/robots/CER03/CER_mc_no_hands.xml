@@ -30,15 +30,15 @@
     <devices file="wrappers/motorControl/cer_right_wrist_tripod-mc_wrapper.xml" />
     <devices file="wrappers/motorControl/cer_right_arm_no_hand-mc_wrapper.xml" />
 
-    <!-- HEAD 
+    <!-- HEAD --> 
     <devices file="hardware/motorControl/cer_head-mcp10-mc.xml" />
-    <devices file="wrappers/motorControl/cer_head-mc_wrapper.xml" /> -->
+    <devices file="wrappers/motorControl/cer_head-mc_wrapper.xml" />
 
     <!--  CALIBRATORS -->
     <devices file="calibrators/cer_torso-calib.xml" />
     <devices file="calibrators/cer_left_arm_no_hand-calib.xml" />
     <devices file="calibrators/cer_right_arm_no_hand-calib.xml" />
-    <!-- <devices file="calibrators/cer_head-calib.xml" /> -->
+    <devices file="calibrators/cer_head-calib.xml" />
     <devices file="calibrators/cer_base-calib.xml" /> 
 
     <!-- SKIN
@@ -46,9 +46,10 @@
     <devices file="wrappers/skin/right_arm-skin_wrapper.xml" /> -->
 
     <!--  FT -->
-    <!-- <devices file="hardware/FT/cer_left_shoulder-ems5-strain.xml" />
-    <devices file="wrappers/FT/cer_left_arm-FT_wrapper.xml" /> -->
+    <devices file="hardware/FT/cer_left_shoulder-ems5-strain.xml" />
+    <devices file="wrappers/FT/cer_left_arm-FT_wrapper.xml" />
 
-    <!-- <devices file="wrappers/FT/cer_right_arm-FT_wrapper.xml" /> -->
-  <!-- <devices file="hardware/FT/cer_right_shoulder-ems4-strain.xml" /> -->
+    <devices file="wrappers/FT/cer_right_arm-FT_wrapper.xml" />
+    <devices file="hardware/FT/cer_right_shoulder-ems4-strain.xml" />
+
 </robot> 
