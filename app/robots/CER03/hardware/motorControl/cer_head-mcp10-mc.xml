@@ -11,7 +11,7 @@
       <params file="hardware/motorControl/cer_head-mcp10-mc-service.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                48      49           </param>
+        <param name="jntPosMax">                38      49           </param>
         <param name="jntPosMin">               -28     -49           </param>
         <param name="jntVelMax">                50      50           </param>
         <param name="motorOverloadCurrents">    5000    5000         </param>

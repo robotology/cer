@@ -9,8 +9,8 @@
       <params file="hardware/motorControl/cer_right_upper_arm-ems11-mc-service.xml" />
 
     <group name="LIMITS">
-        <param name="jntPosMax">                      85            95        </param>
-        <param name="jntPosMin">                     -85             5        </param>
+        <param name="jntPosMax">                      90            95        </param>
+        <param name="jntPosMin">                     -90             2        </param>
         <param name="motorOverloadCurrents">          9000          9000      </param>
         <param name="motorNominalCurrents">           3000          3000      </param>
         <param name="motorPeakCurrents">              6000          6000      </param>
