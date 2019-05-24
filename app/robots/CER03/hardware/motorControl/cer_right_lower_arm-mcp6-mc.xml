@@ -3,7 +3,7 @@
 
  <!-- Initialization file for MC4+ 20 - CER right lower arm, 4 dof -->
 
-<devices robot="CER01" build="1">
+<devices robot="CER03" build="1">
   <device name="cer_right_lower_arm_mc" type="embObjMotionControl">
       <params file="general.xml" />
       <params file="hardware/electronics/cer_right_lower_arm-mcp6-eln.xml" />
