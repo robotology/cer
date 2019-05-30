@@ -588,22 +588,34 @@ public:
             iloc->getCurrentPosition(loc);
             vector<string> areaNames;
             imap->getAreasList(areaNames);
-yDebug() << "area list";
-for(int i=0 ; i<areaNames.size() ; i++) yDebug() << areaNames[i];
+
+            if (verbosity>0)
+            {
+                yDebug() << "Area list:";
+                for(int i=0 ; i<areaNames.size() ; i++)
+                    yDebug() << "/t" << areaNames[i];
+            }
 
             Map2DArea area;
             for(size_t i=0 ; i<areaNames.size() ; i++)
             {
                 imap->getArea(areaNames[i], area);
                 if(area.checkLocationInsideArea(loc))
+                {
+                    if (verbosity>0)
+                        yDebug() << "Currently in" << areaNames[i];
                     break;
+                }
             }
 
             Bottle b;
             Bottle &coord = b.addList();
+            if (verbosity>0)
+                yDebug() << "Area points list:";
             for(size_t i=0 ; i<area.points.size() ; i++)
             {
-yDebug() << "area points" << area.points[i].x << area.points[i].y;
+                if (verbosity>0)
+                    yDebug() << "\t" << area.points[i].x << area.points[i].y;
                 area.points.size();
                 coord.addDouble(area.points[i].x);
                 coord.addDouble(area.points[i].y);

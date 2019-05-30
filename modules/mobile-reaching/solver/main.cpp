@@ -44,6 +44,7 @@ class IKSolver : public RFModule
     MobileArmSolver solver;
     RpcServer rpcPort;
     Vector q;
+    int verbosity;
 
     /****************************************************************/
     bool getBounds(const string &remote, const string &local,
@@ -139,7 +140,7 @@ public:
         string robot=rf.check("robot",Value("cer")).asString();
         string arm_type=rf.check("arm-type",Value("left")).asString();
         bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
-        int verbosity=rf.check("verbosity",Value(0)).asInt();
+        verbosity=rf.check("verbosity",Value(0)).asInt();
 
         SolverParameters p=solver.getSolverParameters();
         p.setMode("full_pose");
@@ -188,7 +189,8 @@ public:
     /****************************************************************/
     bool respond(const Bottle &cmd, Bottle &reply)
     {
-        yInfo() << "Received command:" << cmd.toString();
+        if(verbosity>0)
+            yInfo() << "Received command:" << cmd.toString();
 
         SolverParameters p=solver.getSolverParameters();
         reply.addVocab(Vocab::encode("nack"));
@@ -235,30 +237,40 @@ public:
                 {
                     string mode=parameters->find("mode").asString();
                     p.setMode(mode);
+                    if(verbosity>0)
+                        yInfo() << "Mode set:" << p.getMode();
                     ack=true;
                 }
 
                 if (parameters->check("torso_heave"))
                 {
                     p.torso_heave=parameters->find("torso_heave").asDouble();
+                    if(verbosity>0)
+                        yInfo() << "Torso heave set:" << p.torso_heave;
                     ack=true;
                 }
 
                 if (parameters->check("lower_arm_heave"))
                 {
                     p.lower_arm_heave=parameters->find("lower_arm_heave").asDouble();
+                    if(verbosity>0)
+                        yInfo() << "Lower arm heave set:" << p.lower_arm_heave;
                     ack=true;
                 }
 
                 if (parameters->check("tol"))
                 {
                     p.tol=parameters->find("tol").asDouble();
+                    if(verbosity>0)
+                        yInfo() << "Tolerance set:" << p.tol;
                     ack=true;
                 }
 
                 if (parameters->check("constr_tol"))
                 {
                     p.constr_tol=parameters->find("constr_tol").asDouble();
+                    if(verbosity>0)
+                        yInfo() << "Constraints tolerance set:" << p.constr_tol;
                     ack=true;
                 }
 
@@ -280,6 +292,8 @@ public:
                     domain[i] = parameters->get(i).asDouble();
 
                 solver.setDomain(domain);
+                if(verbosity>0)
+                    yInfo() << "Domain set:" << solver.getDomain().toString();
             }
         }
 
@@ -337,7 +351,7 @@ public:
                 reply.addVocab(Vocab::encode("nack"));
                 return true;
             }
-            
+
             Vector xd(3),ud(4);
             xd[0]=payLoad->get(0).asDouble();
             xd[1]=payLoad->get(1).asDouble();
@@ -346,6 +360,9 @@ public:
             ud[1]=payLoad->get(4).asDouble();
             ud[2]=payLoad->get(5).asDouble();
             ud[3]=payLoad->get(6).asDouble();
+
+            if(verbosity>0)
+                yInfo() << "Target set: pos" << xd.toString() << "orient" << ud.toString();
 
             Matrix Hd=axis2dcm(ud);
             Hd.setSubcol(xd,0,3);
