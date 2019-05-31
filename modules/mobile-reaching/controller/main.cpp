@@ -26,6 +26,7 @@
 
 #include <yarp/dev/ILocalization2D.h>
 #include <yarp/dev/IMap2D.h>
+#include <yarp/dev/INavigation2D.h>
 
 #include <iCub/ctrl/minJerkCtrl.h>
 #include <cer_mobile_kinematics/mobile_arm.h>
@@ -63,7 +64,7 @@ public:
 /****************************************************************/
 class Controller : public RFModule
 {
-    PolyDriver        drivers[6];
+    PolyDriver        drivers[7];
     vector<int>       jointsIndexes[4];
     IControlMode*     imod[4];
     IEncodersTimed*   ienc[4];
@@ -71,6 +72,7 @@ class Controller : public RFModule
     IPositionDirect*  iposd[4];
     ILocalization2D*  iloc;
     IMap2D*           imap;
+    INavigation2D*    inav;
 
     vector<int> posDirectMode;
     vector<int> curMode;
@@ -94,6 +96,7 @@ class Controller : public RFModule
 
     Bottle target;
     Vector qd,xd;
+    Map2DLocation bd;
 
     string mapName;
 
@@ -202,7 +205,7 @@ class Controller : public RFModule
             ipos[i]->stop((int)jointsIndexes[i].size(),jointsIndexes[i].data());
         controlling=false;
 
-        // TODO stop navigation if necessary
+        inav->stopNavigation();
     }
 
     /****************************************************************/
@@ -254,6 +257,7 @@ public:
         stop_threshold_prismatic=rf.check("stop-threshold-prismatic",Value(0.002)).asDouble();
         string map_server=rf.check("map-server",Value("/mapServer")).asString();
         string loc_server=rf.check("loc-server",Value("/localizationServer")).asString();
+        string nav_server=rf.check("nav-server",Value("/navigationServer")).asString();
         mapName=rf.check("map-name",Value("testMap")).asString();
         double T=rf.check("T",Value(2.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
@@ -347,7 +351,11 @@ public:
             close();
             return false;
         }
-        drivers[4].view(iloc);
+        if (!drivers[4].view(iloc))
+        {
+            yError() << "Unable to open ILocalization2D interface";
+            return false;
+        }
 
         // map
         option.clear();
@@ -360,8 +368,34 @@ public:
             close();
             return false;
         }
-        drivers[5].view(imap);
+        if (!drivers[5].view(imap))
+        {
+            yError() << "Unable to open IMap2D interface";
+            return false;
+        }
 
+        // navigation
+        option.clear();
+        option.put("device","navigation2DClient");
+        option.put("local","/cer_mobile-reaching-controller/"+arm_type+"navigation");
+        option.put("navigation_server",nav_server);
+        option.put("map_locations_server",map_server);
+        option.put("localization_server",loc_server);
+        if (!drivers[6].open(option))
+        {
+            yError("Unable to connect to %s",(nav_server+"/rpc").c_str());
+            close();
+            return false;
+        }
+        if (!drivers[6].view(inav))
+        {
+            yError() << "Unable to open INavigation2D interface";
+            return false;
+        }
+        inav->stopNavigation();
+        yarp::os::Time::delay(0.1);
+
+        //
         statePort.open("/cer_mobile-reaching-controller/"+arm_type+"/state:o");
         solverPort.open("/cer_mobile-reaching-controller/"+arm_type+"/solver:rpc");
 
@@ -461,6 +495,7 @@ public:
                 q[0]=p.x;
                 q[1]=p.y;
                 q[2]=p.theta;
+                bd.map_id=p.map_id;
             }
 
             Bottle b; b.addList().read(q);
@@ -514,13 +549,17 @@ public:
 
                     if ((payLoadJoints!=NULL) && (payLoadPose!=NULL))
                     {
-                        // TODO navigate to location
-
                         LockGuard lg(mutex);
                         // process only if we didn't receive
                         // a stop request in the meanwhile
                         if (controlling==latch_controlling)
                         {
+                            bd.x=payLoadJoints->get(0).asDouble();
+                            bd.y=payLoadJoints->get(1).asDouble();
+                            bd.theta=payLoadJoints->get(2).asDouble();
+
+                            inav->gotoTargetByAbsoluteLocation(bd);
+
                             for (size_t i=0; i<qd.length(); i++)
                                 qd[i]=payLoadJoints->get(3+i).asDouble();
 
