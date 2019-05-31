@@ -251,6 +251,7 @@ public:
     {
         if(domain.size()>5)
         {
+            this->lambda.resize(5);
             domain_constr=true;
             domain_poly.resize(domain.size()/2);
 
@@ -262,6 +263,7 @@ public:
         }
         else
         {
+            this->lambda.resize(4);
             domain_constr=false;
             domain_poly.clear();
         }
@@ -288,6 +290,10 @@ public:
         this->zL=zL;
         this->zU=zU;
         this->lambda=lambda;
+        if(domain_constr)
+            this->lambda.resize(5);
+        else
+            this->lambda.resize(4);
     }
 
     /****************************************************************/
