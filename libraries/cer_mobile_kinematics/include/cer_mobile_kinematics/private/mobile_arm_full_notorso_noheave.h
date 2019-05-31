@@ -349,10 +349,11 @@ yDebug() << "nb constr" << m;
             // g[4] (domain boundaries constraints)
             if(domain_constr)
             {
-                double d = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0]+drho, x[idx_b+1]), true);
-                values[idx]=(d-domain_dist)/drho;idx++;
-                d = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0], x[idx_b+1]+drho), true);
-                values[idx]=(d-domain_dist)/drho;
+                const double dt = 1e-3;
+                double d = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0]+dt, x[idx_b+1]), true);
+                values[idx]=(d-domain_dist)/dt;idx++;
+                d = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0], x[idx_b+1]+dt), true);
+                values[idx]=(d-domain_dist)/dt;
             }
         }
 

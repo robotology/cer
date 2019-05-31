@@ -148,8 +148,8 @@ public:
         p.lower_arm_heave=0.02;
         p.warm_start=true;
         p.weight_postural_torso=1;
-        p.weight_postural_torso_yaw=1;
-        p.weight_postural_upper_arm=1;
+        p.weight_postural_torso_yaw=1e-2;
+        p.weight_postural_upper_arm=1e-2;
         p.weight_postural_lower_arm=1;
 
         solver.setArmParameters(ArmParameters(arm_type));
