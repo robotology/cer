@@ -185,7 +185,7 @@ bool MobileArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 
     curMode=mode;
     q=nlp->get_result();
-    nlp->get_warm_start(zL,zU,lambda);    
+    nlp->get_warm_start(zL,zU,lambda);
     if (exit_code!=NULL)
         *exit_code=status;
 

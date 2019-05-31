@@ -369,14 +369,15 @@ public:
 
             solver.setSolverParameters(p);
             solver.setInitialGuess(q);
-            solver.ikin(Hd,q);
+            bool success = solver.ikin(Hd,q);
 
-            Matrix H; solver.fkin(q,H);
+            Matrix H;
+            solver.fkin(q,H);
             Vector x=H.getCol(3).subVector(0,2);
             x=cat(x,dcm2axis(H));
 
             reply.clear();
-            reply.addVocab(Vocab::encode("ack"));
+            reply.addVocab(Vocab::encode(success?"ack":"nack"));
 
             Bottle &payLoadJoints=reply.addList();
             payLoadJoints.addString("q");

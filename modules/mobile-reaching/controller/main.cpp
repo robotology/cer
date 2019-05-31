@@ -638,8 +638,13 @@ public:
                 reply=reply.tail();
                 return true;
             }
+            else if(reply.get(0).asVocab()==Vocab::encode("nack"))
+            {
+                reply=reply.tail();
+                return false;
+            }
             else
-                yError("Malformed target type!");
+                yError("Invalid reply from solver!");
         }
         else
             yError("Unable to communicate with the solver");
@@ -904,6 +909,11 @@ public:
                     if (ask(p,payLoad))
                     {
                         reply.addVocab(Vocab::encode("ack"));
+                        reply.append(payLoad);
+                    }
+                    else if (payLoad.size()>0)
+                    {
+                        reply.addVocab(Vocab::encode("nack"));
                         reply.append(payLoad);
                     }
                 }

@@ -261,7 +261,7 @@ bool SolverParameters::setMode(const string &mode)
                 tol=1e-5;
                 constr_tol=1e-4;
             }
-            if (submode=="heave")
+            else if (submode=="heave")
                 configuration=configuration::heave;
             else if (submode=="no_heave")
                 configuration=configuration::no_heave;
