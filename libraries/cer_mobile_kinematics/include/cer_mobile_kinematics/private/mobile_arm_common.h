@@ -40,7 +40,7 @@ protected:
     double wpostural_lower_arm;
 
     Matrix Hb,Rb,H0,HN,Hd,Rd;
-    Vector x0,x;
+    Vector x0,x,xref;
     Vector xd;
 
     int idx_b,idx_t,idx_ua,idx_la;
@@ -153,6 +153,7 @@ public:
             x0[idx_ua+i]=0.5*((*chain)[i].getMin()+(*chain)[i].getMax());
 
         x=x0;
+        xref=x0;
         set_target(eye(4,4));
         q=x0.subVector(idx_ua,idx_ua+upper_arm.getDOF()-1);
 

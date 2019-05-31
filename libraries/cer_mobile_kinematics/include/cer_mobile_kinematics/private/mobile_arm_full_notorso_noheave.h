@@ -116,7 +116,7 @@ yDebug() << "nb constr" << m;
         {
             for (size_t i=1; i<upper_arm.getDOF(); i++)
             {
-                tmp=x[idx_ua+i]-x0[idx_ua+i];
+                tmp=x[idx_ua+i]-xref[idx_ua+i];
                 postural_upper_arm+=tmp*tmp;
             }
         }
@@ -165,7 +165,7 @@ yDebug() << "nb constr" << m;
         eax*=eax[3]; eax.pop_back();
         Vector grad=-2.0*((Rb.submatrix(0,2,0,2)*J_.submatrix(3,5,0,upper_arm.getDOF()-1)).transposed()*eax);
         for (size_t i=1; i<grad.length(); i++)
-            grad_f[idx_ua+i]=grad[i] + 2.0*wpostural_upper_arm*(x[idx_ua+i]-x0[idx_ua+i]);
+            grad_f[idx_ua+i]=grad[i] + 2.0*wpostural_upper_arm*(x[idx_ua+i]-xref[idx_ua+i]);
 
         // lower_arm
         TripodState d_fw;
