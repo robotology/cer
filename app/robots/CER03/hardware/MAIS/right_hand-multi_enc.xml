@@ -4,7 +4,7 @@
 <devices robot="CER03" build="1">
     <device name="right_hand_multienc" type="embObjMultiEnc">
         <params file="general.xml" />
-        <params file="hardware/electronics/cer_right_hand-mcp9-eln.xml" />
+        <params file="hardware/electronics/cer_right_hand-mcp7-eln.xml" />
         <group name="JOINTS">
             <param name="listofjoints"> 0 1 </param>
             <param name="encoderConversionFactor"> -182.044 182.044 1.0 -182.044 182.044 1.0 </param>

@@ -10,6 +10,9 @@
 
     <!--  CALIBRATORS -->
     <devices file="calibrators/cer_left_hand-calib.xml" />
+    
+    <devices file="wrappers/PSC/cer_left_arm-PSC_wrapper.xml" /> 
+    <devices file="hardware/PSC/left_hand-psc.xml" /> 
 </robot> 
 
 

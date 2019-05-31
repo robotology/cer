@@ -36,23 +36,23 @@
 
                 <group name="ACTUATOR">                 
                     <param name="type">             pwm                 pwm                 </param>
-                    <param name="port">              CONN:P2             CONN:P3                </param>
+                    <param name="port">             CONN:P2             CONN:P3             </param>
                 </group>
                 
                 <group name="ENCODER1">  
-                    <param name="type">                psc                psc                    </param>  
-                    <param name="port">                finger0            finger1                 </param>
-                    <param name="position">         atjoint             atjoint             </param> 
-                    <param name="resolution">          65535               65535                 </param> <!-- 65535:this value will change by fw during calibration (type 6 or 7) --> 
-                    <param name="tolerance">           5                  5                      </param>  
+                    <param name="type">             psc                psc                 </param>  
+                    <param name="port">             finger0            finger1             </param>
+                    <param name="position">         atjoint            atjoint             </param> 
+                    <param name="resolution">       65535              65535               </param> <!-- 65535:this value will change by fw during calibration (type 6 or 7) --> 
+                    <param name="tolerance">        5                  5                   </param>  
                 </group>        
                 
                 <group name="ENCODER2">
                     <param name="type">             qenc                qenc                </param>
-                    <param name="port">             CONN:P3             CONN:P2             </param>
+                    <param name="port">             CONN:P2             CONN:P3             </param>
                     <param name="position">         atmotor             atmotor             </param>
                     <param name="resolution">       1024                1024                </param>
-                    <param name="tolerance">        0                   0                </param>  
+                    <param name="tolerance">        0                   0                   </param>  
                 </group>  
             </group>    
             
