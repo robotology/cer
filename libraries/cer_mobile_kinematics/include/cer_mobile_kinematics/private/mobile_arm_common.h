@@ -276,9 +276,13 @@ public:
         Vector x_=x;
 
         x_[idx_b+2]*=CTRL_RAD2DEG;
+        x_[idx_b+2]=remainder(x_[idx_b+2], 360.0);
 
         for (size_t i=0; i<upper_arm.getDOF(); i++)
+        {
             x_[idx_ua+i]*=CTRL_RAD2DEG;
+            x_[idx_ua+i]=remainder(x_[idx_ua+i], 360.0);
+        }
 
         return x_;
     }

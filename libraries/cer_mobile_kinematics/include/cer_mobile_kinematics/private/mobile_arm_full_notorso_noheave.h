@@ -52,15 +52,11 @@ yDebug() << "nb constr" << m;
     bool get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt::Number *x_u,
                          Ipopt::Index m, Ipopt::Number *g_l, Ipopt::Number *g_u)
     {
-        size_t offs;
-
-        for (size_t i=0; i<2; i++)
+        for (size_t i=0; i<3; i++)
         {
             x_l[idx_b+i]=std::numeric_limits<double>::lowest();
             x_u[idx_b+i]=std::numeric_limits<double>::max();
         }
-        x_l[idx_b+2]=-M_PI;
-        x_u[idx_b+2]=M_PI;
 
         for (size_t i=0; i<3; i++)
             x_l[idx_t+i]=x_u[idx_t+i]=x0[idx_t+i];
