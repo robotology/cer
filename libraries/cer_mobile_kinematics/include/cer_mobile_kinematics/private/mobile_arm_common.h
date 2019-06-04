@@ -248,6 +248,25 @@ public:
     }
 
     /****************************************************************/
+    virtual void set_qref(const Vector &xref)
+    {
+        for (size_t i=0; i<2; i++)
+            this->xref[idx_b+i]=xref[idx_b+i];
+
+        this->xref[idx_b+2]=CTRL_DEG2RAD*xref[idx_b+2];
+
+        for (size_t i=0; i<3; i++)
+            this->xref[idx_t+i]=std::max(torso.l_min,std::min(torso.l_max,xref[idx_t+i]));
+
+        iKinChain *chain=upper_arm.asChain();
+        for (size_t i=0; i<upper_arm.getDOF(); i++)
+            this->xref[idx_ua+i]=std::max((*chain)[i].getMin(),std::min((*chain)[i].getMax(),CTRL_DEG2RAD*xref[idx_ua+i]));
+
+        for (size_t i=0; i<3; i++)
+            this->xref[idx_la+i]=std::max(lower_arm.l_min,std::min(lower_arm.l_max,xref[idx_la+i]));
+    }
+
+    /****************************************************************/
     virtual void set_domain(const Vector &domain)
     {
         if(domain.size()>5)
