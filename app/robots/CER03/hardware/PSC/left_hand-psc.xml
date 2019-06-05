@@ -3,7 +3,7 @@
 
   
 
-    <device name="left_hand-psc" type="embObjPSC">
+    <device xmlns:xi="http://www.w3.org/2001/XInclude" name="left_hand-psc" type="embObjPSC">
         <xi:include href="general.xml" />
  
         <xi:include href="hardware/electronics/cer_left_hand-mcp9-eln.xml" />

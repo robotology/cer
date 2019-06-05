@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+<!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 3.0//EN" "http://www.icub.org/DTD/robotInterfaceV3.0.dtd">
 
  <!-- Initialization file for MC4+ 18 - CER left lower arm, 4 dof -->
 
 
-  <device name="cer_left_lower_arm_mc" type="embObjMotionControl">
+  <device xmlns:xi="http://www.w3.org/2001/XInclude" name="cer_left_lower_arm_mc" type="embObjMotionControl">
       <xi:include href="../../general.xml" />
       <xi:include href="../electronics/cer_left_lower_arm-mcp18-eln.xml" />
       <xi:include href="../mechanicals/cer_left_lower_arm-mcp18-mec.xml" />
