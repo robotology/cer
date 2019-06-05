@@ -13,6 +13,15 @@
             <elem name="left_hand_skin_thumb">      384 575     0   191   </elem>
         </paramlist>
         
+        <!-- used taxels:
+             left-index-proxy:      24 taxels of port left_hand_skin_index in positions [8*12, (9+1)*12-1]      = [96, 119]
+             left-index-distal:     24 taxels of port left_hand_skin_index in positions [0*12, (1+1)*12-1]      = [0, 23]
+             left-paddle-proxy:     48 taxels of port left_hand_skin_paddle in positions [0*12, (3+1)*12-1]     = [0, 47]
+             left-paddle-distal:    48 taxels of port left_hand_skin_paddle in positions [8*12, (11+1)*12-1]    = [96, 143]
+             left-thumb-proxy:      24 taxels of port left_hand_skin_thumb in positions [8*12, (9+1)*12-1]      = [96, 119]
+             left-thumb-distal:     36 taxels of port left_hand_skin_thumb in positions [0*12, (2+1)*12-1]      = [0, 35]
+          -->
+        
         <action phase="startup" level="5" type="attach">
             <paramlist name="networks">
             <!-- The param value must match the device name in the corresponding emsX file -->
