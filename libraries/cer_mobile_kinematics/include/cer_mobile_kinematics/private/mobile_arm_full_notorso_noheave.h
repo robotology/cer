@@ -407,7 +407,7 @@ public:
         eax*=eax[3]; eax.pop_back();
         Vector grad=-2.0*((Rb.submatrix(0,2,0,2)*J_.submatrix(3,5,0,upper_arm.getDOF()-1)).transposed()*eax);
         for (size_t i=1; i<grad.length(); i++)
-            grad_f[idx_ua+i]=grad[i] + 2.0*wpostural_upper_arm*(x[idx_ua+i]-x0[idx_ua+i]);
+            grad_f[idx_ua+i]=grad[i] + 2.0*wpostural_upper_arm*(x[idx_ua+i]-xref[idx_ua+i]);
 
         // lower_arm
         TripodState d_fw,d_bw;
@@ -475,8 +475,15 @@ public:
             }
 
             // g[3] (cover constraints)
-            iRow[idx]=3; jCol[idx]=idx_ua+1;
-            iRow[idx+1]=3; jCol[idx+1]=idx_ua+2;
+            iRow[idx]=3; jCol[idx]=idx_ua+1;idx++;
+            iRow[idx]=3; jCol[idx]=idx_ua+2;idx++;
+
+            // g[4] (domain boundaries constraints)
+            if(domain_constr)
+            {
+                iRow[idx]=4; jCol[idx]=0;idx++;
+                iRow[idx]=4; jCol[idx]=1;
+            }
         }
         else
         {
@@ -577,8 +584,20 @@ public:
             x_dx[idx_la+2]=x[idx_la+2];
 
             // g[3]
-            values[idx]=-cover_shoulder_avoidance[0];
-            values[idx+1]=1.0;
+            values[idx]=-cover_shoulder_avoidance[0];idx++;
+            values[idx]=1.0;idx++;
+
+            // g[4] (domain boundaries constraints)
+            if(domain_constr)
+            {
+                const double dt = 1e-3;
+                double df = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0]+dt, x[idx_b+1]), true);
+                double db = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0]-dt, x[idx_b+1]), true);
+                values[idx]=0.5*(df-db)/dt;idx++;
+                df = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0], x[idx_b+1]+dt), true);
+                db = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0], x[idx_b+1]-dt), true);
+                values[idx]=0.5*(df-db)/dt;
+            }
         }
 
         return true;
