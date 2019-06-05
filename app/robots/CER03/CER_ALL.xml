@@ -45,8 +45,12 @@
     <devices file="wrappers/motorControl/cer_torso_tripod-mc_wrapper.xml" /> 
     
     <!-- SKIN-->
+    <!-- 
     <devices file="hardware/skin/left_hand-mc7-skin.xml" />
-    <devices file="wrappers/skin/left_arm-skin_wrapper.xml" />
+    <devices file="wrappers/skin/left_hand-skin_wrapper.xml" />
+    <devices file="hardware/skin/right_hand-mc7-skin.xml" />
+    <devices file="wrappers/skin/right_hand-skin_wrapper.xml" />
+    -->
     
     <!-- TRIPODS EQUIVALENTS-->
     <devices file="hardware/motorControl/cer_torso_equivalent-mc.xml" />

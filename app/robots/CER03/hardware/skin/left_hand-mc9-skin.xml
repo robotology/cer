@@ -3,11 +3,35 @@
 
 <devices robot="CER03" build="1">
     <device name="left_hand_skin" type="embObjSkin">
-        <params file="general.xml" />
- 
+        <params file="general.xml" /> 
         <params file="hardware/electronics/cer_left_hand-mcp9-eln.xml" />
+
+        <group name="SERVICE">
+        
+            <param name="type"> eomn_serv_SK_skin </param>
+
+            <group name="PROPERTIES">
+            
+                <group name="CANBOARDS">
+                    <param name="type">                 psc                 </param>
+
+                    <group name="PROTOCOL">
+                        <param name="major">            2                   </param>    
+                        <param name="minor">            0                   </param>     
+                    </group>                    
+                    <group name="FIRMWARE">
+                        <param name="major">            0                   </param>    
+                        <param name="minor">            0                   </param> 
+                        <param name="build">            0                   </param>
+                    </group>
+                </group>
+           
+            </group>  
+
+        </group>
+
         <group name="patches">
-            <param name="skinCanAddrsPatch1"> 13 </param> 
+            <param name="skinCanAddrsPatch1"> 1 2 3 </param> 
         </group>
         <params file="hardware/skin/left_hand-mc9-skinSpec.xml" />
     </device>
