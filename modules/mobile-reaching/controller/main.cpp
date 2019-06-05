@@ -200,7 +200,7 @@ class Controller : public RFModule
 
     /****************************************************************/
     void stopControl()
-    {        
+    {
         for (int i=0; i<4; i++)
             ipos[i]->stop((int)jointsIndexes[i].size(),jointsIndexes[i].data());
         controlling=false;

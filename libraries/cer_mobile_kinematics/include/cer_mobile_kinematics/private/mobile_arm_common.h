@@ -271,7 +271,7 @@ public:
     {
         if(domain.size()>5)
         {
-            this->lambda.resize(5);
+            this->lambda.resize(6);
             domain_constr=true;
             domain_poly.resize(domain.size()/2);
 
@@ -283,7 +283,7 @@ public:
         }
         else
         {
-            this->lambda.resize(4);
+            this->lambda.resize(5);
             domain_constr=false;
             domain_poly.clear();
         }
@@ -310,14 +310,14 @@ public:
     /****************************************************************/
     virtual void set_warm_start(const Vector &zL, const Vector &zU,
                                 const Vector &lambda)
-    {        
+    {
         this->zL=zL;
         this->zU=zU;
         this->lambda=lambda;
         if(domain_constr)
-            this->lambda.resize(5);
+            this->lambda.resize(6);
         else
-            this->lambda.resize(4);
+            this->lambda.resize(5);
     }
 
     /****************************************************************/
@@ -361,7 +361,7 @@ public:
 
     /************************************************************************/
     virtual void computeQuantities(const Ipopt::Number *x, const bool new_x)
-    {        
+    {
         if (new_x)
         {
             for (size_t i=0; i<this->x.length(); i++)
@@ -435,7 +435,7 @@ public:
         this->lambda.resize(m);
 
         for (Ipopt::Index i=0; i<n; i++)
-        {            
+        {
             zL[i]=z_L[i];
             zU[i]=z_U[i];
         }
