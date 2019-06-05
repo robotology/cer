@@ -40,7 +40,7 @@ using namespace cer::kinematics;
 
 /****************************************************************/
 class IKSolver : public RFModule
-{    
+{
     MobileArmSolver solver;
     RpcServer rpcPort;
     Vector q;
@@ -296,6 +296,8 @@ public:
                     yInfo() << "Domain set:" << solver.getDomain().toString();
             }
         }
+        else
+            solver.setDomain(Vector());
 
         if (cmd.check("obstacles"))
         {
