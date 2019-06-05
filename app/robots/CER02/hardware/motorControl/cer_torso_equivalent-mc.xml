@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
 
-<devices robot="CER01" build="1">
+
   <device name="cer_torso_equivalent_mc" type="tripodMotionControl">
-      <params file="general.xml" />
+      <xi:include href="../../general.xml" />
 
     <param name="AxisNames">  "torso_heave_eq_joint"   "torso_pitch_eq_joint"   "torso_roll_eq_joint"  </param>
 
@@ -50,4 +50,4 @@
     <action phase="shutdown" level="6" type="detach" />
 
   </device>
-</devices>
+

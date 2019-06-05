@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>    
 
-<devices>
+
     <device name="cer_double_laser_device" type="cerDoubleLidar">  
 
 	<group name="LASERFRONT-CFG">
@@ -23,5 +23,5 @@
 
 
     </device>
-</devices>
+
 

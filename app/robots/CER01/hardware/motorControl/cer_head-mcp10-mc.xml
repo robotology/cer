@@ -3,12 +3,12 @@
 
  <!-- Initialization file for EMS 10 - CER head, 2 dof -->
 
-<devices robot="CER01" build="1">
+
   <device name="cer_head_mc" type="embObjMotionControl">
-      <params file="general.xml" />
-      <params file="hardware/electronics/cer_head-mcp10-eln.xml" />
-      <params file="hardware/mechanicals/cer_head-mcp10-mec.xml" />
-      <params file="hardware/motorControl/cer_head-mcp10-mc-service.xml" />
+      <xi:include href="../../general.xml" />
+      <xi:include href="../electronics/cer_head-mcp10-eln.xml" />
+      <xi:include href="../mechanicals/cer_head-mcp10-mec.xml" />
+      <xi:include href="../motorControl/cer_head-mcp10-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                35      70            </param>
@@ -76,4 +76,4 @@
     </group>
 
   </device>
-</devices>
+

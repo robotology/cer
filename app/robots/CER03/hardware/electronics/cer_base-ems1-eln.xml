@@ -2,7 +2,7 @@
 <!DOCTYPE params PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
 
 <params robot="CER03" build="1">
-    <params file="hardware/electronics/pc104.xml" />
+    <xi:include href="../electronics/pc104.xml" />
     
         <group name="ETH_BOARD">
 

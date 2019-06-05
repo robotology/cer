@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
 
-<devices robot="CER01" build="1">
+
     <device name="right_hand_calibrator" type="parametricCalibratorEth">
-        <params file="general.xml" />
+        <xi:include href="../general.xml" />
                 
     <group name="GENERAL">
         <param name="joints">  2  </param> <!-- the number of joints of the robot part -->
@@ -43,8 +43,3 @@
 		<action phase="interrupt3" level="1" type="abort" />
 
 	</device>
-</devices>
-
-        <param name="calibration1">                      -1500            1500           </param>
-        <param name="calibration3">                       64225           16766          </param>
-        <param name="calibration4">                        8829             728          </param>

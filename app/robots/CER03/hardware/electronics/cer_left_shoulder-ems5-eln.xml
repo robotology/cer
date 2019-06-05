@@ -3,7 +3,7 @@
 
 <params robot="CER03" build="1">
 
-    <params file="hardware/electronics/pc104.xml" />
+    <xi:include href="../electronics/pc104.xml" />
     
     <group name="ETH_BOARD">
 

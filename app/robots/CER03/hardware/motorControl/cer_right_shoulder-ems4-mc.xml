@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
 
-<devices robot="CER03" build="1">
+
   <device name="cer_right_shoulder_mc" type="embObjMotionControl">
-      <params file="general.xml" />
-      <params file="hardware/electronics/cer_right_shoulder-ems4-eln.xml" />
-      <params file="hardware/mechanicals/cer_right_shoulder-ems4-mec.xml" />
-      <params file="hardware/motorControl/cer_right_shoulder-ems4-mc-service.xml" />
+      <xi:include href="../../general.xml" />
+      <xi:include href="../electronics/cer_right_shoulder-ems4-eln.xml" />
+      <xi:include href="../mechanicals/cer_right_shoulder-ems4-mec.xml" />
+      <xi:include href="../motorControl/cer_right_shoulder-ems4-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                      85            85        </param>
@@ -119,4 +119,4 @@
     </group>
 
   </device>
-</devices>
+

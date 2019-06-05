@@ -1,24 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE robot PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+<!DOCTYPE robot PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
 
-<robot name="CER01" build="1" portprefix="cer">
-    <params file="hardware/electronics/pc104.xml" />
+<robot name="CER01" build="1" portprefix="cer" xmlns:xi="http://www.w3.org/2001/XInclude">
+<devices>
+    <xi:include href="hardware/electronics/pc104.xml" />
 
     <!-- RIGHT ARM -->
-    <devices file="hardware/motorControl/cer_right_upper_arm-ems19-mc.xml" />
-    <devices file="hardware/motorControl/cer_right_lower_arm-mcp20-mc.xml" />
-    <devices file="wrappers/motorControl/cer_right_arm_no_hand-mc_wrapper.xml" />
-    <devices file="wrappers/motorControl/cer_right_wrist_tripod-mc_wrapper.xml" />
+    <xi:include href="hardware/motorControl/cer_right_upper_arm-ems19-mc.xml" />
+    <xi:include href="hardware/motorControl/cer_right_lower_arm-mcp20-mc.xml" />
+    <xi:include href="wrappers/motorControl/cer_right_arm_no_hand-mc_wrapper.xml" />
+    <xi:include href="wrappers/motorControl/cer_right_wrist_tripod-mc_wrapper.xml" />
     
      <!-- TRIPODS EQUIVALENTS-->
-    <devices file="hardware/motorControl/cer_right_wrist_equivalent-mc.xml" />
+    <xi:include href="hardware/motorControl/cer_right_wrist_equivalent-mc.xml" />
 
     <!--  FT -->
-    <devices file="hardware/FT/cer_right_upper_arm-ems19-strain.xml" />
-    <devices file="wrappers/FT/cer_right_arm-FT_wrapper.xml" />
+    <xi:include href="hardware/FT/cer_right_upper_arm-ems19-strain.xml" />
+    <xi:include href="wrappers/FT/cer_right_arm-FT_wrapper.xml" />
 
     <!--  CALIBRATORS -->
-    <devices file="calibrators/cer_right_arm-calib.xml" />
+    <xi:include href="calibrators/cer_right_arm-calib.xml" />
 
+</devices>
 </robot> 
 

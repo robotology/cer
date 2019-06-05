@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>    
 
-<devices>
+
     <device name="cer_laser_front_device" type="rpLidar2">  
        <group name="GENERAL">
             <param name="name">            cer_laserFront  </param>
@@ -19,4 +19,4 @@
             <param name="max">  325    </param>
         </group> 
     </device>
-</devices>
+

@@ -3,12 +3,12 @@
 
  <!-- Initialization file for MC4+ 20 - CER right lower arm, 4 dof -->
 
-<devices robot="CER03" build="1">
+
   <device name="cer_right_lower_arm_mc" type="embObjMotionControl">
-      <params file="general.xml" />
-      <params file="hardware/electronics/cer_right_lower_arm-mcp6-eln.xml" />
-      <params file="hardware/mechanicals/cer_right_lower_arm-mcp6-mec.xml" />
-      <params file="hardware/motorControl/cer_right_lower_arm-mcp6-mc-service.xml" />
+      <xi:include href="../../general.xml" />
+      <xi:include href="../electronics/cer_right_lower_arm-mcp6-eln.xml" />
+      <xi:include href="../mechanicals/cer_right_lower_arm-mcp6-mec.xml" />
+      <xi:include href="../motorControl/cer_right_lower_arm-mcp6-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                  0.12     0.12    0.12     89     </param>
@@ -105,5 +105,5 @@
     </group>
 	
   </device>
-</devices>
+
 
