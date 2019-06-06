@@ -111,6 +111,8 @@ public:
         Ipopt::Number postural_lower_arm=0.0;
         Ipopt::Number tmp;
 
+        Ipopt::Number view_angle=remainder(atan2(xd[1]-x[idx_b+1], xd[0]-x[idx_b+0])-x[idx_b+2], 2.0*M_PI);
+
         if (wpostural_upper_arm!=0.0)
         {
             for (size_t i=1; i<upper_arm.getDOF(); i++)
@@ -128,7 +130,8 @@ public:
             postural_lower_arm+=tmp*tmp;
         }
 
-        obj_value=wpostural_upper_arm*postural_upper_arm+
+        obj_value=view_angle*view_angle+
+                  wpostural_upper_arm*postural_upper_arm+
                   wpostural_lower_arm*postural_lower_arm;
 
         return true;
@@ -141,9 +144,12 @@ public:
         computeQuantities(x,new_x);
 
         // base
-        grad_f[idx_b+0]=0.0;
-        grad_f[idx_b+1]=0.0;
-        grad_f[idx_b+2]=0.0;
+        double dx=xd[0]-x[idx_b+0];
+        double dy=xd[1]-x[idx_b+1];
+        double view_angle=remainder(atan2(xd[1]-x[idx_b+1], xd[0]-x[idx_b+0])-x[idx_b+2], 2.0*M_PI);
+        grad_f[idx_b+0]=2.0*view_angle*dy/(dx*dx+dy*dy);
+        grad_f[idx_b+1]=-2.0*view_angle*dx/(dx*dx+dy*dy);
+        grad_f[idx_b+2]=-2.0*view_angle;
 
         // torso
         grad_f[idx_t+0]=0.0;
