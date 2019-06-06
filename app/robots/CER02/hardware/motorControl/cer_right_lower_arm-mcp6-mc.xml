@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+<!DOCTYPE devices PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
 
  <!-- Initialization file for MC4+ 20 - CER right lower arm, 4 dof -->
 
-<devices robot="CER01" build="1">
-  <device name="cer_right_lower_arm_mc" type="embObjMotionControl">
-      <params file="general.xml" />
-      <params file="hardware/electronics/cer_right_lower_arm-mcp6-eln.xml" />
-      <params file="hardware/mechanicals/cer_right_lower_arm-mcp6-mec.xml" />
-      <params file="hardware/motorControl/cer_right_lower_arm-mcp6-mc-service.xml" />
+
+  <device xmlns:xi="http://www.w3.org/2001/XInclude" name="cer_right_lower_arm_mc" type="embObjMotionControl">
+      <xi:include href="../../general.xml" />
+      <xi:include href="../electronics/cer_right_lower_arm-mcp6-eln.xml" />
+      <xi:include href="../mechanicals/cer_right_lower_arm-mcp6-mec.xml" />
+      <xi:include href="../motorControl/cer_right_lower_arm-mcp6-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                  0.12     0.12    0.12     89     </param>
@@ -105,5 +105,5 @@
     </group>
 	
   </device>
-</devices>
+
 

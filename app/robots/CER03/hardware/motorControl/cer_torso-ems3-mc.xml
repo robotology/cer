@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+<!DOCTYPE devices PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
 
  <!-- Initialization file for EMS 15 - CER torso tripod + yaw, 4 dof -->
 
-<devices robot="CER03" build="1">
-  <device name="cer_torso_mc" type="embObjMotionControl">
-      <params file="general.xml" />
-      <params file="hardware/electronics/cer_torso-ems3-eln.xml" />
-      <params file="hardware/mechanicals/cer_torso-ems3-mec.xml" />
-      <params file="hardware/motorControl/cer_torso-ems3-mc-service.xml" />
+
+  <device xmlns:xi="http://www.w3.org/2001/XInclude" name="cer_torso_mc" type="embObjMotionControl">
+      <xi:include href="../../general.xml" />
+      <xi:include href="../electronics/cer_torso-ems3-eln.xml" />
+      <xi:include href="../mechanicals/cer_torso-ems3-mec.xml" />
+      <xi:include href="../motorControl/cer_torso-ems3-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                0.15    0.15         0.15       30     </param>
@@ -151,5 +151,5 @@
     </group>
 	
   </device>
-</devices>
+
 
