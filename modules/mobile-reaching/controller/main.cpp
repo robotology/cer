@@ -103,9 +103,6 @@ class Controller : public RFModule
     /****************************************************************/
     Vector getEncoders(double *timeStamp=NULL)
     {
-
-        // TODO include mobile base position
-
         Vector encs(12,0.0);
         Vector stamps(encs.length());
 
@@ -141,8 +138,6 @@ class Controller : public RFModule
         imod[1]->getControlModes((int)jointsIndexes[1].size(),jointsIndexes[1].data(),&curMode[3]);
         imod[2]->getControlModes((int)jointsIndexes[2].size(),jointsIndexes[2].data(),&curMode[4]);
         imod[3]->getControlModes((int)jointsIndexes[3].size(),jointsIndexes[3].data(),&curMode[9]);
-
-        // TODO get mobile base mode
     }
 
     /****************************************************************/
@@ -192,8 +187,6 @@ class Controller : public RFModule
                 break;
             }
         }
-
-        // TODO set mobile base control mode
 
         return true;
     }
@@ -510,18 +503,33 @@ public:
             vector<string> areaNames;
             imap->getAreasList(areaNames);
 
+            if (verbosity>0)
+            {
+                yDebug() << "Area list:";
+                for(int i=0 ; i<areaNames.size() ; i++)
+                    yDebug() << "\t" << areaNames[i];
+            }
+
             Map2DArea area;
             for(size_t i=0 ; i<areaNames.size() ; i++)
             {
                 imap->getArea(areaNames[i], area);
                 if(area.checkLocationInsideArea(loc))
+                {
+                    if (verbosity>0)
+                        yDebug() << "Currently in" << areaNames[i];
                     break;
+                }
             }
 
             Bottle b;
             Bottle &coord = b.addList();
+            if (verbosity>0)
+                yDebug() << "Area points list:";
             for(size_t i=0 ; i<area.points.size() ; i++)
             {
+                if (verbosity>0)
+                    yDebug() << "\t" << area.points[i].x << area.points[i].y;
                 area.points.size();
                 coord.addDouble(area.points[i].x);
                 coord.addDouble(area.points[i].y);
@@ -592,7 +600,7 @@ public:
                 return true;
             }
             else
-                yError("Malformed target type!");
+                yError("Solver failed, the object is probably not reachable!");
         }
         else
             yError("Unable to communicate with the solver");
@@ -640,7 +648,7 @@ public:
             {
                 yDebug() << "Area list:";
                 for(int i=0 ; i<areaNames.size() ; i++)
-                    yDebug() << "/t" << areaNames[i];
+                    yDebug() << "\t" << areaNames[i];
             }
 
             Map2DArea area;

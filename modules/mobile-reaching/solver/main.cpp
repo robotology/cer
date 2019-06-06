@@ -106,10 +106,10 @@ class IKSolver : public RFModule
 
         if (getBounds("/"+robot+"/"+arm_type+"_arm","/cer_mobile-reaching-solver/"+arm_type+"/"+arm_type+"_arm",lim))
         {
-            iKinChain &chain=*p.upper_arm.asChain(); 
+            iKinChain &chain=*p.upper_arm.asChain();
             for (int i=0; i<5; i++)
             {
-                chain[1+i].setMin(CTRL_DEG2RAD*lim(i,0)); 
+                chain[1+i].setMin(CTRL_DEG2RAD*lim(i,0));
                 chain[1+i].setMax(CTRL_DEG2RAD*lim(i,1));
 
                 yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
@@ -227,7 +227,7 @@ public:
 
             return true;
         }
-        
+
         if (cmd.check("parameters"))
         {
             if (Bottle *parameters=cmd.find("parameters").asList())
@@ -404,7 +404,7 @@ int main(int argc, char *argv[])
         yError("YARP server not available!");
         return 1;
     }
-    
+
     ResourceFinder rf;
     rf.configure(argc,argv);
 
