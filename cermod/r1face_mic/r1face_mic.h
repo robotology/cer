@@ -8,11 +8,7 @@
 
 #include <atomic>
 
-#ifdef CARDE
-#include "CircularBuffer.h"
-#else
 #include <yarp/dev/CircularAudioBuffer.h>
-#endif
 
 #include <yarp/sig/Sound.h>
 #include <yarp/os/PeriodicThread.h>
@@ -123,9 +119,5 @@ private:
 
     int32_t                     *rawBuffer;
     inputData                   *tmpData;
-#if CARDE
-    CircularBuffer<inputData>   *inputBuffer;
-#else
     yarp::dev::CircularAudioBuffer_32t    *inputBuffer;
-#endif
 };

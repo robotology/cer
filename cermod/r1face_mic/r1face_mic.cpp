@@ -65,16 +65,12 @@ R1faceMic::R1faceMic(): PeriodicThread(0),
 {
     tmpData     = new inputData;
     
-#if CARDE
-    inputBuffer = new CircularBuffer<inputData>(BUFFER_SIZE);
-#else
     const size_t _channels = HW_STEREO_CHANNELS * STEREO;
     const size_t _samples = BUFFER_SIZE * CHUNK_SIZE;
     const size_t _depth = 4;
     yarp::dev::AudioBufferSize size (_samples, _channels, _depth);
     inputBuffer = new CircularAudioBuffer_32t("r1_face_mic",size);
     record_waiting_counter=0;
-#endif
 }
 
 R1faceMic::~R1faceMic()
@@ -177,12 +173,6 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, 
 {
     //check for something_to_record
     {
-#ifdef AUTOMATIC_REC_START
-        if (m_isRecording == false)
-        {
-            this->startRecording();
-        }
-#else
         double debug_time = yarp::os::Time::now();
         while (m_isRecording == false)
         {
@@ -193,7 +183,6 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, 
             }
             yarp::os::SystemClock::delaySystem(SLEEP_TIME);
         }
-#endif
     }
 
     //check on input parameters

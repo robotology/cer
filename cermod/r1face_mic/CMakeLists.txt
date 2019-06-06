@@ -14,7 +14,7 @@ if(ENABLE_cermod_r1face_mic)
 
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-    yarp_add_plugin(r1face_mic r1face_mic.h r1face_mic.cpp CircularBuffer.h CircularBuffer.cpp)
+    yarp_add_plugin(r1face_mic r1face_mic.h r1face_mic.cpp)
 
     target_link_libraries(r1face_mic ${YARP_LIBRARIES})
 
