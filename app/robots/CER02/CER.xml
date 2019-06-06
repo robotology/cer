@@ -3,7 +3,6 @@
 
 <robot name="CER02" build="1" portprefix="cer" xmlns:xi="http://www.w3.org/2001/XInclude">
 <devices>
-    <!-- <xi:include href="hardware/electronics/pc104.xml" /> -->
 
     <!-- LASER -->
     <xi:include href="hardware/rpLidar/laserA2_hw_front.xml" /> 

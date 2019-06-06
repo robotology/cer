@@ -3,8 +3,7 @@
 
 <robot name="CER03" build="1" portprefix="cer" xmlns:xi="http://www.w3.org/2001/XInclude">
 <devices>
-    <!-- <xi:include href="hardware/electronics/pc104.xml" /> -->
-
+ 
     <!-- LASER -->
     <xi:include href="hardware/rpLidar/laserA2_hw_front.xml" /> 
     <xi:include href="wrappers/rpLidar/laser_wrapper.xml" /> 
@@ -58,9 +57,7 @@
 
     <!-- SKIN-->
     <xi:include href="hardware/skin/left_hand-mc9-skin.xml" />
-    <xi:include href="wrappers/skin/left_arm-skin_wrapper.xml" />
     <xi:include href="hardware/skin/right_hand-mc7-skin.xml" />
-    <xi:include href="wrappers/skin/right_arm-skin_wrapper.xml" />
 
     <!--  FT -->
     <xi:include href="hardware/FT/cer_left_shoulder-ems5-strain.xml" />

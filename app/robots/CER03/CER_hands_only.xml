@@ -3,7 +3,6 @@
 
 <robot name="CER03" build="1" portprefix="cer" xmlns:xi="http://www.w3.org/2001/XInclude">
 <devices>
-    <xi:include href="hardware/electronics/pc104.xml" />
 
     <!-- DEVICE -->
     <xi:include href="hardware/motorControl/cer_right_hand-mcp9-mc.xml" />
