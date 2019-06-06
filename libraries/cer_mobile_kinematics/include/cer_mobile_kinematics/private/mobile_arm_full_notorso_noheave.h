@@ -286,7 +286,6 @@ public:
             Ipopt::Index idx=6;
 
             // g[2] (base)
-
             values[idx]=-2.0*e[0];idx++;
             values[idx]=-2.0*e[1];idx++;
 
@@ -308,7 +307,6 @@ public:
             }
 
             // g[2] (lower_arm)
-
             Vector e_fw;
             Matrix M=d1.T*H;
 
@@ -335,7 +333,6 @@ public:
             values[idx]=1.0;idx++;
 
             // g[4] init
-
             Vector eo=dcm2axis(Rd*(Rb*T).transposed());
             eo*=eo[3]; eo.pop_back();
 
@@ -354,7 +351,6 @@ public:
             }
 
             // g[4] (lower_arm)
-
             Vector e_fwo;
 
             x_dx[idx_la+0]=x[idx_la+0]+drho;
@@ -413,72 +409,6 @@ public:
     }
 
     /****************************************************************/
-    bool eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
-                     Ipopt::Number *grad_f)
-    {
-        computeQuantities(x,new_x);
-
-        Vector e=dcm2axis(Rd*(Rb*T).transposed());
-        e*=e[3]; e.pop_back();
-
-        Ipopt::Number x_dx[n];
-        for (Ipopt::Index i=0; i<n; i++)
-            x_dx[i]=x[i];
-
-        // base
-        grad_f[idx_b+0]=0.0;
-        grad_f[idx_b+1]=0.0;
-        grad_f[idx_b+2]=-2.0*e[2];
-
-        // torso
-        grad_f[idx_t+0]=0.0;
-        grad_f[idx_t+1]=0.0;
-        grad_f[idx_t+2]=0.0;
-
-        // upper_arm
-        grad_f[idx_ua+0]=0.0;
-        Vector eax=dcm2axis(Rd*(Rb*H_).transposed());
-        eax*=eax[3]; eax.pop_back();
-        Vector grad=-2.0*((Rb.submatrix(0,2,0,2)*J_.submatrix(3,5,0,upper_arm.getDOF()-1)).transposed()*eax);
-        for (size_t i=1; i<grad.length(); i++)
-            grad_f[idx_ua+i]=grad[i] + 2.0*wpostural_upper_arm*(x[idx_ua+i]-xref[idx_ua+i]);
-
-        // lower_arm
-        TripodState d_fw,d_bw;
-        Vector e_fw,e_bw;
-        Matrix M=d1.T*H;
-
-        x_dx[idx_la+0]=x[idx_la+0]+drho;
-        d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*(Rb*M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
-        x_dx[idx_la+0]=x[idx_la+0]-drho;
-        d_bw=tripod_fkin(2,x_dx);
-        e_bw=dcm2axis(Rd*(Rb*M*d_bw.T*TN).transposed()); e_bw*=e_bw[3]; e_bw.pop_back();
-        grad_f[idx_la+0]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(x[idx_la+0]-x[idx_la+1]);
-        x_dx[idx_la+0]=x[idx_la+0];
-
-        x_dx[idx_la+1]=x[idx_la+1]+drho;
-        d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*(Rb*M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
-        x_dx[idx_la+1]=x[idx_la+1]-drho;
-        d_bw=tripod_fkin(2,x_dx);
-        e_bw=dcm2axis(Rd*(Rb*M*d_bw.T*TN).transposed()); e_bw*=e_bw[3]; e_bw.pop_back();
-        grad_f[idx_la+1]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(2.0*x[idx_la+1]-x[idx_la+0]-x[idx_la+2]);
-        x_dx[idx_la+1]=x[idx_la+1];
-
-        x_dx[idx_la+2]=x[idx_la+2]+drho;
-        d_fw=tripod_fkin(2,x_dx);
-        e_fw=dcm2axis(Rd*(Rb*M*d_fw.T*TN).transposed()); e_fw*=e_fw[3]; e_fw.pop_back();
-        x_dx[idx_la+2]=x[idx_la+2]-drho;
-        d_bw=tripod_fkin(2,x_dx);
-        e_bw=dcm2axis(Rd*(Rb*M*d_bw.T*TN).transposed()); e_bw*=e_bw[3]; e_bw.pop_back();
-        grad_f[idx_la+2]=dot(e,e_fw-e_bw)/drho + 2.0*wpostural_lower_arm*(x[idx_la+2]-x[idx_la+1]);
-        x_dx[idx_la+2]=x[idx_la+2];
-
-        return true;
-    }
-
-    /****************************************************************/
     bool eval_jac_g(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                     Ipopt::Index m, Ipopt::Index nele_jac, Ipopt::Index *iRow,
                     Ipopt::Index *jCol, Ipopt::Number *values)
@@ -512,11 +442,19 @@ public:
             iRow[idx]=3; jCol[idx]=idx_ua+1;idx++;
             iRow[idx]=3; jCol[idx]=idx_ua+2;idx++;
 
-            // g[4] (domain boundaries constraints)
+            // g[4] (reaching orientation)
+            iRow[idx]=4; jCol[idx]=2;idx++;
+            for (Ipopt::Index col=idx_ua+1; col<n; col++)
+            {
+                iRow[idx]=4; jCol[idx]=col;
+                idx++;
+            }
+
+            // g[5] (domain boundaries constraints)
             if(domain_constr)
             {
-                iRow[idx]=4; jCol[idx]=0;idx++;
-                iRow[idx]=4; jCol[idx]=1;
+                iRow[idx]=5; jCol[idx]=0;idx++;
+                iRow[idx]=5; jCol[idx]=1;
             }
         }
         else
@@ -565,7 +503,6 @@ public:
             Ipopt::Index idx=6;
 
             // g[2] (base)
-
             values[idx]=-2.0*e[0];idx++;
             values[idx]=-2.0*e[1];idx++;
 
@@ -621,7 +558,55 @@ public:
             values[idx]=-cover_shoulder_avoidance[0];idx++;
             values[idx]=1.0;idx++;
 
-            // g[4] (domain boundaries constraints)
+            // g[4] init
+            Vector eo=dcm2axis(Rd*(Rb*T).transposed());
+            eo*=eo[3]; eo.pop_back();
+
+            Vector eax=dcm2axis(Rd*(Rb*H_).transposed());
+            eax*=eax[3]; eax.pop_back();
+
+            // g[4] base
+            values[idx]=-2.0*eo[2];idx++;
+
+            // g[4] (upper_arm)
+            Vector grado=-2.0*((Rb.submatrix(0,2,0,2)*J_.submatrix(3,5,0,upper_arm.getDOF()-1)).transposed()*eax);
+            for (size_t i=1; i<grad.length(); i++)
+            {
+                values[idx]=grado[i];
+                idx++;
+            }
+
+            // g[4] (lower_arm)
+            Vector e_fwo, e_bwo;
+
+            x_dx[idx_la+0]=x[idx_la+0]+drho;
+            d_fw=tripod_fkin(2,x_dx);
+            e_fwo=dcm2axis(Rd*(Rb*M*d_fw.T*TN).transposed()); e_fwo*=e_fwo[3]; e_fwo.pop_back();
+            x_dx[idx_la+0]=x[idx_la+0]-drho;
+            d_fw=tripod_fkin(2,x_dx);
+            e_bwo=dcm2axis(Rd*(Rb*M*d_fw.T*TN).transposed()); e_bwo*=e_bwo[3]; e_bwo.pop_back();
+            values[idx]=dot(eo,e_fwo-e_bwo)/drho;idx++;
+            x_dx[idx_la+0]=x[idx_la+0];
+
+            x_dx[idx_la+1]=x[idx_la+1]+drho;
+            d_fw=tripod_fkin(2,x_dx);
+            e_fwo=dcm2axis(Rd*(Rb*M*d_fw.T*TN).transposed()); e_fwo*=e_fwo[3]; e_fwo.pop_back();
+            x_dx[idx_la+1]=x[idx_la+1]-drho;
+            d_fw=tripod_fkin(2,x_dx);
+            e_bwo=dcm2axis(Rd*(Rb*M*d_fw.T*TN).transposed()); e_bwo*=e_bwo[3]; e_bwo.pop_back();
+            values[idx]=dot(eo,e_fwo-e_bwo)/drho;idx++;
+            x_dx[idx_la+1]=x[idx_la+1];
+
+            x_dx[idx_la+2]=x[idx_la+2]+drho;
+            d_fw=tripod_fkin(2,x_dx);
+            e_fwo=dcm2axis(Rd*(Rb*M*d_fw.T*TN).transposed()); e_fwo*=e_fwo[3]; e_fwo.pop_back();
+            x_dx[idx_la+2]=x[idx_la+2]-drho;
+            d_fw=tripod_fkin(2,x_dx);
+            e_bwo=dcm2axis(Rd*(Rb*M*d_fw.T*TN).transposed()); e_bwo*=e_bwo[3]; e_bwo.pop_back();
+            values[idx]=dot(eo,e_fwo-e_bwo)/drho;idx++;
+            x_dx[idx_la+2]=x[idx_la+2];
+
+            // g[5] (domain boundaries constraints)
             if(domain_constr)
             {
                 Vector v(2);
