@@ -118,9 +118,7 @@ bool MobileArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetStringValue("mu_strategy","monotone");
     app->Options()->SetIntegerValue("max_iter",slvParameters.max_iter);
     app->Options()->SetNumericValue("max_cpu_time",slvParameters.max_cpu_time);
-    app->Options()->SetStringValue("nlp_scaling_method","gradient-based");
-    app->Options()->SetNumericValue("nlp_scaling_max_gradient",1.0);
-    app->Options()->SetNumericValue("nlp_scaling_min_value",1e-6);
+    app->Options()->SetStringValue("nlp_scaling_method","none");
     app->Options()->SetStringValue("hessian_approximation","limited-memory");
     app->Options()->SetStringValue("fixed_variable_treatment","make_parameter");
     app->Options()->SetStringValue("derivative_test",print_level>=4?"first-order":"none");
