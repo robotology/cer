@@ -147,6 +147,7 @@ public:
         p.torso_heave=0.0;
         p.lower_arm_heave=0.02;
         p.warm_start=true;
+        p.max_cpu_time=10;
         p.weight_postural_torso=1;
         p.weight_postural_torso_yaw=1e-2;
         p.weight_postural_upper_arm=1e-2;

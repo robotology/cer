@@ -114,7 +114,8 @@ bool MobileArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     Ipopt::SmartPtr<Ipopt::IpoptApplication> app=new Ipopt::IpoptApplication;
     app->Options()->SetNumericValue("tol",slvParameters.tol);
     app->Options()->SetNumericValue("constr_viol_tol",slvParameters.constr_tol);
-    app->Options()->SetIntegerValue("acceptable_iter",0);
+    app->Options()->SetNumericValue("acceptable_tol",100*slvParameters.tol);
+    app->Options()->SetIntegerValue("acceptable_iter",100);
     app->Options()->SetStringValue("mu_strategy","monotone");
     app->Options()->SetIntegerValue("max_iter",slvParameters.max_iter);
     app->Options()->SetNumericValue("max_cpu_time",slvParameters.max_cpu_time);
