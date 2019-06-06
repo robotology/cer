@@ -27,7 +27,7 @@ protected:
     iKinLimb &upper_arm;
 
     bool domain_constr;
-    vector<cv::Point2f> domain_poly;
+    vector<Vector> domain_poly;
     double domain_dist;
 
     double drho;
@@ -273,12 +273,12 @@ public:
         {
             this->lambda.resize(6);
             domain_constr=true;
-            domain_poly.resize(domain.size()/2);
+            domain_poly.resize(domain.size()/2, Vector(2));
 
             for (size_t i=0; i<domain_poly.size(); i++)
             {
-                domain_poly[i].x = domain[2*i];
-                domain_poly[i].y = domain[2*i+1];
+                domain_poly[i][0] = domain[2*i];
+                domain_poly[i][1] = domain[2*i+1];
             }
         }
         else
@@ -390,8 +390,10 @@ public:
 
             if(domain_constr)
             {
-                cv::Point2d point(x[0], x[1]);
-                domain_dist = cv::pointPolygonTest(domain_poly,  point, true);
+                Vector v(2);
+                v[0]=x[0];
+                v[1]=x[1];
+                domain_dist = distanceFromDomain(domain_poly, v);
             }
         }
     }
@@ -442,6 +444,60 @@ public:
 
         for (Ipopt::Index i=0; i<m; i++)
             this->lambda[i]=lambda[i];
+    }
+
+    static double distanceFromDomain(std::vector<Vector> domain, Vector point)
+    {
+        int nbSides=domain.size();
+        int on_right=0;
+        double dist=0;
+        double min_dist=std::numeric_limits<double>::max();
+        Vector p1(2);
+        Vector p2=domain[nbSides-1];
+        Vector x(2);
+        Vector x1(2);
+        Vector x2(2);
+
+        for(size_t i=0; i<nbSides; i++)
+        {
+            p1=p2;
+            p2=domain[i];
+
+            x=p2-p1;
+            x*=1.0/norm(x);
+            x1=point-p1;
+            x2=point-p2;
+
+            if( dot(x1,x)<=0 )
+                dist=norm(x1);
+            else if( dot(x2,x)>=0 )
+                dist=norm(x2);
+            else
+                dist=fabs(x1[1]*x[0]-x1[0]*x[1]);
+
+            if(dist<min_dist)
+            {
+                min_dist=dist;
+                if(min_dist==0)
+                    break;
+            }
+
+            if( (p1[1]<=point[1] && p2[1]<=point[1]) ||
+               (p1[1]>point[1] && p2[1]>point[1]) ||
+               (p1[0]<point[0] && p2[0]<point[0]) )
+                continue;
+
+            double signed_dist=x1[1]*x[0]-x1[0]*x[1];
+            if(x[1]<0)
+                signed_dist=-signed_dist;
+            if(signed_dist>0)
+                on_right++;
+        }
+
+        if(on_right%2==0)
+            return -min_dist;
+        else
+            return min_dist;
     }
 };
 

@@ -19,8 +19,6 @@
 #define __CER_KINEMATICS_ARM_H__
 
 #include <deque>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>

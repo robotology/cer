@@ -20,8 +20,8 @@ target_include_directories(${PROJECT_NAME} PUBLIC  "$<BUILD_INTERFACE:${PROJECT_
                                            PRIVATE ${IPOPT_INCLUDE_DIRS})
 
 set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${IPOPT_LINK_FLAGS}")
-target_link_libraries(${PROJECT_NAME} cer_kinematics ctrlLib iKin ${YARP_LIBRARIES} ${IPOPT_LIBRARIES} ${OpenCV_LIBRARIES})
-message(${OpenCV_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} cer_kinematics ctrlLib iKin ${YARP_LIBRARIES} ${IPOPT_LIBRARIES})
+
 install(TARGETS ${PROJECT_NAME}
         EXPORT  ${VARS_PREFIX}
         COMPONENT runtime

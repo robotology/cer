@@ -44,7 +44,7 @@ public:
         }
         nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
-yDebug() << "nb constr" << m;
+
         return true;
     }
 
@@ -372,11 +372,16 @@ yDebug() << "nb constr" << m;
             // g[5] (domain boundaries constraints)
             if(domain_constr)
             {
-                const double dt = 1e-3;
-                double d = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0]+dt, x[idx_b+1]), true);
-                values[idx]=(d-domain_dist)/dt;idx++;
-                d = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0], x[idx_b+1]+dt), true);
-                values[idx]=(d-domain_dist)/dt;
+                Vector v(2);
+                v[0]=x[idx_b+0]+drho;
+                v[1]=x[idx_b+1];
+                double d = distanceFromDomain(domain_poly, v);
+                values[idx]=(d-domain_dist)/drho;idx++;
+
+                v[0]=x[idx_b+0];
+                v[1]=x[idx_b+1]+drho;
+                d = distanceFromDomain(domain_poly, v);
+                values[idx]=(d-domain_dist)/drho;
             }
         }
 
@@ -613,13 +618,20 @@ public:
             // g[4] (domain boundaries constraints)
             if(domain_constr)
             {
-                const double dt = 1e-3;
-                double df = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0]+dt, x[idx_b+1]), true);
-                double db = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0]-dt, x[idx_b+1]), true);
-                values[idx]=0.5*(df-db)/dt;idx++;
-                df = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0], x[idx_b+1]+dt), true);
-                db = cv::pointPolygonTest(domain_poly, cv::Point2d(x[idx_b+0], x[idx_b+1]-dt), true);
-                values[idx]=0.5*(df-db)/dt;
+                Vector v(2);
+                v[0]=x[idx_b+0]+drho;
+                v[1]=x[idx_b+1];
+                double df = distanceFromDomain(domain_poly, v);
+                v[0]=x[idx_b+0]-drho;
+                double db = distanceFromDomain(domain_poly, v);
+                values[idx]=0.5*(df-db)/drho;idx++;
+
+                v[0]=x[idx_b+0];
+                v[1]=x[idx_b+1]+drho;
+                df = distanceFromDomain(domain_poly, v);
+                v[1]=x[idx_b+1]-drho;
+                db = distanceFromDomain(domain_poly, v);
+                values[idx]=0.5*(df-db)/drho;
             }
         }
 
