@@ -8,13 +8,13 @@ yarp_prepare_plugin(r1face_mic
                     CATEGORY device
                     TYPE cer::dev::R1faceMic
                     INCLUDE r1face_mic.h
-                    EXTRA_CONFIG WRAPPER=grabber)
+                    EXTRA_CONFIG WRAPPER=ServerSoundGrabber)
 
 if(ENABLE_cermod_r1face_mic)
 
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-    yarp_add_plugin(r1face_mic r1face_mic.h r1face_mic.cpp CircularBuffer.h CircularBuffer.cpp)
+    yarp_add_plugin(r1face_mic r1face_mic.h r1face_mic.cpp)
 
     target_link_libraries(r1face_mic ${YARP_LIBRARIES})
 

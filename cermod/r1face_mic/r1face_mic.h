@@ -8,7 +8,8 @@
 
 #include <atomic>
 
-#include "CircularBuffer.h"
+#include <yarp/dev/CircularAudioBuffer.h>
+
 #include <yarp/sig/Sound.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/DeviceDriver.h>
@@ -55,23 +56,23 @@ public:
     ~R1faceMic();
 
     // Device driver interface
-    bool open(yarp::os::Searchable &params);
-    bool close();
+    bool open(yarp::os::Searchable &params) override;
+    bool close() override;
 
     // Thread interface
-    virtual bool threadInit();
+    virtual bool threadInit() override;
 
-    virtual void run();
+    virtual void run() override;
 
-    virtual void threadRelease();
+    virtual void threadRelease() override;
 
     // IService interface
 
-    virtual bool startService();
+    virtual bool startService() override;
 
-    virtual bool updateService();
+    virtual bool updateService() override;
 
-    virtual bool stopService();
+    virtual bool stopService() override;
 
     // IAudioGrabberSound interface
     /**
@@ -80,33 +81,43 @@ public:
      * @param sound the sound to be filled
      * @return true/false upon success/failure
      */
-    virtual bool getSound(yarp::sig::Sound& sound);
+    virtual bool getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, size_t max_number_of_samples, double max_samples_timeout_s) override;
 
     /**
      * Start the recording.
      *
      * @return true/false upon success/failure
      */
-    virtual bool startRecording();
+    virtual bool startRecording() override;
 
      /**
      * Stop the recording.
      *
      * @return true/false upon success/failure
      */
-    virtual bool stopRecording();
+    virtual bool stopRecording() override;
+
+    virtual bool getRecordingAudioBufferMaxSize(yarp::dev::AudioBufferSize& size) override;
+
+    virtual bool getRecordingAudioBufferCurrentSize(yarp::dev::AudioBufferSize& size) override;
+
+    virtual bool resetRecordingAudioBuffer() override;
 
 private:
 
     int  shift;
-    bool recording;
+    bool m_isRecording;
     int  channels;
     int  samplingRate;
     int  dev_fd;
     int  chunkSize;
     std::string deviceFile;
+    int selected_chan;
+    int userChannelsNum;
+    size_t record_waiting_counter;
+    yarp::os::Mutex m_mutex;
 
     int32_t                     *rawBuffer;
     inputData                   *tmpData;
-    CircularBuffer<inputData>   *inputBuffer;
+    yarp::dev::CircularAudioBuffer_32t    *inputBuffer;
 };
