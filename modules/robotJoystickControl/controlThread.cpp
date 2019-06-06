@@ -156,7 +156,7 @@ void ControlThread::reachingHandler(string arm_type, const bool b, const Vector 
     }*/
 }
 
-void ControlThread::velMoveHandler(const bool b, std::vector<int> joints, double speed, IControlMode2* imod, IVelocityControl* ivel)
+void ControlThread::velMoveHandler(const bool b, std::vector<int> joints, double speed, IControlMode * imod, IVelocityControl* ivel)
 {
     for (size_t i = 0; i < joints.size(); i++)
     {

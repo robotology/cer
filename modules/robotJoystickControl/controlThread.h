@@ -91,20 +91,20 @@ protected:
     IVelocityControl*         interface_torso_tripod_iVel;
     IPositionDirect*          interface_torso_tripod_iDir;
     IEncoders*                interface_torso_tripod_iEnc;
-    IControlMode2*            interface_torso_tripod_iCmd;
+    IControlMode *            interface_torso_tripod_iCmd;
 
     IPositionControl*         interface_torso_equiv_iPos;
     IVelocityControl*         interface_torso_equiv_iVel;
-    IControlMode2*            interface_torso_equiv_iCmd;
+    IControlMode *            interface_torso_equiv_iCmd;
 
-    IControlMode2*            interface_left_hand_iCmd;
+    IControlMode*             interface_left_hand_iCmd;
     IVelocityControl*         interface_left_hand_iVel;
 
-    IControlMode2*            interface_right_hand_iCmd;
+    IControlMode *            interface_right_hand_iCmd;
     IVelocityControl*         interface_right_hand_iVel;
 
     IPositionControl*         interface_head_iPos;
-    IControlMode2*            interface_head_iCmd;
+    IControlMode *            interface_head_iCmd;
     IVelocityControl*         interface_head_iVel;
 
     yarp::sig::Vector         initial_xyz_left;
@@ -135,7 +135,7 @@ public:
     
 private:
     void goToPose(string arm_type, const yarp::sig::Vector &xd, const yarp::sig::Vector &od);
-    void velMoveHandler(const bool b, std::vector<int> joints, double speed, IControlMode2* imod, IVelocityControl* ivel);
+    void velMoveHandler(const bool b, std::vector<int> joints, double speed, IControlMode * imod, IVelocityControl* ivel);
     void reachingHandler(string arm_type, const bool b, const yarp::sig::Vector &pos, const yarp::sig::Vector &rpy);
     void saturate(double& v, double sat_lim);
     void updateRVIZ(const yarp::sig::Vector &xd, const yarp::sig::Vector &od);

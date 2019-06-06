@@ -98,7 +98,7 @@ private:
     typedef yarp::dev::IVelocityControl                          IVelocityControl;
     typedef yarp::dev::IPositionDirect                           IPositionDirect;
     typedef yarp::dev::IControlLimits                            IControlLimits;
-    typedef yarp::dev::IControlMode2                             IControlMode2;
+    typedef yarp::dev::IControlMode                              IControlMode;
     typedef yarp::dev::IEncoders                                 IEncoders;
     typedef yarp::dev::PolyDriver                                PolyDriver;
     typedef yarp::os::Publisher<yarp::rosmsg::visualization_msgs::MarkerArray>  MarkerArrayPort;
@@ -134,7 +134,7 @@ private:
     int                b0_pressedCount;
     int                b1_pressedCount;
     IEncoders*         ienc;
-    IControlMode2*     imod;
+    IControlMode*      imod;
     IVelocityControl*  ivel;
     IPositionDirect*   ipos;
     IControlLimits*    ilim;
