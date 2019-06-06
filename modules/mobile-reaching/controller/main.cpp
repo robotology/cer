@@ -558,7 +558,15 @@ public:
                             bd.y=payLoadJoints->get(1).asDouble();
                             bd.theta=payLoadJoints->get(2).asDouble();
 
-                            inav->gotoTargetByAbsoluteLocation(bd);
+                            NavigationStatusEnum navStatus;
+                            inav->getNavigationStatus(navStatus);
+                            if(navStatus!=navigation_status_idle)
+                                inav->stopNavigation();
+                            if(!inav->gotoTargetByAbsoluteLocation(bd))
+                            {
+                                yError("Cannot navigate to destination!");
+                                return false;
+                            }
 
                             for (size_t i=0; i<qd.length(); i++)
                                 qd[i]=payLoadJoints->get(3+i).asDouble();
