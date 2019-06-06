@@ -45,6 +45,12 @@
     <xi:include href="hardware/motorControl/cer_torso-ems15-mc.xml" />
     <xi:include href="wrappers/motorControl/cer_torso_tripod-mc_wrapper.xml" />
 
+    <!-- SKIN-->
+    <!--
+    <xi:include href="hardware/skin/left_hand-mc7-skin.xml" />
+    <xi:include href="wrappers/skin/left_arm-skin_wrapper.xml" />
+    -->
+    
      <!-- TRIPODS EQUIVALENTS-->
     <xi:include href="hardware/motorControl/cer_torso_equivalent-mc.xml" />
     <xi:include href="hardware/motorControl/cer_left_wrist_equivalent-mc.xml" />
