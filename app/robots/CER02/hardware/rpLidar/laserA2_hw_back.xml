@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>    
 
-<devices>
+
     <device xmlns:xi="http://www.w3.org/2001/XInclude" name="cer_laser_back_device" type="rpLidar2">  
        <group name="GENERAL">
             <param name="name">            cer_laserBack     </param>
