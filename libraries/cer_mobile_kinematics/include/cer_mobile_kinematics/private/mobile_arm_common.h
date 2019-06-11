@@ -39,11 +39,15 @@ protected:
     double wpostural_upper_arm;
     double wpostural_lower_arm;
 
-    Matrix Hb,Rb,H0,HN,Hd,Rd;
+    int nb_targets;
+    int nb_kin_DOF;
+    Matrix Hb,Rb,H0,HN;
+    vector<Matrix> Hd,Rd;
+    vector<Vector> xd;
     Vector x0,x,xref;
-    Vector xd;
 
-    int idx_b,idx_t,idx_ua,idx_la;
+    int idx_b;
+    vector<int> idx_t,idx_ua,idx_la;
 
     Vector latch_x;
     vector<int> latch_idx;
@@ -52,19 +56,19 @@ protected:
     Vector zL,zU;
     Vector lambda;
 
-    TripodState d1,d2;
-    TripodState din1,din2;
-    Matrix H,H_,J_,T;
-    Vector q;
+    vector<TripodState> d1,d2;
+    vector<TripodState> din1,din2;
+    vector<Matrix> H,H_,J_,T;
+    vector<Vector> q;
 
     Vector cover_shoulder_avoidance;
 
     /****************************************************************/
     TripodState tripod_fkin(const int which, const Ipopt::Number *x,
-                            TripodState *internal=NULL)
+                            TripodState *internal=NULL, const int target_idx=0)
     {
         const TripodParametersExtended &params=((which==1)?torso:lower_arm);
-        int offs=(which==1)?idx_t:idx_la;
+        int offs=(which==1)?idx_t[target_idx]:idx_la[target_idx];
 
         return fkinHelper(&x[offs],params,internal);
     }
@@ -122,7 +126,7 @@ protected:
 
 public:
     /****************************************************************/
-    MobileArmCommonNLP(MobileArmSolver &slv_) :
+    MobileArmCommonNLP(MobileArmSolver &slv_, int nb_targets_=1) :
                  slv(slv_), torso(slv_.armParameters.torso),
                  upper_arm(slv_.armParameters.upper_arm),
                  lower_arm(slv_.armParameters.lower_arm),
@@ -133,29 +137,60 @@ public:
                  wpostural_torso(slv_.slvParameters.weight_postural_torso),
                  wpostural_torso_yaw(slv_.slvParameters.weight_postural_torso_yaw),
                  wpostural_upper_arm(slv_.slvParameters.weight_postural_upper_arm),
-                 wpostural_lower_arm(slv_.slvParameters.weight_postural_lower_arm)
+                 wpostural_lower_arm(slv_.slvParameters.weight_postural_lower_arm),
+                 nb_targets(nb_targets_)
     {
-        idx_b=0;
-        idx_t=idx_b+3;
-        idx_ua=idx_t+3;
-        idx_la=idx_ua+upper_arm.getDOF();
-
         drho=DELTA_RHO;
+
+        yAssert(nb_targets>=1);
+
+        idx_b=0;
+
+        idx_t.resize(nb_targets);
+        idx_t[0]=idx_b+3;
+        idx_ua.resize(nb_targets);
+        idx_ua[0]=idx_t[0]+3;
+        idx_la.resize(nb_targets);
+        idx_la[0]=idx_ua[0]+upper_arm.getDOF();
+
+        for (size_t i=1; i<nb_targets; i++)
+        {
+            idx_t[i]=idx_la[i-1]+3;
+            idx_ua[i]=idx_t[i]+3;
+            idx_la[i]=idx_ua[i]+upper_arm.getDOF();
+        }
+        nb_kin_DOF=idx_la[0]+3-3;
 
         Hb=Rb=eye(4,4);
         H0=upper_arm.getH0();
         HN=upper_arm.getHN();
 
-        x0.resize(idx_la+3,0.0);
+        Hd.resize(nb_targets, eye(4,4));
+        Rd=Hd;
+        xd.resize(nb_targets, Vector(3,0.0));
+
+        x0.resize(3+nb_kin_DOF,0.0);
 
         iKinChain *chain=upper_arm.asChain();
         for (size_t i=0; i<upper_arm.getDOF(); i++)
-            x0[idx_ua+i]=0.5*((*chain)[i].getMin()+(*chain)[i].getMax());
+            x0[idx_ua[0]+i]=0.5*((*chain)[i].getMin()+(*chain)[i].getMax());
 
-        x=x0;
         xref=x0;
-        set_target(eye(4,4));
-        q=x0.subVector(idx_ua,idx_ua+upper_arm.getDOF()-1);
+        x.resize(3+nb_targets*nb_kin_DOF);
+        x.setSubvector(0, x0.subVector(0,2));
+        for (size_t i=0; i<nb_targets; i++)
+            x.setSubvector(3+i*nb_kin_DOF, x0.subVector(3,x0.size()-1));
+
+        d1.resize(nb_targets);
+        d2.resize(nb_targets);
+        din1.resize(nb_targets);
+        din2.resize(nb_targets);
+        H.resize(nb_targets,eye(4,4));
+        H_.resize(nb_targets,eye(4,4));
+        J_.resize(nb_targets,eye(6,upper_arm.getDOF()));
+        T.resize(nb_targets,eye(4,4));
+
+        q.resize(nb_targets, x0.subVector(idx_ua[0],idx_ua[0]+upper_arm.getDOF()-1));
 
         // limits to prevent shoulder from hitting torso's cover
         double roll_0=CTRL_DEG2RAD*5.0;  double pitch_0=CTRL_DEG2RAD*0.0;   // [rad]
@@ -189,7 +224,7 @@ public:
         M[0][3] = x[idx_b];
         M[1][3] = x[idx_b+1];
 
-        return M*d1.T*upper_arm.getH(CTRL_DEG2RAD*x.subVector(idx_ua,idx_ua+upper_arm.getDOF()-1))*d2.T*TN;
+        return M*d1.T*upper_arm.getH(CTRL_DEG2RAD*x.subVector(idx_ua[0],idx_ua[0]+upper_arm.getDOF()-1))*d2.T*TN;
     }
 
     /****************************************************************/
@@ -200,7 +235,7 @@ public:
 
         TripodState d1=tripod_fkin(1,x);
         TripodState d2=tripod_fkin(2,x);
-        upper_arm.setAng(CTRL_DEG2RAD*x.subVector(idx_ua,idx_ua+upper_arm.getDOF()-1));
+        upper_arm.setAng(CTRL_DEG2RAD*x.subVector(idx_ua[0],idx_ua[0]+upper_arm.getDOF()-1));
 
         Matrix T=d1.T;
 
@@ -227,24 +262,27 @@ public:
             this->x0[idx_b+i]=x0[idx_b+i];
 
         for (size_t i=0; i<3; i++)
-            this->x0[idx_t+i]=std::max(torso.l_min,std::min(torso.l_max,x0[idx_t+i]));
+            this->x0[idx_t[0]+i]=std::max(torso.l_min,std::min(torso.l_max,x0[idx_t[0]+i]));
 
         iKinChain *chain=upper_arm.asChain();
         for (size_t i=0; i<upper_arm.getDOF(); i++)
-            this->x0[idx_ua+i]=std::max((*chain)[i].getMin(),std::min((*chain)[i].getMax(),CTRL_DEG2RAD*x0[idx_ua+i]));
+            this->x0[idx_ua[0]+i]=std::max((*chain)[i].getMin(),std::min((*chain)[i].getMax(),CTRL_DEG2RAD*x0[idx_ua[0]+i]));
 
         for (size_t i=0; i<3; i++)
-            this->x0[idx_la+i]=std::max(lower_arm.l_min,std::min(lower_arm.l_max,x0[idx_la+i]));
+            this->x0[idx_la[0]+i]=std::max(lower_arm.l_min,std::min(lower_arm.l_max,x0[idx_la[0]+i]));
     }
 
     /****************************************************************/
-    virtual void set_target(const Matrix &Hd)
+    virtual void set_targets(const vector<Matrix> &Hd)
     {
+        yAssert(Hd.size()==nb_targets);
         this->Hd=Hd;
-        xd=Hd.getCol(3).subVector(0,2);
-
-        Rd=Hd;
-        Rd(0,3)=Rd(1,3)=Rd(2,3)=0.0;
+        for (size_t i=0; i<nb_targets ; i++)
+        {
+            xd[i]=Hd[i].getCol(3).subVector(0,2);
+            Rd[i]=Hd[i];
+            Rd[i](0,3)=Rd[i](1,3)=Rd[i](2,3)=0.0;
+        }
     }
 
     /****************************************************************/
@@ -256,14 +294,14 @@ public:
         this->xref[idx_b+2]=CTRL_DEG2RAD*xref[idx_b+2];
 
         for (size_t i=0; i<3; i++)
-            this->xref[idx_t+i]=std::max(torso.l_min,std::min(torso.l_max,xref[idx_t+i]));
+            this->xref[idx_t[0]+i]=std::max(torso.l_min,std::min(torso.l_max,xref[idx_t[0]+i]));
 
         iKinChain *chain=upper_arm.asChain();
         for (size_t i=0; i<upper_arm.getDOF(); i++)
-            this->xref[idx_ua+i]=std::max((*chain)[i].getMin(),std::min((*chain)[i].getMax(),CTRL_DEG2RAD*xref[idx_ua+i]));
+            this->xref[idx_ua[0]+i]=std::max((*chain)[i].getMin(),std::min((*chain)[i].getMax(),CTRL_DEG2RAD*xref[idx_ua[0]+i]));
 
         for (size_t i=0; i<3; i++)
-            this->xref[idx_la+i]=std::max(lower_arm.l_min,std::min(lower_arm.l_max,xref[idx_la+i]));
+            this->xref[idx_la[0]+i]=std::max(lower_arm.l_min,std::min(lower_arm.l_max,xref[idx_la[0]+i]));
     }
 
     /****************************************************************/
@@ -271,7 +309,7 @@ public:
     {
         if(domain.size()>5)
         {
-            this->lambda.resize(6);
+            this->lambda.resize(5*nb_targets+1);
             domain_constr=true;
             domain_poly.resize(domain.size()/2, Vector(2));
 
@@ -283,11 +321,10 @@ public:
         }
         else
         {
-            this->lambda.resize(5);
+            this->lambda.resize(5*nb_targets);
             domain_constr=false;
             domain_poly.clear();
         }
-
     }
 
     /****************************************************************/
@@ -298,10 +335,12 @@ public:
         x_[idx_b+2]*=CTRL_RAD2DEG;
         x_[idx_b+2]=remainder(x_[idx_b+2], 360.0);
 
-        for (size_t i=0; i<upper_arm.getDOF(); i++)
+        for (size_t i=0; i<nb_targets; i++)
         {
-            x_[idx_ua+i]*=CTRL_RAD2DEG;
-            x_[idx_ua+i]=remainder(x_[idx_ua+i], 360.0);
+            for (size_t j=0; j<upper_arm.getDOF(); j++)
+            {
+                x_[idx_ua[i]+j]=remainder(CTRL_RAD2DEG*x_[idx_ua[i]+j], 360.0);
+            }
         }
 
         return x_;
@@ -312,12 +351,14 @@ public:
                                 const Vector &lambda)
     {
         this->zL=zL;
+        this->zL.resize(idx_la.back()+3);
         this->zU=zU;
+        this->zU.resize(idx_la.back()+3);
         this->lambda=lambda;
         if(domain_constr)
-            this->lambda.resize(6);
+            this->lambda.resize(5*nb_targets+1);
         else
-            this->lambda.resize(5);
+            this->lambda.resize(5*nb_targets);
     }
 
     /****************************************************************/
@@ -335,8 +376,12 @@ public:
     {
         if (init_x)
         {
-            for (Ipopt::Index i=0; i<n; i++)
+            for (Ipopt::Index i=0; i<3; i++)
                 x[i]=x0[i];
+
+            for (Ipopt::Index i=0; i<nb_targets; i++)
+                for (Ipopt::Index j=0; j<nb_kin_DOF; j++)
+                    x[3+i*nb_kin_DOF+j]=x0[3+j];
         }
 
         if (init_z)
@@ -367,9 +412,6 @@ public:
             for (size_t i=0; i<this->x.length(); i++)
                 this->x[i]=x[i];
 
-            for (size_t i=0; i<q.length(); i++)
-                q[i]=x[idx_ua+i];
-
             Vector b(4,0.0);
             b[2]=1.0;
             b[3]=x[idx_b+2];
@@ -378,14 +420,22 @@ public:
             Hb[0][3]=x[idx_b];
             Hb[1][3]=x[idx_b+1];
 
-            d1=tripod_fkin(1,x,&din1);
-            d2=tripod_fkin(2,x,&din2);
-            H=upper_arm.getH(q);
-            T=d1.T*H*d2.T*TN;
+            for(size_t i=0; i<nb_targets; i++)
+            {
+                for (size_t j=0; j<q[i].length(); j++)
+                    q[i][j]=x[idx_ua[i]+j];
 
-            upper_arm.setH0(d1.T*H0); upper_arm.setHN(HN*d2.T*TN);
-            H_=upper_arm.getH(q);
-            J_=upper_arm.GeoJacobian();
+                d1[i]=tripod_fkin(1,x,&(din1[i]),i);
+                d2[i]=tripod_fkin(2,x,&(din2[i]),i);
+
+                upper_arm.setH0(H0); upper_arm.setHN(HN);
+                H[i]=upper_arm.getH(q[i]);
+                T[i]=d1[i].T*H[i]*d2[i].T*TN;
+
+                upper_arm.setH0(d1[i].T*H0); upper_arm.setHN(HN*d2[i].T*TN);
+                H_[i]=upper_arm.getH(q[i]);
+                J_[i]=upper_arm.GeoJacobian();
+            }
             upper_arm.setH0(H0); upper_arm.setHN(HN);
 
             if(domain_constr)
@@ -417,7 +467,7 @@ public:
                                Ipopt::IpoptCalculatedQuantities* ip_cq)
     {
         if (slv.callback!=NULL)
-            return slv.callback->exec(iter,Hd,x,T);
+            return true;//slv.callback->exec(iter,Hd,x,T);
         else
             return true;
     }
@@ -446,7 +496,7 @@ public:
             this->lambda[i]=lambda[i];
     }
 
-    static double distanceFromDomain(std::vector<Vector> domain, Vector point)
+    static double distanceFromDomain(const std::vector<Vector> &domain, const Vector &point)
     {
         int nbSides=domain.size();
         int on_right=0;

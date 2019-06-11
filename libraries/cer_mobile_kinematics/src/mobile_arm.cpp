@@ -102,10 +102,11 @@ bool MobileArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
 
 
 /****************************************************************/
-bool MobileArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
+bool MobileArmSolver::ikin(const vector<Matrix> &Hd, Vector &q, int *exit_code)
 {
     LockGuard lg(makeThreadSafe);
-    yAssert((Hd.rows()==4)&&(Hd.cols()==4));
+    for(size_t i=0; i<Hd.size(); i++)
+        yAssert((Hd[i].rows()==4)&&(Hd[i].cols()==4));
 
     int mode=computeMode();
     int print_level=std::max(verbosity-5,0);
@@ -151,9 +152,9 @@ bool MobileArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         case configuration::heave:
         default:
             if (slvParameters.use_central_difference)
-                nlp=new MobileArmFullNoTorsoNoHeaveNLP_CentralDiff(*this);
+                nlp=new MobileArmFullNoTorsoNoHeaveNLP_CentralDiff(*this,Hd.size());
             else
-                nlp=new MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff(*this);
+                nlp=new MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff(*this,Hd.size());
             break;
         }
     }
@@ -166,16 +167,16 @@ bool MobileArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         case configuration::heave:
         default:
             if (slvParameters.use_central_difference)
-                nlp=new MobileArmFullNoTorsoNoHeaveNLP_CentralDiff(*this);
+                nlp=new MobileArmFullNoTorsoNoHeaveNLP_CentralDiff(*this,Hd.size());
             else
-                nlp=new MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff(*this);
+                nlp=new MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff(*this,Hd.size());
             break;
         }
     }
 
     nlp->set_q0(q0);
     nlp->set_warm_start(zL,zU,lambda);
-    nlp->set_target(Hd);
+    nlp->set_targets(Hd);
     nlp->set_domain(domainPoly);
 
     double t0=Time::now();
@@ -190,19 +191,6 @@ bool MobileArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 
     if (verbosity>0)
     {
-        Vector xd=Hd.getCol(3).subVector(0,2);
-        Vector ud=dcm2axis(Hd);
-
-        Matrix H=nlp->fkin(q);
-        TripodState din1,din2;
-        nlp->tripod_fkin(1,q,&din1);
-        nlp->tripod_fkin(2,q,&din2);
-        Vector x=H.getCol(3).subVector(0,2);
-        Vector u=dcm2axis(H);
-
-        Vector e_u=dcm2axis(Hd*H.transposed());
-        e_u*=e_u[3]; e_u.pop_back();
-
         yInfo()<<" *** Arm Solver ******************************";
         yInfo()<<" *** Arm Solver:              arm ="<<armParameters.upper_arm.getType();
         yInfo()<<" *** Arm Solver:             mode ="<<nlp->get_mode();
@@ -214,16 +202,35 @@ bool MobileArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         yInfo()<<" *** Arm Solver:           q0 [*] = ("<<q0.toString(4,4)<<")";
         yInfo()<<" *** Arm Solver:          hd1 [m] ="<<slvParameters.torso_heave;
         yInfo()<<" *** Arm Solver:          hd2 [m] ="<<slvParameters.lower_arm_heave;
-        yInfo()<<" *** Arm Solver:           xd [m] = ("<<xd.toString(4,4)<<")";
-        yInfo()<<" *** Arm Solver:         ud [rad] = ("<<ud.toString(4,4)<<")";
-        yInfo()<<" *** Arm Solver:            q [*] = ("<<q.toString(4,4)<<")";
-        yInfo()<<" *** Arm Solver:          e_x [m] ="<<norm(xd-x);
-        yInfo()<<" *** Arm Solver:        e_u [rad] ="<<norm(e_u);
-        yInfo()<<" *** Arm Solver:         e_h1 [m] ="<<fabs(slvParameters.torso_heave-din1.p[2]);
-        yInfo()<<" *** Arm Solver:     alpha1 [deg] ="<<CTRL_RAD2DEG*acos(din1.n[2]);
-        yInfo()<<" *** Arm Solver:         e_h2 [m] ="<<fabs(slvParameters.lower_arm_heave-din2.p[2]);
-        yInfo()<<" *** Arm Solver:     alpha2 [deg] ="<<CTRL_RAD2DEG*acos(din2.n[2]);
         yInfo()<<" *** Arm Solver:          dt [ms] ="<<1000.0*(t1-t0);
+        int nb_kin_DOF = (q.size()-3)/Hd.size();
+        for(size_t i=0; i<Hd.size(); i++)
+        {
+            Vector xd=Hd[i].getCol(3).subVector(0,2);
+            Vector ud=dcm2axis(Hd[i]);
+            Vector qt(3+nb_kin_DOF);
+            qt.setSubvector(0,q.subVector(0,2));
+            qt.setSubvector(3,q.subVector(3+i*nb_kin_DOF,3+(i+1)*nb_kin_DOF-1));
+            Matrix H=nlp->fkin(qt);
+            TripodState din1,din2;
+            nlp->tripod_fkin(1,qt,&din1);
+            nlp->tripod_fkin(2,qt,&din2);
+            Vector x=H.getCol(3).subVector(0,2);
+            Vector e_u=dcm2axis(Hd[i]*H.transposed());
+            e_u*=e_u[3]; e_u.pop_back();
+
+            yInfo()<<" *** Arm Solver: ** Target" << i;
+            yInfo()<<" *** Arm Solver:           xd [m] = ("<<xd.toString(4,4)<<")";
+            yInfo()<<" *** Arm Solver:         ud [rad] = ("<<ud.toString(4,4)<<")";
+            yInfo()<<" *** Arm Solver:            q [*] = ("<<qt.toString(4,4)<<")";
+            yInfo()<<" *** Arm Solver:          e_x [m] ="<<norm(xd-x);
+            yInfo()<<" *** Arm Solver:        e_u [rad] ="<<norm(e_u);
+            yInfo()<<" *** Arm Solver:         e_h1 [m] ="<<fabs(slvParameters.torso_heave-din1.p[2]);
+            yInfo()<<" *** Arm Solver:     alpha1 [deg] ="<<CTRL_RAD2DEG*acos(din1.n[2]);
+            yInfo()<<" *** Arm Solver:         e_h2 [m] ="<<fabs(slvParameters.lower_arm_heave-din2.p[2]);
+            yInfo()<<" *** Arm Solver:     alpha2 [deg] ="<<CTRL_RAD2DEG*acos(din2.n[2]);
+        }
+
         yInfo()<<" *** Arm Solver ******************************";
     }
 

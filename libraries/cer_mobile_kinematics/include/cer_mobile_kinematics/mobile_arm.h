@@ -19,6 +19,7 @@
 #define __CER_KINEMATICS_ARM_H__
 
 #include <deque>
+#include <vector>
 
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
@@ -171,14 +172,18 @@ public:
     /**
      * Inverse Kinematics Law.
      * 
-     * @param Hd        the desired 4-by-4 homogeneous matrix 
+     * @param Hd        the list of desired 4-by-4 homogeneous matrices
      *                  representing the end-effector frame ([m]).
      * @param q         the solved DOFs ([m]-[deg]-[m]). 
      * @param exit_code pointer to solver's exit codes. 
      * @return true/false on success/failure.
      */
-    virtual bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &q,
+    virtual bool ikin(const std::vector<yarp::sig::Matrix> &Hd, yarp::sig::Vector &q,
                       int *exit_code=NULL);
+
+    virtual bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &q,
+                      int *exit_code=NULL)
+    {}
 
     /**
      * Destructor.

@@ -345,50 +345,82 @@ public:
             reply.addVocab(Vocab::encode("ack"));
         }
 
-        if (Bottle *payLoad=cmd.find("target").asList())
+        if (Bottle *targetList=cmd.find("target").asList())
         {
-            if (payLoad->size()<7)
+            if (targetList->size()<1)
             {
-                yError("wrong target size!");
+                yError("no target specified!");
                 reply.clear();
                 reply.addVocab(Vocab::encode("nack"));
                 return true;
             }
 
-            Vector xd(3),ud(4);
-            xd[0]=payLoad->get(0).asDouble();
-            xd[1]=payLoad->get(1).asDouble();
-            xd[2]=payLoad->get(2).asDouble();
-            ud[0]=payLoad->get(3).asDouble();
-            ud[1]=payLoad->get(4).asDouble();
-            ud[2]=payLoad->get(5).asDouble();
-            ud[3]=payLoad->get(6).asDouble();
+            vector<Matrix> Hd;
+            for (size_t i=0; i<targetList->size(); i++)
+            {
+                Bottle *target=targetList->get(i).asList();
+                if (!target)
+                {
+                    yError("wrong target list format!");
+                    reply.clear();
+                    reply.addVocab(Vocab::encode("nack"));
+                    return true;
+                }
 
-            if(verbosity>0)
-                yInfo() << "Target set: pos" << xd.toString() << "orient" << ud.toString();
+                if (target->size()<7)
+                {
+                    yError("wrong target size!");
+                    reply.clear();
+                    reply.addVocab(Vocab::encode("nack"));
+                    return true;
+                }
 
-            Matrix Hd=axis2dcm(ud);
-            Hd.setSubcol(xd,0,3);
+                Vector xd(3),ud(4);
+                xd[0]=target->get(0).asDouble();
+                xd[1]=target->get(1).asDouble();
+                xd[2]=target->get(2).asDouble();
+                ud[0]=target->get(3).asDouble();
+                ud[1]=target->get(4).asDouble();
+                ud[2]=target->get(5).asDouble();
+                ud[3]=target->get(6).asDouble();
+
+                if(verbosity>0)
+                    yInfo() << "Target" << i << "set: pos" << xd.toString() << "orient" << ud.toString();
+
+                Hd.push_back(axis2dcm(ud));
+                Hd.back().setSubcol(xd,0,3);
+            }
 
             solver.setSolverParameters(p);
             solver.setInitialGuess(q);
             bool success = solver.ikin(Hd,q);
 
-            Matrix H;
-            solver.fkin(q,H);
-            Vector x=H.getCol(3).subVector(0,2);
-            x=cat(x,dcm2axis(H));
-
             reply.clear();
             reply.addVocab(Vocab::encode(success?"ack":"nack"));
 
-            Bottle &payLoadJoints=reply.addList();
-            payLoadJoints.addString("q");
-            payLoadJoints.addList().read(q);
+            Bottle &payLoadJointsList=reply.addList();
+            Bottle &payLoadPoseList=reply.addList();
+            payLoadJointsList.addString("q");
+            payLoadPoseList.addString("x");
+            Bottle &payLoadJoints=payLoadJointsList.addList();
+            Bottle &payLoadPose=payLoadPoseList.addList();
 
-            Bottle &payLoadPose=reply.addList();
-            payLoadPose.addString("x");
-            payLoadPose.addList().read(x);
+            int nb_kin_DOF = (q.size()-3)/Hd.size();
+            for(size_t i=0; i<Hd.size(); i++)
+            {
+                Vector qt(3+nb_kin_DOF);
+                qt.setSubvector(0,q.subVector(0,2));
+                qt.setSubvector(3,q.subVector(3+i*nb_kin_DOF,3+(i+1)*nb_kin_DOF-1));
+                payLoadJoints.addList().read(qt);
+
+                Matrix H;
+                solver.fkin(qt,H);
+                Vector x=H.getCol(3).subVector(0,2);
+                x=cat(x,dcm2axis(H));
+                payLoadPose.addList().read(x);
+            }
+
+
         }
 
         return true;
