@@ -511,6 +511,7 @@ public:
             }
 
             Map2DArea area;
+            bool in_known_area=false;
             for(size_t i=0 ; i<areaNames.size() ; i++)
             {
                 imap->getArea(areaNames[i], area);
@@ -518,23 +519,27 @@ public:
                 {
                     if (verbosity>0)
                         yDebug() << "Currently in" << areaNames[i];
+                    in_known_area=true;
                     break;
                 }
             }
 
             Bottle b;
             Bottle &coord = b.addList();
-            if (verbosity>0)
-                yDebug() << "Area points list:";
-            for(size_t i=0 ; i<area.points.size() ; i++)
+
+            if (in_known_area)
             {
                 if (verbosity>0)
-                    yDebug() << "\t" << area.points[i].x << area.points[i].y;
-                area.points.size();
-                coord.addDouble(area.points[i].x);
-                coord.addDouble(area.points[i].y);
+                    yDebug() << "Area points list:";
+                for(size_t i=0 ; i<area.points.size() ; i++)
+                {
+                    if (verbosity>0)
+                        yDebug() << "\t" << area.points[i].x << area.points[i].y;
+                    area.points.size();
+                    coord.addDouble(area.points[i].x);
+                    coord.addDouble(area.points[i].y);
+                }
             }
-
             request.put("domain",b.get(0));
         }
 
@@ -552,11 +557,14 @@ public:
             {
                 if ((reply.size()>1) && !reply.check("parameters"))
                 {
-                    Bottle *payLoadJoints=reply.find("q").asList();
-                    Bottle *payLoadPose=reply.find("x").asList();
+                    Bottle *payLoadJointsList=reply.find("q").asList();
+                    Bottle *payLoadPoseList=reply.find("x").asList();
 
-                    if ((payLoadJoints!=NULL) && (payLoadPose!=NULL))
+                    if ((payLoadJointsList!=NULL) && (payLoadPoseList!=NULL))
                     {
+                        Bottle *payLoadJoints=payLoadJointsList->get(0).asList();
+                        Bottle *payLoadPose=payLoadPoseList->get(0).asList();
+
                         LockGuard lg(mutex);
                         // process only if we didn't receive
                         // a stop request in the meanwhile
@@ -652,6 +660,7 @@ public:
             }
 
             Map2DArea area;
+            bool in_known_area=false;
             for(size_t i=0 ; i<areaNames.size() ; i++)
             {
                 imap->getArea(areaNames[i], area);
@@ -659,23 +668,27 @@ public:
                 {
                     if (verbosity>0)
                         yDebug() << "Currently in" << areaNames[i];
+                    in_known_area=true;
                     break;
                 }
             }
 
             Bottle b;
             Bottle &coord = b.addList();
-            if (verbosity>0)
-                yDebug() << "Area points list:";
-            for(size_t i=0 ; i<area.points.size() ; i++)
+
+            if (in_known_area)
             {
                 if (verbosity>0)
-                    yDebug() << "\t" << area.points[i].x << area.points[i].y;
-                area.points.size();
-                coord.addDouble(area.points[i].x);
-                coord.addDouble(area.points[i].y);
+                    yDebug() << "Area points list:";
+                for(size_t i=0 ; i<area.points.size() ; i++)
+                {
+                    if (verbosity>0)
+                        yDebug() << "\t" << area.points[i].x << area.points[i].y;
+                    area.points.size();
+                    coord.addDouble(area.points[i].x);
+                    coord.addDouble(area.points[i].y);
+                }
             }
-
             request.put("domain",b.get(0));
         }
 
