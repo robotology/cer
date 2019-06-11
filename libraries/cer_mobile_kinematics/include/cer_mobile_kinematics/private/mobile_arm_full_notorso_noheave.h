@@ -18,6 +18,8 @@
 /****************************************************************/
 class MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff : public MobileArmCommonNLP
 {
+protected:
+    const double s_pos=0.01;
 public:
     /****************************************************************/
     MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff(MobileArmSolver &slv_, int nb_targets=1) : MobileArmCommonNLP(slv_, nb_targets)
@@ -35,8 +37,8 @@ public:
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
         n=x.length();
-        m=nb_targets*(2+1+1+1);
-        nnz_jac_g=nb_targets*(2*3+(3+nb_kin_DOF-4)+(1+nb_kin_DOF-4)+2);
+        m=nb_targets*(2+3+1+1);
+        nnz_jac_g=nb_targets*(2*3+3*(3+nb_kin_DOF-4)+(1+nb_kin_DOF-4)+2);
         if(domain_constr)
         {
             m++;
@@ -80,20 +82,22 @@ public:
 
         for (Ipopt::Index i=0; i<nb_targets; i++)
         {
-            g_l[5*i+0]=g_u[5*i+0]=0.0;
-            g_l[5*i+1]=lower_arm.cos_alpha_max; g_u[5*i+1]=1.0;
+            g_l[7*i+0]=g_u[7*i+0]=0.0;
+            g_l[7*i+1]=lower_arm.cos_alpha_max; g_u[7*i+1]=1.0;
 
-            g_l[5*i+2]=g_u[5*i+2]=0.0;
+            g_l[7*i+2]=g_u[7*i+2]=0.0;
+            g_l[7*i+3]=g_u[7*i+3]=0.0;
+            g_l[7*i+4]=g_u[7*i+4]=0.0;
 
-            g_l[5*i+3]=cover_shoulder_avoidance[1]; g_u[5*i+3]=std::numeric_limits<double>::max();
+            g_l[7*i+5]=cover_shoulder_avoidance[1]; g_u[7*i+5]=std::numeric_limits<double>::max();
 
-            g_l[5*i+4]=g_u[5*i+4]=0.0;
+            g_l[7*i+6]=g_u[7*i+6]=0.0;
         }
 
         if(domain_constr)
         {
-            g_l[5*nb_targets]=0.0;
-            g_u[5*nb_targets]=std::numeric_limits<double>::max();
+            g_l[7*nb_targets]=0.0;
+            g_u[7*nb_targets]=std::numeric_limits<double>::max();
         }
 
         latch_idx.clear();
@@ -103,8 +107,8 @@ public:
         for (size_t i=0; i<nb_targets; i++)
         {
             latch_idx.push_back(1);
-            latch_gl.push_back(g_l[5*i+1]);
-            latch_gu.push_back(g_u[5*i+1]);
+            latch_gl.push_back(g_l[7*i+1]);
+            latch_gu.push_back(g_u[7*i+1]);
         }
 
         return true;
@@ -207,22 +211,24 @@ public:
         for (Ipopt::Index i=0; i<nb_targets; i++)
         {
             double e2=hd2-din2[i].p[2];
-            g[5*i+0]=e2*e2;
-            g[5*i+1]=din2[i].n[2];
+            g[7*i+0]=e2*e2;
+            g[7*i+1]=din2[i].n[2];
 
+            double s=0.01;
             Vector xe=Hb*T[i].getCol(3).subVector(0,3);
             xe.pop_back();
-            g[5*i+2]=norm2(xd[i]-xe);
+            for(Ipopt::Index j=0; j<3 ;j++)
+                g[7*i+2+j]=s_pos*(xd[i][j]-xe[j]);
 
-            g[5*i+3]=-cover_shoulder_avoidance[0]*x[idx_ua[i]+1]+x[idx_ua[i]+2];
+            g[7*i+5]=-cover_shoulder_avoidance[0]*x[idx_ua[i]+1]+x[idx_ua[i]+2];
 
             Vector e=dcm2axis(Rd[i]*(Rb*T[i]).transposed());
             e*=e[3]; e.pop_back();
-            g[5*i+4]=norm2(e);
+            g[7*i+6]=norm2(e);
         }
 
         if(domain_constr)
-            g[5*nb_targets] = domain_dist;
+            g[7*nb_targets] = domain_dist;
 
         latch_x_verifying_alpha(n,x,g);
 
@@ -240,44 +246,49 @@ public:
             for (size_t i=0; i<nb_targets; i++)
             {
                 // g[0,1] (lower_arm)
-                iRow[idx]=5*i+0; jCol[idx]=idx_la[i]+0;idx++;
-                iRow[idx]=5*i+1; jCol[idx]=idx_la[i]+0;idx++;
-                iRow[idx]=5*i+0; jCol[idx]=idx_la[i]+1;idx++;
-                iRow[idx]=5*i+1; jCol[idx]=idx_la[i]+1;idx++;
-                iRow[idx]=5*i+0; jCol[idx]=idx_la[i]+2;idx++;
-                iRow[idx]=5*i+1; jCol[idx]=idx_la[i]+2;idx++;
+                iRow[idx]=7*i+0; jCol[idx]=idx_la[i]+0;idx++;
+                iRow[idx]=7*i+1; jCol[idx]=idx_la[i]+0;idx++;
+                iRow[idx]=7*i+0; jCol[idx]=idx_la[i]+1;idx++;
+                iRow[idx]=7*i+1; jCol[idx]=idx_la[i]+1;idx++;
+                iRow[idx]=7*i+0; jCol[idx]=idx_la[i]+2;idx++;
+                iRow[idx]=7*i+1; jCol[idx]=idx_la[i]+2;idx++;
 
                 // g[2] (reaching position)
                 for (Ipopt::Index col=0; col<3; col++)
                 {
-                    iRow[idx]=5*i+2; jCol[idx]=col;
-                    idx++;
+                    for (Ipopt::Index j=0; j<3; j++)
+                    {
+                        iRow[idx]=7*i+2+j; jCol[idx]=col;
+                        idx++;
+                    }
                 }
                 for (Ipopt::Index col=idx_ua[i]+1; col<idx_la[i]+3; col++)
                 {
-                    iRow[idx]=5*i+2; jCol[idx]=col;
-                    idx++;
+                    for (Ipopt::Index j=0; j<3; j++)
+                    {
+                        iRow[idx]=7*i+2+j; jCol[idx]=col;
+                        idx++;
+                    }
                 }
 
                 // g[3] (cover constraints)
-                iRow[idx]=5*i+3; jCol[idx]=idx_ua[i]+1;idx++;
-                iRow[idx]=5*i+3; jCol[idx]=idx_ua[i]+2;idx++;
+                iRow[idx]=7*i+5; jCol[idx]=idx_ua[i]+1;idx++;
+                iRow[idx]=7*i+5; jCol[idx]=idx_ua[i]+2;idx++;
 
                 // g[4] (reaching orientation)
-                iRow[idx]=5*i+4; jCol[idx]=2;idx++;
+                iRow[idx]=7*i+6; jCol[idx]=2;idx++;
                 for (Ipopt::Index col=idx_ua[i]+1; col<idx_la[i]+3; col++)
                 {
-                    iRow[idx]=5*i+4; jCol[idx]=col;
+                    iRow[idx]=7*i+6; jCol[idx]=col;
                     idx++;
                 }
-
             }
 
             // g[5] (domain boundaries constraints)
             if(domain_constr)
             {
-                iRow[idx]=5*nb_targets; jCol[idx]=0;idx++;
-                iRow[idx]=5*nb_targets; jCol[idx]=1;
+                iRow[idx]=7*nb_targets; jCol[idx]=0;idx++;
+                iRow[idx]=7*nb_targets; jCol[idx]=1;
             }
         }
         else
@@ -314,53 +325,65 @@ public:
                 values[idx]=(d_fw.n[2]-din2[i].n[2])/drho;idx++;
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2];
 
-                // g[2] (init)
-                Vector xe=Hb*T[i].getCol(3).subVector(0,3);
-                xe.pop_back();
-
-                Vector e=xd[i]-xe;
-
                 // g[2] (base)
-                values[idx]=-2.0*e[0];idx++;
-                values[idx]=-2.0*e[1];idx++;
+                values[idx]=-s_pos;idx++;
+                values[idx]=0.0;idx++;
+                values[idx]=0.0;idx++;
+
+                values[idx]=0.0;idx++;
+                values[idx]=-s_pos;idx++;
+                values[idx]=0.0;idx++;
 
                 Vector o(4,0.0);
                 o[2] = 1.0;
                 o[3] = M_PI/2.0+x[idx_b+2];
                 Matrix Ro=axis2dcm(o);
                 Vector v=Ro*T[i].getCol(3).subVector(0,3);
-                v[2]=0.0;
-                v.pop_back();
-                values[idx]=-2.0*dot(v,e);idx++;
+
+                values[idx]=-s_pos*v[0];idx++;
+                values[idx]=-s_pos*v[1];idx++;
+                values[idx]=0.0;idx++;
 
                 // g[2] (upper_arm)
-                Vector grad=-2.0*((Hb.submatrix(0,2,0,2)*J_[i].submatrix(0,2,0,upper_arm.getDOF()-1)).transposed()*e);
-                for (size_t j=1; j<grad.length(); j++)
+                Matrix grad=Hb.submatrix(0,2,0,2)*J_[i].submatrix(0,2,0,upper_arm.getDOF()-1);
+                for (size_t j=1; j<grad.cols(); j++)
                 {
-                    values[idx]=grad[j];
-                    idx++;
+                    for (size_t k=0; k<3; k++)
+                    {
+                        values[idx]=-s_pos*grad[k][j];
+                        idx++;
+                    }
                 }
 
                 // g[2] (lower_arm)
+                Vector xe=Hb*T[i].getCol(3).subVector(0,3);
+                xe.pop_back();
+                Vector e=xd[i]-xe;
                 Vector e_fw;
                 Matrix M=d1[i].T*H[i];
 
                 x_dx[idx_la[i]+0]=x[idx_la[i]+0]+drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
                 e_fw=xd[i]-(Hb*M*d_fw.T*TN).getCol(3).subVector(0,2);
-                values[idx]=2.0*dot(e,e_fw-e)/drho;idx++;
+                values[idx]=s_pos*(e_fw[0]-e[0])/drho;idx++;
+                values[idx]=s_pos*(e_fw[1]-e[1])/drho;idx++;
+                values[idx]=s_pos*(e_fw[2]-e[2])/drho;idx++;
                 x_dx[idx_la[i]+0]=x[idx_la[i]+0];
 
                 x_dx[idx_la[i]+1]=x[idx_la[i]+1]+drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
                 e_fw=xd[i]-(Hb*M*d_fw.T*TN).getCol(3).subVector(0,2);
-                values[idx]=2.0*dot(e,e_fw-e)/drho;idx++;
+                values[idx]=s_pos*(e_fw[0]-e[0])/drho;idx++;
+                values[idx]=s_pos*(e_fw[1]-e[1])/drho;idx++;
+                values[idx]=s_pos*(e_fw[2]-e[2])/drho;idx++;
                 x_dx[idx_la[i]+1]=x[idx_la[i]+1];
 
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2]+drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
                 e_fw=xd[i]-(Hb*M*d_fw.T*TN).getCol(3).subVector(0,2);
-                values[idx]=2.0*dot(e,e_fw-e)/drho;idx++;
+                values[idx]=s_pos*(e_fw[0]-e[0])/drho;idx++;
+                values[idx]=s_pos*(e_fw[1]-e[1])/drho;idx++;
+                values[idx]=s_pos*(e_fw[2]-e[2])/drho;idx++;
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2];
 
                 // g[3]
@@ -379,7 +402,7 @@ public:
 
                 // g[4] (upper_arm)
                 Vector grado=-2.0*((Rb.submatrix(0,2,0,2)*J_[i].submatrix(3,5,0,upper_arm.getDOF()-1)).transposed()*eax);
-                for (size_t j=1; j<grad.length(); j++)
+                for (size_t j=1; j<grado.length(); j++)
                 {
                     values[idx]=grado[j];
                     idx++;
@@ -455,34 +478,40 @@ public:
             for (size_t i=0; i<nb_targets; i++)
             {
                 // g[0,1] (lower_arm)
-                iRow[idx]=5*i+0; jCol[idx]=idx_la[i]+0;idx++;
-                iRow[idx]=5*i+1; jCol[idx]=idx_la[i]+0;idx++;
-                iRow[idx]=5*i+0; jCol[idx]=idx_la[i]+1;idx++;
-                iRow[idx]=5*i+1; jCol[idx]=idx_la[i]+1;idx++;
-                iRow[idx]=5*i+0; jCol[idx]=idx_la[i]+2;idx++;
-                iRow[idx]=5*i+1; jCol[idx]=idx_la[i]+2;idx++;
+                iRow[idx]=7*i+0; jCol[idx]=idx_la[i]+0;idx++;
+                iRow[idx]=7*i+1; jCol[idx]=idx_la[i]+0;idx++;
+                iRow[idx]=7*i+0; jCol[idx]=idx_la[i]+1;idx++;
+                iRow[idx]=7*i+1; jCol[idx]=idx_la[i]+1;idx++;
+                iRow[idx]=7*i+0; jCol[idx]=idx_la[i]+2;idx++;
+                iRow[idx]=7*i+1; jCol[idx]=idx_la[i]+2;idx++;
 
                 // g[2] (reaching position)
                 for (Ipopt::Index col=0; col<3; col++)
                 {
-                    iRow[idx]=5*i+2; jCol[idx]=col;
-                    idx++;
+                    for (Ipopt::Index j=0; j<3; j++)
+                    {
+                        iRow[idx]=7*i+2+j; jCol[idx]=col;
+                        idx++;
+                    }
                 }
                 for (Ipopt::Index col=idx_ua[i]+1; col<idx_la[i]+3; col++)
                 {
-                    iRow[idx]=5*i+2; jCol[idx]=col;
-                    idx++;
+                    for (Ipopt::Index j=0; j<3; j++)
+                    {
+                        iRow[idx]=7*i+2+j; jCol[idx]=col;
+                        idx++;
+                    }
                 }
 
                 // g[3] (cover constraints)
-                iRow[idx]=5*i+3; jCol[idx]=idx_ua[i]+1;idx++;
-                iRow[idx]=5*i+3; jCol[idx]=idx_ua[i]+2;idx++;
+                iRow[idx]=7*i+5; jCol[idx]=idx_ua[i]+1;idx++;
+                iRow[idx]=7*i+5; jCol[idx]=idx_ua[i]+2;idx++;
 
                 // g[4] (reaching orientation)
-                iRow[idx]=5*i+4; jCol[idx]=2;idx++;
+                iRow[idx]=7*i+6; jCol[idx]=2;idx++;
                 for (Ipopt::Index col=idx_ua[i]+1; col<idx_la[i]+3; col++)
                 {
-                    iRow[idx]=5*i+4; jCol[idx]=col;
+                    iRow[idx]=7*i+6; jCol[idx]=col;
                     idx++;
                 }
             }
@@ -490,8 +519,8 @@ public:
             // g[5] (domain boundaries constraints)
             if(domain_constr)
             {
-                iRow[idx]=5*nb_targets; jCol[idx]=0;idx++;
-                iRow[idx]=5*nb_targets; jCol[idx]=1;
+                iRow[idx]=7*nb_targets; jCol[idx]=0;idx++;
+                iRow[idx]=7*nb_targets; jCol[idx]=1;
             }
         }
         else
@@ -534,34 +563,40 @@ public:
                 values[idx]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);idx++;
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2];
 
-                // g[2] (init)
-                Vector xe=Hb*T[i].getCol(3).subVector(0,3);
-                xe.pop_back();
-
-                Vector e=xd[i]-xe;
-
                 // g[2] (base)
-                values[idx]=-2.0*e[0];idx++;
-                values[idx]=-2.0*e[1];idx++;
+                values[idx]=-s_pos;idx++;
+                values[idx]=0.0;idx++;
+                values[idx]=0.0;idx++;
+
+                values[idx]=0.0;idx++;
+                values[idx]=-s_pos;idx++;
+                values[idx]=0.0;idx++;
 
                 Vector o(4,0.0);
                 o[2] = 1.0;
                 o[3] = M_PI/2.0+x[idx_b+2];
                 Matrix Ro=axis2dcm(o);
                 Vector v=Ro*T[i].getCol(3).subVector(0,3);
-                v[2]=0.0;
-                v.pop_back();
-                values[idx]=-2.0*dot(v,e);idx++;
+
+                values[idx]=-s_pos*v[0];idx++;
+                values[idx]=-s_pos*v[1];idx++;
+                values[idx]=0.0;idx++;
 
                 // g[2] (upper_arm)
-                Vector grad=-2.0*((Hb.submatrix(0,2,0,2)*J_[i].submatrix(0,2,0,upper_arm.getDOF()-1)).transposed()*e);
-                for (size_t j=1; j<grad.length(); j++)
+                Matrix grad=Hb.submatrix(0,2,0,2)*J_[i].submatrix(0,2,0,upper_arm.getDOF()-1);
+                for (size_t j=1; j<grad.cols(); j++)
                 {
-                    values[idx]=grad[j];
-                    idx++;
+                    for (size_t k=0; k<3; k++)
+                    {
+                        values[idx]=-s_pos*grad[k][j];
+                        idx++;
+                    }
                 }
 
                 // g[2] (lower_arm)
+                Vector xe=Hb*T[i].getCol(3).subVector(0,3);
+                xe.pop_back();
+                Vector e=xd[i]-xe;
                 Vector e_fw,e_bw;
                 Matrix M=d1[i].T*H[i];
 
@@ -571,7 +606,9 @@ public:
                 x_dx[idx_la[i]+0]=x[idx_la[i]+0]-drho;
                 d_bw=tripod_fkin(2,x_dx,nullptr,i);
                 e_bw=xd[i]-(Hb*M*d_bw.T*TN).getCol(3).subVector(0,2);
-                values[idx]=dot(e,e_fw-e_bw)/drho;idx++;
+                values[idx]=0.5*s_pos*(e_fw[0]-e_bw[0])/drho;idx++;
+                values[idx]=0.5*s_pos*(e_fw[1]-e_bw[1])/drho;idx++;
+                values[idx]=0.5*s_pos*(e_fw[2]-e_bw[2])/drho;idx++;
                 x_dx[idx_la[i]+0]=x[idx_la[i]+0];
 
                 x_dx[idx_la[i]+1]=x[idx_la[i]+1]+drho;
@@ -580,7 +617,9 @@ public:
                 x_dx[idx_la[i]+1]=x[idx_la[i]+1]-drho;
                 d_bw=tripod_fkin(2,x_dx,nullptr,i);
                 e_bw=xd[i]-(Hb*M*d_bw.T*TN).getCol(3).subVector(0,2);
-                values[idx]=dot(e,e_fw-e_bw)/drho;idx++;
+                values[idx]=0.5*s_pos*(e_fw[0]-e_bw[0])/drho;idx++;
+                values[idx]=0.5*s_pos*(e_fw[1]-e_bw[1])/drho;idx++;
+                values[idx]=0.5*s_pos*(e_fw[2]-e_bw[2])/drho;idx++;
                 x_dx[idx_la[i]+1]=x[idx_la[i]+1];
 
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2]+drho;
@@ -589,7 +628,9 @@ public:
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2]-drho;
                 d_bw=tripod_fkin(2,x_dx,nullptr,i);
                 e_bw=xd[i]-(Hb*M*d_bw.T*TN).getCol(3).subVector(0,2);
-                values[idx]=dot(e,e_fw-e_bw)/drho;idx++;
+                values[idx]=0.5*s_pos*(e_fw[0]-e_bw[0])/drho;idx++;
+                values[idx]=0.5*s_pos*(e_fw[1]-e_bw[1])/drho;idx++;
+                values[idx]=0.5*s_pos*(e_fw[2]-e_bw[2])/drho;idx++;
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2];
 
                 // g[3]
@@ -608,7 +649,7 @@ public:
 
                 // g[4] (upper_arm)
                 Vector grado=-2.0*((Rb.submatrix(0,2,0,2)*J_[i].submatrix(3,5,0,upper_arm.getDOF()-1)).transposed()*eax);
-                for (size_t i=1; i<grad.length(); i++)
+                for (size_t i=1; i<grado.length(); i++)
                 {
                     values[idx]=grado[i];
                     idx++;

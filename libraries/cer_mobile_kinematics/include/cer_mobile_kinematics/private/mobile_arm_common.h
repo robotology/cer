@@ -309,7 +309,7 @@ public:
     {
         if(domain.size()>5)
         {
-            this->lambda.resize(5*nb_targets+1);
+            this->lambda.resize(7*nb_targets+1);
             domain_constr=true;
             domain_poly.resize(domain.size()/2, Vector(2));
 
@@ -321,7 +321,7 @@ public:
         }
         else
         {
-            this->lambda.resize(5*nb_targets);
+            this->lambda.resize(7*nb_targets);
             domain_constr=false;
             domain_poly.clear();
         }
@@ -356,9 +356,9 @@ public:
         this->zU.resize(idx_la.back()+3);
         this->lambda=lambda;
         if(domain_constr)
-            this->lambda.resize(5*nb_targets+1);
+            this->lambda.resize(7*nb_targets+1);
         else
-            this->lambda.resize(5*nb_targets);
+            this->lambda.resize(7*nb_targets);
     }
 
     /****************************************************************/
