@@ -16,6 +16,7 @@
 */
 
 #include <string>
+#include <vector>
 #include <set>
 #include <map>
 #include <cmath>
@@ -27,6 +28,7 @@
 #include <yarp/math/Math.h>
 #include <yarp/math/SVD.h>
 
+#include <iCub/ctrl/math.h>
 #include <iCub/ctrl/minJerkCtrl.h>
 #include <iCub/iKin/iKinFwd.h>
 #include <cer_kinematics/head.h>
@@ -42,25 +44,44 @@ using namespace iCub::ctrl;
 using namespace iCub::iKin;
 using namespace cer::kinematics;
 
+// forward declaration
+class Controller;
 
 /****************************************************************/
-class Controller : public RFModule, public PortReader
+class TargetPort : public BufferedPort<Property>
 {
-    PolyDriver         drivers[3];
-    IEncodersTimed*    ienc[3];
-    IControlMode2*     imod;
-    IPositionControl2* ipos;
-    IPositionDirect*   iposd;
+    Controller *ctrl;
 
-    VectorOf<int> posDirectMode;
-    VectorOf<int> curMode;
+    /****************************************************************/
+    void onRead(Property &request);
+
+public:
+    /****************************************************************/
+    TargetPort() : ctrl(NULL) { }
+
+    /****************************************************************/
+    void setController(Controller *ctrl) { this->ctrl=ctrl; }
+};
+
+
+/****************************************************************/
+class Controller : public RFModule
+{
+    PolyDriver        drivers[3];
+    IEncodersTimed*   ienc[3];
+    IControlMode*     imod;
+    IPositionControl* ipos;
+    IPositionDirect*  iposd;
+
+    vector<int> posDirectMode;
+    vector<int> curMode;
 
     map<string,HeadSolver> solver;
-    map<string,Matrix> intrinsincs;
+    map<string,Matrix> intrinsics;
     minJerkTrajGen* gen;
     
     BufferedPort<Property> statePort;
-    Port targetPort;
+    TargetPort targetPort;
     RpcServer rpcPort;
     Stamp txInfo;
 
@@ -76,132 +97,6 @@ class Controller : public RFModule, public PortReader
     Vector qd;
     Vector pitchPhy;
     Vector yawPhy;
-
-    /****************************************************************/
-    bool read(ConnectionReader &connection)
-    {
-        Property request;
-        request.read(connection);
-
-        if (closing)
-            return true;
-
-        if (verbosity>0)
-            yInfo("Received target request: %s",request.toString().c_str());
-
-        if (request.check("control-frame"))
-        {
-            string control_frame_=request.find("control-frame").asString();
-            const set<string>::iterator it=avFrames.find(control_frame_);
-            if (it==avFrames.end())
-                yError("Unrecognized control frame type \"%s\"!",control_frame_.c_str());                
-            else
-                control_frame=control_frame_;
-        }
-
-        bool doControl=false;        
-        Vector xd(3);
-        Vector q;
-
-        string target_type=request.check("target-type",Value("cartesian")).asString();
-        Bottle *target_location=request.find("target-location").asList();
-        if ((target_type!="cartesian") && (target_type!="angular") && (target_type!="image"))
-            yError("Unrecognized target type \"%s\"!",target_type.c_str());
-        else if (target_location==NULL)
-            yWarning("Missing \"target-location\" option!");
-        else if (target_type=="cartesian")
-        {
-            if (target_location->size()>=3)
-            {
-                xd[0]=target_location->get(0).asDouble();
-                xd[1]=target_location->get(1).asDouble();
-                xd[2]=target_location->get(2).asDouble();
-
-                q=getEncoders();
-                doControl=true;
-            }
-            else
-                yError("Provided too few Cartesian coordinates!");
-        }
-        else if (target_type=="angular")
-        {
-            if (target_location->size()>=2)
-            {
-                Vector azi(4,0.0); azi[2]=1.0;
-                azi[3]=(M_PI/180.0)*target_location->get(0).asDouble();
-
-                Vector ele(4,0.0); ele[1]=-1.0;
-                ele[3]=(M_PI/180.0)*target_location->get(1).asDouble();
-
-                Matrix Hee;
-                Vector q0(6,0.0);
-                solver[control_frame].fkin(q0,Hee);
-
-                Vector xc(4,0.0);
-                xc[2]=xc[3]=1.0;
-
-                xd=axis2dcm(azi)*axis2dcm(ele)*Hee*xc;
-                xd.pop_back();
-
-                q=getEncoders();
-                doControl=true;
-            }
-            else
-                yError("Provided too few angular coordinates!");
-        }
-        else if (target_type=="image")
-        {
-            string image=request.check("image",Value("left")).asString();
-            if (avFrames.find(image)==avFrames.end())
-                yError("Unrecognized image type \"%s\"!",image.c_str());
-            else if (intrinsincs.find(image)==intrinsincs.end())
-                yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
-            else 
-            {                    
-                if (target_location->size()>=2)
-                {
-                    Vector p(3,1.0);
-                    if (target_location->size()>=3)
-                        p[2]=target_location->get(2).asDouble();
-
-                    p[0]=p[2]*target_location->get(0).asDouble(); 
-                    p[1]=p[2]*target_location->get(1).asDouble();
-                    
-                    Matrix Hee;
-                    q=getEncoders();
-                    solver[image].fkin(q,Hee);
-
-                    Vector xc=intrinsincs[image]*p;
-                    xc[3]=1.0;
-
-                    xd=Hee*xc;
-                    xd.pop_back();
-
-                    doControl=true;
-                }
-                else
-                    yError("Provided too few image coordinates!");
-            }
-        }
-        else
-            yError("Reached a point in the code we shouldn't have reached :(");
-
-        if (doControl)
-        {
-            LockGuard lg(mutex);
-            solver[control_frame].setInitialGuess(q);
-            solver[control_frame].ikin(xd,qd);
-
-            if (!controlling)
-                gen->init(q.subVector(4,5));
-            
-            controlling=true;
-            if (verbosity>0)
-                yInfo("Going to: %s",qd.toString(3,3).c_str());
-        }
-
-        return true;
-    }
 
     /****************************************************************/
     void getIntrinsics(ResourceFinder &rf)
@@ -229,7 +124,7 @@ class Controller : public RFModule, public PortReader
                     K(1,2)=group.find("cy").asDouble();
                     
                     yInfo("%s",K.toString(3,3).c_str());
-                    intrinsincs[camera]=pinv(K.transposed()).transposed(); 
+                    intrinsics[camera]=pinv(K.transposed()).transposed(); 
                     ok=true;
                 }
             }
@@ -269,7 +164,7 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     void getCurrentMode()
     {
-        imod->getControlModes(&curMode[0]);
+        imod->getControlModes(curMode.data());
     }
 
     /****************************************************************/
@@ -289,7 +184,7 @@ class Controller : public RFModule, public PortReader
         {
             if (curMode[i]!=posDirectMode[i])
             {
-                imod->setControlModes(&posDirectMode[0]);
+                imod->setControlModes(posDirectMode.data());
                 break;
             }
         }        
@@ -339,23 +234,24 @@ class Controller : public RFModule, public PortReader
             p.torso.l_max=lim(0,1);
             p.torso.alpha_max=fabs(lim(1,1));
 
-            chain[0].setMin((M_PI/180.0)*lim(3,0));
-            chain[0].setMax((M_PI/180.0)*lim(3,1));
+            chain[0].setMin(CTRL_DEG2RAD*lim(3,0));
+            chain[0].setMax(CTRL_DEG2RAD*lim(3,1));
 
             part=drivers[1].getValue("remote");
             yInfo("limits of %s part: heave=[%g,%g] [m], [pitch,roll]=[%g,%g] [deg], yaw=[%g,%g] [deg]",
                   part.asString().c_str(),p.torso.l_min,p.torso.l_max,-p.torso.alpha_max,p.torso.alpha_max,lim(3,0),lim(3,1));
 
             getBounds(drivers[2],lim);
+            part=drivers[2].getValue("remote");
+
             for (int i=0; i<2; i++)
             {
-                chain[1+i].setMin((M_PI/180.0)*lim(i,0));
-                chain[1+i].setMax((M_PI/180.0)*lim(i,1));
+                chain[1+i].setMin(CTRL_DEG2RAD*lim(i,0));
+                chain[1+i].setMax(CTRL_DEG2RAD*lim(i,1));
 
-                part=drivers[2].getValue("remote");
                 yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                      part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
-                      (180.0/M_PI)*chain[1+i].getMax());
+                      part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                      CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
             s.setHeadParameters(p);
@@ -370,12 +266,12 @@ class Controller : public RFModule, public PortReader
         iKinChain &chain=*p.head.asChain();
 
         pitchLim.resize(2);
-        pitchLim[0]=(180.0/M_PI)*chain[1].getMin();
-        pitchLim[1]=(180.0/M_PI)*chain[1].getMax();
+        pitchLim[0]=CTRL_RAD2DEG*chain[1].getMin();
+        pitchLim[1]=CTRL_RAD2DEG*chain[1].getMax();
 
         yawLim.resize(2);
-        yawLim[0]=(180.0/M_PI)*chain[2].getMin();
-        yawLim[1]=(180.0/M_PI)*chain[2].getMax();
+        yawLim[0]=CTRL_RAD2DEG*chain[2].getMin();
+        yawLim[1]=CTRL_RAD2DEG*chain[2].getMax();
     }
 
     /****************************************************************/
@@ -401,7 +297,7 @@ class Controller : public RFModule, public PortReader
                 {
                     double val=pitchLim->get(0).asDouble();
                     val=std::min(std::max(val,pitchPhy[0]),pitchPhy[1]);
-                    chain[1+i].setMin((M_PI/180.0)*val);
+                    chain[1+i].setMin(CTRL_DEG2RAD*val);
                     doPrint=true;
                 }
 
@@ -409,14 +305,14 @@ class Controller : public RFModule, public PortReader
                 {
                     double val=pitchLim->get(1).asDouble();
                     val=std::min(std::max(val,pitchPhy[0]),pitchPhy[1]);
-                    chain[1+i].setMax((M_PI/180.0)*val);
+                    chain[1+i].setMax(CTRL_DEG2RAD*val);
                     doPrint=true;
                 }
 
                 if (doPrint)
                     yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                          part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
-                          (180.0/M_PI)*chain[1+i].getMax());
+                          part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                          CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
             i++;
@@ -427,7 +323,7 @@ class Controller : public RFModule, public PortReader
                 {
                     double val=yawLim->get(0).asDouble();
                     val=std::min(std::max(val,yawPhy[0]),yawPhy[1]);
-                    chain[1+i].setMin((M_PI/180.0)*val);
+                    chain[1+i].setMin(CTRL_DEG2RAD*val);
                     doPrint=true;
                 }
 
@@ -435,14 +331,14 @@ class Controller : public RFModule, public PortReader
                 {
                     double val=yawLim->get(1).asDouble();
                     val=std::min(std::max(val,yawPhy[0]),yawPhy[1]);
-                    chain[1+i].setMax((M_PI/180.0)*val);
+                    chain[1+i].setMax(CTRL_DEG2RAD*val);
                     doPrint=true;
                 }
 
                 if (doPrint)
                     yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                          part.asString().c_str(),i,(180.0/M_PI)*chain[1+i].getMin(),
-                          (180.0/M_PI)*chain[1+i].getMax());
+                          part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                          CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
             s.setHeadParameters(p);
@@ -460,10 +356,8 @@ class Controller : public RFModule, public PortReader
             Matrix Hee;
             solver[frame].fkin(q,Hee);
 
-            Vector pose=Hee.getCol(3).subVector(0,2);
-            Vector oee; oee=dcm2axis(Hee);
-            oee*=oee[3]; oee.pop_back();
-            pose=cat(pose,oee);
+            Vector pose=cat(Hee.getCol(3).subVector(0,2),
+                            dcm2axis(Hee));
 
             Bottle val; val.addList().read(pose);
             state.put(frame,val.get(0));
@@ -471,9 +365,9 @@ class Controller : public RFModule, public PortReader
             if (frame==control_frame)
             {
                 Vector ang(2);
-                Vector z=Hee.getCol(2).subVector(0,2);
-                ang[0]=(180.0/M_PI)*atan2(z[1],z[0]);
-                ang[1]=(180.0/M_PI)*atan2(z[2],z[0]);
+                Vector z=Hee.getCol(2);
+                ang[0]=CTRL_RAD2DEG*atan2(z[1],z[0]);
+                ang[1]=CTRL_RAD2DEG*atan2(z[2],z[0]);
 
                 Bottle val; val.addList().read(ang);
                 state.put("angular",val.get(0));
@@ -483,7 +377,7 @@ class Controller : public RFModule, public PortReader
 
 public:
     /****************************************************************/
-    Controller() : gen(NULL)
+    Controller() : gen(NULL), closing(false), controlling(false)
     {
         avFrames=HeadParameters::getTypes();
         for (set<string>::iterator it=avFrames.begin(); it!=avFrames.end(); it++)
@@ -501,7 +395,7 @@ public:
         string robot=rf.check("robot",Value("cer")).asString();
         bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
         verbosity=rf.check("verbosity",Value(0)).asInt();
-        stop_threshold=rf.check("stop-threshold",Value(0.01)).asDouble();
+        stop_threshold=rf.check("stop-threshold",Value(2.0)).asDouble();
         double T=rf.check("T",Value(1.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
@@ -517,7 +411,7 @@ public:
         Property option;
 
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/torso_tripod").c_str());
+        option.put("remote","/"+robot+"/torso_tripod");
         option.put("local","/cer_gaze-controller/torso_tripod"); 
         if (!drivers[0].open(option))
         {
@@ -528,7 +422,7 @@ public:
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/torso").c_str());
+        option.put("remote","/"+robot+"/torso");
         option.put("local","/cer_gaze-controller/torso");
         if (!drivers[1].open(option))
         {
@@ -539,7 +433,7 @@ public:
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/head").c_str());
+        option.put("remote","/"+robot+"/head");
         option.put("local","/cer_gaze-controller/head");
         option.put("writeStrict","on");
         if (!drivers[2].open(option))
@@ -558,7 +452,8 @@ public:
 
         statePort.open("/cer_gaze-controller/state:o");
         targetPort.open("/cer_gaze-controller/target:i");
-        targetPort.setReader(*this);
+        targetPort.setController(this);
+        targetPort.useCallback();
 
         rpcPort.open("/cer_gaze-controller/rpc");
         attach(rpcPort);
@@ -589,13 +484,14 @@ public:
         }
 
         ResourceFinder rf_cameras;
-        rf_cameras.setDefaultContext(cameras_context.c_str());
+        rf_cameras.setDefaultContext(cameras_context);
         rf_cameras.setDefaultConfigFile(cameras_file.c_str());
         rf_cameras.configure(0,NULL);
         getIntrinsics(rf_cameras);
 
+        for (auto &s:solver)
+            s.second.setVerbosity(verbosity);
         gen=new minJerkTrajGen(qd,Ts,T);
-        closing=controlling=false;
 
         return true;
     }
@@ -608,7 +504,7 @@ public:
         if (controlling)
             stopControl();
 
-        if (targetPort.isOpen())
+        if (!targetPort.isClosed())
             targetPort.close(); 
 
         if (!statePort.isClosed())
@@ -632,6 +528,140 @@ public:
     }
 
     /****************************************************************/
+    bool look(Property &request)
+    {
+        if (closing)
+            return false;
+
+        if (verbosity>0)
+            yInfo("Received request: %s",request.toString().c_str());
+
+        if (request.check("stop"))
+        {
+            LockGuard lg(mutex);
+            stopControl();
+            return true;
+        }
+
+        if (request.check("control-frame"))
+        {
+            string control_frame_=request.find("control-frame").asString();
+            const set<string>::iterator it=avFrames.find(control_frame_);
+            if (it==avFrames.end())
+                yError("Unrecognized control frame type \"%s\"!",control_frame_.c_str());                
+            else
+                control_frame=control_frame_;
+        }
+
+        bool doControl=false;        
+        Vector xd(3);
+        Vector q;
+
+        string target_type=request.check("target-type",Value("cartesian")).asString();
+        Bottle *target_location=request.find("target-location").asList();
+        if ((target_type!="cartesian") && (target_type!="angular") && (target_type!="image"))
+            yError("Unrecognized target type \"%s\"!",target_type.c_str());
+        else if (target_location==NULL)
+            yError("Missing \"target-location\" option!");
+        else if (target_type=="cartesian")
+        {
+            if (target_location->size()>=3)
+            {
+                xd[0]=target_location->get(0).asDouble();
+                xd[1]=target_location->get(1).asDouble();
+                xd[2]=target_location->get(2).asDouble();
+
+                q=getEncoders();
+                doControl=true;
+            }
+            else
+                yError("Missing Cartesian coordinates!");
+        }
+        else if (target_type=="angular")
+        {
+            if (target_location->size()>=2)
+            {
+                Vector azi(4,0.0); azi[2]=1.0;
+                azi[3]=CTRL_DEG2RAD*target_location->get(0).asDouble();
+
+                Vector ele(4,0.0); ele[1]=-1.0;
+                ele[3]=CTRL_DEG2RAD*target_location->get(1).asDouble();
+
+                Matrix Hee;
+                Vector q0(6,0.0);
+                mutex.lock();
+                solver[control_frame].fkin(q0,Hee);
+                mutex.unlock();
+
+                Vector xc(4,0.0);
+                xc[2]=xc[3]=1.0;
+
+                xd=axis2dcm(azi)*axis2dcm(ele)*Hee*xc;
+                xd.pop_back();
+
+                q=getEncoders();
+                doControl=true;
+            }
+            else
+                yError("Missing angular coordinates!");
+        }
+        else if (target_type=="image")
+        {
+            string image=request.check("image",Value("left")).asString();
+            if (avFrames.find(image)==avFrames.end())
+                yError("Unrecognized image type \"%s\"!",image.c_str());
+            else if (intrinsics.find(image)==intrinsics.end())
+                yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
+            else 
+            {                    
+                if (target_location->size()>=2)
+                {
+                    Vector p(3,1.0);
+                    if (target_location->size()>=3)
+                        p[2]=target_location->get(2).asDouble();
+
+                    p[0]=p[2]*target_location->get(0).asDouble(); 
+                    p[1]=p[2]*target_location->get(1).asDouble();
+
+                    Matrix Hee;
+                    q=getEncoders();
+                    mutex.lock();
+                    solver[image].fkin(q,Hee);
+                    mutex.unlock();
+
+                    Vector xc=intrinsics[image]*p;
+                    xc[3]=1.0;
+
+                    xd=Hee*xc;
+                    xd.pop_back();
+
+                    doControl=true;
+                }
+                else
+                    yError("Missing image coordinates!");
+            }
+        }
+        else
+            yError("Reached a point in the code we shouldn't have reached :(");
+
+        if (doControl)
+        {
+            LockGuard lg(mutex);
+            solver[control_frame].setInitialGuess(q);
+            solver[control_frame].ikin(xd,qd);
+
+            if (!controlling)
+                gen->init(q.subVector(4,5));
+
+            controlling=true;
+            if (verbosity>0)
+                yInfo("Going to: %s",qd.toString(3,3).c_str());
+        }
+
+        return doControl;
+    }
+
+    /****************************************************************/
     bool updateModule()
     {
         LockGuard lg(mutex);
@@ -647,7 +677,7 @@ public:
 
         fillState(q,statePort.prepare());
         statePort.setEnvelope(txInfo);
-        statePort.write();
+        statePort.writeStrict();
 
         if (controlling)
         {
@@ -662,11 +692,12 @@ public:
                 setPositionDirectMode(); 
                 iposd->setPositions(ref.data());
 
-                if (norm(qd-ref)<stop_threshold)
+                Vector q_=q.subVector(4,5);
+                if (norm(qd-q_)<stop_threshold)
                 {
                     controlling=false;
                     if (verbosity>0)
-                        yInfo("Just stopped at: %s",ref.toString(3,3).c_str());
+                        yInfo("Just stopped at: %s",q_.toString(3,3).c_str());
                 }
             }
             else
@@ -682,9 +713,7 @@ public:
     /****************************************************************/
     bool respond(const Bottle &cmd, Bottle &reply)
     {
-        LockGuard lg(mutex);
         int cmd_0=cmd.get(0).asVocab();
-
         if (cmd.size()==3)
         {
             if (cmd_0==Vocab::encode("set"))
@@ -692,26 +721,41 @@ public:
                 string cmd_1=cmd.get(1).asString();
                 if (cmd_1=="T")
                 {
+                    mutex.lock();
                     gen->setT(cmd.get(2).asDouble());
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (cmd_1=="Ts")
                 {
                     Ts=cmd.get(2).asDouble();
                     Ts=std::max(Ts,MIN_TS);
+
+                    mutex.lock();
                     gen->setTs(Ts);
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (cmd_1=="verbosity")
                 {
+                    mutex.lock();
                     verbosity=cmd.get(2).asInt();
+                    for (auto &s:solver)
+                        s.second.setVerbosity(verbosity);
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (cmd_1=="joints-limits::pitch")
                 {
                     if (Bottle *pitchLim=cmd.get(2).asList())
                     {
+                        mutex.lock();
                         applyCustomJointsBounds(pitchLim,NULL);
+                        mutex.unlock();
+
                         reply.addVocab(Vocab::encode("ack"));
                     }
                 }
@@ -719,7 +763,10 @@ public:
                 {
                     if (Bottle *yawLim=cmd.get(2).asList())
                     {
+                        mutex.lock();
                         applyCustomJointsBounds(NULL,yawLim);
+                        mutex.unlock();
+
                         reply.addVocab(Vocab::encode("ack"));
                     }
                 }
@@ -730,25 +777,45 @@ public:
             if (cmd_0==Vocab::encode("get"))
             {
                 string cmd_1=cmd.get(1).asString();
-                if (cmd_1=="T")
+                if (cmd_1=="done")
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
+                    reply.addInt(controlling?0:1);
+                    mutex.unlock();
+                }
+                else if (cmd_1=="T")
+                {
+                    reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addDouble(gen->getT());
+                    mutex.unlock();
                 }
                 else if (cmd_1=="Ts")
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addDouble(Ts);
+                    mutex.unlock();
                 }
                 else if (cmd_1=="verbosity")
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addInt(verbosity);
+                    mutex.unlock();
                 }
                 else if (cmd_1=="joints-limits::pitch")
                 {
                     Vector pitchLim,yawLim;
+
+                    mutex.lock();
                     getJointsBounds(pitchLim,yawLim);
+                    mutex.unlock();
 
                     reply.addVocab(Vocab::encode("ack"));                    
                     reply.addList().read(pitchLim);
@@ -756,16 +823,31 @@ public:
                 else if (cmd_1=="joints-limits::yaw")
                 {
                     Vector pitchLim,yawLim;
+
+                    mutex.lock();
                     getJointsBounds(pitchLim,yawLim);
+                    mutex.unlock();
 
                     reply.addVocab(Vocab::encode("ack"));                    
                     reply.addList().read(yawLim);
                 }
             }
+            else if (cmd_0==Vocab::encode("look"))
+            {
+                if (Bottle *b=cmd.get(1).asList())
+                {
+                    Property p(b->toString().c_str());
+                    if (look(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+            }
         }
         else if (cmd_0==Vocab::encode("stop"))
         {
+            mutex.lock();
             stopControl();
+            mutex.unlock();
+
             reply.addVocab(Vocab::encode("ack"));
         }
 
@@ -775,6 +857,14 @@ public:
         return true;
     }
 };
+
+
+/****************************************************************/
+void TargetPort::onRead(Property &request)
+{
+    if (ctrl!=NULL)
+        ctrl->look(request);
+}
 
 
 /****************************************************************/

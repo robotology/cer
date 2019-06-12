@@ -1,0 +1,69 @@
+<application>
+<name>CER_TELEOP_RIGHT_SIM</name>
+
+        <dependencies>
+        </dependencies>
+
+        <module>
+                <name>yarprobotinterface</name>
+                <parameters>--context geomagic --config geomagic.xml</parameters>
+                <node>r1-console-windows</node>
+        </module>
+
+        <module>
+                <name>cer_teleop</name>
+                <parameters>--arm-type right --wrist-heave 0.02</parameters>
+                <dependencies>
+                    <port timeout="5.0">/geomagic/state:o</port>
+                </dependencies>
+                <prefix>/sim</prefix>
+                <node>r1-console-windows</node>
+        </module>
+
+        <module>
+                <name>cer_reaching-solver</name>
+                <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1</parameters>
+                <prefix>/sim</prefix>
+                <node>r1-console-linux</node>
+        </module>
+
+        <module>
+                <name>cer_reaching-controller</name>
+                <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1 --T 1.0</parameters>
+                <prefix>/sim</prefix>
+                <node>r1-console-linux</node>
+        </module>
+
+<!----- connections ------>
+
+        <connection>
+                <from>/sim/cer_reaching-controller/right/state:o</from>
+                <to>/sim/cer_teleop/state:i</to>
+                <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+                <from>/sim/cer_reaching-controller/right/solver:rpc</from>
+                <to>/sim/cer_reaching-solver/right/rpc</to>
+                <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+                <from>/sim/cer_teleop/target:o</from>
+                <to>/sim/cer_reaching-controller/right/target:i</to>
+                <protocol>tcp</protocol>
+        </connection>
+ 
+        <connection>
+                <from>/sim/cer_teleop/cmd:rpc</from>
+                <to>/sim/cer_reaching-controller/right/rpc</to>
+                <protocol>tcp</protocol>
+        </connection>
+
+        <connection>
+                <from>/sim/cer_teleop/gazebo:o</from>
+                <to>/world_input_port</to>
+                <protocol>tcp</protocol>
+        </connection>
+</application>
+

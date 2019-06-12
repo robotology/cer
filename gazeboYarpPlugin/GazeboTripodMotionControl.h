@@ -23,12 +23,13 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/ControlBoardInterfacesImpl.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
-#include <yarp/dev/IControlMode2.h>
+#include <yarp/dev/IControlMode.h>
 #include <yarp/dev/IInteractionMode.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
+#include <yarp/dev/IPidControl.h>
 #include <string>
 #include <vector>
 
@@ -36,7 +37,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include <gazebo/math/Angle.hh>
+#include <ignition/math/Angle.hh>
 
 namespace cer {
     namespace dev {
@@ -75,12 +76,12 @@ namespace gazebo {
 
 class cer::dev::GazeboTripodMotionControl:
     public yarp::dev::DeviceDriver,
-    public yarp::dev::IPositionControl2,
-    public yarp::dev::IVelocityControl2,
+    public yarp::dev::IPositionControl,
+    public yarp::dev::IVelocityControl,
     public yarp::dev::IEncodersTimed,
-    public yarp::dev::IControlLimits2,
+    public yarp::dev::IControlLimits,
     public yarp::dev::IInteractionMode,
-    public yarp::dev::IControlMode2,
+    public yarp::dev::IControlMode,
     public yarp::dev::ITorqueControl,
     public yarp::dev::IPositionDirect,
 //     public yarp::dev::IImpedanceControl,
@@ -108,7 +109,7 @@ public:
 
 
     // AXIS IAxisInfo
-    virtual bool getAxisName(int axis, yarp::os::ConstString& name);
+    virtual bool getAxisName(int axis, std::string& name);
     virtual bool getJointType(int axis, yarp::dev::JointTypeEnum& type);
 
     //ENCODERS
@@ -146,7 +147,7 @@ public:
     virtual bool checkMotionDone(bool* flag);
     virtual bool setPositionMode();
 
-    // Position Control 2
+    // Position Control
     virtual bool positionMove(const int n_joint, const int* joints, const double* refs);
     virtual bool relativeMove(const int n_joint, const int* joints, const double* deltas);
     virtual bool checkMotionDone(const int n_joint, const int* joints, bool* flags);
@@ -162,8 +163,8 @@ public:
         // IPOSITION DIRECT
     virtual bool setPositionDirectMode();
     virtual bool setPosition(int j, double ref);
-    virtual bool setPositions(const int n_joint, const int *joints, double *refs);
     virtual bool setPositions(const double *refs);
+    virtual bool setPositions(const int n_joint, const int *joints, const double *refs);
 
     /// @arg spds [deg/sec]
     virtual bool setRefSpeeds(const double *spds);
@@ -253,24 +254,8 @@ public:
     virtual bool setTorqueMode();
     virtual bool getBemfParam(int j, double *bemf);
     virtual bool setBemfParam(int j, double bemf);
-    virtual bool setTorquePid(int j, const yarp::dev::Pid &pid);
     virtual bool getTorqueRange(int j, double *min, double *max);
     virtual bool getTorqueRanges(double *min, double *max);
-    virtual bool setTorquePids(const yarp::dev::Pid *pids);
-    virtual bool setTorqueErrorLimit(int j, double limit);
-    virtual bool setTorqueErrorLimits(const double *limits);
-    virtual bool getTorqueError(int j, double *err);
-    virtual bool getTorqueErrors(double *errs);
-    virtual bool getTorquePidOutput(int j, double *out);
-    virtual bool getTorquePidOutputs(double *outs);
-    virtual bool getTorquePid(int j, yarp::dev::Pid *pid);
-    virtual bool getTorquePids(yarp::dev::Pid *pids);
-    virtual bool getTorqueErrorLimit(int j, double *limit);
-    virtual bool getTorqueErrorLimits(double *limits);
-    virtual bool resetTorquePid(int j);
-    virtual bool disableTorquePid(int j);
-    virtual bool enableTorquePid(int j);
-    virtual bool setTorqueOffset(int j, double v);
 
     #if 0
     //IMPEDANCE CTRL
@@ -380,11 +365,12 @@ private:
     yarp::sig::Vector m_torques; /**< joint torques [Netwon Meters] */
     yarp::sig::Vector m_last_measJointPos;  /** encoder reading zeroed */
     yarp::sig::Vector m_last_motorElongat;  /** encoder reading zeroed */
+    yarp::sig::Vector m_decoded_elong;      /** helper variable to store elongations to be written on yarp port*/
 
     yarp::os::Stamp m_lastTimestamp; /**< timestamp, updated with simulation time at each onUpdate call */
 
     yarp::sig::Vector amp;
-    yarp::sig::VectorOf<JointType> m_jointTypes;
+    std::vector<JointType> m_jointTypes;
 
     //Desired Control variables
     yarp::sig::Vector m_referenceElongations;   /**< desired reference positions as elongations. [Meters]*/
@@ -465,7 +451,7 @@ private:
      * \param value Raw value read from Gazebo function like 'GetAngle'
      * \return value in user units
      */
-    double convertGazeboToUser(int joint, gazebo::math::Angle value);
+    double convertGazeboToUser(int joint, ignition::math::Angle value);
     double convertGazeboToUser(int joint, double value);
     double *convertGazeboToUser(double *values);
     double convertGazeboGainToUserGain(int joint, double value);
@@ -482,6 +468,32 @@ private:
 
     double convertUserToGazebo(double value);
     double *convertUserToGazebo(double *values);
+
+
+    bool setPid(const yarp::dev::PidControlTypeEnum& pidtype, int j, const yarp::dev::Pid &pid);
+    bool setPids(const yarp::dev::PidControlTypeEnum& pidtype, const yarp::dev::Pid *pids);
+    bool setPidReference(const yarp::dev::PidControlTypeEnum& pidtype, int j, double ref);
+    bool setPidReferences(const yarp::dev::PidControlTypeEnum& pidtype, const double *refs);
+    bool setPidErrorLimit(const yarp::dev::PidControlTypeEnum& pidtype, int j, double limit);
+    bool setPidErrorLimits(const yarp::dev::PidControlTypeEnum& pidtype, const double *limits);
+    bool getPidError(const yarp::dev::PidControlTypeEnum& pidtype, int j, double *err);
+    bool getPidErrors(const yarp::dev::PidControlTypeEnum& pidtype, double *errs);
+    bool getPidOutput(const yarp::dev::PidControlTypeEnum& pidtype, int j, double *out);
+    bool getPidOutputs(const yarp::dev::PidControlTypeEnum& pidtype, double *outs);
+    bool getPid(const yarp::dev::PidControlTypeEnum& pidtype, int j, yarp::dev::Pid *pid);
+    bool getPids(const yarp::dev::PidControlTypeEnum& pidtype, yarp::dev::Pid *pids);
+    bool getPidReference(const yarp::dev::PidControlTypeEnum& pidtype, int j, double *ref);
+    bool getPidReferences(const yarp::dev::PidControlTypeEnum& pidtype, double *refs);
+    bool getPidErrorLimit(const yarp::dev::PidControlTypeEnum& pidtype, int j, double *limit);
+    bool getPidErrorLimits(const yarp::dev::PidControlTypeEnum& pidtype, double *limits);
+    bool resetPid(const yarp::dev::PidControlTypeEnum& pidtype, int j);
+    bool disablePid(const yarp::dev::PidControlTypeEnum& pidtype, int j);
+    bool enablePid(const yarp::dev::PidControlTypeEnum& pidtype, int j);
+    bool setPidOffset(const yarp::dev::PidControlTypeEnum& pidtype, int j, double v);
+    bool isPidEnabled(const yarp::dev::PidControlTypeEnum& pidtype, int j, bool* enabled);
+
 };
+
+
 
 #endif //GAZEBOYARP_TRIPOD_CONTROLBOARD_DRIVER_HH

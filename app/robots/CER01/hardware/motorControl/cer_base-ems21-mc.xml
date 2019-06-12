@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+<!DOCTYPE devices PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
 
-<devices robot="CER01" build="1">
-  <device name="cer_mobile_base_mc" type="embObjMotionControl">
-      <params file="general.xml" />
-      <params file="hardware/electronics/cer_base-ems21-eln.xml" />
-      <params file="hardware/mechanicals/cer_base-ems21-mec.xml" />
-      <params file="hardware/motorControl/cer_base-ems21-mc-service.xml" />
+
+  <device xmlns:xi="http://www.w3.org/2001/XInclude" name="cer_mobile_base_mc" type="embObjMotionControl">
+      <xi:include href="../../general.xml" />
+      <xi:include href="../electronics/cer_base-ems21-eln.xml" />
+      <xi:include href="../mechanicals/cer_base-ems21-mec.xml" />
+      <xi:include href="../motorControl/cer_base-ems21-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">              0          0           0        0     </param>
@@ -35,7 +35,8 @@
 
     <group name="JOINT_POS_VEL_CTRL">
     <param name="controlLaw">    PidPos_withInnerVelPid </param> 
-        <param name="controlUnits">  machine_units </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="pos_kp">               5           5          0          0 </param>       
         <param name="pos_kd">               0           0          0          0 </param>       
         <param name="pos_ki">               0           0          0          0 </param>      
@@ -67,8 +68,9 @@
     </group>
     
     <group name="2FOC_FEEDBACK">
-        <param name="controlLaw">       limitscurrent                           </param> 
-        <param name="controlUnits">     metric_units                            </param> 
+        <param name="controlLaw">       limitscurrent            </param> 
+        <param name="fbkControlUnits">        machine_units  </param>
+        <param name="outputControlUnits">     machine_units  </param>
         <param name="cur_kp">              8           8          0          0  </param>       
         <param name="cur_kd">              0           0          0          0  </param>       
         <param name="cur_ki">              2           2          0          0  </param>
@@ -82,5 +84,5 @@
     </group>
 
   </device>
-</devices>
+
 

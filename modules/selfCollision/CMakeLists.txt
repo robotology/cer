@@ -19,9 +19,8 @@ get_property(RobotModelLib_INCLUDE_DIRS
              TARGET RobotModelLib
              PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
 			 
-include_directories(${YARP_INCLUDE_DIRS}
-                    ${ICUB_INCLUDE_DIRS}
-					${R1ModelLib_INCLUDE_DIRS}
+include_directories(${ICUB_INCLUDE_DIRS}
+				    ${R1ModelLib_INCLUDE_DIRS}
 					${RobotModelLib_INCLUDE_DIRS}
                     ${SelfCollisionLib_INCLUDE_DIRS})
 

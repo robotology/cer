@@ -18,14 +18,12 @@
 #ifndef __CER_KINEMATICS_HELPERS_H__
 #define __CER_KINEMATICS_HELPERS_H__
 
-#include <cmath>
 #include <deque>
 
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
-#include <yarp/math/Math.h>
 
-#include <iCub/ctrl/math.h>
+#include <IpTNLP.hpp>
 
 #include <cer_kinematics/utils.h>
 
@@ -39,32 +37,8 @@ struct TripodParametersExtended : public TripodParameters
     std::deque<yarp::sig::Vector> s;
     yarp::sig::Vector z;
 
-    yarp::sig::Matrix R0;
-    yarp::sig::Vector p0;
-
     /****************************************************************/
-    TripodParametersExtended(const TripodParameters &parameters) :
-                             TripodParameters(parameters)
-    {
-        cos_alpha_max=cos(iCub::ctrl::CTRL_DEG2RAD*alpha_max);
-
-        z.resize(3,0.0);
-        z[2]=1.0;
-
-        yarp::sig::Vector v(3,0.0);
-        double theta=0.0;
-        for (int i=0; i<3; i++)
-        {            
-            v[0]=r*cos(theta);
-            v[1]=r*sin(theta);
-            s.push_back(v);
-
-            theta+=iCub::ctrl::CTRL_DEG2RAD*120.0;
-        }
-
-        R0=T0.submatrix(0,2,0,2);
-        p0=T0.getCol(3).subVector(0,2);
-    }
+    TripodParametersExtended(const TripodParameters &parameters);
 };
 
 
@@ -76,6 +50,17 @@ struct TripodState
 
     /****************************************************************/
     TripodState():n(3,0.0),u(4,0.0),p(3,0.0),T(yarp::math::eye(4,4)) { }
+};
+
+
+/****************************************************************/
+class TripodNLPHelper
+{
+protected:
+    /****************************************************************/
+    TripodState fkinHelper(const Ipopt::Number *x,
+                           const TripodParametersExtended &params,
+                           TripodState *internal=NULL);
 };
 
 }

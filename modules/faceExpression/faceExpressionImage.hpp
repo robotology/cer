@@ -8,23 +8,28 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
 
 
-#define VOCAB_AUDIO_START       VOCAB4('a','s','t','a')
-#define VOCAB_AUDIO_STOP        VOCAB4('a','s','t','o')
-#define VOCAB_BLINK             VOCAB4('b','l','i','n')
-#define VOCAB_RESET             VOCAB3('r','s','t')
+#define VOCAB_AUDIO_START       yarp::os::createVocab('a','s','t','a')
+#define VOCAB_AUDIO_STOP        yarp::os::createVocab('a','s','t','o')
+#define VOCAB_TALK_START        yarp::os::createVocab('t','s','t','a')
+#define VOCAB_TALK_STOP         yarp::os::createVocab('t','s','t','o')
+#define VOCAB_BLINK             yarp::os::createVocab('b','l','i','n')
+#define VOCAB_RESET             yarp::os::createVocab('r','s','t')
+#define VOCAB_BLACK_RESET       yarp::os::createVocab('b','l','c','k')
 
-class BlinkThread : public yarp::os::RateThread
+class BlinkThread : public yarp::os::PeriodicThread
 {
 public:
     BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >  &imagePort);
 
     cv::Mat                 face;
     cv::Mat                 faceRest;
+    cv::Mat                 faceBlack;
+    cv::Mat                 faceMouth;
     cv::Mat                 noseBar;
     cv::Mat                 blinkBar;
     cv::Mat                 blackBar;
@@ -53,26 +58,32 @@ public:
     int hearBar0_len;
     int hearBar1_len;
 
-    bool configure(yarp::os::ResourceFinder &_rf, yarp::os::Property options);
-    bool threadInit();
-    void threadRelease();
-    void afterStart(bool s);
-    void run();
+    bool threadInit()  override;
+    void threadRelease()  override;
+    void afterStart(bool s)  override;
+    void run() override;
 
     void activateBlink(bool activate);
     void activateBars (bool activate);
+    void activateTalk (bool activate);
+    void activateDraw (bool activate);
 
     bool updateBars(float percentage);
     bool updateBlink(int index);
+    void updateTalk();
+    void blackReset();
 
     bool doBlink;
     bool doBars;
+    bool doTalk;
+    bool doDraw;
 
 private:
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >  &port;
     int index;
     int indexes[11];
     float delays[11];
+    yarp::os::Mutex mutex;
 };
 
 class FaceExpressionImageModule: public yarp::os::RFModule
@@ -82,7 +93,7 @@ private:
     yarp::os::Port          rpcPort;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >    imagePort;
 
-    yarp::os::ConstString   imagePath;
+    std::string imagePath;
 
     float period_percent;
     float blink_per_minute;

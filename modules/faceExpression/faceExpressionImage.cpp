@@ -1,3 +1,5 @@
+#include <cmath>
+#include <string>
 #include "faceExpressionImage.hpp"
 
 #include <opencv2/core/core.hpp>
@@ -5,6 +7,7 @@
 
 #include <yarp/os/Time.h>
 #include <yarp/os/Searchable.h>
+#include <yarp/math/Rand.h>
 
 
 #define BLINK_STEP_NUM  10
@@ -14,6 +17,7 @@
 using namespace cv;
 using namespace std;
 using namespace yarp::os;
+using namespace yarp::math;
 
 FaceExpressionImageModule::FaceExpressionImageModule() :    th(0.2, imagePort),
                                                             imagePath(""),
@@ -27,13 +31,13 @@ bool FaceExpressionImageModule::configure(ResourceFinder &rf)
     // Check input params
     if(!rf.check("path"))
     {
-        ConstString imagePath_test = rf.findFileByName("images/blink_1.bmp");
+        string imagePath_test = rf.findFileByName("images/blink_1.bmp");
         size_t last = imagePath_test.rfind("/");
         imagePath = imagePath_test.substr(0, last);
     }
     else
     {
-        imagePath = rf.find(ConstString("path")).asString();
+        imagePath = rf.find("path").asString();
     }
 
     // Open ports
@@ -55,18 +59,18 @@ bool FaceExpressionImageModule::configure(ResourceFinder &rf)
     }
 
     // Load basic images
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_1.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_2.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_3.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_4.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_5.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(yarp::os::ConstString(imagePath + "/blink_6.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_1.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_2.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_3.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_4.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_5.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_6.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
 
     // Load image for bars
-    th.blinkBar = imread(yarp::os::ConstString(imagePath + "/happyBar.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+    th.blinkBar = imread(std::string(imagePath + "/happyBar.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
 
     // Load image for 'nose' bar
-    th.noseBar = cv::imread(yarp::os::ConstString(imagePath + "/noseBar.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+    th.noseBar = cv::imread(std::string(imagePath + "/noseBar.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
     th.noseBar0_len = th.noseBar.cols;
 
     // Verify all images are loaded correctly
@@ -96,7 +100,7 @@ bool FaceExpressionImageModule::configure(ResourceFinder &rf)
     // Quit if something wrong!!
     if(!ok) return false;
 
-    // Check for oprtional params
+    // Check for optional params
     th.hearBar0_x       = rf.check("hearBar0_x",      Value( 1), "horizontal offset from left border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
     th.hearBar0_y       = rf.check("hearBar0_y",      Value( 6), "vertical offset from bottom border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
     th.hearBar0_minLen  = rf.check("hearBar0_minLen", Value( 3), "minimum length  of outer ear bar").asInt();
@@ -137,6 +141,19 @@ bool FaceExpressionImageModule::respond(const Bottle& command, Bottle& reply)
         }
         break;
 
+        case VOCAB_TALK_START:
+        {
+            th.activateTalk(true);
+        }
+        break;
+
+        case VOCAB_TALK_STOP:
+        {
+            th.activateTalk(false);
+            th.step();
+        }
+        break;
+
         case VOCAB_BLINK:
         {
             th.activateBlink(true);
@@ -145,7 +162,15 @@ bool FaceExpressionImageModule::respond(const Bottle& command, Bottle& reply)
 
         case VOCAB_RESET:
         {
+			th.activateDraw(true);
             th.threadRelease();
+        }
+        break;
+
+        case VOCAB_BLACK_RESET:
+        {
+            th.activateDraw(false);
+            th.blackReset();
         }
         break;
 
@@ -201,7 +226,7 @@ bool FaceExpressionImageModule::updateModule()
         shall_blink = 0;
     }
 
-    if(th.doBlink || th.doBars)
+    if(th.doBlink || th.doBars || th.doTalk)
         th.step();
 
     if(doubleBlink)
@@ -214,7 +239,7 @@ bool FaceExpressionImageModule::updateModule()
 
 
 BlinkThread::BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb> >  &imagePort):
-                                                RateThread(_period),
+                                                PeriodicThread((double)_period/1000.0),
                                                 port(imagePort),
                                                 barWidth  ( 1),
                                                 eyeWidth  (21),
@@ -228,7 +253,8 @@ BlinkThread::BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig:
                                                 blackBar(32, 1, CV_8UC3, cv::Scalar(0,0,0)),
                                                 face(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
                                                 faceRest(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
-                                                index(0), doBlink(false), doBars(false)
+                                                faceBlack(FACE_HEIGHT, FACE_WIDTH, CV_8UC3, cv::Scalar(0, 0, 0)),
+                                                index(0), doBlink(false), doBars(false), doTalk(false), doDraw(true)
 {
     indexes[ 0] = 0;
     indexes[ 1] = 1;
@@ -253,18 +279,31 @@ BlinkThread::BlinkThread(unsigned int _period, yarp::os::BufferedPort<yarp::sig:
     delays[ 8] = 0.065;
     delays[ 9] = 0.065;
     delays[10] = 0.065;
+
+    Rand::init();
 }
 
 void BlinkThread::afterStart(bool s) { }
 
 void BlinkThread::activateBars(bool activate)
 {
+    mutex.lock();
     doBars = activate;
+    mutex.unlock();
+}
+
+void BlinkThread::activateTalk(bool activate)
+{
+    mutex.lock();
+    doTalk = activate;
+    mutex.unlock();
 }
 
 void BlinkThread::activateBlink(bool activate)
 {
+    mutex.lock();
     doBlink = activate;
+    mutex.unlock();
 }
 
 bool BlinkThread::threadInit()
@@ -307,10 +346,18 @@ bool BlinkThread::threadInit()
     yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
     img.setExternal(faceRest.data, faceWidth, faceHeight);
     port.writeStrict();
+
+    return true;
 }
 
 void BlinkThread::run()
 {
+	if (doDraw==false)
+	{
+		return;
+	}
+	
+    mutex.lock();
     // Compute hear bars sizes
     // Left side
     float percentage = 0.5;
@@ -340,13 +387,23 @@ void BlinkThread::run()
         }
 
         yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
-        img.setExternal(face.data, faceWidth, faceHeight);
+        if(doTalk)
+        {
+            updateTalk();
+            img.setExternal(faceMouth.data, faceWidth, faceHeight);
+        }
+        else
+        {
+            img.setExternal(face.data, faceWidth, faceHeight);
+        }
         port.writeStrict();
 
         if(doBlink)
             yarp::os::Time::delay(delays[index]);
     }
     while(doBlink);
+    
+    mutex.unlock();
 }
 
 bool BlinkThread::updateBars(float percentage)
@@ -367,6 +424,8 @@ bool BlinkThread::updateBars(float percentage)
     // Right side
     blinkBar(Rect(0, 0, barWidth, hearBar0_len)).  copyTo  (face(cv::Rect(hearBarR0_x, faceHeight - hearBar0_y - hearBar0_len, barWidth, hearBar0_len)));
     blinkBar(Rect(0, 0, barWidth, hearBar1_len)).  copyTo  (face(cv::Rect(hearBarR1_x, faceHeight - hearBar1_y - hearBar1_len, barWidth, hearBar1_len)));
+
+    return true;
 }
 
 bool BlinkThread::updateBlink(int index)
@@ -377,13 +436,44 @@ bool BlinkThread::updateBlink(int index)
 
     // Add nose
     noseBar.copyTo(face(cv::Rect(noseBar0_x, noseBar0_y, noseBar.cols, noseBar.rows)));
+    return true;
 }
 
+void BlinkThread::updateTalk()
+{
+    face.copyTo(faceMouth);
+    int pixels=faceHeight>>1;
+    int y=faceHeight-2;
+    for (int x=(faceWidth-pixels)>>1; x<(faceWidth+pixels)>>1; x++)
+    {
+        int y_=y+round(Rand::scalar(-1,1));
+        faceMouth.at<cv::Vec3b>(y_,x)[0]=0;
+        faceMouth.at<cv::Vec3b>(y_,x)[1]=255;
+        faceMouth.at<cv::Vec3b>(y_,x)[2]=0;
+    }
+}
 
 void BlinkThread::threadRelease()
 {
+    mutex.lock();
     yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
     img.setExternal(faceRest.data, faceWidth, faceHeight);
     port.writeStrict();
+    mutex.unlock();
 }
 
+void BlinkThread::activateDraw(bool activate)
+{
+    mutex.lock();
+    doDraw = activate;
+    mutex.unlock();
+}
+
+void BlinkThread::blackReset()
+{
+    mutex.lock();
+    yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
+    img.setExternal(faceBlack.data, faceWidth, faceHeight);
+    port.writeStrict();
+    mutex.unlock();
+}

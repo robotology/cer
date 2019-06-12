@@ -157,15 +157,15 @@ int main()
         Vector e_u=dcm2axis(input[i].Hd*H_1.transposed());
         e_u*=e_u[3]; e_u.pop_back();
 
-        yInfo()<<"           q_1 [*] = ("<<q_1.toString(5,5).c_str()<<")";
+        yInfo()<<"           q_1 [*] = ("<<q_1.toString(5,5)<<")";
         yInfo()<<"joints-constraints = ("<<jconstr.str()<<")";
-        yInfo()<<"         e_x_1 [m] = "<<norm(input[i].xd-x_1);
-        yInfo()<<"       e_u_1 [rad] = "<<norm(e_u);
-        yInfo()<<"        e_h1_1 [m] = "<<fabs(input[i].torso_heave-h1);
-        yInfo()<<"    alpha1_1 [deg] = "<<alpha1<<" ("<<(alpha1<=armParams.torso.alpha_max?"ok":"fail")<<")";
-        yInfo()<<"        e_h2_1 [m] = "<<fabs(input[i].lower_arm_heave-h2);
-        yInfo()<<"    alpha1_2 [deg] = "<<alpha2<<" ("<<(alpha2<=armParams.lower_arm.alpha_max?"ok":"fail")<<")";
-        yInfo()<<"         dt_1 [ms] = "<<1000.0*(t1-t0);
+        yInfo()<<"         e_x_1 [m] ="<<norm(input[i].xd-x_1);
+        yInfo()<<"       e_u_1 [rad] ="<<norm(e_u);
+        yInfo()<<"        e_h1_1 [m] ="<<fabs(input[i].torso_heave-h1);
+        yInfo()<<"    alpha1_1 [deg] ="<<alpha1<<" ("<<(alpha1<=armParams.torso.alpha_max?"ok":"fail")<<")";
+        yInfo()<<"        e_h2_1 [m] ="<<fabs(input[i].lower_arm_heave-h2);
+        yInfo()<<"    alpha1_2 [deg] ="<<alpha2<<" ("<<(alpha2<=armParams.lower_arm.alpha_max?"ok":"fail")<<")";
+        yInfo()<<"         dt_1 [ms] ="<<1000.0*(t1-t0);
         yInfo()<<"";
         yInfo()<<"";
     }

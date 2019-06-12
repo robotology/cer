@@ -19,12 +19,12 @@ if(ENABLE_faceExpressionImage)
 
 
     file(GLOB folder_source main.cpp faceExpressionImage.cpp)
-    file(GLOB folder_header faceExpressionImage.h)
+    file(GLOB folder_header faceExpressionImage.hpp)
 
     source_group("Source Files" FILES ${folder_source})
     source_group("Header Files" FILES ${folder_header})
 
-    include_directories(${YARP_INCLUDE_DIRS} ${OPENCV_INCLUDE_DIR})
+    include_directories(${OPENCV_INCLUDE_DIR})
 
     add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
 

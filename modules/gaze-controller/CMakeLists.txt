@@ -4,14 +4,8 @@
 
 project(cer_gaze-controller)
 
-get_property(cer_kinematics_INCLUDE_DIRS
-             TARGET cer_kinematics
-             PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
-
-include_directories(${YARP_INCLUDE_DIRS} ${ICUB_INCLUDE_DIRS} ${cer_kinematics_INCLUDE_DIRS})
-
-add_definitions(-D_USE_MATH_DEFINES)
 add_executable(${PROJECT_NAME} main.cpp)
+target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ctrlLib iKin cer_kinematics)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 

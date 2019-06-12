@@ -1,0 +1,27 @@
+<application>
+<name>R1 joystick mobile base control</name>
+
+    <dependencies>
+    </dependencies>
+
+    <!-- modules --> 	
+    <module>
+        <name>baseControl</name>
+        <parameters>--context baseControl --from baseCtrl_cer.ini  --skip_robot_interface_check</parameters>
+        <node>r1-base</node>
+    </module>
+
+    <module>
+        <name>joystickCtrl</name>
+        <parameters>--context joystickCtrl --from cer_linux.ini</parameters>
+        <node>r1-base</node>
+    </module>
+		
+   <connection>
+	   <from>/joystickCtrl:o</from>
+	   <to>/baseControl/joystick1:i</to>
+	   <protocol>udp</protocol>
+   </connection>
+
+</application>
+

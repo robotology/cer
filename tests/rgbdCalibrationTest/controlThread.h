@@ -32,7 +32,7 @@
 #include <yarp/sig/Image.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/pids.h>
@@ -44,7 +44,7 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 
-class ControlThread : public yarp::os::RateThread
+class ControlThread : public yarp::os::PeriodicThread
 {
 private:
 

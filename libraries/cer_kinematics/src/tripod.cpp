@@ -19,7 +19,7 @@
 #include <cmath>
 #include <deque>
 
-#include <yarp/os/Log.h>
+#include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/LockGuard.h>
 #include <yarp/sig/Vector.h>
@@ -47,17 +47,17 @@ namespace cer {
 namespace kinematics {
 
 /****************************************************************/
-class TripodNLP : public Ipopt::TNLP
+class TripodNLP : public TripodNLPHelper,
+                  public Ipopt::TNLP
 {
 protected:
     TripodSolver &slv;
     const TripodParametersExtended params;
-    
-    Vector ud;
-    double zd;
+        
     Vector rho0,rho;
     double drho;
 
+    double zd;
     Matrix Rd;
     Vector e;
 
@@ -67,60 +67,7 @@ protected:
     /****************************************************************/
     TripodState fkin(const Ipopt::Number *x, TripodState *internal=NULL)
     {
-        double q33=sqrt(27.0)*params.r/sqrt(12.0*(x[2]*x[2]-(x[0]+x[1])*x[2]+
-                                            x[1]*x[1]-x[0]*x[1]+x[0]*x[0]+
-                                            (27.0/12.0)*params.r*params.r));
-
-        TripodState d;
-        if (q33>=1.0)
-        {
-            d.n=params.z;
-            d.u=0.0;
-            d.p[0]=d.p[1]=0.0;
-            d.p[2]=d.T(2,3)=x[0];
-        }
-        else
-        {
-            Vector v1=params.s[0]+x[0]*params.z;
-            Vector v2=params.s[1]+x[1]*params.z;
-            Vector v3=params.s[2]+x[2]*params.z;
-            d.n=cross(v2-v1,v3-v1);
-            d.n/=norm(d.n);
-
-            double sin_theta=sqrt(1.0-q33*q33);
-            d.u[0]=-d.n[1]/sin_theta;
-            d.u[1]=d.n[0]/sin_theta;
-            d.u[2]=0.0;
-            d.u[3]=acos(q33);
-            double tmp=(1.0-q33);
-            double q11=tmp*d.u[0]*d.u[0]+q33;
-            double q22=tmp*d.u[1]*d.u[1]+q33;
-            double q21=tmp*d.u[0]*d.u[1];
-            double q31=-sin_theta*d.u[1];
-            double q32=sin_theta*d.u[0];
-            double m1=params.r/q33*(-0.5*q11+1.5*q22);
-            d.p[0]=params.r-m1*q11;
-            d.p[1]=-m1*q21;
-            d.p[2]=x[0]-m1*q31;            
-
-            // transformation matrix
-            d.T(0,0)=q11; d.T(0,1)=q21; d.T(0,2)=-q31; d.T(0,3)=d.p[0];
-            d.T(1,0)=q21; d.T(1,1)=q22; d.T(1,2)=-q32; d.T(1,3)=d.p[1];
-            d.T(2,0)=q31; d.T(2,1)=q32; d.T(2,2)=q33;  d.T(2,3)=d.p[2];
-        }
-
-        if (internal!=NULL)
-            *internal=d;
-
-        d.n=params.R0*d.n;        
-        d.p=params.R0*d.p+params.p0;
-        d.T=params.T0*d.T;
-
-        double theta=d.u[3];
-        d.u=params.R0*d.u.subVector(0,2);
-        d.u.push_back(theta);
-
-        return d;
+        return fkinHelper(x,params,internal);
     }
 
 public:
@@ -128,7 +75,7 @@ public:
     TripodNLP(TripodSolver &slv_) : slv(slv_), params(slv_.parameters)
     {
         zd=(params.l_max+params.l_min)/2.0;
-        ud.resize(4,0.0);
+        Rd=eye(4,4);
 
         rho0.resize(3,zd);
         rho=rho0;
@@ -159,9 +106,8 @@ public:
     /****************************************************************/
     void set_ud(const Vector &ud)
     {
-        size_t len=std::min(this->ud.length(),ud.length());
-        for (size_t i=0; i<len; i++)
-            this->ud[i]=ud[i];
+        yAssert(ud.length()>=4);
+        Rd=axis2dcm(ud);
     }
 
     /****************************************************************/
@@ -219,8 +165,6 @@ public:
                 this->lll[i]=x[i];
 
             d=fkin(x,&din);
-
-            Rd=axis2dcm(ud);
             e=dcm2axis(Rd*d.T.transposed());
             e*=e[3]; e.pop_back();
         }
@@ -285,7 +229,7 @@ public:
     {
         computeQuantities(x,new_x);
 
-        Ipopt::Number tmp=(zd-din.p[2]);
+        Ipopt::Number tmp=zd-din.p[2];
         g[0]=tmp*tmp;
         g[1]=din.n[2];
 
@@ -369,13 +313,8 @@ public:
     {
         if (slv.callback!=NULL)
         {
-            Matrix Hd=axis2dcm(ud);
-            Hd(2,3)=zd;
-
-            Matrix Hee=d.T;
-            Hd.setSubcol(d.p,0,3);
-
-            return slv.callback->exec(iter,Hd,lll,Hee);
+            Matrix Hd=Rd; Hd(2,3)=zd;
+            return slv.callback->exec(iter,Hd,lll,d.T);
         }
         else
             return true;
@@ -412,12 +351,7 @@ TripodSolver::TripodSolver(const TripodParameters &params,
 /****************************************************************/
 bool TripodSolver::setInitialGuess(const Vector &lll0)
 {
-    if (lll0.length()<3)
-    {
-        yError("mis-sized elongation vector!");
-        return false;
-    }
-
+    yAssert(lll0.length()>=3);
     this->lll0=lll0.subVector(0,2);
     return true;
 }
@@ -426,12 +360,7 @@ bool TripodSolver::setInitialGuess(const Vector &lll0)
 /****************************************************************/
 bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u)
 {
-    if (lll.length()<3)
-    {
-        yError("mis-sized elongation vector!");
-        return false;
-    }
-
+    yAssert(lll.length()>=3);
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(lll);
     p=d.p;
@@ -442,36 +371,9 @@ bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u)
 
 
 /****************************************************************/
-bool TripodSolver::fkin(const Vector &lll, Vector &hpr)
-{
-    if (lll.length()<3)
-    {
-        yError("mis-sized elongation vector!");
-        return false;
-    }
-
-    Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
-    TripodState d=nlp->fkin(lll);
-
-    Vector ypr=dcm2ypr(axis2dcm(d.u));
-    hpr.resize(3);
-    hpr[0]=d.p[2];
-    hpr[1]=CTRL_RAD2DEG*ypr[1];
-    hpr[2]=CTRL_RAD2DEG*ypr[2];
-
-    return true;
-}
-
-
-/****************************************************************/
 bool TripodSolver::fkin(const Vector &q, Matrix &H, const int frame)
 {
-    if (q.length()<3)
-    {
-        yError("mis-sized elongation vector!");
-        return false;
-    }
-
+    yAssert(q.length()>=3);
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(q);
     H=d.T;
@@ -485,11 +387,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
                         Vector &lll, int *exit_code)
 {
     LockGuard lg(makeThreadSafe);
-    if (ud.length()<4)
-    {
-        yError("mis-sized orientation vector!");
-        return false;
-    }
+    yAssert(ud.length()>=4);
 
     int print_level=std::max(verbosity-5,0);
 
@@ -522,23 +420,24 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
 
     if (verbosity>0)
     {
-        TripodState d=nlp->fkin(lll);
+        TripodState din;
+        TripodState d=nlp->fkin(lll,&din);
 
         Vector e_u=dcm2axis(axis2dcm(ud)*d.T.transposed());
         e_u*=e_u[3]; e_u.pop_back();
 
-        yInfo(" *** Tripod Solver ******************************");
-        yInfo(" *** Tripod Solver:    lll0 [m] = (%s)",lll0.toString(4,4).c_str());
-        yInfo(" *** Tripod Solver:      zd [m] = %g",zd);
-        yInfo(" *** Tripod Solver:    ud [rad] = (%s)",ud.toString(4,4).c_str());
-        yInfo(" *** Tripod Solver:     lll [m] = (%s)",lll.toString(4,4).c_str());
-        yInfo(" *** Tripod Solver:     u [rad] = (%s)",d.u.toString(4,4).c_str());
-        yInfo(" *** Tripod Solver:       p [m] = (%s)",d.p.toString(4,4).c_str());
-        yInfo(" *** Tripod Solver:   e_u [rad] = %g",norm(e_u));
-        yInfo(" *** Tripod Solver:     e_z [m] = %g",fabs(zd-d.p[2]));
-        yInfo(" *** Tripod Solver: alpha [deg] = %g",CTRL_RAD2DEG*acos(d.n[2]));
-        yInfo(" *** Tripod Solver:     dt [ms] = %g",1000.0*(t1-t0));
-        yInfo(" *** Tripod Solver ******************************");
+        yInfo()<<" *** Tripod Solver ******************************";
+        yInfo()<<" *** Tripod Solver:    lll0 [m] = ("<<lll0.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:      zd [m] ="<<zd;
+        yInfo()<<" *** Tripod Solver:    ud [rad] = ("<<ud.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:     lll [m] = ("<<lll.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:     u [rad] = ("<<d.u.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:       p [m] = ("<<d.p.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:   e_u [rad] ="<<norm(e_u);
+        yInfo()<<" *** Tripod Solver:     e_z [m] ="<<fabs(zd-din.p[2]);
+        yInfo()<<" *** Tripod Solver: alpha [deg] ="<<CTRL_RAD2DEG*acos(din.n[2]);
+        yInfo()<<" *** Tripod Solver:     dt [ms] ="<<1000.0*(t1-t0);
+        yInfo()<<" *** Tripod Solver ******************************";
     }
 
     switch (status)
@@ -548,14 +447,14 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         case Ipopt::Feasible_Point_Found:
         {
             if (verbosity>0)
-                yInfo(" *** Tripod Solver: IpOpt return code %d",status);
+                yInfo()<<" *** Tripod Solver: IpOpt return code"<<status;
             return true;
         } 
 
         default:
         {
             if (verbosity>0)
-                yWarning(" *** Tripod Solver: IpOpt return code %d",status);
+                yWarning()<<" *** Tripod Solver: IpOpt return code"<<status;
             return false;
         } 
     }
@@ -563,34 +462,11 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
 
 
 /****************************************************************/
-bool TripodSolver::ikin(const Vector &hpr, Vector &lll,
-                        int *exit_code)
-{
-    if (hpr.length()<3)
-    {
-        yError("mis-sized input vector!");
-        return false;
-    }
-
-    Vector ypr(3,0.0);
-    ypr[1]=CTRL_DEG2RAD*hpr[1];
-    ypr[2]=CTRL_DEG2RAD*hpr[2];
-
-    Vector ud=dcm2axis(ypr2dcm(ypr));
-    return ikin(hpr[0],ud,lll,exit_code);
-}
-
-
-/****************************************************************/
 bool TripodSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 {
-    if ((Hd.rows()!=4) || (Hd.cols()!=4))
-    {
-        yError("mis-sized desired end-effector frame!");
-        return false;
-    }
-
-    Vector ud=dcm2axis(Hd);
-    return ikin(Hd(2,3),ud,q,exit_code);
+    yAssert((Hd.rows()==4)&&(Hd.cols()==4));
+    // get the heave irrespective of the frame
+    Matrix Hd_=SE3inv(parameters.T0)*Hd;
+    return ikin(Hd_(2,3),dcm2axis(Hd),q,exit_code);
 }
 

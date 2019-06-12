@@ -14,14 +14,14 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/../R1ModelLib/include)
 include_directories(${PROJECT_SOURCE_DIR}/../RobotModelLib/include)
 include_directories(${PROJECT_SOURCE_DIR}/../RobotControlLib/include)
-include_directories(${YARP_INCLUDE_DIRS})
 
-add_definitions(-D_USE_MATH_DEFINES)
 add_library(${PROJECT_NAME} ${headers} ${sources})
+target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_link_libraries(${PROJECT_NAME} RobotModelLib R1ModelLib RobotControlLib ${YARP_LIBRARIES})
 
 # Add install target
 yarp_install(TARGETS ${PROJECT_NAME}
+             EXPORT  ${VARS_PREFIX}
              COMPONENT Runtime
              LIBRARY DESTINATION  ${CMAKE_INSTALL_LIBDIR}
              ARCHIVE DESTINATION  ${CMAKE_INSTALL_LIBDIR})

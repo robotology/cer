@@ -1,0 +1,120 @@
+<application>
+  <name>Oculus CER V2</name>
+  <dependencies></dependencies>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--device grabberDual --split true --subdevice usbCamera --d /dev/video0 --width 1280 --height 480 --name /cer/cam/cameras --framerate 30</parameters>
+    <node>/r1-torso2</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--context OculusTeleop --from oculus.ini</parameters>
+    <node>/r1-console-windows</node>
+  </module>
+
+  <module>
+    <name>camCalibWithPose</name>
+    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_LEFT --name /cer/camCalibWithPose/left</parameters>
+    <node>/r1-torso2</node>
+  </module>
+
+  <module>
+    <name>camCalibWithPose</name>
+    <parameters>--context cameraCalibration --from icubEyes.ini --group CAMERA_CALIBRATION_RIGHT --name /cer/camCalibWithPose/right</parameters>
+    <node>/r1-torso2</node>
+  </module>
+
+  <module>
+    <name>positionDirectControl</name>
+    <parameters>--robot cer --part head --joints "(0 1)"</parameters>
+    <node>/r1-torso2</node>
+  </module>
+
+  <module>
+    <name>yarpdev</name>
+    <parameters>--device FrameTransformServer --ROS "(enable_ros_subscriber true)" "(enable_ros_publisher true)"</parameters>
+    <node>/r1-base</node>
+  </module>
+
+  <module>
+    <name>roslaunch</name>
+    <parameters>cer robotStatePublisher.launch</parameters>
+    <node>/r1-base</node>
+  </module>
+
+  <module>
+    <name>rviz</name>
+    <parameters></parameters>
+    <node>/r1-console-linux</node>
+  </module>
+
+  <connection>
+    <from>/cer/cam/cameras/left</from>
+    <to>/cer/camCalibWithPose/left/in</to>
+    <protocol>shmem</protocol>
+  </connection>
+
+  <connection>
+    <from>/cer/cam/cameras/right</from>
+    <to>/cer/camCalibWithPose/right/in</to>
+    <protocol>shmem</protocol>
+  </connection>
+
+  <connection>
+    <from>/cer/inertial</from>
+    <to>/cer/camcalib/left/imu/in</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <from>/cer/inertial</from>
+    <to>/cer/camCalibWithPose/right/imu/in</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <from>/cer/head/state:o</from>
+    <to>/cer/camCalibWithPose/right/head_encs/in</to>
+    <protocol>udp+send.portmonitor+type.dll+file.cer2headpose</protocol>
+  </connection>
+
+  <connection>
+    <from>/cer/head/state:o</from>
+    <to>/cer/camCalibWithPose/left/head_encs/in</to>
+    <protocol>udp+send.portmonitor+type.dll+file.cer2headpose</protocol>
+  </connection>
+
+  <connection>
+    <from>/cer/torso/state:o</from>
+    <to>/cer/camCalibWithPose/right/torso_encs/in</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <from>/cer/torso/state:o</from>
+    <to>/cer/camCalibWithPose/left/torso_encs/in</to>
+    <protocol>udp</protocol>
+  </connection>
+
+  <connection>
+    <from>/cer/camCalibWithPose/left/out</from>
+    <to>/oculus/display/left:i</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/cer/camCalibWithPose/right/out</from>
+    <to>/oculus/display/right:i</to>
+    <protocol>mjpeg</protocol>
+  </connection>
+
+  <connection>
+    <from>/oculus/headpose/orientation:o</from>
+    <to>/directPositionControl/cer/head/command:i</to>
+    <protocol>udp+recv.portmonitor+type.dll+file.oculus2cer</protocol>
+  </connection>
+
+</application>
+

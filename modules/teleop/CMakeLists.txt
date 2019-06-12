@@ -2,18 +2,12 @@
 # Authors: Ugo Pattacini
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 
-find_package(hapticdevice QUIET)
-if(hapticdevice_FOUND)
-    project(cer_teleop)
-    message(STATUS "hapticdevice library found => ${PROJECT_NAME} will be built")
-    include_directories(${YARP_INCLUDE_DIRS}
-                        ${hapticdevice_INCLUDE_DIRS}
-                        ${PROJECT_SOURCE_DIR}/ros_messages)
-    add_definitions(-D_USE_MATH_DEFINES)
-    add_executable(${PROJECT_NAME} main.cpp)
-    target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
-    install(TARGETS ${PROJECT_NAME} DESTINATION bin)
-endif()
+project(cer_teleop)
+set(CMAKE_CXX_STANDARD 11)
 
-
+include_directories(${PROJECT_SOURCE_DIR}/ros_messages ${PROJECT_SOURCE_DIR})
+add_executable(${PROJECT_NAME} main.cpp handThread.cpp ParamParser.h)
+target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
+target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 

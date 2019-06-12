@@ -1,0 +1,65 @@
+<application>
+<name>Calib Cameras</name>
+<dependencies>
+</dependencies> 
+<module>
+  <name>yarpdev</name>
+      <parameters> --from camera/ServerGrabberDual.ini --split true</parameters>
+  <node>r1-torso</node>
+</module>
+
+<module>
+  <name>camCalib</name>
+  <parameters>--context cameraCalibration --from cerEyes_640x480.ini --group CAMERA_CALIBRATION_LEFT --name /cer/camcalib/left</parameters>
+  <node>r1-console-linux</node>
+</module>
+<module>
+  <name>camCalib</name>
+  <parameters>--context cameraCalibration --from cerEyes_640x480.ini --group CAMERA_CALIBRATION_RIGHT --name /cer/camcalib/right</parameters>
+  <node>r1-console-linux</node>
+</module>
+
+<module>
+  <name>yarpview</name>
+  <parameters>--name /cer/view/left --x 0 --y 0 --p 50</parameters>
+  <node>r1-console-linux</node>
+</module>
+<module>
+  <name>yarpview</name>
+  <parameters>--name /cer/view/right --x 320 --y 0 --p 50</parameters>
+  <node>r1-console-linux</node>
+</module>
+<module>
+  <name>frameGrabberGui2</name>
+  <parameters>--local /cer/fggui --remote /cer/cam/rpc --x 0 --y 350 --width 350 --height 500</parameters>
+  <node>r1-console-linux</node>
+  <dependencies>
+  <port> /cer/cam/left </port>
+  </dependencies>
+</module>
+
+<connection>
+  <from>/cer/cam/left</from>
+  <to>/cer/camcalib/left/in</to>
+  <protocol>mjpeg</protocol>
+</connection>
+
+<connection>
+  <from>/cer/cam/right</from>
+  <to>/cer/camcalib/right/in</to>
+  <protocol>mjpeg</protocol>
+</connection>
+
+<connection>
+  <from>/cer/camcalib/left/out</from>
+  <to>/cer/view/left</to>
+  <protocol>udp</protocol>
+</connection>
+
+<connection>
+  <from>/cer/camcalib/right/out</from>
+  <to>/cer/view/right</to>
+  <protocol>udp</protocol>
+</connection>
+</application>
+

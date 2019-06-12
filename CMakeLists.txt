@@ -5,20 +5,23 @@
 # Prepare a device library called "cermod".
 # A test executable called "cermoddev" will also be produced.
 
-cmake_minimum_required(VERSION 2.8.9)
-project(cer)
+cmake_minimum_required(VERSION 3.5)
+project(CER LANGUAGES CXX C VERSION 1.0.0)
+
+set(VARS_PREFIX "CER")
+
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED 11)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(YARP 2.3.64.4 REQUIRED)
-list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
+find_package(YARP 3.1.101 REQUIRED COMPONENTS OS sig dev math rosmsg idl_tools)
 
 find_package(ICUB REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
-
-find_package(RTF 1.0)
 
 find_package(IPOPT)
 if(NOT IPOPT_FOUND)
@@ -37,9 +40,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}"
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
-set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "cer is always built with dynamic plugins")
-include(YarpInstallationHelpers)
-yarp_configure_external_installation(cer WITH_PLUGINS)
+set(YARP_FORCE_DYNAMIC_PLUGINS TRUE CACHE INTERNAL "${PROJECT_NAME} is always built with dynamic plugins")
+yarp_configure_external_installation(${PROJECT_NAME} WITH_PLUGINS)
 
 include(AddInstallRPATHSupport)
 
@@ -62,5 +64,19 @@ add_subdirectory(cermod)
 add_subdirectory(gazeboYarpPlugin)
 add_subdirectory(modules)
 add_subdirectory(tools)
-add_subdirectory(tests)
+
+option(CER_COMPILE_TESTS "Compile tests" OFF)
+if(CER_COMPILE_TESTS)
+  add_subdirectory(tests)
+endif()
+
+include(InstallBasicPackageFiles)
+install_basic_package_files(${PROJECT_NAME} VARS_PREFIX ${VARS_PREFIX}
+                                            VERSION ${${VARS_PREFIX}_VERSION}
+                                            COMPATIBILITY AnyNewerVersion
+                                            TARGETS_PROPERTY ${VARS_PREFIX}_TARGETS
+                                            DEPENDENCIES "YARP 3.1 REQUIRED COMPONENTS OS sig dev math rosmsg" "ICUB REQUIRED"
+                                            NO_CHECK_REQUIRED_COMPONENTS_MACRO)
+
+include(AddUninstallTarget)
 

@@ -12,499 +12,394 @@
 #include <limits>
 #include <algorithm>
 #include <map>
-
-#include <yarp/os/all.h>
 #include <yarp/dev/all.h>
-#include <yarp/sig/all.h>
+#include <yarp/os/all.h>
 #include <yarp/math/Math.h>
-
-#include <hapticdevice/IHapticDevice.h>
-
-#include "ros_messages/visualization_msgs_Marker.h"
-#include "ros_messages/visualization_msgs_MarkerArray.h"
+#include <yarp/math/FrameTransform.h>
+#include <yarp/dev/IFrameTransform.h>
+#include <yarp/dev/IJoypadController.h>
+#include "ParamParser.h"
+#include "handThread.h"
+#include <yarp/rosmsg/visualization_msgs/Marker.h>
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::math;
-using namespace hapticdevice;
 
+typedef vector<IVelocityControl*> IVelVector;
+typedef vector<IControlMode*>     ICtrlModVec;
+typedef vector<IEncoders*>        IEncVec;
 
-/**********************************************************/
 class TeleOp: public RFModule
 {
 protected:
-    Publisher<visualization_msgs_MarkerArray> rosPublisherPort;
-    Node *rosNode;
-
-    PolyDriver     drvGeomagic;
-    IHapticDevice *igeo;
-
-    PolyDriver         drvHand;
-    IControlMode2     *imod;
-    IVelocityControl2 *ivel;
-    VectorOf<int>      modes;
-    Vector             vels;
-    
-    BufferedPort<Bottle>   gazeboPort;
-    BufferedPort<Property> robotTargetPort;
-    BufferedPort<Vector>   robotStatePort;
-    RpcClient              robotCmdPort;
-
-    string arm_type;
-    string mode;
-    double wrist_heave;
-    double gain;
-    bool reachState;
-
-    enum {
-        idle,
-        triggered,
-        running
+    enum FrameSource
+    {
+        VR_DEVICE,
+        HAPTIC_DEVICE
     };
 
-    int s0,s1;
-    int c0,c1;
-    map<int,string> stateStr;
-
-    Matrix Tsim;
-    Vector cur_x,cur_o;
-    Vector pos0,rpy0;
-    Vector x0,o0;
-    Vector fixedPosition;
-    Vector fixedOrientation;
+    HandThread         left{HandThread::left_hand};
+    HandThread         right{HandThread::right_hand};
+    HandThread*        hands[HandThread::hand_count];
+    ParamParser        param_parser{"TeleOp Module"};
+    string             mode;
+    double             wrist_heave;
+    double             gain;
+    FrameSource        frameSource;
+    string             rightHandFrame;
+    string             leftHandFrame;
+    string             rootHandFrame;
+    Matrix             T;
+    Node*              rosNode;
+    PolyDriver         drvControlSource;
+    PolyDriver         drvJoypad;
+    IHapticDevice*     igeo{YARP_NULLPTR};
+    IFrameTransform*   iTf;
+    IJoypadController* iJoypad;
+    map<int,string>    stateStr;
+    Matrix             Tsim;
+    int                ctrlMode;
+    bool               absoluteRotation{false};
 
     /**********************************************************/
-    void printState()
-    {
-        yInfo("pose=%s; hand=%s;",
-              reachState?"fixed-position":"fixed-orientation",
-              vels[0]>0.0?"closing":"opening");
-    }
 
 public:
-    /**********************************************************/
-    bool configure(ResourceFinder &rf)
+    TeleOp(){}
+
+    bool configureVrDevice(ResourceFinder& rf)
     {
-        string robot=rf.check("robot",Value("cer")).asString();
-        string geomagic=rf.check("geomagic",Value("geomagic")).asString();
-        arm_type=rf.check("arm-type",Value("right")).asString();
-        gain=rf.check("gain",Value(1.5)).asDouble();        
-        
-        wrist_heave=0.02;        
-        if (rf.check("wrist-heave"))
+        vector<pair<string, ParamParser::paramType> > param_v;
+        param_v.push_back(std::make_pair("tfDevice",            ParamParser::TYPE_STRING));
+        param_v.push_back(std::make_pair("tfLocal",             ParamParser::TYPE_STRING));
+        param_v.push_back(std::make_pair("tfRemote",            ParamParser::TYPE_STRING));
+        param_v.push_back(std::make_pair("tf_left_hand_frame",  ParamParser::TYPE_STRING));
+        param_v.push_back(std::make_pair("tf_right_hand_frame", ParamParser::TYPE_STRING));
+        param_v.push_back(std::make_pair("left_radius",         ParamParser::TYPE_DOUBLE));
+        param_v.push_back(std::make_pair("right_radius",        ParamParser::TYPE_DOUBLE));
+        param_v.push_back(std::make_pair("tf_root_frame",       ParamParser::TYPE_STRING));
+        param_v.push_back(std::make_pair("joyDevice",           ParamParser::TYPE_STRING));
+        param_v.push_back(std::make_pair("joyLocal",            ParamParser::TYPE_STRING));
+        param_v.push_back(std::make_pair("joyRemote",           ParamParser::TYPE_STRING));
+        param_v.push_back(std::make_pair("control_mode",        ParamParser::TYPE_STRING));
+
+        if(!param_parser.parse(rf, param_v))
         {
-            wrist_heave=rf.find("wrist-heave").asDouble();
-            mode="full_pose+no_torso_no_heave";
+            return false;
+        }
+
+        if(rf.find("control_mode").asString() == "velocity")
+        {
+            ctrlMode = VOCAB_CM_VELOCITY;
+        }
+        else if(rf.find("control_mode").asString() == "position")
+        {
+            ctrlMode = VOCAB_CM_POSITION_DIRECT;
         }
         else
-            mode="full_pose+no_torso_heave";
-        
-        transform(arm_type.begin(),arm_type.end(),arm_type.begin(),::tolower);
-        if ((arm_type!="left") && (arm_type!="right"))
         {
-            yWarning("Unrecognized arm-type \"%s\"",arm_type.c_str());
-            arm_type="right";
+            yError() << "teleop: control mode not supported.. possible value are 'position' and 'velocity'";
+            return false;
         }
+        absoluteRotation = rf.check("absolute_rotation");
 
-        rosNode=new yarp::os::Node("/cer_teleop");
-        if (!rosPublisherPort.topic("/cer_teleop_marker"))
+        Property tf_cfg, joy_cfg;
+        tf_cfg.put("device",  rf.find("tfDevice").asString());
+        tf_cfg.put("local",   rf.find("tfLocal").asString());
+        tf_cfg.put("remote",  rf.find("tfRemote").asString());
+        joy_cfg.put("device", rf.find("joyDevice").asString());
+        joy_cfg.put("local",  rf.find("joyLocal").asString());
+        joy_cfg.put("remote", rf.find("joyRemote").asString());
+
+        leftHandFrame  = rf.find("tf_left_hand_frame").asString();
+        rightHandFrame = rf.find("tf_right_hand_frame").asString();
+        rootHandFrame  = rf.find("tf_root_frame").asString();
+
+        if(!drvControlSource.open(tf_cfg))
         {
-            yError("Unable to publish data on /cer_teleop_marker topic");
-            yWarning("Check your yarp-ROS network configuration");
+            yError() << "Teleoperation Module: unable to open the tf device";
             return false;
         }
 
-        Property optGeo("(device hapticdeviceclient)");
-        optGeo.put("remote",("/"+geomagic).c_str());
-        optGeo.put("local","/cer_teleop/geomagic");
-        if (!drvGeomagic.open(optGeo))
+        if (!drvControlSource.view(iTf))
         {
-            delete rosNode;
-            return false;
-        }
-        drvGeomagic.view(igeo);
-
-        Property optHand("(device remote_controlboard)");
-        optHand.put("remote",("/"+robot+"/"+arm_type+"_hand").c_str());
-        optHand.put("local",("/cer_teleop/"+arm_type+"_hand").c_str());
-        if (!drvHand.open(optHand))
-        {
-            drvGeomagic.close();
-            delete rosNode;
+            yError() << "Teleoperation Module: dynamic_cast to IFrameTransform interface failed";
             return false;
         }
 
-        IEncoders *ienc;
-        drvHand.view(ienc);
-        drvHand.view(imod);
-        drvHand.view(ivel);
-
-        int nAxes;
-        ienc->getAxes(&nAxes);
-        for (int i=0; i<nAxes; i++)
+        if(!drvJoypad.open(joy_cfg))
         {
-            modes.push_back(VOCAB_CM_VELOCITY);
-            vels.push_back(40.0);
+            yError() << "Teleoperation Module: unable to open the Joypad Device";
+            return false;
         }
 
-        s0=s1=idle;
-        c0=c1=0;
-        reachState=false;
-        
-        stateStr[idle]="idle";
-        stateStr[triggered]="triggered";
-        stateStr[running]="running";
+        if (!drvJoypad.view(iJoypad))
+        {
+            yError() << "Teleoperation Module: dynamic_cast to IJoypadController interface failed";
+            return false;
+        }
 
-        Matrix T=zeros(4,4);
-        T(0,1)=-1.0;
-        T(1,2)=+1.0;
-        T(2,0)=-1.0;
-        T(3,3)=+1.0;
-        igeo->setTransformation(SE3inv(T));
-        
-        pos0.resize(3,0.0);
-        rpy0.resize(3,0.0);
-        cur_x.resize(3,0.0);
-        cur_o.resize(4,0.0);
+        unsigned int buttCount;
+        if(iJoypad->getButtonCount(buttCount) && buttCount < 4)
+        {
+            yError() << "teleoperation via tf requires at least 4 button";
+            return false;
+        }
 
-        x0.resize(3,0.0);
-        o0.resize(4,0.0);
-        fixedPosition.resize(3,0.0);
-        fixedOrientation.resize(4,0.0);
+        unsigned int axisCount;
+        if(iJoypad->getAxisCount(axisCount) && axisCount < 4)
+        {
+            yError() << "teleoperation via tf requires at least 4 axis";
+            return false;
+        }
 
-        gazeboPort.open("/cer_teleop/gazebo:o");
-        robotTargetPort.open("/cer_teleop/target:o");
-        robotStatePort.open("/cer_teleop/state:i");
-        robotCmdPort.open("/cer_teleop/cmd:rpc");
 
         return true;
     }
 
-    /**********************************************************/
+    bool configureHaptic(ResourceFinder& rf)
+    {
+        ctrlMode = VOCAB_CM_VELOCITY;
+        string device   = rf.check("device",   Value("geomagic")).asString();
+
+        Property optGeo("(device hapticdeviceclient)");
+        optGeo.put("remote", ("/" + device).c_str());
+        optGeo.put("local", "/cer_teleop/geomagic");
+
+        if (!drvControlSource.open(optGeo))
+        {
+            delete rosNode;
+            return false;
+        }
+
+        if(!drvControlSource.view(igeo))
+        {
+            yError() << "dynamic_cast to IHapticDevice failed.";
+        }
+
+        igeo->setTransformation(SE3inv(T));
+
+        return true;
+    }
+
+    bool configure(ResourceFinder& rf)
+    {
+        hands[HandThread::left_hand] = YARP_NULLPTR;
+        hands[HandThread::right_hand] = YARP_NULLPTR;
+        if(rf.check("frame_source") && rf.find("frame_source").isString())
+        {
+            string inputFS;
+
+            inputFS = rf.find("frame_source").asString();
+            if(inputFS == "VrDevice")
+            {
+                frameSource = VR_DEVICE;
+            }
+            else if(inputFS == "Haptic_Device")
+            {
+                frameSource = HAPTIC_DEVICE;
+            }
+            else
+            {
+                yError() << "frame_source parameter value not understood. valid value are transforms or Haptic_Device at the moment";
+                return false;
+            }
+        }
+        else
+        {
+            yError() << "frame_source parameter missing in configuration file";
+            return false;
+        }
+
+        rosNode = new yarp::os::Node("/cer_teleop");
+
+        //T =
+        //  0-1 0 0
+        //  0 0 1 0
+        // -1 0 0 0
+        //  0 0 0 1
+        T      = zeros(4,4);
+        T(0,1) = -1.0;
+        T(1,2) = +1.0;
+        T(2,0) = -1.0;
+        T(3,3) = +1.0;
+
+        switch(frameSource)
+        {
+        case VR_DEVICE:
+            if(!configureVrDevice(rf))
+            {
+                return false;
+            }
+            hands[HandThread::left_hand]  = &left;
+            hands[HandThread::right_hand] = &right;
+
+            left.targetRadius = rf.find("left_radius").asDouble();
+            right.targetRadius = rf.find("right_radius").asDouble();
+
+            if(!left.openControlBoards(rf)  ||
+               !right.openControlBoards(rf))
+            {
+                yError() << "teleop: something goes wrong...";
+                return false;
+            }
+
+            if(!left.start() || !right.start())
+            {
+                yError() << "teleop: thread start fail";
+                return false;
+            }
+            break;
+
+        case HAPTIC_DEVICE:
+            if(!configureHaptic(rf))
+            {
+                if(rf.check("arm-type"))
+                {
+                    if(rf.find("arm-type").asString() == "left")
+                    {
+                        hands[HandThread::left_hand]  = &left;
+                        left.openControlBoards(rf);
+                    }
+                    else if(rf.find("arm-type").asString() == "right")
+                    {
+                        hands[HandThread::right_hand] = &right;
+                        right.openControlBoards(rf);
+                    }
+                    else
+                    {
+                        hands[HandThread::right_hand] = &right;
+                        right.openControlBoards(rf);
+                        yError() << "arm-type parameter not understood.. possible values are 'left' or 'right'.. using right arm";
+                    }
+                }
+                return false;
+            }
+            break;
+        default:
+            return false;
+        }
+        return true;
+    }
+
     bool close()
     {
-        igeo->setTransformation(eye(4,4));
-        drvGeomagic.close();
+        if(igeo != YARP_NULLPTR)
+        {
+            igeo->setTransformation(eye(4, 4));
+        }
 
-        stopReaching();
+        drvControlSource.close();
 
-        ivel->stop();
-        for (size_t i=0; i<modes.size(); i++)
-            modes[i]=VOCAB_CM_POSITION;
-        imod->setControlModes(modes.getFirst());
-        drvHand.close();
+        left.stop();
+        right.stop();
 
-        gazeboPort.close();
-        robotTargetPort.close();
-        robotStatePort.close();
-        robotCmdPort.close();
+        left.threadRelease();
+        right.threadRelease();
 
         delete rosNode;
         return true;
     }
 
-    /**********************************************************/
-    void stopReaching()
-    {
-        Bottle cmd,reply;
-        cmd.addVocab(Vocab::encode("stop"));
-        if (robotCmdPort.write(cmd,reply))
-        {
-            if (reply.get(0).asVocab()!=Vocab::encode("ack"))
-                yError("Something went wrong while stopping");
-        }
-        else
-            yError("Unable to communicate to controller");
-    }
-
-    /**********************************************************/
-    void goToPose(const Vector &xd, const Vector &od)
-    {
-        Vector payLoad;
-        payLoad.push_back(0.0); // uncontrolled torso-heave
-        payLoad.push_back(wrist_heave);
-        payLoad=cat(payLoad,xd);
-        payLoad=cat(payLoad,od);
-
-        Bottle target;
-        target.addList().read(payLoad);
-        
-        Bottle params;
-        Bottle &bLoad=params.addList().addList();
-        bLoad.addString("mode");
-        bLoad.addString(mode);
-        
-        Property &prop=robotTargetPort.prepare(); prop.clear();
-        prop.put("parameters",params.get(0));
-        prop.put("target",target.get(0));
-        robotTargetPort.write();
-    }
-
-    /**********************************************************/
-    void updateRVIZ(const Vector &xd, const Vector &od)
-    {
-        double yarpTimeStamp = yarp::os::Time::now();
-        uint64_t time;
-        uint64_t nsec_part;
-        uint64_t sec_part;
-        TickTime ret;
-        time = (uint64_t)(yarpTimeStamp * 1000000000UL);
-        nsec_part = (time % 1000000000UL);
-        sec_part = (time / 1000000000UL);
-        if (sec_part > std::numeric_limits<unsigned int>::max())
-        {
-            yWarning() << "Timestamp exceeded the 64 bit representation, resetting it to 0";
-            sec_part = 0;
-        }
-
-        visualization_msgs_MarkerArray& markerarray = rosPublisherPort.prepare();
-        markerarray.markers.clear();
-        visualization_msgs_Marker marker;
-        marker.header.frame_id = "mobile_base_body_link";
-        marker.header.stamp.sec = (yarp::os::NetUint32) sec_part;
-        marker.header.stamp.nsec = (yarp::os::NetUint32) nsec_part;
-        marker.ns = "cer-teleop_namespace";
-        marker.type = visualization_msgs_Marker::SPHERE;
-        marker.action = visualization_msgs_Marker::ADD;
-
-        //center
-        Quaternion q;
-        q.fromRotationMatrix(axis2dcm(od));
-        marker.id = 1;
-        marker.pose.position.x = xd[0];
-        marker.pose.position.y = xd[1];
-        marker.pose.position.z = xd[2];
-        marker.pose.orientation.x = 0.0;
-        marker.pose.orientation.y = 0.0;
-        marker.pose.orientation.z = 0.0;
-        marker.pose.orientation.w = 1.0;
-        marker.scale.x = 0.05;
-        marker.scale.y = 0.05;
-        marker.scale.z = 0.05;
-        marker.color.a = 0.5;
-        marker.color.r = 0.0;
-        marker.color.g = 1.0;
-        marker.color.b = 0.0;
-        markerarray.markers.push_back(marker);
-        
-        /*
-        //x
-        marker.id = 2;
-        marker.pose.orientation.x = q.x();
-        marker.pose.orientation.y = q.y();
-        marker.pose.orientation.z = q.z();
-        marker.pose.orientation.w = q.w();
-        marker.scale.x = 0.5;
-        marker.scale.y = 0.05;
-        marker.scale.z = 0.05;
-        marker.color.r = 1.0;
-        marker.color.g = 0.0;
-        marker.color.b = 0.0;
-        markerarray.markers.push_back(marker);
-
-        //y
-        marker.id = 3;        
-        marker.pose.orientation.x = q.x();
-        marker.pose.orientation.y = q.y();
-        marker.pose.orientation.z = q.z();
-        marker.pose.orientation.w = q.w();
-        marker.scale.x = 0.05;
-        marker.scale.y = 0.5;
-        marker.scale.z = 0.05;
-        marker.color.r = 0.0;
-        marker.color.g = 1.0;
-        marker.color.b = 0.0;
-        markerarray.markers.push_back(marker);
-
-        //z
-        marker.id = 4;        
-        marker.pose.orientation.x = q.x();
-        marker.pose.orientation.y = q.y();
-        marker.pose.orientation.z = q.z();
-        marker.pose.orientation.w = q.w();
-        marker.scale.x = 0.05;
-        marker.scale.y = 0.05;
-        marker.scale.z = 0.5;
-        marker.color.r = 0.0;
-        marker.color.g = 0.0;
-        marker.color.b = 1.0;
-        markerarray.markers.push_back(marker);
-        */
-        rosPublisherPort.write();
-    }
-
-    /**********************************************************/
-    void updateGazebo(const Vector &xd, const Vector &od)
-    {
-        if (gazeboPort.getOutputCount()>0)
-        {
-            Vector rpy=dcm2rpy(axis2dcm(od));
-            Bottle &b=gazeboPort.prepare();
-            b.clear();
-            b.addString("setPose");
-            b.addString("frame22");
-            b.addDouble(xd[0]);
-            b.addDouble(xd[1]);
-            b.addDouble(xd[2]);
-            b.addDouble(rpy[0]);
-            b.addDouble(rpy[1]);
-            b.addDouble(rpy[2]);
-            b.addString("frame11::link");
-            gazeboPort.write();
-        }
-    }
-
-    /**********************************************************/
-    void reachingHandler(const bool b, const Vector &pos,
-                         const Vector &rpy)
-    {
-        if (b)
-        {
-            if (s0==idle)
-                s0=triggered;
-            else if (s0==triggered)
-            {
-                if (++c0*getPeriod()>0.5)
-                {
-                    pos0[0]=pos[0];
-                    pos0[1]=pos[1];
-                    pos0[2]=pos[2];
-
-                    rpy0[0]=rpy[0];
-                    rpy0[1]=rpy[1];
-                    rpy0[2]=rpy[2];
-
-                    x0=cur_x;
-                    o0=cur_o;
-                    s0=running;
-                }
-            }
-            else
-            {
-                Vector xd(4,0.0);
-                xd[0]=gain*(pos[0]-pos0[0]);
-                xd[1]=gain*(pos[1]-pos0[1]);
-                xd[2]=gain*(pos[2]-pos0[2]);
-                xd[3]=1.0;
-
-                Matrix H0=eye(4,4);
-                H0(0,3)=x0[0];
-                H0(1,3)=x0[1];
-                H0(2,3)=x0[2];
-
-                xd=H0*xd;
-                xd.pop_back();
-
-                Vector drpy(3);
-                drpy[0]=gain*(rpy[0]-rpy0[0]);
-                drpy[1]=gain*(rpy[1]-rpy0[1]);
-                drpy[2]=gain*(rpy[2]-rpy0[2]);
-
-                Vector ax(4,0.0),ay(4,0.0),az(4,0.0);
-                ax[0]=1.0; ax[3]=drpy[2];
-                ay[1]=1.0; ay[3]=drpy[1]*((arm_type=="right")?-1.0:+1.0);
-                az[2]=1.0; az[3]=drpy[0]*((arm_type=="right")?-1.0:+1.0);
-
-                Matrix Rd=axis2dcm(o0)*axis2dcm(ax)*axis2dcm(ay)*axis2dcm(az);
-
-                Vector od=dcm2axis(Rd);
-                if (reachState)
-                    goToPose(fixedPosition,od);
-                else
-                    goToPose(xd,fixedOrientation); 
-
-                updateGazebo(xd,od);
-                updateRVIZ(xd,od);
-            }
-        }
-        else
-        {
-            if (s0==triggered)
-            {
-                reachState=!reachState;
-                fixedPosition=cur_x;
-                fixedOrientation=cur_o;
-                printState();
-            }
-
-            if (c0!=0)
-            {
-                stopReaching();
-                updateGazebo(cur_x,cur_o);
-                updateRVIZ(cur_x,cur_o);
-            }
-
-            s0=idle;
-            c0=0;
-        }
-    }
-
-    /**********************************************************/
-    void handHandler(const bool b)
-    {
-        if (b)
-        {
-            if (s1==idle)
-                s1=triggered;
-            else if (s1==triggered)
-            {
-                if (++c1*getPeriod()>0.5)
-                {
-                    imod->setControlModes(modes.getFirst());
-                    s1=running;
-                }
-            }
-            else
-                ivel->velocityMove(vels.data());
-        }
-        else
-        {
-            if (s1==triggered)
-            {
-                vels=-1.0*vels;
-                printState();
-            }
-
-            if (c1!=0)
-                ivel->stop();
-
-            s1=idle;
-            c1=0;
-        }
-    }
-
-    /**********************************************************/
     double getPeriod()
     {
         return 0.01;
     }
 
-    /**********************************************************/
     bool updateModule()
     {
-        if (robotStatePort.getInputCount()>0)
+        //disclaimer: those static are read only constant value.. (so it's safe for them to be static)
+        Matrix                  m(4, 4), m_gripper(4, 4);
+        float                   button0, button1, button2;
+        HandThread::CommandData data;
+        static const string     enum2frameName[HandThread::hand_count] = {leftHandFrame, rightHandFrame};
+        static HandThread*      enum2hands[HandThread::hand_count]     = {&left, &right};
+        if (frameSource == HAPTIC_DEVICE)
         {
-            if (Vector *pose=robotStatePort.read(false))
-            {
-                cur_x=pose->subVector(0,2);
-                cur_o=pose->subVector(3,6);
-            }
-
-            Vector buttons,pos,rpy;
+            Vector buttons, pos, rpy;
             igeo->getButtons(buttons);
             igeo->getPosition(pos);
             igeo->getOrientation(rpy);
+            m = rpy2dcm(rpy);
+            m.setSubcol(pos, 0, 3);
 
-            bool b0=(buttons[0]!=0.0);
-            bool b1=(buttons[1]!=0.0);
-
-            reachingHandler(b0,pos,rpy);
-            handHandler(b1);
+            data.pose             = m;
+            data.button0          = buttons[0];
+            data.button1          = buttons[1];
+            data.controlMode      = VOCAB_CM_VELOCITY;
+            data.singleButton     = true;
+            data.targetDistance   = 0;
+            data.simultMovRot     = false;
+            data.absoluteRotation = false;
+            (*enum2hands[0]).setData(data);
         }
-        else
-            yError("No robot connected!");
+        else if (frameSource == VR_DEVICE)
+        {
+            for(int i = 0; i < HandThread::hand_count; ++i)
+            { 
+                string gripper = i ? "r_gripper" : "l_gripper";
+                double axis0, axis1;
+                bool reset = false;
+
+                if(!iJoypad->getButton(!i * 4 + 0, button0))
+                {
+                    yWarning() << "unable to get buttons state";
+                    reset = true;
+                }
+
+                if (!iJoypad->getButton(!i * 4 + 1, button2))
+                {
+                    yWarning() << "unable to get buttons state";
+                    reset = true;
+                }
+
+                if(!iJoypad->getAxis(i, axis0) || !iJoypad->getAxis(i + 2, axis1))
+                {
+                    yWarning() << "unable to get buttons state";
+                    reset = true;
+                }
+
+                if(!iTf->getTransform(enum2frameName[i], rootHandFrame, m))
+                {
+                    yWarning() << "teleop: unable to get transform between" << enum2frameName[i] << rootHandFrame;
+                    reset = true;
+                }
+
+                if((*enum2hands[i]).targetRadius > 0 && !iTf->getTransform(enum2frameName[i], gripper, m_gripper))
+                {
+                    yWarning() << "teleop: unable to get transform between" << enum2frameName[i] << gripper;
+                    reset = true;
+                }
+
+                if(reset)
+                {
+                    (*enum2hands[i]).setData(data);
+                    return true;
+                }
+
+                data.pose               = m;
+                data.button0            = button0 > 0.3;
+                data.button1            = ctrlMode == VOCAB_CM_POSITION_DIRECT ? (axis0 + axis1)/2 : axis0 - axis1;
+                data.button2            = button2;
+                data.controlMode        = ctrlMode;
+                data.singleButton       = false;
+                data.simultMovRot       = true;
+                data.absoluteRotation   = absoluteRotation;
+                data.targetDistance     = sqrt(m_gripper[0][3] * m_gripper[0][3] +
+                                               m_gripper[1][3] * m_gripper[1][3] +
+                                               m_gripper[2][3] * m_gripper[2][3]);
+                (*enum2hands[i]).setData(data);
+
+                iTf->setTransform(enum2frameName[i]+"_target", "mobile_base_body_link",  (*enum2hands[i]).getMatrix());
+
+                if(data.targetDistance < (*enum2hands[i]).targetRadius)
+                {
+                    //give a feedback to the user here
+                }
+            }
+        }
 
         return true;
     }
@@ -512,7 +407,7 @@ public:
 
 
 /**********************************************************/
-int main(int argc,char *argv[])
+int main(int argc, char *argv[])
 {
     Network yarp;
     if (!yarp.checkNetwork())
@@ -522,7 +417,7 @@ int main(int argc,char *argv[])
     }
 
     ResourceFinder rf;
-    rf.configure(argc,argv);
+    rf.configure(argc, argv);
 
     TeleOp teleop;
     return teleop.runModule(rf);

@@ -10,7 +10,7 @@ if(COMPILE_TEXTIMAGE)
   include(YarpUseQt5)
   include(YarpOSXUtilities)
 
-  include_directories(${YARP_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/../../cermod/faceDisplayServer)
+  include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../cermod/faceDisplayServer)
 
   set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
 

@@ -31,7 +31,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/math/Math.h>
 #include <iCub/ctrl/pids.h>
@@ -46,7 +46,7 @@ using namespace yarp::dev;
 #define MAX_ANGULAR_VEL 24.0 // maximum angular velocity (deg/s)
 
 
-class ControlThread : public yarp::os::RateThread
+class ControlThread : public yarp::os::PeriodicThread
 {
 private:
     Property            ctrl_options;
@@ -67,7 +67,7 @@ protected:
     IVelocityControl*         iVel;
     IPositionDirect*          iDir;
     IEncoders*                iEnc;
-    IControlMode2*            iCmd;
+    IControlMode *            iCmd;
     
     double                    elong;
     double                    pitch;

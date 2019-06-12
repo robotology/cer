@@ -10,20 +10,16 @@ yarp_prepare_plugin(tripodMotionControl
 
 if(ENABLE_cermod_tripodMotionControl)
 
-    get_property(cer_kinematics_INCLUDE_DIRS
-                 TARGET cer_kinematics
-                 PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-                        ${YARP_INCLUDE_DIRS}
-                        ${cer_kinematics_INCLUDE_DIRS})
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     yarp_add_plugin(tripodMotionControl tripodMotionControl.h tripodMotionControl.cpp)
+    add_definitions(-D_USE_MATH_DEFINES)
     target_link_libraries(tripodMotionControl ${YARP_LIBRARIES} cer_kinematics)
     yarp_install(TARGETS tripodMotionControl
+                 EXPORT YARP_${YARP_PLUGIN_MASTER}
                  COMPONENT Runtime
-                 LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR})
+                 LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR}
+                 YARP_INI DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
-    yarp_install(FILES tripodMotionControl.ini
-                 DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
 endif(ENABLE_cermod_tripodMotionControl)

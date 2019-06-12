@@ -9,11 +9,6 @@ yarp_prepare_plugin(oculus2cer TYPE Oculus2Cer
                                CATEGORY portmonitor)
 
 if(ENABLE_cermod_oculus2cer)
-  include_directories(${YARP_INCLUDE_DIRS})
-
-  yarp_install(FILES oculus2cer.ini
-               COMPONENT runtime
-               DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
   yarp_add_plugin(cer_pm_oculus2cer
                   oculus2cer.cpp
@@ -24,7 +19,9 @@ if(ENABLE_cermod_oculus2cer)
 
   yarp_install(TARGETS cer_pm_oculus2cer
                COMPONENT Runtime
+               EXPORT YARP_${YARP_PLUGIN_MASTER}
                LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR}
-               ARCHIVE DESTINATION ${CER_STATIC_PLUGINS_INSTALL_DIR})
+               ARCHIVE DESTINATION ${CER_STATIC_PLUGINS_INSTALL_DIR}
+               YARP_INI DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
 endif()

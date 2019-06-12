@@ -12,6 +12,8 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/sig/Vector.h>
+#include <yarp/sig/Matrix.h>
+#include <yarp/math/Math.h>
 
 #include <tripodMotionControl.h>
 
@@ -21,23 +23,22 @@ using namespace yarp::os::impl;
 using namespace cer::dev;
 using namespace cer::dev::impl;
 // using namespace yarp::dev::impl;
+using namespace yarp::sig;
+using namespace yarp::math;
 
 HW_deviceHelper::HW_deviceHelper() : pid(NULL),
                                      pos(NULL),
-                                     pos2(NULL),
                                      vel(NULL),
-                                     vel2(NULL),
                                      iJntEnc(NULL),
                                      iMotEnc(NULL),
                                      amp(NULL),
-                                     lim2(NULL),
+                                     lim(NULL),
                                      calib(NULL),
                                      calib2(NULL),
                                      iTorque(NULL),
                                      iImpedance(NULL),
-                                     iOpenLoop(NULL),
+                                     iPWM(NULL),
                                      iMode(NULL),
-                                     iMode2(NULL),
                                      info(NULL),
                                      posDir(NULL),
                                      iInteract(NULL),
@@ -55,20 +56,17 @@ void HW_deviceHelper::detach()
     configured = false;
     pid = NULL;
     pos = NULL;
-    pos2 = NULL;
     vel = NULL;
-    vel2 = NULL;
     iJntEnc = NULL;
     iMotEnc = NULL;
     amp = NULL;
-    lim2 = NULL;
+    lim = NULL;
     calib = NULL;
     calib2 = NULL;
     iTorque = NULL;
     iImpedance = NULL;
-    iOpenLoop = NULL;
+    iPWM = NULL;
     iMode = NULL;
-    iMode2 = NULL;
     info = NULL;
     posDir = NULL;
     iInteract = NULL;
@@ -89,20 +87,17 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
     {
         subdevice->view(pid);
         subdevice->view(pos);
-        subdevice->view(pos2);
         subdevice->view(posDir);
         subdevice->view(vel);
-        subdevice->view(vel2);
         subdevice->view(amp);
-        subdevice->view(lim2);
+        subdevice->view(lim);
         subdevice->view(calib);
         subdevice->view(calib2);
         subdevice->view(info);
         subdevice->view(iTorque);
         subdevice->view(iImpedance);
         subdevice->view(iMode);
-        subdevice->view(iMode2);
-        subdevice->view(iOpenLoop);
+        subdevice->view(iPWM);
         subdevice->view(iJntEnc);
         subdevice->view(iMotEnc);
         subdevice->view(iInteract);
@@ -115,7 +110,7 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
         return false;
     }
 
-    if ( ((iMode==0) || (iMode2==0)) && (_subDevVerbose ))
+    if ((iMode==0) && (_subDevVerbose ))
         yWarning() << "tripodMotionControl:  Warning iMode not valid interface";
 
     if ((iTorque==0) && (_subDevVerbose))
@@ -124,8 +119,8 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
     if ((iImpedance==0) && (_subDevVerbose))
         yWarning() << "tripodMotionControl:  Warning iImpedance not valid interface";
 
-    if ((iOpenLoop==0) && (_subDevVerbose))
-        yWarning() << "tripodMotionControl:  Warning iOpenLoop not valid interface";
+    if ((iPWM==0) && (_subDevVerbose))
+        yWarning() << "tripodMotionControl:  Warning iPWMControl not valid interface";
 
     if ((iInteract==0) && (_subDevVerbose))
         yWarning() << "tripodMotionControl:  Warning iInteractionMode not valid interface";
@@ -142,7 +137,7 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
     int deviceJoints=0;
 
     // checking minimum set of intefaces required
-    if( ! (pos || pos2) ) // One of the 2 is enough, therefore if both are missing I raise an error
+    if( !pos) // One of the 2 is enough, therefore if both are missing I raise an error
     {
         yError("tripodMotionControl: neither IPositionControl nor IPositionControl2 interface was not found in the attached subdevice. Quitting");
         return false;
@@ -158,8 +153,6 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
     int tmp;
     if(pos)
         pos->getAxes(&tmp);
-    if(pos2)
-        pos2->getAxes(&tmp);
 
     yarp::sig::Vector tmp_encs; tmp_encs.resize(tmp);
     // TODO: if it takes too many cycles to get valid encoder values, warn the user
@@ -176,14 +169,73 @@ bool HW_deviceHelper::isConfigured()
 
 bool tripodMotionControl::tripod_user2HW(yarp::sig::Vector &user, yarp::sig::Vector &robot)
 {
+#if USE_IKIN_IPOPT
     // The caller must use mutex or private data
-    return solver.ikin(user, robot);
+    yAssert(user.length()>=3);
+    
+    Vector ypr(3,0.0);
+    double &zd=user[0];                                     // heave
+    ypr[1]=_baseTransformation(0,0)*(M_PI/180.0)*user[1];   // pitch
+    ypr[2]=_baseTransformation(1,1)*(M_PI/180.0)*user[2];   // roll
+    Matrix Rd=ypr2dcm(ypr); Rd(2,3)=zd;
+    Rd=_baseTransformation*Rd;
+
+    return solver.ikin(Rd,robot);
+#else
+    // The caller must use mutex or private data
+    yAssert(user.length()>=3);
+    
+    //Vector ypr(3,0.0);
+    //double &zd=user[0];                                     // heave
+    //ypr[1]=_baseTransformation(0,0)*(M_PI/180.0)*user[1];   // pitch
+    //ypr[2]=_baseTransformation(1,1)*(M_PI/180.0)*user[2];   // roll
+
+    static const double SQRT3(sqrt(3.0));
+
+    double heave = user[0];
+    double pitch = _baseTransformation(0,0)*(M_PI/180.0)*user[1];
+    double roll  = _baseTransformation(1,1)*(M_PI/180.0)*user[2];
+
+    double cp = cos(pitch);
+    double v1 = sin(pitch);
+
+    double v2 = -cp*sin(roll);
+    double v3 =  cp*cos(roll);
+
+    double ld2 = (v1*v2) / (1.0 + v3);
+    ld2 = 1.0 - ld2*ld2;
+
+    double LcosT = mRadius / v3;
+
+    robot[0] = heave - v1*LcosT*(1.5*sqrt(ld2 - v2*v2) - 0.5*sqrt(ld2 - v1*v1));
+
+    double A = 3.0*v1*LcosT + 2.0*robot[0];
+    double B = SQRT3*v2*LcosT;
+
+    robot[2] = 0.5*(A+B);
+    robot[1] = 0.5*(A-B);
+    
+    return true;
+#endif
 }
 
 bool tripodMotionControl::tripod_HW2user(yarp::sig::Vector &robot, yarp::sig::Vector &user)
 {
     // The caller must use mutex or private data
-    return solver.fkin(robot, user);
+    Matrix H;
+    if (solver.fkin(robot,H))
+    {
+        Matrix H_=SE3inv(_baseTransformation)*H;
+        Vector ypr=dcm2ypr(H);
+
+        user.resize(3);
+        user[0]=H_(2,3);                // heave
+        user[1]=(180.0/M_PI)*ypr[1];    // pitch
+        user[2]=(180.0/M_PI)*ypr[2];    // roll
+        return true;
+    }
+    else
+        return false;
 }
 
 bool tripodMotionControl::compute_speeds(yarp::sig::Vector& reference, yarp::sig::Vector& encoders)
@@ -385,20 +437,22 @@ bool tripodMotionControl::dealloc()
 }
 
 tripodMotionControl::tripodMotionControl() :
-    ImplementControlCalibration2<tripodMotionControl, IControlCalibration2>(this),
-//     ImplementPidControl<tripodMotionControl, IPidControl>(this),
-//     ImplementVelocityControl<tripodMotionControl, IVelocityControl>(this),
+    ImplementControlCalibration(this),
+//     ImplementPidControl(this),
+//     ImplementVelocityControl(this),
     ImplementEncodersTimed(this),
     ImplementPositionControl2(this),
     ImplementVelocityControl2(this),
     ImplementControlMode2(this),
     ImplementMotorEncoders(this),
-    ImplementControlLimits2(this),
+    ImplementControlLimits(this),
     ImplementPositionDirect(this),
-    ImplementAmplifierControl<tripodMotionControl,IAmplifierControl>(this),
+    ImplementAmplifierControl(this),
 //     ImplementOpenLoopControl(this),
     ImplementInteractionMode(this),
-//     ImplementMotor(this),
+    ImplementRemoteVariables(this),
+    ImplementMotor(this),
+    ImplementPWMControl(this),
     _mutex(1)
 //     ,SAFETY_THRESHOLD(2.0)
 {
@@ -481,21 +535,23 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
     // data on yarp in meters
 
     //  INIT ALL INTERFACES
-    ImplementControlCalibration2<tripodMotionControl, IControlCalibration2>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+    ImplementControlCalibration::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementEncodersTimed::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementMotorEncoders::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementPositionControl2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
-//     ImplementPidControl<tripodMotionControl, IPidControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+//     ImplementPidControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementControlMode2::initialize(_njoints, _axisMap);
-//     ImplementVelocityControl<tripodMotionControl, IVelocityControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
-    ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+//     ImplementVelocityControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+    ImplementAmplifierControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementVelocityControl2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
 //
-    ImplementControlLimits2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+    ImplementControlLimits::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementPositionDirect::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
-//     ImplementOpenLoopControl::initialize(_njoints, _axisMap);
+    double* tmpOnes = new double[_njoints]; for (int i = 0; i < _njoints; i++) { tmpOnes[i] = 1.0; }
+    ImplementPWMControl::initialize(_njoints, _axisMap, tmpOnes);
+    delete[] tmpOnes;
     ImplementInteractionMode::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
-//     ImplementMotor::initialize(_njoints, _axisMap);
+    ImplementMotor::initialize(_njoints, _axisMap);
 
    /*
     *  Init the IK library somehow if needed
@@ -541,7 +597,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
             {
                  yError() << "tripodMotionControl: error while attachig polyDriverDevice";
                  return false;
-	    }
+        }
 
             initKinematics();
             useRemoteCB = true;
@@ -737,6 +793,8 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
     else
         radius = xtmp.get(1).asDouble();
 
+    mRadius = radius;
+
     // max limit
         if (!extractGroup(tripod_description, xtmp, "Max_el","The minimum elongation ([m]).", 1))
         return false;
@@ -796,7 +854,6 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
     cer::kinematics::TripodParameters tParam(radius, lMin, lMax, alpha, _baseTransformation);
     solver.setParameters(tParam);
 
-
     Bottle &limits_group=config.findGroup("LIMITS");
     if (limits_group.isNull())
     {
@@ -826,12 +883,12 @@ bool tripodMotionControl::close()
     ImplementEncodersTimed::uninitialize();
     ImplementMotorEncoders::uninitialize();
     ImplementPositionControl2::uninitialize();
-//     ImplementVelocityControl<tripodMotionControl, IVelocityControl>::uninitialize();
+//     ImplementVelocityControl::uninitialize();
     ImplementVelocityControl2::uninitialize();
-//     ImplementPidControl<tripodMotionControl, IPidControl>::uninitialize();
-    ImplementAmplifierControl<tripodMotionControl, IAmplifierControl>::uninitialize();
-    ImplementControlCalibration2<tripodMotionControl, IControlCalibration2>::uninitialize();
-    ImplementControlLimits2::uninitialize();
+//     ImplementPidControl::uninitialize();
+    ImplementAmplifierControl::uninitialize();
+    ImplementControlCalibration::uninitialize();
+    ImplementControlLimits::uninitialize();
     ImplementPositionDirect::uninitialize();
 //     ImplementOpenLoopControl::uninitialize();
     ImplementInteractionMode::uninitialize();
@@ -840,11 +897,10 @@ bool tripodMotionControl::close()
     return true;
 }
 
-
-bool tripodMotionControl::getAxisName(int axis, yarp::os::ConstString& name)
+bool tripodMotionControl::getAxisName(int axis, std::string& name)
 {
     if (axis < 0 || axis >=  _njoints) return false;
-    name = yarp::os::ConstString(_jointNames[axis]);
+    name = std::string(_jointNames[axis]);
     return true;
 }
 
@@ -1055,12 +1111,6 @@ bool tripodMotionControl::setOffsetRaw(int j, double v)
 //    Velocity control interface raw  //
 ////////////////////////////////////////
 
-bool tripodMotionControl::setVelocityModeRaw()
-{
-    // I guess this is too dangerous to be used with this device.
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
-}
-
 bool tripodMotionControl::velocityMoveRaw(int j, double sp)
 {
     // I guess this is too dangerous to be used with this device.
@@ -1082,14 +1132,14 @@ bool tripodMotionControl::setCalibrationParametersRaw(int j, const CalibrationPa
     return _device.calib2->setCalibrationParameters(j, params);
 }
 
-bool tripodMotionControl::calibrate2Raw(int j, unsigned int type, double p1, double p2, double p3)
+bool tripodMotionControl::calibrateAxisWithParamsRaw(int j, unsigned int type, double p1, double p2, double p3)
 {
-    return _device.calib2->calibrate2(j, type, p1, p2, p3);
+    return _device.calib2->calibrateAxisWithParams(j, type, p1, p2, p3);
 }
 
-bool tripodMotionControl::doneRaw(int axis)
+bool tripodMotionControl::calibrationDoneRaw(int axis)
 {
-    return _device.calib2->done(axis);
+    return _device.calib2->calibrationDone(axis);
 }
 
 ////////////////////////////////////////
@@ -1099,11 +1149,6 @@ bool tripodMotionControl::getAxes(int *ax)
 {
     *ax=_njoints;
     return _device.isConfigured();
-}
-
-bool tripodMotionControl::setPositionModeRaw()
-{
-    return false;
 }
 
 bool tripodMotionControl::positionMoveRaw(int j, double ref)
@@ -1131,10 +1176,10 @@ bool tripodMotionControl::positionMoveRaw(int j, double ref)
         compute_speeds(_robotRef_positions, _lastRobot_encoders);
         // all joints may need to move in order to achieve the new requested position
         // even if only one user virtual joint has got new reference.
-        ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+        ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
     }
 
-    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1168,8 +1213,8 @@ bool tripodMotionControl::positionMoveRaw(const double *refs)
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference.
-    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
-    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+    ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1205,8 +1250,8 @@ bool tripodMotionControl::relativeMoveRaw(int j, double delta)
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference.
-    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
-    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+    ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1243,8 +1288,8 @@ bool tripodMotionControl::relativeMoveRaw(const double *deltas)
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference.
-    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
-    ret &= _device.pos2->positionMove(_njoints, _axisMap,_robotRef_positions.data());
+    ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1336,7 +1381,7 @@ bool tripodMotionControl::getRefAccelerationRaw(int j, double *acc)
 
 bool tripodMotionControl::getRefAccelerationsRaw(double *accs)
 {
-    return _device.pos2->getRefAccelerations(_njoints, _axisMap, accs);
+    return _device.pos->getRefAccelerations(_njoints, _axisMap, accs);
 }
 
 bool tripodMotionControl::stopRaw(int j)
@@ -1414,8 +1459,8 @@ bool tripodMotionControl::positionMoveRaw(const int n_joint, const int *joints, 
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference.
-    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
-    ret &= _device.pos2->positionMove(_njoints, _axisMap, _robotRef_positions.data());
+    ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap, _robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1459,8 +1504,8 @@ bool tripodMotionControl::relativeMoveRaw(const int n_joint, const int *joints, 
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference.
-    ret &= _device.pos2->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
-    ret &= _device.pos2->positionMove(_njoints, _axisMap, _robotRef_positions.data());
+    ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
+    ret &= _device.pos->positionMove(_njoints, _axisMap, _robotRef_positions.data());
 
     _mutex.post();
     return ret;
@@ -1468,7 +1513,7 @@ bool tripodMotionControl::relativeMoveRaw(const int n_joint, const int *joints, 
 
 bool tripodMotionControl::checkMotionDoneRaw(const int n_joint, const int *joints, bool *flag)
 {
-    return _device.pos2->checkMotionDone(n_joint, joints, flag);
+    return _device.pos->checkMotionDone(n_joint, joints, flag);
 }
 
 bool tripodMotionControl::setRefSpeedsRaw(const int n_joint, const int *joints, const double *spds)
@@ -1496,49 +1541,19 @@ bool tripodMotionControl::getRefSpeedsRaw(const int n_joint, const int *joints, 
 
 bool tripodMotionControl::getRefAccelerationsRaw(const int n_joint, const int *joints, double *accs)
 {
-    return _device.pos2->getRefAccelerations(n_joint, joints, accs);
+    return _device.pos->getRefAccelerations(n_joint, joints, accs);
 }
 
 bool tripodMotionControl::stopRaw(const int n_joint, const int *joints)
 {
-    return _device.pos2->stop(n_joint, joints);
+    return _device.pos->stop(n_joint, joints);
 }
 ///////////// END Position Control INTERFACE  //////////////////
 
 // ControlMode
-bool tripodMotionControl::setPositionModeRaw(int j)
-{
-    return DEPRECATED("setPositionModeRaw");
-}
-
-bool tripodMotionControl::setVelocityModeRaw(int j)
-{
-    return DEPRECATED("setVelocityModeRaw");
-}
-
-bool tripodMotionControl::setTorqueModeRaw(int j)
-{
-    return DEPRECATED("setTorqueModeRaw");
-}
-
-bool tripodMotionControl::setImpedancePositionModeRaw(int j)
-{
-    return DEPRECATED("setImpedancePositionModeRaw");
-}
-
-bool tripodMotionControl::setImpedanceVelocityModeRaw(int j)
-{
-    return DEPRECATED("setImpedanceVelocityModeRaw");
-}
-
-bool tripodMotionControl::setOpenLoopModeRaw(int j)
-{
-    return DEPRECATED("setOpenLoopModeRaw");
-}
-
 bool tripodMotionControl::getControlModeRaw(int j, int *v)
 {
-    return _device.iMode2->getControlMode(j,v);
+    return _device.iMode->getControlMode(j,v);
 }
 
 // IControl Mode 2
@@ -1546,31 +1561,56 @@ bool tripodMotionControl::getControlModesRaw(int* v)
 {
     bool ret = true;
     for(int i=0; i<_njoints; i++)
-        ret &= _device.iMode2->getControlMode(i, &v[i]);
+        ret &= _device.iMode->getControlMode(i, &v[i]);
     return ret;
 }
 
 bool tripodMotionControl::getControlModesRaw(const int n_joint, const int *joints, int *modes)
 {
-    return _device.iMode2->getControlModes(n_joint, joints, modes);
+    return _device.iMode->getControlModes(n_joint, joints, modes);
 }
 
 bool tripodMotionControl::setControlModeRaw(const int j, const int mode)
 {
-    refreshPositionTargets(mode);
-    return _device.iMode2->setControlMode(j, mode);
+    int m;
+    bool ret = true;
+    _device.iMode->getControlMode(j, &m);
+    if(m != mode)
+    {
+        refreshPositionTargets(mode);
+        ret = _device.iMode->setControlMode(j, mode);
+    }
+    return ret;
 }
 
 bool tripodMotionControl::setControlModesRaw(const int n_joint, const int *joints, int *modes)
 {
-    refreshPositionTargets(modes[0]);
-    return _device.iMode2->setControlModes(n_joint, joints, modes);
+    // Using only joint 0 because having different joints in different control
+    // modes is not supported
+    int m;
+    bool ret = true;
+    _device.iMode->getControlMode(0, &m);
+    if(m != modes[0])
+    {
+        refreshPositionTargets(modes[0]);
+        ret = _device.iMode->setControlModes(n_joint, joints, modes);
+    }
+    return ret;
 }
 
 bool tripodMotionControl::setControlModesRaw(int *modes)
 {
-    refreshPositionTargets(modes[0]);
-    return _device.iMode2->setControlModes(_njoints, _axisMap, modes);
+    // Using only joint 0 because having different joints in different control
+    // modes is not supported
+    int m;
+    bool ret = true;
+    _device.iMode->getControlMode(0, &m);
+    if(m != modes[0])
+    {
+        refreshPositionTargets(modes[0]);
+        ret = _device.iMode->setControlModes(_njoints, _axisMap, modes);
+    }
+    return ret;
 }
 
 //////////////////////// BEGIN EncoderInterface
@@ -1761,7 +1801,8 @@ bool tripodMotionControl::disableAmpRaw(int j)
 
 bool tripodMotionControl::getCurrentRaw(int j, double *value)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    *value = std::nan("");
+    return true;
 }
 
 bool tripodMotionControl::getCurrentsRaw(double *vals)
@@ -1970,31 +2011,8 @@ bool tripodMotionControl::velocityMoveRaw(const int n_joint, const int *joints, 
     return NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
 
-bool tripodMotionControl::setVelPidRaw(int j, const Pid &pid)
-{
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
-}
-
-bool tripodMotionControl::setVelPidsRaw(const Pid *pids)
-{
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
-}
-
-bool tripodMotionControl::getVelPidRaw(int j, Pid *pid)
-{
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
-}
-
-bool tripodMotionControl::getVelPidsRaw(Pid *pids)
-{
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
-}
 
 // PositionDirect Interface
-bool tripodMotionControl::setPositionDirectModeRaw()
-{
-    return DEPRECATED("setPositionDirectModeRaw");
-}
 
 bool tripodMotionControl::setPositionRaw(int j, double ref)
 {
@@ -2025,7 +2043,7 @@ bool tripodMotionControl::setPositionRaw(int j, double ref)
     return _device.posDir->setPositions(_njoints, _axisMap, _robotRef_positions.data());
 }
 
-bool tripodMotionControl::setPositionsRaw(const int n_joint, const int *joints, double *refs)
+bool tripodMotionControl::setPositionsRaw(const int n_joint, const int *joints, const double *refs)
 {
     if(n_joint == 0)
         return true;
@@ -2120,73 +2138,111 @@ bool tripodMotionControl::setInteractionModesRaw(yarp::dev::InteractionModeEnum*
     return _device.iInteract->setInteractionModes(_njoints, _axisMap, modes);
 }
 
-#if 0
-//
-// OPENLOOP interface
-//
-bool tripodMotionControl::setOpenLoopModeRaw()
+bool tripodMotionControl::getRemoteVariableRaw(std::string key, yarp::os::Bottle& val)
 {
-    return DEPRECATED("setOpenLoopModeRaw");
+    val.clear();
+    //if (key == "encoders")
+    //{
+    //    Bottle& r = val.addList(); for (int i = 0; i < _njoints; i++) { r.addDouble(_measureConverter->posA2E(1.0, i)); }
+    //    return true;
+    //}
+    yWarning("getRemoteVariable(): Unknown variable %s", key.c_str());
+    return false;
 }
 
-bool tripodMotionControl::setRefOutputRaw(int j, double v)
+bool tripodMotionControl::setRemoteVariableRaw(std::string key, const yarp::os::Bottle& val)
+{
+    string s1 = val.toString();
+    if (val.size() != _njoints)
+    {
+        yWarning("setRemoteVariable(): Protocol error %s", s1.c_str());
+        return false;
+    }
+
+    //if (key == "kinematic_mj")
+    //{
+    //    yWarning("setRemoteVariable(): Impossible to set kinematic_mj parameter at runtime.");
+    //    return false;
+    //}
+    yWarning("setRemoteVariable(): Unknown variable %s", key.c_str());
+    return false;
+}
+
+bool tripodMotionControl::getRemoteVariablesListRaw(yarp::os::Bottle* listOfKeys)
+{
+    listOfKeys->clear();
+//    listOfKeys->addString("encoders");
+    return true;
+}
+
+
+bool tripodMotionControl::setRefDutyCycleRaw(int j, double v)
 {
     return NOT_YET_IMPLEMENTED(__YFUNCTION__);
 }
 
-bool tripodMotionControl::setRefOutputsRaw(const double *v)
+bool tripodMotionControl::setRefDutyCyclesRaw(const double *v)
 {
     bool ret = true;
     for(int j=0; j<_njoints; j++)
     {
-        ret = ret && setRefOutputRaw(j, v[j]);
+        ret = ret && setRefDutyCycleRaw(j, v[j]);
     }
     return ret;
 }
 
-bool tripodMotionControl::getRefOutputRaw(int j, double *out)
+bool tripodMotionControl::getRefDutyCycleRaw(int j, double *ref)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    *ref = std::nan("");
+    return true;
 }
 
-bool tripodMotionControl::getRefOutputsRaw(double *outs)
+bool tripodMotionControl::getRefDutyCyclesRaw(double *outs)
 {
     bool ret = true;
     for(int j=0; j<_njoints; j++)
     {
-        ret = ret && getRefOutputRaw(j, &outs[j]);
+        ret = ret && getRefDutyCycleRaw(j, &outs[j]);
     }
     return ret;
 }
 
-bool tripodMotionControl::getOutputRaw(int j, double *out)
+bool tripodMotionControl::getDutyCycleRaw(int j, double *out)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    *out = std::nan("");
+    return true;
 }
 
-bool tripodMotionControl::getOutputsRaw(double *outs)
+bool tripodMotionControl::getDutyCyclesRaw(double *outs)
 {
     bool ret = true;
     for(int j=0; j< _njoints; j++)
     {
-        ret &= getOutputRaw(j, &outs[j]);
+        ret &= getDutyCycleRaw(j, &outs[j]);
     }
     return ret;
 }
 
 bool tripodMotionControl::getNumberOfMotorsRaw(int* num)
 {
-    return NOT_YET_IMPLEMENTED(__YFUNCTION__);
+    *num = _njoints;
+    return true;
 }
 
 bool tripodMotionControl::getTemperatureRaw(int m, double* val)
 {
-    return NOT_YET_IMPLEMENTED("getTemperatureRaw");
+    *val = std::nan("");
+    return true;
 }
 
 bool tripodMotionControl::getTemperaturesRaw(double *vals)
 {
-    return NOT_YET_IMPLEMENTED("getTemperaturesRaw");
+    bool ret = true;
+    for (int j = 0; j< _njoints; j++)
+    {
+        ret &= getTemperatureRaw(j, &vals[j]);
+    }
+    return ret;
 }
 
 bool tripodMotionControl::getTemperatureLimitRaw(int m, double *temp)
@@ -2199,15 +2255,6 @@ bool tripodMotionControl::setTemperatureLimitRaw(int m, const double temp)
     return NOT_YET_IMPLEMENTED("setTemperatureLimitRaw");
 }
 
-bool tripodMotionControl::getMotorOutputLimitRaw(int m, double *limit)
-{
-    return NOT_YET_IMPLEMENTED("getMotorOutputLimitRaw");
-}
 
-bool tripodMotionControl::setMotorOutputLimitRaw(int m, const double limit)
-{
-    return NOT_YET_IMPLEMENTED("setMotorOutputLimitRaw");
-}
-#endif
 
 // eof

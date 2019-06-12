@@ -6,45 +6,43 @@ option(GAZEBO_TRIPOD_PLUGIN "Compile Gazebo Yarp Plugin to control the tripod de
 
 if(GAZEBO_TRIPOD_PLUGIN)
   find_package(Gazebo)
-  find_package(GazeboYarpPlugins)
+  find_package(GazeboYARPPlugins)
 
   if(NOT Gazebo_FOUND)
     message(SEND_ERROR "Gazebo was not found therefore Gazebo plugins cannot be compiled.")
     return()
   endif()
 
-  if(NOT GazeboYarpPlugins_FOUND)
+  if(NOT GazeboYARPPlugins_FOUND)
     message(SEND_ERROR "Gazebo YARP Plugins was not found therefore Gazebo plugins cannot be compiled.")
     return()
   endif()
 
+  option(GAZEBO_TRIPOD_USES_IKIN "Use iKin to compute tripod simulation" OFF)
+
   # Add Gazebo CXX flags, to support Gazebo 6 reckless dependency on C++11
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
 
+  set(gazeboTripod_source  GazeboYarpTripod.cpp
+                           GazeboTripodMotionControl.cpp
+                           GazeboTripod_Implementation.cpp)
 
-  set(gazeboTripod_source     GazeboYarpTripod.cpp
-                              GazeboTripodMotionControl.cpp
-                              GazeboTripod_Implementation.cpp)
-
-  set(gazeboTripod_headers    GazeboYarpTripod.h
-                              GazeboTripodMotionControl.h )
-
-  get_property(cer_kinematics_INCLUDE_DIRS
-               TARGET cer_kinematics
-               PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
+  set(gazeboTripod_headers GazeboYarpTripod.h
+                           GazeboTripodMotionControl.h )
 
   include_directories(${CMAKE_CURRENT_SOURCE_DIR}
-                      ${YARP_INCLUDE_DIRS}
                       ${Boost_INCLUDE_DIRS}
                       ${GAZEBO_INCLUDE_DIRS}
-                      ${GazeboYarpPlugins_INCLUDE_DIRS}
-                      ${cer_kinematics_INCLUDE_DIRS}
                       ${CMAKE_CURRENT_SOURCE_DIR}/../cermod/tripod)
 
   link_directories(${GAZEBO_LIBRARY_DIRS})
   add_library(gazeboTripod ${gazeboTripod_source} ${gazeboTripod_headers})
+  target_compile_definitions(gazeboTripod PRIVATE _USE_MATH_DEFINES)
+  if(GAZEBO_TRIPOD_USES_IKIN)
+    target_compile_definitions(gazeboTripod PRIVATE _GAZEBO_TRIPOD_USES_IKIN_)
+  endif()
 
-  target_link_libraries(gazeboTripod GazeboYarpPlugins::singleton
+  target_link_libraries(gazeboTripod GazeboYARPPlugins::gazebo_yarp_singleton
                                      cer_kinematics
                                      ${YARP_LIBRARIES}
                                      ${GAZEBO_LIBRARIES}

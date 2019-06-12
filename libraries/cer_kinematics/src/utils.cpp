@@ -73,7 +73,7 @@ struct CER_TORSO : public TripodParameters
 struct CER_LOWER_ARM : public TripodParameters
 {
     /****************************************************************/
-    CER_LOWER_ARM() : TripodParameters(0.018,0.0,0.13,30.0) { }
+    CER_LOWER_ARM() : TripodParameters(0.018,0.0,0.13,25.0) { }
 };
 
 
@@ -279,5 +279,27 @@ bool SolverParameters::setMode(const string &mode)
     }
 
     return ret;
+}
+
+
+/****************************************************************/
+string SolverParameters::getMode() const
+{
+    string mode=(full_pose?"full_pose":"xyz_pose");
+
+    mode+="+";
+    if (configuration==configuration::heave)
+        mode+="heave";
+    else if (configuration==configuration::no_heave)
+        mode+="no_heave";
+    else if (configuration==configuration::no_torso_heave)
+        mode+="no_torso_heave";
+    else if (configuration==configuration::no_torso_no_heave)
+        mode+="no_torso_no_heave";
+
+    mode+="+";
+    mode+=(use_central_difference?"central_diff":"forward_diff");
+
+    return mode;
 }
 

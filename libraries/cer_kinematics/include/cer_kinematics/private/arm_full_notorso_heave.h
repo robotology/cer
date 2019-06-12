@@ -37,8 +37,8 @@ public:
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
         n=x0.length();
-        m=1+1;
-        nnz_jac_g=3+(n-4);
+        m=1+1+1;
+        nnz_jac_g=3+(n-4)+2;
         nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
 
@@ -73,6 +73,7 @@ public:
 
         g_l[0]=lower_arm.cos_alpha_max; g_u[0]=1.0;
         g_l[1]=g_u[1]=0.0;
+        g_l[2]=cover_shoulder_avoidance[1]; g_u[2]=std::numeric_limits<double>::max();
 
         latch_idx.clear();
         latch_gl.clear();
@@ -93,6 +94,7 @@ public:
 
         g[0]=din2.n[2];
         g[1]=norm2(xd-T.getCol(3).subVector(0,2));
+        g[2]=-cover_shoulder_avoidance[0]*x[4]+x[5];
 
         latch_x_verifying_alpha(n,x,g);
 
@@ -111,13 +113,17 @@ public:
             iRow[1]=0; jCol[1]=10;
             iRow[2]=0; jCol[2]=11;
 
-            // g[1]
+            // g[1] (reaching position)
             Ipopt::Index idx=3;
             for (Ipopt::Index col=4; col<n; col++)
             {
                 iRow[idx]=1; jCol[idx]=col;
                 idx++;
             }
+
+            // g[2] (cover constraints)
+            iRow[11]=2; jCol[11]=4;
+            iRow[12]=2; jCol[12]=5;
         }
         else
         {
@@ -174,6 +180,10 @@ public:
             e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
             values[10]=2.0*dot(e,e_fw-e)/drho;
             x_dx[11]=x[11];
+
+            // g[2]
+            values[11]=-cover_shoulder_avoidance[0];
+            values[12]=1.0;
         }
 
         return true;
@@ -202,8 +212,8 @@ public:
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
         n=x0.length();
-        m=1+1;
-        nnz_jac_g=3+(n-4);
+        m=1+1+1;
+        nnz_jac_g=3+(n-4)+2;
         nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
 
@@ -238,6 +248,7 @@ public:
 
         g_l[0]=lower_arm.cos_alpha_max; g_u[0]=1.0;
         g_l[1]=g_u[1]=0.0;
+        g_l[2]=cover_shoulder_avoidance[1]; g_u[2]=std::numeric_limits<double>::max();
 
         latch_idx.clear();
         latch_gl.clear();
@@ -258,6 +269,7 @@ public:
 
         g[0]=din2.n[2];
         g[1]=norm2(xd-T.getCol(3).subVector(0,2));
+        g[2]=-cover_shoulder_avoidance[0]*x[4]+x[5];
 
         latch_x_verifying_alpha(n,x,g);
 
@@ -276,13 +288,17 @@ public:
             iRow[1]=0; jCol[1]=10;
             iRow[2]=0; jCol[2]=11;
 
-            // g[1]
+            // g[1] (reaching position)
             Ipopt::Index idx=3;
             for (Ipopt::Index col=4; col<n; col++)
             {
                 iRow[idx]=1; jCol[idx]=col;
                 idx++;
             }
+
+            // g[2] (cover constraints)
+            iRow[11]=2; jCol[11]=4;
+            iRow[12]=2; jCol[12]=5;
         }
         else
         {
@@ -354,6 +370,10 @@ public:
             e_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
             values[10]=dot(e,e_fw-e_bw)/drho;
             x_dx[11]=x[11];
+
+            // g[2]
+            values[11]=-cover_shoulder_avoidance[0];
+            values[12]=1.0;
         }
 
         return true;

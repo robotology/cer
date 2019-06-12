@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+<!DOCTYPE devices PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
 
  <!-- Initialization file for EMS 15 - CER torso tripod + yaw, 4 dof -->
 
-<devices robot="CER01" build="1">
-  <device name="cer_torso_mc" type="embObjMotionControl">
-      <params file="general.xml" />
-      <params file="hardware/electronics/cer_torso-ems15-eln.xml" />
-      <params file="hardware/mechanicals/cer_torso-ems15-mec.xml" />
-      <params file="hardware/motorControl/cer_torso-ems15-mc-service.xml" />
+
+  <device xmlns:xi="http://www.w3.org/2001/XInclude" name="cer_torso_mc" type="embObjMotionControl">
+      <xi:include href="../../general.xml" />
+      <xi:include href="../electronics/cer_torso-ems15-eln.xml" />
+      <xi:include href="../mechanicals/cer_torso-ems15-mec.xml" />
+      <xi:include href="../motorControl/cer_torso-ems15-mc-service.xml" />
 
     <group name="LIMITS">
         <param name="jntPosMax">                0.17    0.17         0.17       30     </param>
@@ -37,7 +37,8 @@
 
     <group name="JOINT_PID_V1">
     <param name="controlLaw">    Pid_inPos_outPwm </param> 
-        <param name="controlUnits">  machine_units </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="pos_kp">            3000        3000       3000          0     </param>       
         <param name="pos_kd">               0           0          0          0     </param>       
         <param name="pos_ki">            5000        5000       5000          0     </param>       
@@ -55,7 +56,8 @@
     
     <group name="JOINT_POS_VEL_CTRL">
 	<param name="controlLaw">    PidPos_withInnerVelPid </param> 
-        <param name="controlUnits">  machine_units </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="pos_kp">               0           0          0          5     </param>       
         <param name="pos_kd">               0           0          0          0     </param>       
         <param name="pos_ki">               0           0          0          0     </param>       
@@ -83,7 +85,8 @@
 
     <group name="VEL_CTRL">
 	<param name="controlLaw">    Pid_inVel_outPwm </param> 
-        <param name="controlUnits">  machine_units </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="vel_kp">          3000        3000       3000          1280  </param>       
         <param name="vel_kd">             0           0          0          6144  </param>       
         <param name="vel_ki">          5000        5000       5000          1     </param>       
@@ -99,7 +102,8 @@
     
     <group name="JOINT_TRQ_VEL_CTRL">
         <param name="controlLaw">    PidTrq_withInnerVelPid                   </param> 
-        <param name="controlUnits">  metric_units                             </param>         
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>     
         <param name="trq_kp">              0          0          0          0     </param>       
         <param name="trq_kd">              0          0          0          0     </param>       
         <param name="trq_ki">              0          0          0          0     </param>       
@@ -128,7 +132,8 @@
 
     <group name="2FOC_FEEDBACK">
         <param name="controlLaw">       limitscurrent                                  </param> 
-        <param name="controlUnits">     metric_units                                   </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="cur_kp">              8           8           8           8       </param>       
         <param name="cur_kd">              0           0           0           0       </param>       
         <param name="cur_ki">              2           2           2           2       </param>
@@ -147,5 +152,5 @@
     </group>
 	
   </device>
-</devices>
+
 

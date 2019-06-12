@@ -10,14 +10,19 @@
 #include <GazeboYarpPlugins/Handler.hh>
 
 #include <cstdio>
+#include <cmath>
+
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
-#include <gazebo/math/Angle.hh>
 
 #include <yarp/os/LogStream.h>
+#include <yarp/sig/Vector.h>
+#include <yarp/sig/Matrix.h>
+#include <yarp/math/Math.h>
 
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::math;
 using namespace yarp::dev;
 using namespace cer::dev;
 
@@ -43,14 +48,39 @@ bool GazeboTripodMotionControl::NOT_YET_IMPLEMENTED(const char *txt)
 bool GazeboTripodMotionControl::tripod_client2Sim(yarp::sig::Vector &client, yarp::sig::Vector &sim)
 {
     // The caller must use mutex or private data
-    return solver.fkin(client, sim);
+    Matrix H;
+    if (solver.fkin(client,H))
+    {
+        // get the heave irrespective of the frame
+        Matrix H_=SE3inv(_baseTransformation)*H;
+        Vector ypr=dcm2ypr(H);
+
+        sim.resize(3);
+        sim[0]=H_(2,3);                // heave
+        sim[1]=(180.0/M_PI)*ypr[1];    // pitch
+        sim[2]=(180.0/M_PI)*ypr[2];    // roll
+        return true;
+    }
+    else
+        return false;
 }
 
 bool GazeboTripodMotionControl::tripod_Sim2client(yarp::sig::Vector &sim, yarp::sig::Vector &client)
 {
     // The caller must use mutex or private data
-    client = m_referenceElongations;
+#ifdef _GAZEBO_TRIPOD_USES_IKIN_
+    Vector ypr(3);
+    ypr[0]=0.0;
+    ypr[1]=-(M_PI/180.0)*sim[2];
+    ypr[2]=-(M_PI/180.0)*sim[1];
+
+    Matrix H=SE3inv(_baseTransformation)*ypr2dcm(ypr);
+    Vector axis=dcm2axis(H);
+    return solver.ikin(sim[0],axis,client);
+#else
+    client=m_referenceElongations;
     return true;
+#endif
 }
 
 bool GazeboTripodMotionControl::extractGroup(Bottle &input, Bottle &out, const std::string &key1, const std::string &txt, int size)
@@ -178,7 +208,11 @@ bool GazeboTripodMotionControl::close()
     std::cout << "Closing device " << deviceName  << std::endl;
     //unbinding events
     if (this->m_updateConnection.get()) {
+#if (GAZEBO_MAJOR_VERSION >= 9)
+        this->m_updateConnection.reset();
+#else
         gazebo::event::Events::DisconnectWorldUpdateBegin (this->m_updateConnection);
+#endif
         this->m_updateConnection = gazebo::event::ConnectionPtr();
     }
 
@@ -197,7 +231,11 @@ bool GazeboTripodMotionControl::gazebo_init()
     assert(m_robot);
     if (!m_robot) return false;
 
+#if (GAZEBO_MAJOR_VERSION >= 9)
+     this->m_robotRefreshPeriod = (unsigned)(this->m_robot->GetWorld()->Physics()->GetUpdatePeriod() * 1000.0);
+#else
     this->m_robotRefreshPeriod = (unsigned)(this->m_robot->GetWorld()->GetPhysicsEngine()->GetUpdatePeriod() * 1000.0);
+#endif
     if (!setJointNames()) return false;
 
     m_numberOfJoints = m_jointNames.size();
@@ -212,6 +250,7 @@ bool GazeboTripodMotionControl::gazebo_init()
     m_torques.resize(m_numberOfJoints); m_torques.zero();
     m_trajectoryGenerationReferenceSpeed.resize(m_numberOfJoints);
     m_referencePositions.resize(m_numberOfJoints);
+    m_decoded_elong.resize(m_numberOfJoints);
     m_oldReferencePositions.resize(m_numberOfJoints);
     m_referenceElongations.resize(m_numberOfJoints);
     m_trajectoryGenerationReferencePosition.resize(m_numberOfJoints);
@@ -239,6 +278,7 @@ bool GazeboTripodMotionControl::gazebo_init()
     m_velocities.zero();
     m_trajectoryGenerationReferenceSpeed.zero();
     m_referencePositions.zero();
+    m_decoded_elong.zero();
     m_referenceElongations.zero();
     m_trajectoryGenerationReferencePosition.zero();
     m_trajectoryGenerationReferenceAcceleraton.zero();
@@ -281,7 +321,11 @@ bool GazeboTripodMotionControl::gazebo_init()
     gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboTripodMotionControl::onUpdate, this, _1));
 
     m_gazeboNode = gazebo::transport::NodePtr(new gazebo::transport::Node);
+    #if (GAZEBO_MAJOR_VERSION >= 9)
+    m_gazeboNode->Init(this->m_robot->GetWorld()->Name());
+    #else
     m_gazeboNode->Init(this->m_robot->GetWorld()->GetName());
+    #endif
     m_jointCommandPublisher = m_gazeboNode->Advertise<gazebo::msgs::JointCmd>(std::string("~/") + this->m_robot->GetName() + "/joint_cmd");
 
     _T_controller = 1;
@@ -412,7 +456,11 @@ void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info
     // Sensing position & torque
     for (unsigned int jnt_cnt = 0; jnt_cnt < m_jointPointers.size(); jnt_cnt++) {
     //TODO: consider multi-dof joint ?
+        #if (GAZEBO_MAJOR_VERSION >= 9)
+        m_positions[jnt_cnt] = convertGazeboToUser(jnt_cnt, m_jointPointers[jnt_cnt]->Position(0));
+        #else
         m_positions[jnt_cnt] = convertGazeboToUser(jnt_cnt, m_jointPointers[jnt_cnt]->GetAngle(0));
+        #endif
         m_velocities[jnt_cnt] = convertGazeboToUser(jnt_cnt, m_jointPointers[jnt_cnt]->GetVelocity(0));
         m_torques[jnt_cnt] = m_jointPointers[jnt_cnt]->GetForce(0u);
     }
@@ -443,8 +491,8 @@ void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info
             if (m_clock % _T_controller == 0) {
                 sendTorqueToGazebo(j, m_referenceTorques[j]);
             }
-        } else if (m_controlMode[j] == VOCAB_CM_OPENLOOP) {
-            //OpenLoop control sends torques to gazebo at this moment.
+        } else if (m_controlMode[j] == VOCAB_CM_PWM) {
+            //PWM control sends torques to gazebo at this moment.
             //Check if gazebo implements a "motor" entity and change the code accordingly.
             if (m_clock % _T_controller == 0) {
                 sendTorqueToGazebo(j, m_referenceTorques[j]);
@@ -459,15 +507,25 @@ void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info
             }
         }
     }
-    tripod_Sim2client(m_last_measJointPos, m_last_motorElongat);
+
+    // calling 'tripod_Sim2client' function here somehow messes-up with 
+    // the movement of the plugins, both elongations and user-space. 
+    // TODO: This has to be investigate further.
+    //
+    // tripod_Sim2client(tmp, m_decoded_elong);
 }
 
 void GazeboTripodMotionControl::setMinMaxPos()
 {
     for(unsigned int i = 0; i < m_numberOfJoints; ++i)
     {
+        #if (GAZEBO_MAJOR_VERSION >= 9)
+        m_jointLimits[i].max = convertGazeboToUser(i, m_jointPointers[i]->UpperLimit(0));
+        m_jointLimits[i].min = convertGazeboToUser(i, m_jointPointers[i]->LowerLimit(0));
+        #else
         m_jointLimits[i].max = convertGazeboToUser(i, m_jointPointers[i]->GetUpperLimit(0));
         m_jointLimits[i].min = convertGazeboToUser(i, m_jointPointers[i]->GetLowerLimit(0));
+        #endif
    }
 }
 
@@ -730,7 +788,7 @@ void GazeboTripodMotionControl::sendImpPositionsToGazebo ( Vector &dess )
         sendImpPositionToGazebo(i, dess[i]);
 }
 
-double GazeboTripodMotionControl::convertGazeboToUser(int joint, gazebo::math::Angle value)
+double GazeboTripodMotionControl::convertGazeboToUser(int joint, ignition::math::Angle value)
 {
     double newValue = 0;
     switch(m_jointTypes[joint])
@@ -898,6 +956,16 @@ bool GazeboTripodMotionControl::getTorques(double *t)
     return ret;
 }
 
+bool GazeboTripodMotionControl::getTorqueRange(int j, double *min, double *max)
+{
+	return NOT_YET_IMPLEMENTED("getTorqueRange");
+}
+
+bool GazeboTripodMotionControl::getTorqueRanges(double *min, double *max)
+{
+    return NOT_YET_IMPLEMENTED("getTorqueRanges");
+}
+
 bool GazeboTripodMotionControl::getRefTorque(int j, double* t)
 {
     if (t && j >= 0 && j < (int)m_numberOfJoints) {
@@ -1004,23 +1072,33 @@ bool GazeboTripodMotionControl::setTorqueMode()
     return ret;
 }
 
-bool GazeboTripodMotionControl::setTorquePid(int joint, const Pid &pid){return NOT_YET_IMPLEMENTED("setTorquePid");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::setTorquePids(const Pid *newPids){return NOT_YET_IMPLEMENTED("setTorquePids");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorquePid(int joint, Pid *pid){return NOT_YET_IMPLEMENTED("getTorquePid");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorquePids(Pid *pids) {return NOT_YET_IMPLEMENTED("getTorquePids");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueRange(int, double*, double *){return NOT_YET_IMPLEMENTED("getTorqueRange");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueRanges(double *, double *){return NOT_YET_IMPLEMENTED("getTorqueRanges");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::setTorqueErrorLimit(int , double ){return NOT_YET_IMPLEMENTED("setTorqueErrorLimit");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::setTorqueErrorLimits(const double *){return NOT_YET_IMPLEMENTED("setTorqueErrorLimits");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueError(int , double *){return NOT_YET_IMPLEMENTED("getTorqueError");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueErrors(double *){return NOT_YET_IMPLEMENTED("getTorqueErrors");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorquePidOutput(int , double *){return NOT_YET_IMPLEMENTED("getTorquePidOutput");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorquePidOutputs(double *){return NOT_YET_IMPLEMENTED("getTorquePidOutputs");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueErrorLimit(int , double *){return NOT_YET_IMPLEMENTED("getTorqueErrorLimit");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::getTorqueErrorLimits(double *){return NOT_YET_IMPLEMENTED("getTorqueErrorLimits");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::resetTorquePid(int ){return NOT_YET_IMPLEMENTED("resetTorquePid");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::disableTorquePid(int ){return NOT_YET_IMPLEMENTED("disableTorquePid");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::enableTorquePid(int ){return NOT_YET_IMPLEMENTED("enableTorquePid");} //NOT IMPLEMENTED
-bool GazeboTripodMotionControl::setTorqueOffset(int , double ){return NOT_YET_IMPLEMENTED("setTorqueOffset");} //NOT IMPLEMENTED
 bool GazeboTripodMotionControl::getBemfParam(int , double *){return NOT_YET_IMPLEMENTED("getBemfParam");} //NOT IMPLEMENTED
 bool GazeboTripodMotionControl::setBemfParam(int , double ){return NOT_YET_IMPLEMENTED("getBemfParam");} //NOT IMPLEMENTED
+
+/***************************************/
+/*
+ * IPidControl Interface methods
+ */
+ bool GazeboTripodMotionControl::setPid(const PidControlTypeEnum& pidtype, int j, const Pid &pid)                        {return NOT_YET_IMPLEMENTED("setPid");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPids(const PidControlTypeEnum& pidtype, const Pid *pids)                             {return NOT_YET_IMPLEMENTED("setPids");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPidReference(const PidControlTypeEnum& pidtype, int j, double ref)                   {return NOT_YET_IMPLEMENTED("setPidReference");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPidReferences(const PidControlTypeEnum& pidtype, const double *refs)                 {return NOT_YET_IMPLEMENTED("setPidReferences");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPidErrorLimit(const PidControlTypeEnum& pidtype, int j, double limit)                {return NOT_YET_IMPLEMENTED("setPidErrorLimit");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPidErrorLimits(const PidControlTypeEnum& pidtype, const double *limits)              {return NOT_YET_IMPLEMENTED("setPidErrorLimits");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidError(const PidControlTypeEnum& pidtype, int j, double *err)                      {return NOT_YET_IMPLEMENTED("getPidError");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidErrors(const PidControlTypeEnum& pidtype, double *errs)                           {return NOT_YET_IMPLEMENTED("getPidErrors");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidOutput(const PidControlTypeEnum& pidtype, int j, double *out)                     {return NOT_YET_IMPLEMENTED("getPidOutput");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidOutputs(const PidControlTypeEnum& pidtype, double *outs)                          {return NOT_YET_IMPLEMENTED("getPidOutputs");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPid(const PidControlTypeEnum& pidtype, int j, Pid *pid)                              {return NOT_YET_IMPLEMENTED("getPid");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPids(const PidControlTypeEnum& pidtype, Pid *pids)                                   {return NOT_YET_IMPLEMENTED("getPids");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidReference(const PidControlTypeEnum& pidtype, int j, double *ref)                  {return NOT_YET_IMPLEMENTED("getPidReference");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidReferences(const PidControlTypeEnum& pidtype, double *refs)                       {return NOT_YET_IMPLEMENTED("getPidReferences");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidErrorLimit(const PidControlTypeEnum& pidtype, int j, double *limit)               {return NOT_YET_IMPLEMENTED("getPidErrorLimit");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::getPidErrorLimits(const PidControlTypeEnum& pidtype, double *limits)                    {return NOT_YET_IMPLEMENTED("getPidErrorLimits");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::resetPid(const PidControlTypeEnum& pidtype, int j)                                      {return NOT_YET_IMPLEMENTED("resetPid");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::disablePid(const PidControlTypeEnum& pidtype, int j)                                    {return NOT_YET_IMPLEMENTED("disablePid");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::enablePid(const PidControlTypeEnum& pidtype, int j)                                     {return NOT_YET_IMPLEMENTED("enablePid");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::setPidOffset(const PidControlTypeEnum& pidtype, int j, double v)                        {return NOT_YET_IMPLEMENTED("setPidOffset");} //NOT IMPLEMENTED
+ bool GazeboTripodMotionControl::isPidEnabled(const PidControlTypeEnum& pidtype, int j, bool* enabled)                   {return NOT_YET_IMPLEMENTED("isPidEnabled");} //NOT IMPLEMENTED
+
+

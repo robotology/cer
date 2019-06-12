@@ -16,6 +16,7 @@
 */
 
 #include <string>
+#include <vector>
 #include <algorithm>
 
 #include <yarp/os/all.h>
@@ -36,100 +37,58 @@ using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace cer::kinematics;
 
+// forward declaration
+class Controller;
 
 /****************************************************************/
-class Controller : public RFModule, public PortReader
+class TargetPort : public BufferedPort<Property>
 {
-    PolyDriver         drivers[4];
-    VectorOf<int>      jointsIndexes[4];
-    IControlMode2*     imod[4];
-    IEncodersTimed*    ienc[4];
-    IPositionControl2* ipos[4];
-    IPositionDirect*   iposd[4];
+    Controller *ctrl;
+
+    /****************************************************************/
+    void onRead(Property &request);
+
+public:
+    /****************************************************************/
+    TargetPort() : ctrl(NULL) { }
+
+    /****************************************************************/
+    void setController(Controller *ctrl) { this->ctrl=ctrl; }
+};
+
+
+/****************************************************************/
+class Controller : public RFModule
+{
+    PolyDriver        drivers[4];
+    vector<int>       jointsIndexes[4];
+    IControlMode*     imod[4];
+    IEncodersTimed*   ienc[4];
+    IPositionControl* ipos[4];
+    IPositionDirect*  iposd[4];
     
-    VectorOf<int> posDirectMode;
-    VectorOf<int> curMode;
+    vector<int> posDirectMode;
+    vector<int> curMode;
 
     ArmSolver solver;
     minJerkTrajGen* gen;
     
     BufferedPort<Vector> statePort;
-    Port targetPort;
+    TargetPort targetPort;
     RpcServer rpcPort;
     RpcClient solverPort;
     Stamp txInfo;
 
     Mutex mutex;
-    string orientation_type;
     int verbosity;
     bool closing;
     bool controlling;
     double stop_threshold_revolute;
     double stop_threshold_prismatic;
     double Ts;
-    Vector qd;    
 
-    /****************************************************************/
-    bool read(ConnectionReader &connection)
-    {
-        Property target;
-        target.read(connection);
-
-        if (closing)
-            return true;
-
-        if (verbosity>0)
-            yInfo("Received target request: %s",target.toString().c_str());
-
-        if (!target.check("q"))
-        {
-            Vector q=getEncoders();
-            Bottle b; b.addList().read(q);
-            target.put("q",b.get(0));
-        }
-
-        if (verbosity>0)
-            yInfo("Forwarding request to solver: %s",target.toString().c_str());
-
-        Bottle reply;
-        bool latch_controlling=controlling;
-        if (solverPort.write(target,reply))
-        {
-            if (verbosity>0)
-                yInfo("Received reply from solver: %s",reply.toString().c_str());
-
-            if (reply.get(0).asVocab()==Vocab::encode("ack"))
-            {
-                if (reply.size()>1)
-                {
-                    if (Bottle *payLoad=reply.get(1).asList())
-                    {
-                        LockGuard lg(mutex);
-                        // process only if we didn't receive
-                        // a stop request in the meanwhile
-                        if (controlling==latch_controlling)
-                        {
-                            for (size_t i=0; i<qd.length(); i++)
-                                qd[i]=payLoad->get(i).asDouble();
-
-                            if (!controlling)
-                                gen->init(getEncoders());
-                            
-                            controlling=true;
-                            if (verbosity>0)
-                                yInfo("Going to: %s",qd.toString(3,3).c_str());
-                        }
-                    }
-                }
-            }
-            else
-                yError("Malformed target type!");
-        }
-        else
-            yError("Unable to communicate with the solver");
-
-        return true;
-    }
+    Bottle target;
+    Vector qd,xd;
 
     /****************************************************************/
     Vector getEncoders(double *timeStamp=NULL)
@@ -165,10 +124,10 @@ class Controller : public RFModule, public PortReader
     /****************************************************************/
     void getCurrentMode()
     {
-        imod[0]->getControlModes(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&curMode[0]);
-        imod[1]->getControlModes(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&curMode[3]);
-        imod[2]->getControlModes(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&curMode[4]);
-        imod[3]->getControlModes(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&curMode[9]);
+        imod[0]->getControlModes((int)jointsIndexes[0].size(),jointsIndexes[0].data(),&curMode[0]);
+        imod[1]->getControlModes((int)jointsIndexes[1].size(),jointsIndexes[1].data(),&curMode[3]);
+        imod[2]->getControlModes((int)jointsIndexes[2].size(),jointsIndexes[2].data(),&curMode[4]);
+        imod[3]->getControlModes((int)jointsIndexes[3].size(),jointsIndexes[3].data(),&curMode[9]);
     }
 
     /****************************************************************/
@@ -187,7 +146,7 @@ class Controller : public RFModule, public PortReader
         {
             if (curMode[i]!=posDirectMode[i])
             {
-                imod[0]->setControlModes(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&posDirectMode[0]);
+                imod[0]->setControlModes((int)jointsIndexes[0].size(),jointsIndexes[0].data(),&posDirectMode[0]);
                 break;
             }
         }
@@ -196,7 +155,7 @@ class Controller : public RFModule, public PortReader
         {
             if (curMode[i]!=posDirectMode[i])
             {
-                imod[1]->setControlModes(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&posDirectMode[3]);
+                imod[1]->setControlModes((int)jointsIndexes[1].size(),jointsIndexes[1].data(),&posDirectMode[3]);
                 break;
             }
         }
@@ -205,7 +164,7 @@ class Controller : public RFModule, public PortReader
         {
             if (curMode[i]!=posDirectMode[i])
             {
-                imod[2]->setControlModes(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&posDirectMode[4]);
+                imod[2]->setControlModes((int)jointsIndexes[2].size(),jointsIndexes[2].data(),&posDirectMode[4]);
                 break;
             }
         }
@@ -214,7 +173,7 @@ class Controller : public RFModule, public PortReader
         {
             if (curMode[i]!=posDirectMode[i])
             {
-                imod[3]->setControlModes(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&posDirectMode[9]);
+                imod[3]->setControlModes((int)jointsIndexes[3].size(),jointsIndexes[3].data(),&posDirectMode[9]);
                 break;
             }
         }
@@ -226,7 +185,7 @@ class Controller : public RFModule, public PortReader
     void stopControl()
     {        
         for (int i=0; i<4; i++)
-            ipos[i]->stop(jointsIndexes[i].size(),jointsIndexes[i].getFirst());
+            ipos[i]->stop((int)jointsIndexes[i].size(),jointsIndexes[i].data());
         controlling=false;
     }
 
@@ -239,9 +198,33 @@ class Controller : public RFModule, public PortReader
                (norm(e_prismatic)<stop_threshold_prismatic);
     }
 
+    /****************************************************************/
+    Property prepareSolverOptions(const string &key, const Value &val)
+    {
+        Bottle b;
+        Bottle &payLoad=b.addList().addList();
+        payLoad.addString(key);
+        payLoad.add(val);
+
+        Property option;
+        option.put("parameters",b.get(0));
+
+        return option;
+    }
+
+    /****************************************************************/
+    Value parseSolverOptions(const Bottle &rep, const string &key)
+    {
+        Value val;
+        if (Bottle *payLoad=rep.find("parameters").asList())
+            val=payLoad->find(key);
+
+        return val;
+    }
+
 public:
     /****************************************************************/
-    Controller() : gen(NULL)
+    Controller() : gen(NULL), closing(false), controlling(false)
     {
     }
 
@@ -250,10 +233,9 @@ public:
     {
         string robot=rf.check("robot",Value("cer")).asString();
         string arm_type=rf.check("arm-type",Value("left")).asString();
-        orientation_type=rf.check("orientation-type",Value("axis-angle")).asString();
         verbosity=rf.check("verbosity",Value(0)).asInt();
-        stop_threshold_revolute=rf.check("stop-threshold-revolute",Value(0.01)).asDouble();
-        stop_threshold_prismatic=rf.check("stop-threshold-prismatic",Value(0.0001)).asDouble();
+        stop_threshold_revolute=rf.check("stop-threshold-revolute",Value(2.0)).asDouble();
+        stop_threshold_prismatic=rf.check("stop-threshold-prismatic",Value(0.002)).asDouble();
         double T=rf.check("T",Value(2.0)).asDouble();
         Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
         Ts=std::max(Ts,MIN_TS);
@@ -261,48 +243,48 @@ public:
         Property option;
 
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/torso_tripod").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso_tripod").c_str());
+        option.put("remote","/"+robot+"/torso_tripod");
+        option.put("local","/cer_reaching-controller/"+arm_type+"/torso_tripod");
         option.put("writeStrict","on");
         if (!drivers[0].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/torso_tripod").c_str());
+            yError("Unable to connect to %s",string("/"+robot+"/torso_tripod").c_str());
             close();
             return false;
         }
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/torso").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/torso").c_str());
+        option.put("remote","/"+robot+"/torso");
+        option.put("local","/cer_reaching-controller/"+arm_type+"/torso");
         option.put("writeStrict","on");
         if (!drivers[1].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/torso").c_str());
+            yError("Unable to connect to %s",string("/"+robot+"/torso").c_str());
             close();
             return false;
         }
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/"+arm_type+"_arm").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_arm").c_str());
+        option.put("remote","/"+robot+"/"+arm_type+"_arm");
+        option.put("local","/cer_reaching-controller/"+arm_type+"/"+arm_type+"_arm");
         option.put("writeStrict","on");
         if (!drivers[2].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_arm").c_str());
+            yError("Unable to connect to %s",string("/"+robot+"/"+arm_type+"_arm").c_str());
             close();
             return false;
         }
 
         option.clear();
         option.put("device","remote_controlboard");
-        option.put("remote",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
-        option.put("local",("/cer_reaching-controller/"+arm_type+"/"+arm_type+"_wrist_tripod").c_str());
+        option.put("remote","/"+robot+"/"+arm_type+"_wrist_tripod");
+        option.put("local","/cer_reaching-controller/"+arm_type+"/"+arm_type+"_wrist_tripod");
         option.put("writeStrict","on");
         if (!drivers[3].open(option))
         {
-            yError("Unable to connect to %s",("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
+            yError("Unable to connect to %s",string("/"+robot+"/"+arm_type+"_wrist_tripod").c_str());
             close();
             return false;
         }
@@ -335,24 +317,25 @@ public:
         jointsIndexes[3].push_back(1);
         jointsIndexes[3].push_back(2);
 
-        statePort.open(("/cer_reaching-controller/"+arm_type+"/state:o").c_str());
-        solverPort.open(("/cer_reaching-controller/"+arm_type+"/solver:rpc").c_str());
+        statePort.open("/cer_reaching-controller/"+arm_type+"/state:o");
+        solverPort.open("/cer_reaching-controller/"+arm_type+"/solver:rpc");
 
-        targetPort.open(("/cer_reaching-controller/"+arm_type+"/target:i").c_str());
-        targetPort.setReader(*this);
+        targetPort.open("/cer_reaching-controller/"+arm_type+"/target:i");
+        targetPort.setController(this);
+        targetPort.useCallback();
 
-        rpcPort.open(("/cer_reaching-controller/"+arm_type+"/rpc").c_str());
+        rpcPort.open("/cer_reaching-controller/"+arm_type+"/rpc");
         attach(rpcPort);
 
-        transform(orientation_type.begin(),orientation_type.end(),
-                  orientation_type.begin(),::tolower);
-        if ((orientation_type!="axis-angle") && (orientation_type!="rpy"))
-        {
-            yWarning("Unrecognized Orientation Type \"%s\"",orientation_type.c_str());
-            orientation_type="axis-angle";
-        }
-        yInfo("Orientation Type is \"%s\"",orientation_type.c_str()); 
-        
+        // prepare target bottle
+        Bottle &payLoadJoints=target.addList();
+        payLoadJoints.addString("q");
+        payLoadJoints.addList();
+
+        Bottle &payLoadPose=target.addList();
+        payLoadPose.addString("x");
+        payLoadPose.addList();
+
         qd=getEncoders();
         for (size_t i=0; i<qd.length(); i++)
             posDirectMode.push_back(VOCAB_CM_POSITION_DIRECT);
@@ -364,8 +347,7 @@ public:
         arm.upper_arm.setAllConstraints(false);
         solver.setArmParameters(arm);
 
-        gen=new minJerkTrajGen(qd,Ts,T);
-        closing=controlling=false;        
+        gen=new minJerkTrajGen(qd,Ts,T);        
 
         return true;
     }
@@ -378,7 +360,7 @@ public:
         if (controlling)
             stopControl();
 
-        if (targetPort.isOpen())
+        if (!targetPort.isClosed())
             targetPort.close(); 
 
         if (!statePort.isClosed())
@@ -405,6 +387,124 @@ public:
     }
 
     /****************************************************************/
+    bool go(Property &request)
+    {
+        if (closing)
+            return false;
+
+        if (verbosity>0)
+            yInfo("Received [go] request: %s",request.toString().c_str());
+
+        if (request.check("stop"))
+        {
+            LockGuard lg(mutex);
+            stopControl();
+            return true;
+        }
+
+        if (!request.check("q"))
+        {
+            Vector q=getEncoders();
+            Bottle b; b.addList().read(q);
+            request.put("q",b.get(0));
+        }
+
+        if (verbosity>0)
+            yInfo("Forwarding request to solver: %s",request.toString().c_str());
+
+        Bottle reply;
+        bool latch_controlling=controlling;
+        if (solverPort.write(request,reply))
+        {
+            if (verbosity>0)
+                yInfo("Received reply from solver: %s",reply.toString().c_str());
+
+            if (reply.get(0).asVocab()==Vocab::encode("ack"))
+            {
+                if ((reply.size()>1) && !reply.check("parameters"))
+                {
+                    Bottle *payLoadJoints=reply.find("q").asList();
+                    Bottle *payLoadPose=reply.find("x").asList();
+
+                    if ((payLoadJoints!=NULL) && (payLoadPose!=NULL))
+                    {
+                        LockGuard lg(mutex);
+                        // process only if we didn't receive
+                        // a stop request in the meanwhile
+                        if (controlling==latch_controlling)
+                        {
+                            for (size_t i=0; i<qd.length(); i++)
+                                qd[i]=payLoadJoints->get(i).asDouble();
+
+                            if (xd.length()==0)
+                                xd.resize((size_t)payLoadPose->size());
+
+                            for (size_t i=0; i<xd.length(); i++)
+                                xd[i]=payLoadPose->get(i).asDouble();
+
+                            target=reply.tail();
+
+                            if (!controlling)
+                                gen->init(getEncoders());
+
+                            controlling=true;
+                            if (verbosity>0)
+                                yInfo("Going to: %s",qd.toString(3,3).c_str());
+                        }
+                    }
+                }
+
+                return true;
+            }
+            else
+                yError("Malformed target type!");
+        }
+        else
+            yError("Unable to communicate with the solver");
+
+        return false;
+    }
+
+    /****************************************************************/
+    bool ask(Property &request, Bottle &reply)
+    {
+        if (closing)
+            return false;
+
+        if (verbosity>0)
+            yInfo("Received [ask] request: %s",request.toString().c_str());
+
+        if (!request.check("q"))
+        {
+            Vector q=getEncoders();
+            Bottle b; b.addList().read(q);
+            request.put("q",b.get(0));
+        }
+
+        if (verbosity>0)
+            yInfo("Forwarding request to solver: %s",request.toString().c_str());
+
+        reply.clear();
+        if (solverPort.write(request,reply))
+        {
+            if (verbosity>0)
+                yInfo("Received reply from solver: %s",reply.toString().c_str());
+
+            if (reply.get(0).asVocab()==Vocab::encode("ack"))
+            {
+                reply=reply.tail();
+                return true;
+            }
+            else
+                yError("Malformed target type!");
+        }
+        else
+            yError("Unable to communicate with the solver");
+
+        return false;
+    }
+
+    /****************************************************************/
     bool updateModule()
     {
         LockGuard lg(mutex);
@@ -412,12 +512,13 @@ public:
 
         Matrix Hee;
         double timeStamp;
-        solver.fkin(getEncoders(&timeStamp),Hee);
+        Vector q=getEncoders(&timeStamp);
+        solver.fkin(q,Hee);
 
         Vector &pose=statePort.prepare();
         pose=Hee.getCol(3).subVector(0,2);
 
-        Vector oee=(orientation_type=="rpy"?dcm2rpy(Hee):dcm2axis(Hee));
+        Vector oee=dcm2axis(Hee);
         pose=cat(pose,oee);
 
         if (timeStamp>=0.0)
@@ -426,7 +527,7 @@ public:
             txInfo.update();
 
         statePort.setEnvelope(txInfo);
-        statePort.write();
+        statePort.writeStrict();
 
         if (controlling)
         {
@@ -439,16 +540,16 @@ public:
             if (areJointsHealthy())
             {
                 setPositionDirectMode(); 
-                iposd[0]->setPositions(jointsIndexes[0].size(),jointsIndexes[0].getFirst(),&ref[0]);
-                iposd[1]->setPositions(jointsIndexes[1].size(),jointsIndexes[1].getFirst(),&ref[3]);
-                iposd[2]->setPositions(jointsIndexes[2].size(),jointsIndexes[2].getFirst(),&ref[4]);
-                iposd[3]->setPositions(jointsIndexes[3].size(),jointsIndexes[3].getFirst(),&ref[9]);
+                iposd[0]->setPositions((int)jointsIndexes[0].size(),jointsIndexes[0].data(),&ref[0]);
+                iposd[1]->setPositions((int)jointsIndexes[1].size(),jointsIndexes[1].data(),&ref[3]);
+                iposd[2]->setPositions((int)jointsIndexes[2].size(),jointsIndexes[2].data(),&ref[4]);
+                iposd[3]->setPositions((int)jointsIndexes[3].size(),jointsIndexes[3].data(),&ref[9]);
 
-                if (dist(qd-ref))
+                if (dist(qd-q))
                 {
                     controlling=false;
                     if (verbosity>0)
-                        yInfo("Just stopped at: %s",ref.toString(3,3).c_str());
+                        yInfo("Just stopped at: %s",q.toString(3,3).c_str());
                 }
             }
             else
@@ -464,30 +565,78 @@ public:
     /****************************************************************/
     bool respond(const Bottle &cmd, Bottle &reply)
     {
-        LockGuard lg(mutex);
         int cmd_0=cmd.get(0).asVocab();
-
         if (cmd.size()==3)
         {
             if (cmd_0==Vocab::encode("set"))
             {
-                int cmd_1=cmd.get(1).asVocab();
-                if (cmd_1==Vocab::encode("T"))
+                string cmd_1=cmd.get(1).asString();
+                if (cmd_1=="T")
                 {
+                    mutex.lock();
                     gen->setT(cmd.get(2).asDouble());
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (cmd_1==Vocab::encode("Ts"))
+                else if (cmd_1=="Ts")
                 {
                     Ts=cmd.get(2).asDouble();
                     Ts=std::max(Ts,MIN_TS);
+
+                    mutex.lock();
                     gen->setTs(Ts);
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
                 }
-                else if (cmd_1==Vocab::encode("verbosity"))
+                else if (cmd_1=="verbosity")
                 {
+                    mutex.lock();
                     verbosity=cmd.get(2).asInt();
+                    mutex.unlock();
+
                     reply.addVocab(Vocab::encode("ack"));
+                }
+                else if (cmd_1=="mode")
+                {
+                    Value mode(cmd.get(2).asString());
+                    Property p=prepareSolverOptions("mode",mode);
+
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+                else if (cmd_1=="torso_heave")
+                {
+                    Value torso_heave(cmd.get(2).asDouble());
+                    Property p=prepareSolverOptions("torso_heave",torso_heave);
+
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+                else if (cmd_1=="lower_arm_heave")
+                {
+                    Value lower_arm_heave(cmd.get(2).asDouble());
+                    Property p=prepareSolverOptions("lower_arm_heave",lower_arm_heave);
+
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+                else if (cmd_1=="tol")
+                {
+                    Value tol(cmd.get(2).asDouble());
+                    Property p=prepareSolverOptions("tol",tol);
+
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+                else if (cmd_1=="constr_tol")
+                {
+                    Value constr_tol(cmd.get(2).asDouble());
+                    Property p=prepareSolverOptions("constr_tol",constr_tol);
+
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
                 }
             }
         }
@@ -495,27 +644,132 @@ public:
         {
             if (cmd_0==Vocab::encode("get"))
             {
-                int cmd_1=cmd.get(1).asVocab();
-                if (cmd_1==Vocab::encode("T"))
+                string cmd_1=cmd.get(1).asString();
+                if (cmd_1=="done")
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
+                    reply.addInt(controlling?0:1);
+                    mutex.unlock();
+                }
+                else if (cmd_1=="target")
+                {
+                    reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
+                    reply.addList()=target;
+                    mutex.unlock();
+                }
+                else if (cmd_1=="T")
+                {
+                    reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addDouble(gen->getT());
+                    mutex.unlock();
                 }
-                else if (cmd_1==Vocab::encode("Ts"))
+                else if (cmd_1=="Ts")
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addDouble(Ts);
+                    mutex.unlock();
                 }
-                else if (cmd_1==Vocab::encode("verbosity"))
+                else if (cmd_1=="verbosity")
                 {
                     reply.addVocab(Vocab::encode("ack"));
+
+                    mutex.lock();
                     reply.addInt(verbosity);
+                    mutex.unlock();
+                }
+                else if (cmd_1=="mode")
+                {
+                    Bottle req,rep;
+                    req.addList().addString("get");
+                    if (solverPort.write(req,rep))
+                    {
+                        Value mode=parseSolverOptions(rep,"mode");
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.add(mode);
+                    }
+                }
+                else if (cmd_1=="torso_heave")
+                {
+                    Bottle req,rep;
+                    req.addList().addString("get");
+                    if (solverPort.write(req,rep))
+                    {
+                        Value torso_heave=parseSolverOptions(rep,"torso_heave");
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.add(torso_heave);
+                    }
+                }
+                else if (cmd_1=="lower_arm_heave")
+                {
+                    Bottle req,rep;
+                    req.addList().addString("get");
+                    if (solverPort.write(req,rep))
+                    {
+                        Value lower_arm_heave=parseSolverOptions(rep,"lower_arm_heave");
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.add(lower_arm_heave);
+                    }
+                }
+                else if (cmd_1=="tol")
+                {
+                    Bottle req,rep;
+                    req.addList().addString("get");
+                    if (solverPort.write(req,rep))
+                    {
+                        Value tol=parseSolverOptions(rep,"tol");
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.add(tol);
+                    }
+                }
+                else if (cmd_1=="constr_tol")
+                {
+                    Bottle req,rep;
+                    req.addList().addString("get");
+                    if (solverPort.write(req,rep))
+                    {
+                        Value constr_tol=parseSolverOptions(rep,"constr_tol");
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.add(constr_tol);
+                    }
+                }
+            }
+            else if (cmd_0==Vocab::encode("go"))
+            {
+                if (Bottle *b=cmd.get(1).asList())
+                {
+                    Property p(b->toString().c_str());
+                    if (go(p))
+                        reply.addVocab(Vocab::encode("ack"));
+                }
+            }
+            else if (cmd_0==Vocab::encode("ask"))
+            {
+                if (Bottle *b=cmd.get(1).asList())
+                {
+                    Property p(b->toString().c_str());
+                    Bottle payLoad;
+                    if (ask(p,payLoad))
+                    {
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.append(payLoad);
+                    }
                 }
             }
         }
         else if (cmd_0==Vocab::encode("stop"))
         {
+            mutex.lock();
             stopControl();
+            mutex.unlock();
+
             reply.addVocab(Vocab::encode("ack"));
         }
 
@@ -525,6 +779,14 @@ public:
         return true;
     }
 };
+
+
+/****************************************************************/
+void TargetPort::onRead(Property &request)
+{
+    if (ctrl!=NULL)
+        ctrl->go(request);
+}
 
 
 /****************************************************************/

@@ -36,8 +36,8 @@ public:
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
         n=x0.length();
-        m=1+1+1;
-        nnz_jac_g=3+3+n;
+        m=1+1+1+1;
+        nnz_jac_g=3+3+n+2;
         nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
 
@@ -75,6 +75,7 @@ public:
         g_l[0]=torso.cos_alpha_max;     g_u[0]=1.0;
         g_l[1]=lower_arm.cos_alpha_max; g_u[1]=1.0;
         g_l[2]=g_u[2]=0.0;
+        g_l[3]=cover_shoulder_avoidance[1]; g_u[3]=std::numeric_limits<double>::max();
 
         latch_idx.clear();
         latch_gl.clear();
@@ -100,6 +101,7 @@ public:
         g[0]=din1.n[2];
         g[1]=din2.n[2];
         g[2]=norm2(xd-T.getCol(3).subVector(0,2));
+        g[3]=-cover_shoulder_avoidance[0]*x[4]+x[5];
 
         latch_x_verifying_alpha(n,x,g);
 
@@ -123,13 +125,17 @@ public:
             iRow[4]=1; jCol[4]=10;
             iRow[5]=1; jCol[5]=11;
 
-            // g[2]
+            // g[2] (reaching position)
             Ipopt::Index idx=6;
             for (Ipopt::Index col=0; col<n; col++)
             {
                 iRow[idx]=2; jCol[idx]=col;
                 idx++;
             }
+
+            // g[3] (cover constraints)
+            iRow[18]=3; jCol[18]=4;
+            iRow[19]=3; jCol[19]=5;
         }
         else
         {
@@ -173,12 +179,12 @@ public:
             values[5]=(d_fw.n[2]-din2.n[2])/drho;
             x_dx[11]=x[11];
 
-            // g[3] (init)
+            // g[2] (init)
             Vector e=xd-T.getCol(3).subVector(0,2);
             Vector e_fw;
             Matrix M;
 
-            // g[3] (torso)
+            // g[2] (torso)
             M=H*d2.T*TN;
 
             x_dx[0]=x[0]+drho;
@@ -199,12 +205,12 @@ public:
             values[8]=2.0*dot(e,e_fw-e)/drho;
             x_dx[2]=x[2];
 
-            // g[3] (upper_arm)
+            // g[2] (upper_arm)
             Vector grad=-2.0*(J_.submatrix(0,2,0,upper_arm.getDOF()-1).transposed()*e);
             for (size_t i=0; i<grad.length(); i++)
                 values[9+i]=grad[i];
 
-            // g[3] (lower_arm)
+            // g[2] (lower_arm)
             M=d1.T*H;
 
             x_dx[9]=x[9]+drho;
@@ -224,6 +230,10 @@ public:
             e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
             values[17]=2.0*dot(e,e_fw-e)/drho;
             x_dx[11]=x[11];
+
+            // g[3]
+            values[18]=-cover_shoulder_avoidance[0];
+            values[19]=1.0;
         }
 
         return true;
@@ -251,8 +261,8 @@ public:
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
         n=x0.length();
-        m=1+1+1;
-        nnz_jac_g=3+3+n;
+        m=1+1+1+1;
+        nnz_jac_g=3+3+n+2;
         nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
 
@@ -290,6 +300,7 @@ public:
         g_l[0]=torso.cos_alpha_max;     g_u[0]=1.0;
         g_l[1]=lower_arm.cos_alpha_max; g_u[1]=1.0;
         g_l[2]=g_u[2]=0.0;
+        g_l[3]=cover_shoulder_avoidance[1]; g_u[3]=std::numeric_limits<double>::max();
 
         latch_idx.clear();
         latch_gl.clear();
@@ -315,6 +326,7 @@ public:
         g[0]=din1.n[2];
         g[1]=din2.n[2];
         g[2]=norm2(xd-T.getCol(3).subVector(0,2));
+        g[3]=-cover_shoulder_avoidance[0]*x[4]+x[5];
 
         latch_x_verifying_alpha(n,x,g);
 
@@ -338,13 +350,17 @@ public:
             iRow[4]=1; jCol[4]=10;
             iRow[5]=1; jCol[5]=11;
 
-            // g[2]
+            // g[2] (reaching position)
             Ipopt::Index idx=6;
             for (Ipopt::Index col=0; col<n; col++)
             {
                 iRow[idx]=2; jCol[idx]=col;
                 idx++;
             }
+
+            // g[3] (cover constraints)
+            iRow[18]=3; jCol[18]=4;
+            iRow[19]=3; jCol[19]=5;
         }
         else
         {
@@ -400,12 +416,12 @@ public:
             values[5]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);
             x_dx[11]=x[11];
 
-            // g[3] (init)
+            // g[2] (init)
             Vector e=xd-T.getCol(3).subVector(0,2);
             Vector e_fw,e_bw;
             Matrix M;
 
-            // g[3] (torso)
+            // g[2] (torso)
             M=H*d2.T*TN;
 
             x_dx[0]=x[0]+drho;
@@ -435,12 +451,12 @@ public:
             values[8]=dot(e,e_fw-e_bw)/drho;
             x_dx[2]=x[2];
 
-            // g[3] (upper_arm)
+            // g[2] (upper_arm)
             Vector grad=-2.0*(J_.submatrix(0,2,0,upper_arm.getDOF()-1).transposed()*e);
             for (size_t i=0; i<grad.length(); i++)
                 values[9+i]=grad[i];
 
-            // g[3] (lower_arm)
+            // g[2] (lower_arm)
             M=d1.T*H;
 
             x_dx[9]=x[9]+drho;
@@ -469,6 +485,10 @@ public:
             e_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
             values[17]=dot(e,e_fw-e_bw)/drho;
             x_dx[11]=x[11];
+
+            // g[3]
+            values[18]=-cover_shoulder_avoidance[0];
+            values[19]=1.0;
         }
 
         return true;

@@ -94,23 +94,12 @@ public:
      * @param lll    the three elongations ([m]).
      * @param p      the computed 3d position of the platform center
      *               ([m]).
-     * @param u      the 3 components orientation (axis,angle) given
+     * @param u      the 4 components orientation (axis,angle) given
      *               in [rad].
      * @return true/false on success/failure.
      */
     virtual bool fkin(const yarp::sig::Vector &lll,
                       yarp::sig::Vector &p, yarp::sig::Vector &u);
-
-    /**
-     * Forward Kinematics Law.
-     * 
-     * @param lll    the three elongations ([m]).
-     * @param hpr    the computed heave ([m]), pitch ([deg]) and 
-     *               roll ([deg]).
-     * @return true/false on success/failure.
-     */
-    virtual bool fkin(const yarp::sig::Vector &lll,
-                      yarp::sig::Vector &hpr);
 
     /**
      * Forward Kinematics Law.
@@ -129,25 +118,13 @@ public:
      * (axis*angles). 
      * 
      * @param zd     desired heave ([m]).
-     * @param ud     the desired orientation given as 3 components 
+     * @param ud     the desired orientation given as 4 components 
      *               vector (axis,angle) expressed in [rad].
      * @param lll    the solved three elongations ([m]).
      * @return true/false on success/failure.
      */
     virtual bool ikin(const double zd, const yarp::sig::Vector &ud,
                       yarp::sig::Vector &lll, int *exit_code=NULL);
-
-    /**
-     * Inverse Kinematics Law with heave-pitch-roll.
-     * 
-     * @param hpr    the desired heave ([m]), pitch ([deg]) and roll
-     *               ([deg]) to solve for.
-     * @param lll    the solved three elongations ([m]).
-     * @return true/false on success/failure.
-     */
-    virtual bool ikin(const yarp::sig::Vector &hpr,
-                      yarp::sig::Vector &lll,
-                      int *exit_code=NULL);
 
     /**
      * Inverse Kinematics Law.
@@ -158,7 +135,8 @@ public:
      * @param exit_code pointer to solver's exit codes. 
      * @return true/false on success/failure.
      */
-    virtual bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &q,
+    virtual bool ikin(const yarp::sig::Matrix &Hd,
+                      yarp::sig::Vector &q,
                       int *exit_code=NULL);
 
     /**

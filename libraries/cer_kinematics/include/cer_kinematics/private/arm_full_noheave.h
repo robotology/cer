@@ -36,8 +36,8 @@ public:
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
         n=x0.length();
-        m=2+2+1;
-        nnz_jac_g=6+6+n;
+        m=2+2+1+1;
+        nnz_jac_g=6+6+n+2;
         nnz_h_lag=0;
         index_style=TNLP::C_STYLE;
 
@@ -79,6 +79,8 @@ public:
         g_l[3]=lower_arm.cos_alpha_max; g_u[3]=1.0;
 
         g_l[4]=g_u[4]=0.0;
+
+        g_l[5]=cover_shoulder_avoidance[1]; g_u[5]=std::numeric_limits<double>::max();
 
         latch_idx.clear();
         latch_gl.clear();
@@ -233,6 +235,8 @@ public:
 
         g[4]=norm2(xd-T.getCol(3).subVector(0,2));
 
+        g[5]=-cover_shoulder_avoidance[0]*x[4]+x[5];
+
         latch_x_verifying_alpha(n,x,g);
 
         return true;
@@ -265,13 +269,17 @@ public:
             iRow[10]=3; jCol[10]=10;
             iRow[11]=3; jCol[11]=11;
 
-            // g[4]
+            // g[4] (reaching position)
             Ipopt::Index idx=12;
             for (Ipopt::Index col=0; col<n; col++)
             {
                 iRow[idx]=4; jCol[idx]=col;
                 idx++;
             }
+
+            // g[5] (cover constraints)
+            iRow[24]=5; jCol[24]=4;
+            iRow[25]=5; jCol[25]=5;
         }
         else
         {
@@ -376,6 +384,10 @@ public:
             e_fw=xd-(M*d_fw.T*TN).getCol(3).subVector(0,2);
             values[23]=2.0*dot(e,e_fw-e)/drho;
             x_dx[11]=x[11];
+
+            // g[5]
+            values[24]=-cover_shoulder_avoidance[0];
+            values[25]=1.0;
         }
 
         return true;
@@ -513,13 +525,17 @@ public:
             iRow[10]=3; jCol[10]=10;
             iRow[11]=3; jCol[11]=11;
 
-            // g[4]
+            // g[4] (reaching position)
             Ipopt::Index idx=12;
             for (Ipopt::Index col=0; col<n; col++)
             {
                 iRow[idx]=4; jCol[idx]=col;
                 idx++;
             }
+
+            // g[5] (cover constraints)
+            iRow[24]=5; jCol[24]=4;
+            iRow[25]=5; jCol[25]=5;
         }
         else
         {
@@ -654,6 +670,10 @@ public:
             e_bw=xd-(M*d_bw.T*TN).getCol(3).subVector(0,2);
             values[23]=dot(e,e_fw-e_bw)/drho;
             x_dx[11]=x[11];
+
+            // g[5]
+            values[24]=-cover_shoulder_avoidance[0];
+            values[25]=1.0;
         }
 
         return true;

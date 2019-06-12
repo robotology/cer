@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE devices PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+<!DOCTYPE devices PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
 
-<devices robot="CER01" build="1">
-  <device name="cer_right_upper_arm_mc" type="embObjMotionControl">
-      <params file="general.xml" />
-      <params file="hardware/electronics/cer_right_upper_arm-ems19-eln.xml" />
-      <params file="hardware/mechanicals/cer_right_upper_arm-ems19-mec.xml" />
-      <params file="hardware/motorControl/cer_right_upper_arm-ems19-mc-service.xml" />
+
+  <device xmlns:xi="http://www.w3.org/2001/XInclude" name="cer_right_upper_arm_mc" type="embObjMotionControl">
+      <xi:include href="../../general.xml" />
+      <xi:include href="../electronics/cer_right_upper_arm-ems19-eln.xml" />
+      <xi:include href="../mechanicals/cer_right_upper_arm-ems19-mec.xml" />
+      <xi:include href="../motorControl/cer_right_upper_arm-ems19-mc-service.xml" />
 
     <group name="LIMITS">
     <!--    <param name="jntPosMax">                  85            70         85        95        </param>   no covers -->
-        <param name="jntPosMax">                      55            65         85        95        </param>
-        <param name="jntPosMin">                     -25            0         -85        5         </param>
+        <param name="jntPosMax">                      55            50         85        95        </param>
+        <param name="jntPosMin">                     -25             5        -85         5        </param>
         <param name="motorOverloadCurrents">          5000          5000       5000      5000      </param>
         <param name="motorNominalCurrents">           2500          2500       2500      2500      </param>
         <param name="motorPeakCurrents">              5000          5000       5000      5000      </param>
@@ -19,31 +19,28 @@
         <param name="motorPwmLimit">                  32000         32000      32000     32000     </param>    
     </group>
     
-    
     <group name="TIMEOUTS">
         <param name="velocity">               100       100           100        100    </param>
     </group>
-
 
     <group name="CONTROLS">
        
        <param name="positionControl">  JOINT_POS_VEL_CTRL     JOINT_POS_VEL_CTRL    JOINT_POS_VEL_CTRL    JOINT_POS_VEL_CTRL    </param> 
        <param name="velocityControl">  none                   none                  none                  none                  </param> 
-<!--        <param name="torqueControl">    JOINT_TRQ_VEL_CTRL     JOINT_TRQ_VEL_CTRL    JOINT_TRQ_VEL_CTRL    JOINT_TRQ_VEL_CTRL    </param> -->
-       
-       <param name="torqueControl">      none                   none                  none                  none  </param>
-
- <param name="currentPid">      2FOC_FEEDBACK          2FOC_FEEDBACK         2FOC_FEEDBACK         2FOC_FEEDBACK         </param> 
+<!--   <param name="torqueControl">    JOINT_TRQ_VEL_CTRL     JOINT_TRQ_VEL_CTRL    JOINT_TRQ_VEL_CTRL    JOINT_TRQ_VEL_CTRL    </param> -->
+       <param name="torqueControl">    none                   none                  none                  none                  </param>
+       <param name="currentPid">       2FOC_FEEDBACK          2FOC_FEEDBACK         2FOC_FEEDBACK         2FOC_FEEDBACK         </param> 
     </group>
 
     
     <group name="JOINT_POS_VEL_CTRL">
         <param name="controlLaw">       PidPos_withInnerVelPid           </param> 
-        <param name="controlUnits">     machine_units          </param> 
+         <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="pos_kp">               5           5          5         5      </param>       
         <param name="pos_kd">               0           0          0         0      </param>       
         <param name="pos_ki">               0           0          0         0      </param>       
-        <param name="pos_limPwm">        15000       15000      15000     15000  </param>
+        <param name="pos_limPwm">           15000       15000      15000     15000  </param>
         <param name="pos_maxOutput">        32000       32000      32000     32000  </param>                 
         <param name="pos_maxInt">           0           0          0         0      </param>       
         <param name="pos_shift">            0           0          0         0      </param>       
@@ -68,7 +65,8 @@
     
     <group name="JOINT_TRQ_VEL_CTRL">
         <param name="controlLaw">       PidTrq_withInnerVelPid      </param> 
-        <param name="controlUnits">     machine_units               </param>         
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>     
         <param name="trq_kp">               1          1         1        1         </param>       
         <param name="trq_kd">               0          0         0        0         </param>       
         <param name="trq_ki">               0          0         0        0         </param> 
@@ -98,7 +96,8 @@
 
     <group name="2FOC_FEEDBACK">
         <param name="controlLaw">       limitscurrent                               </param> 
-        <param name="controlUnits">     metric_units                                </param> 
+        <param name="fbkControlUnits">     machine_units             </param> 
+        <param name="outputControlUnits">  machine_units             </param>
         <param name="cur_kp">              8           8         8           8      </param>       
         <param name="cur_kd">              0           0         0           0      </param>       
         <param name="cur_ki">              2           2         2           2      </param>
@@ -117,4 +116,4 @@
     </group>
 
   </device>
-</devices>
+

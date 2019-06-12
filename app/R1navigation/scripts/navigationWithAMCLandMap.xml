@@ -1,0 +1,112 @@
+<application>
+    <name>R1 Navigation with AMCL and map </name>
+
+    <dependencies>
+    </dependencies>
+
+    <!-- modules -->
+    <module>
+       <name>roslaunch</name>
+       <parameters>amcl_map_from_yarp.launch</parameters>
+       <node>r1-base</node>
+    </module>
+
+    <module>
+        <name>roslaunch</name>
+        <parameters>robotStatePublisher.launch</parameters>
+        <node>r1-base</node>
+    </module>
+    
+    <module>
+       <name>yarpdev</name>
+       <parameters>--device transformServer --ROS "(enable_ros_publisher 0)" "(enable_ros_subscriber 1)"</parameters>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
+       <name>baseControl</name>
+       <parameters>--context baseControl --from baseCtrl_cer.ini --joystick_connect --skip_robot_interface_check</parameters>
+       <node>r1-base</node>
+    </module>
+
+    <module>
+       <name>joystickCtrl</name>
+       <parameters>--context joystickCtrl --from cer_linux.ini</parameters>
+       <node>r1-base</node>
+    </module>
+
+    <module>
+       <name>yarpdev</name>
+       <parameters>--device map2DServer --mapCollectionContext mapsExample</parameters>
+       <node>r1-console-linux</node>
+    </module>
+
+    <module>
+       <name>localizationServer</name>
+       <parameters>--context localizationServer --from localizationServer.ini</parameters>
+       <node>r1-console-linux</node>
+    </module>
+    
+    <module>
+        <name>robotGoto</name>
+        <parameters>--context robotGoto --from robotGoto_cer.ini</parameters>
+        <node>r1-base</node>
+    </module>
+    
+    <module>
+       <name>robotPathPlanner</name>
+       <parameters>--context robotPathPlanner --from robotPathPlanner_cer.ini </parameters>
+       <node>r1-base</node>
+    </module>
+    
+    <module>
+       <name>yarpview</name>
+       <parameters>--name /plannerView:i --out /mapClick:o</parameters>
+       <node>r1-console-linux</node>
+    </module>
+
+    <!-- connections --> 
+    <connection>
+       <from>/robotGoto/control:o</from>
+       <to>/baseControl/control:i</to>
+       <protocol>udp</protocol>
+    </connection>
+
+    <connection>
+       <from>/baseControl/odometry:o</from>
+       <to>/robotGoto/odometry:i</to>
+       <protocol>udp</protocol>
+    </connection>
+
+    <connection>
+       <from>/robotPathPlanner/map:o</from>
+       <to>/plannerView:i</to>
+       <protocol>udp</protocol>
+    </connection>
+
+    <connection>
+       <from>/robotPathPlanner/commands:o</from>
+       <to>/robotGoto/rpc</to>
+       <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+       <from>/robotGoto/status:o</from>
+       <to>/robotPathPlanner/navigationStatus:i</to>
+       <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+       <from>/mapClick:o</from>
+       <to>/robotPathPlanner/yarpviewTarget:i</to>
+       <protocol>tcp</protocol>
+    </connection>
+
+    <connection>
+       <from>/robotPathPlanner/yarpviewTarget:o</from>
+       <to>/robotPathPlanner/rpc</to>
+       <protocol>tcp</protocol>
+    </connection>
+
+</application>
+

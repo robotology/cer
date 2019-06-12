@@ -29,7 +29,7 @@
 #include <yarp/os/Bottle.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Thread.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/Port.h>
@@ -47,302 +47,302 @@ using namespace cer::kinematics_alt::r1;
 class R1Driver
 {
 public:
-	enum R1Part { TORSO, TORSO_TRIPOD, HEAD, LEFT_ARM, LEFT_TRIPOD, RIGHT_ARM, RIGHT_TRIPOD, LEFT_HAND, RIGHT_HAND, NUM_R1_PARTS };
+    enum R1Part { TORSO, TORSO_TRIPOD, HEAD, LEFT_ARM, LEFT_TRIPOD, RIGHT_ARM, RIGHT_TRIPOD, LEFT_HAND, RIGHT_HAND, NUM_R1_PARTS };
 
-	R1Driver(std::string robotName);
+    R1Driver(std::string robotName);
 
-	~R1Driver() { close(); }
+    ~R1Driver() { close(); }
 
-	bool open();
-	void close();
+    bool open();
+    void close();
 
-	void getPos(cer::robot_model::Matrix &q);
+    void getPos(cer::robot_model::Matrix &q);
 
-	void setPos(cer::robot_model::Matrix &q);
-	void setVel(cer::robot_model::Matrix &qdot);
+    void setPos(cer::robot_model::Matrix &q);
+    void setVel(cer::robot_model::Matrix &qdot);
 
-	void setVelHands(double vlf, double vlt, double vrf, double vrt)
-	{
-		double vel[8];
+    void setVelHands(double vlf, double vlt, double vrf, double vrt)
+    {
+        double vel[8];
 
-		vel[0] = vlf; vel[1] = vlt;
+        vel[0] = vlf; vel[1] = vlt;
 
-		pVelCtrl[ LEFT_HAND]->velocityMove(vel);
-		
-		vel[0] = vrf; vel[1] = vrt;
-		
-		pVelCtrl[RIGHT_HAND]->velocityMove(vel);
-	}
+        pVelCtrl[ LEFT_HAND]->velocityMove(vel);
+        
+        vel[0] = vrf; vel[1] = vrt;
+        
+        pVelCtrl[RIGHT_HAND]->velocityMove(vel);
+    }
 
-	int getNumOfJoints(int part)
-	{
-		return mNumJoints[part];
-	}
+    int getNumOfJoints(int part)
+    {
+        return mNumJoints[part];
+    }
 
-	void modePosition(int part)
-	{
-		for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setPositionMode(j);
-	}
+    void modePosition(int part)
+    {
+        for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, VOCAB_CM_POSITION);
+    }
 
-	void modeDirect(int part)
-	{
-		for (int j = 0; j < mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, VOCAB_CM_POSITION_DIRECT);
-	}
+    void modeDirect(int part)
+    {
+        for (int j = 0; j < mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, VOCAB_CM_POSITION_DIRECT);
+    }
 
-	void modeVelocity(int part)
-	{
-		for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setVelocityMode(j);
-	}
+    void modeVelocity(int part)
+    {
+        for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, VOCAB_CM_VELOCITY);
+    }
 
-	static const char *R1PartName[NUM_R1_PARTS];
+    static const char *R1PartName[NUM_R1_PARTS];
 
 protected:
-	yarp::dev::PolyDriver* openDriver(std::string part);
+    yarp::dev::PolyDriver* openDriver(std::string part);
 
-	yarp::dev::PolyDriver* mDriver[NUM_R1_PARTS];
+    yarp::dev::PolyDriver* mDriver[NUM_R1_PARTS];
 
-	int mNumJoints[NUM_R1_PARTS];
+    int mNumJoints[NUM_R1_PARTS];
 
-	yarp::dev::IEncoders         *pEncFbk[NUM_R1_PARTS];
+    yarp::dev::IEncoders          *pEncFbk[NUM_R1_PARTS];
 
-	yarp::dev::IPositionControl2  *pPosCtrl[NUM_R1_PARTS];
-	yarp::dev::IVelocityControl2  *pVelCtrl[NUM_R1_PARTS];
-	yarp::dev::IPositionDirect    *pDirCtrl[NUM_R1_PARTS];
+    yarp::dev::IPositionControl   *pPosCtrl[NUM_R1_PARTS];
+    yarp::dev::IVelocityControl   *pVelCtrl[NUM_R1_PARTS];
+    yarp::dev::IPositionDirect    *pDirCtrl[NUM_R1_PARTS];
 
-	yarp::dev::IControlMode2      *pCmdCtrlMode[NUM_R1_PARTS];
+    yarp::dev::IControlMode       *pCmdCtrlMode[NUM_R1_PARTS];
 
-	std::string mRobotName;
+    std::string mRobotName;
 };
 
 const char* R1Driver::R1PartName[NUM_R1_PARTS] = { "torso","torso_tripod","head","left_arm","left_wrist_tripod","right_arm","right_wrist_tripod","left_hand","right_hand" };
 
 R1Driver::R1Driver(std::string robotName) : mRobotName(robotName)
 {
-	for (int part = TORSO; part < NUM_R1_PARTS; ++part)
-	{
-		pEncFbk[part] = NULL;
-		
-		pPosCtrl[part] = NULL;
-		pVelCtrl[part] = NULL;
-		pDirCtrl[part] = NULL;
+    for (int part = TORSO; part < NUM_R1_PARTS; ++part)
+    {
+        pEncFbk[part] = NULL;
+        
+        pPosCtrl[part] = NULL;
+        pVelCtrl[part] = NULL;
+        pDirCtrl[part] = NULL;
 
-		pCmdCtrlMode[part] = NULL;
-	}
+        pCmdCtrlMode[part] = NULL;
+    }
 }
 
 bool R1Driver::open()
 {
-	double ref_vel[NUM_R1_PARTS][8];
-	double ref_acc[NUM_R1_PARTS][8];
+    double ref_vel[NUM_R1_PARTS][8];
+    double ref_acc[NUM_R1_PARTS][8];
 
-	for (int part=TORSO; part<NUM_R1_PARTS; ++part)
-	{
-		for (int j=0; j<8; ++j)
-		{
-			ref_vel[part][j] = 15.0;
-			ref_acc[part][j] = 100.0;
-		}
-	}
+    for (int part=TORSO; part<NUM_R1_PARTS; ++part)
+    {
+        for (int j=0; j<8; ++j)
+        {
+            ref_vel[part][j] = 15.0;
+            ref_acc[part][j] = 100.0;
+        }
+    }
 
-	ref_vel[TORSO][0] = 0.01;
-	ref_acc[TORSO][0] = 0.05;
+    ref_vel[TORSO][0] = 0.01;
+    ref_acc[TORSO][0] = 0.05;
 
-	ref_vel[TORSO_TRIPOD][0] = ref_vel[TORSO_TRIPOD][1] = ref_vel[TORSO_TRIPOD][2] = 0.01;
-	ref_acc[TORSO_TRIPOD][0] = ref_acc[TORSO_TRIPOD][1] = ref_acc[TORSO_TRIPOD][2] = 0.05;
+    ref_vel[TORSO_TRIPOD][0] = ref_vel[TORSO_TRIPOD][1] = ref_vel[TORSO_TRIPOD][2] = 0.01;
+    ref_acc[TORSO_TRIPOD][0] = ref_acc[TORSO_TRIPOD][1] = ref_acc[TORSO_TRIPOD][2] = 0.05;
 
-	ref_vel[LEFT_TRIPOD][0] = ref_vel[LEFT_TRIPOD][1] = ref_vel[LEFT_TRIPOD][2] = 0.005;
-	ref_acc[LEFT_TRIPOD][0] = ref_acc[LEFT_TRIPOD][1] = ref_acc[LEFT_TRIPOD][2] = 0.025;
+    ref_vel[LEFT_TRIPOD][0] = ref_vel[LEFT_TRIPOD][1] = ref_vel[LEFT_TRIPOD][2] = 0.005;
+    ref_acc[LEFT_TRIPOD][0] = ref_acc[LEFT_TRIPOD][1] = ref_acc[LEFT_TRIPOD][2] = 0.025;
 
-	ref_vel[RIGHT_TRIPOD][0] = ref_vel[RIGHT_TRIPOD][1] = ref_vel[RIGHT_TRIPOD][2] = 0.005;
-	ref_acc[RIGHT_TRIPOD][0] = ref_acc[RIGHT_TRIPOD][1] = ref_acc[RIGHT_TRIPOD][2] = 0.025;
+    ref_vel[RIGHT_TRIPOD][0] = ref_vel[RIGHT_TRIPOD][1] = ref_vel[RIGHT_TRIPOD][2] = 0.005;
+    ref_acc[RIGHT_TRIPOD][0] = ref_acc[RIGHT_TRIPOD][1] = ref_acc[RIGHT_TRIPOD][2] = 0.025;
 
-	for (int part = TORSO; part<NUM_R1_PARTS; ++part)
-	{
-		mNumJoints[part] = 0;
+    for (int part = TORSO; part<NUM_R1_PARTS; ++part)
+    {
+        mNumJoints[part] = 0;
 
-		mDriver[part] = openDriver(R1PartName[part]);
+        mDriver[part] = openDriver(R1PartName[part]);
 
-		if (mDriver[part])
-		{
-			mDriver[part]->view(pEncFbk[part]);
+        if (mDriver[part])
+        {
+            mDriver[part]->view(pEncFbk[part]);
 
-			if (!pEncFbk[part]) return false;
+            if (!pEncFbk[part]) return false;
 
-			mDriver[part]->view(pPosCtrl[part]);
-			mDriver[part]->view(pVelCtrl[part]);
-			mDriver[part]->view(pDirCtrl[part]);
+            mDriver[part]->view(pPosCtrl[part]);
+            mDriver[part]->view(pVelCtrl[part]);
+            mDriver[part]->view(pDirCtrl[part]);
 
-			mDriver[part]->view(pCmdCtrlMode[part]);
+            mDriver[part]->view(pCmdCtrlMode[part]);
 
-			if (pEncFbk[part]) pEncFbk[part]->getAxes(&mNumJoints[part]);
+            if (pEncFbk[part]) pEncFbk[part]->getAxes(&mNumJoints[part]);
 
-			pPosCtrl[part]->setRefSpeeds(ref_vel[part]);
-			pPosCtrl[part]->setRefAccelerations(ref_acc[part]);
-			pVelCtrl[part]->setRefAccelerations(ref_acc[part]);
+            pPosCtrl[part]->setRefSpeeds(ref_vel[part]);
+            pPosCtrl[part]->setRefAccelerations(ref_acc[part]);
+            pVelCtrl[part]->setRefAccelerations(ref_acc[part]);
 
-			modeVelocity(part);
-		}
-		else
-		{
-			return false;
-		}
-	}
+            modeVelocity(part);
+        }
+        else
+        {
+            return false;
+        }
+    }
 
-	return true;
+    return true;
 }
 
 void R1Driver::close()
 {
-	for (int part = TORSO; part<NUM_R1_PARTS; ++part)
-	{
-		if (pCmdCtrlMode[part]) modePosition(part);
-	}
+    for (int part = TORSO; part<NUM_R1_PARTS; ++part)
+    {
+        if (pCmdCtrlMode[part]) modePosition(part);
+    }
 }
 
 yarp::dev::PolyDriver* R1Driver::openDriver(std::string part)
 {
-	yarp::dev::PolyDriver *pDriver = NULL;
+    yarp::dev::PolyDriver *pDriver = NULL;
 
-	yarp::os::Property options;
-	options.put("robot", mRobotName.c_str());
-	options.put("device", "remote_controlboard");
-	options.put("local", (std::string("/R1ctrl/") + part).c_str());
-	options.put("remote", (mRobotName + "/" + part).c_str());
+    yarp::os::Property options;
+    options.put("robot", mRobotName.c_str());
+    options.put("device", "remote_controlboard");
+    options.put("local", (std::string("/R1ctrl/") + part).c_str());
+    options.put("remote", (mRobotName + "/" + part).c_str());
 
-	pDriver = new yarp::dev::PolyDriver(options);
+    pDriver = new yarp::dev::PolyDriver(options);
 
-	if (!pDriver) return NULL;
+    if (!pDriver) return NULL;
 
-	if (!pDriver->isValid())
-	{
-		pDriver->close();
-		delete pDriver;
-		pDriver = NULL;
-	}
+    if (!pDriver->isValid())
+    {
+        pDriver->close();
+        delete pDriver;
+        pDriver = NULL;
+    }
 
-	return pDriver;
+    return pDriver;
 }
 
 void R1Driver::getPos(cer::robot_model::Matrix &q)
 {
-	double enc[8];
+    double enc[8];
 
-	pEncFbk[TORSO_TRIPOD]->getEncoders(enc);
+    pEncFbk[TORSO_TRIPOD]->getEncoders(enc);
 
-	q(0) = enc[0]; q(1) = enc[1]; q(2) = enc[2];
+    q(0) = enc[0]; q(1) = enc[1]; q(2) = enc[2];
 
-	pEncFbk[TORSO]->getEncoders(enc);
+    pEncFbk[TORSO]->getEncoders(enc);
 
-	q(3) = enc[3];
+    q(3) = enc[3];
 
-	pEncFbk[LEFT_ARM]->getEncoders(enc);
+    pEncFbk[LEFT_ARM]->getEncoders(enc);
 
-	q(4) = enc[0]; q(5) = enc[1]; q(6) = enc[2]; q(7) = enc[3]; q(8) = enc[4];
+    q(4) = enc[0]; q(5) = enc[1]; q(6) = enc[2]; q(7) = enc[3]; q(8) = enc[4];
 
-	pEncFbk[LEFT_TRIPOD]->getEncoders(enc);
+    pEncFbk[LEFT_TRIPOD]->getEncoders(enc);
 
-	q(9) = enc[0]; q(10) = enc[1]; q(11) = enc[2];
+    q(9) = enc[0]; q(10) = enc[1]; q(11) = enc[2];
 
-	pEncFbk[RIGHT_ARM]->getEncoders(enc);
+    pEncFbk[RIGHT_ARM]->getEncoders(enc);
 
-	q(12) = enc[0]; q(13) = enc[1]; q(14) = enc[2]; q(15) = enc[3]; q(16) = enc[4]; 
+    q(12) = enc[0]; q(13) = enc[1]; q(14) = enc[2]; q(15) = enc[3]; q(16) = enc[4]; 
 
-	pEncFbk[RIGHT_TRIPOD]->getEncoders(enc);
+    pEncFbk[RIGHT_TRIPOD]->getEncoders(enc);
 
-	q(17) = enc[0]; q(18) = enc[1]; q(19) = enc[2];
+    q(17) = enc[0]; q(18) = enc[1]; q(19) = enc[2];
 
-	pEncFbk[HEAD]->getEncoders(enc);
+    pEncFbk[HEAD]->getEncoders(enc);
 
-	q(20) = enc[0]; q(21) = enc[1];
+    q(20) = enc[0]; q(21) = enc[1];
 }
 
 void R1Driver::setPos(cer::robot_model::Matrix &q)
 {
-	double pos[8];
+    double pos[8];
 
-	pos[0] = q(0); pos[1] = q(1); pos[2] = q(2);
+    pos[0] = q(0); pos[1] = q(1); pos[2] = q(2);
 
-	pPosCtrl[TORSO_TRIPOD]->positionMove(pos);
+    pPosCtrl[TORSO_TRIPOD]->positionMove(pos);
 
-	pos[0] = q(3);
+    pos[0] = q(3);
 
-	static const int torso_yaw = 3;
+    static const int torso_yaw = 3;
 
-	pPosCtrl[TORSO]->positionMove(1,&torso_yaw,pos);
+    pPosCtrl[TORSO]->positionMove(1,&torso_yaw,pos);
 
-	static const int left_upper[] = { 0,1,2,3,4 };
+    static const int left_upper[] = { 0,1,2,3,4 };
 
-	pos[0] = q(4); pos[1] = q(5); pos[2] = q(6); pos[3] = q(7); pos[4] = q(8);
+    pos[0] = q(4); pos[1] = q(5); pos[2] = q(6); pos[3] = q(7); pos[4] = q(8);
 
-	pPosCtrl[LEFT_ARM]->positionMove(5,left_upper,pos);
+    pPosCtrl[LEFT_ARM]->positionMove(5,left_upper,pos);
 
-	pos[0] = q(9); pos[1] = q(10); pos[2] = q(11);
+    pos[0] = q(9); pos[1] = q(10); pos[2] = q(11);
 
-	pPosCtrl[LEFT_TRIPOD]->positionMove(pos);
+    pPosCtrl[LEFT_TRIPOD]->positionMove(pos);
 
-	static const int right_upper[] = { 0,1,2,3,4 };
+    static const int right_upper[] = { 0,1,2,3,4 };
 
-	pos[0] = q(12); pos[1] = q(13); pos[2] = q(14); pos[3] = q(15); pos[4] = q(16);
+    pos[0] = q(12); pos[1] = q(13); pos[2] = q(14); pos[3] = q(15); pos[4] = q(16);
 
-	pPosCtrl[RIGHT_ARM]->positionMove(5,right_upper,pos);
+    pPosCtrl[RIGHT_ARM]->positionMove(5,right_upper,pos);
 
-	pos[0] = q(17); pos[1] = q(18); pos[2] = q(19);
+    pos[0] = q(17); pos[1] = q(18); pos[2] = q(19);
 
-	pPosCtrl[RIGHT_TRIPOD]->positionMove(pos);
+    pPosCtrl[RIGHT_TRIPOD]->positionMove(pos);
 
-	pos[0] = q(20); pos[1] = q(21);
+    pos[0] = q(20); pos[1] = q(21);
 
-	pPosCtrl[HEAD]->positionMove(pos);
+    pPosCtrl[HEAD]->positionMove(pos);
 }
 
 void R1Driver::setVel(cer::robot_model::Matrix &qdot)
 {
-	double vel[8];
+    double vel[8];
 
-	vel[0] = qdot(0); vel[1] = qdot(1); vel[2] = qdot(2);
+    vel[0] = qdot(0); vel[1] = qdot(1); vel[2] = qdot(2);
 
-	pVelCtrl[TORSO_TRIPOD]->velocityMove(vel);
+    pVelCtrl[TORSO_TRIPOD]->velocityMove(vel);
 
-	vel[0] = qdot(3);
+    vel[0] = qdot(3);
 
-	static const int torso_yaw = 3;
+    static const int torso_yaw = 3;
 
-	pVelCtrl[TORSO]->velocityMove(1, &torso_yaw, vel);
+    pVelCtrl[TORSO]->velocityMove(1, &torso_yaw, vel);
 
-	static const int left_upper[] = { 0,1,2,3,4 };
+    static const int left_upper[] = { 0,1,2,3,4 };
 
-	vel[0] = qdot(4); vel[1] = qdot(5); vel[2] = qdot(6); vel[3] = qdot(7); vel[4] = qdot(8);
+    vel[0] = qdot(4); vel[1] = qdot(5); vel[2] = qdot(6); vel[3] = qdot(7); vel[4] = qdot(8);
 
-	pVelCtrl[LEFT_ARM]->velocityMove(5, left_upper, vel);
+    pVelCtrl[LEFT_ARM]->velocityMove(5, left_upper, vel);
 
-	vel[0] = qdot(9); vel[1] = qdot(10); vel[2] = qdot(11);
+    vel[0] = qdot(9); vel[1] = qdot(10); vel[2] = qdot(11);
 
-	pVelCtrl[LEFT_TRIPOD]->velocityMove(vel);
+    pVelCtrl[LEFT_TRIPOD]->velocityMove(vel);
 
-	static const int right_upper[] = { 0,1,2,3,4 };
+    static const int right_upper[] = { 0,1,2,3,4 };
 
-	vel[0] = qdot(12); vel[1] = qdot(13); vel[2] = qdot(14); vel[3] = qdot(15); vel[4] = qdot(16);
+    vel[0] = qdot(12); vel[1] = qdot(13); vel[2] = qdot(14); vel[3] = qdot(15); vel[4] = qdot(16);
 
-	pVelCtrl[RIGHT_ARM]->velocityMove(5, right_upper, vel);
+    pVelCtrl[RIGHT_ARM]->velocityMove(5, right_upper, vel);
 
-	vel[0] = qdot(17); vel[1] = qdot(18); vel[2] = qdot(19);
+    vel[0] = qdot(17); vel[1] = qdot(18); vel[2] = qdot(19);
 
-	pVelCtrl[RIGHT_TRIPOD]->velocityMove(vel);
+    pVelCtrl[RIGHT_TRIPOD]->velocityMove(vel);
 
-	vel[0] = qdot(20); vel[1] = qdot(21);
+    vel[0] = qdot(20); vel[1] = qdot(21);
 
-	pVelCtrl[HEAD]->velocityMove(vel);
+    pVelCtrl[HEAD]->velocityMove(vel);
 }
 
-class R1ControlModule : public yarp::os::RateThread
+class R1ControlModule : public yarp::os::PeriodicThread
 {
 public:
-	R1ControlModule();
-	~R1ControlModule()
-	{
-		if (r1Ctrl) delete r1Ctrl;
-		if (r1Model) delete r1Ctrl;
-	}
+    R1ControlModule();
+    ~R1ControlModule()
+    {
+        if (r1Ctrl) delete r1Ctrl;
+        if (r1Model) delete r1Ctrl;
+    }
 
     virtual bool threadInit();
     virtual void run();
@@ -359,25 +359,25 @@ protected:
     R1Controller *r1Ctrl;
 
 #ifdef JOYSTICK
-	SDL_Joystick *mStick;
-	int mNumJoyAxis;
-	int mNumJoyButt;
-	int mNumJoyHats;
+    SDL_Joystick *mStick;
+    int mNumJoyAxis;
+    int mNumJoyButt;
+    int mNumJoyHats;
 #endif
 
-	Transform TargetL;
-	Transform TargetR;
+    Transform TargetL;
+    Transform TargetR;
 
-	Transform HandL;
-	Transform HandR;
+    Transform HandL;
+    Transform HandR;
 
-	R1Driver mDriver;
+    R1Driver mDriver;
 
-	FILE *dumpin;
+    FILE *dumpin;
 
 #ifndef ONLINE
-	double qdot_del[22][256];
-	double qfbk_del[22][256];
+    double qdot_del[22][256];
+    double qfbk_del[22][256];
 #endif
 
     cer::robot_model::Matrix qfbk;
@@ -392,37 +392,37 @@ protected:
 };
 
 
-R1ControlModule::R1ControlModule() : RateThread(int(PERIOD*1000.0)), qfbk(22) ,mDriver("/cer")
+R1ControlModule::R1ControlModule() : PeriodicThread(PERIOD), qfbk(22) ,mDriver("/cer")
 {
-	r1Model = new R1Model();
-	r1Ctrl = new R1Controller(r1Model);
+    r1Model = new R1Model();
+    r1Ctrl = new R1Controller(r1Model);
 }
 
 bool R1ControlModule::threadInit()
 {
 #ifdef ONLINE
-	if (!mDriver.open()) return false;
+    if (!mDriver.open()) return false;
 #endif
 
 #ifdef JOYSTICK
-	//SDL_INIT_TIMER SDL_INIT_HAPTIC SDL_INIT_GAMECONTROLLER 
+    //SDL_INIT_TIMER SDL_INIT_HAPTIC SDL_INIT_GAMECONTROLLER 
 
-	// SDL
-	if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_NOPARACHUTE) == -1) return false;
+    // SDL
+    if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_NOPARACHUTE) == -1) return false;
 
-	if (SDL_NumJoysticks()<1) return false;
+    if (SDL_NumJoysticks()<1) return false;
 
-	mStick = SDL_JoystickOpen(0);
+    mStick = SDL_JoystickOpen(0);
 
-	if (!mStick) return false;
+    if (!mStick) return false;
 
-	SDL_JoystickEventState(SDL_IGNORE);
+    SDL_JoystickEventState(SDL_IGNORE);
 
-	mNumJoyAxis = SDL_JoystickNumAxes(mStick);
-	mNumJoyButt = SDL_JoystickNumButtons(mStick);
-	mNumJoyHats = SDL_JoystickNumHats(mStick);
+    mNumJoyAxis = SDL_JoystickNumAxes(mStick);
+    mNumJoyButt = SDL_JoystickNumButtons(mStick);
+    mNumJoyHats = SDL_JoystickNumHats(mStick);
 
-	// end SDL
+    // end SDL
 #endif
 
     portEncBase.open("/CERControl/base:o");
@@ -447,29 +447,29 @@ bool R1ControlModule::threadInit()
     srand((unsigned)time(NULL));
 
 #ifdef ONLINE
-	mDriver.getPos(qfbk);
-	r1Model->calcConfig(qfbk);
+    mDriver.getPos(qfbk);
+    r1Model->calcConfig(qfbk);
 #else
-	qfbk = r1Ctrl->getZeroConfig();
+    qfbk = r1Ctrl->getZeroConfig();
 
-	for (int j = 0; j < 22; ++j)
-	{
-		for (int t = 0; t < 256; ++t)
-		{
-			qdot_del[j][t] = 0.0;
-			qfbk_del[j][t] = qfbk(j);
-		}
-	}
+    for (int j = 0; j < 22; ++j)
+    {
+        for (int t = 0; t < 256; ++t)
+        {
+            qdot_del[j][t] = 0.0;
+            qfbk_del[j][t] = qfbk(j);
+        }
+    }
 #endif
 
-	//r1Model->handL(HandL.Pj().x, HandL.Pj().y, HandL.Pj().z, ArpyL.x, ArpyL.y, ArpyL.z);
-	//r1Model->handR(HandR.Pj().x, HandR.Pj().y, HandR.Pj().z, ArpyR.x, ArpyR.y, ArpyR.z);
+    //r1Model->handL(HandL.Pj().x, HandL.Pj().y, HandL.Pj().z, ArpyL.x, ArpyL.y, ArpyL.z);
+    //r1Model->handR(HandR.Pj().x, HandR.Pj().y, HandR.Pj().z, ArpyR.x, ArpyR.y, ArpyR.z);
 
-	HandL = r1Model->getHandTransformL();
-	HandR = r1Model->getHandTransformR();
+    HandL = r1Model->getHandTransformL();
+    HandR = r1Model->getHandTransformR();
 
-	TargetL = HandL;
-	TargetR = HandR;
+    TargetL = HandL;
+    TargetR = HandR;
 
     return true;
 }
@@ -482,8 +482,8 @@ void R1ControlModule::threadRelease()
 {
 
 #ifdef JOYSTICK
-	SDL_JoystickClose(mStick);
-	SDL_Quit();
+    SDL_JoystickClose(mStick);
+    SDL_Quit();
 #endif
 
     portEncBase.interrupt();
@@ -503,279 +503,279 @@ void R1ControlModule::threadRelease()
 
 void R1ControlModule::run()
 {
-	static bool L_active = true;
-	static bool R_active = true;
+    static bool L_active = true;
+    static bool R_active = true;
 
-	static double El = 0.03;
-	static double Er = 0.03;
-	static double Et = 0.05;
+    static double El = 0.03;
+    static double Er = 0.03;
+    static double Et = 0.05;
 
-	Vec3 VjoyL, VjoyR;
-	Vec3 WjoyL, WjoyR;
+    Vec3 VjoyL, VjoyR;
+    Vec3 WjoyL, WjoyR;
 
 #ifdef JOYSTICK
 
-	SDL_JoystickUpdate();
-	
-	//////////////////////////////////////////////////////////////
-	// enable left/right side
-	unsigned char L_enable_new = SDL_JoystickGetButton(mStick, 8);
-	unsigned char R_enable_new = SDL_JoystickGetButton(mStick, 9);
+    SDL_JoystickUpdate();
+    
+    //////////////////////////////////////////////////////////////
+    // enable left/right side
+    unsigned char L_enable_new = SDL_JoystickGetButton(mStick, 8);
+    unsigned char R_enable_new = SDL_JoystickGetButton(mStick, 9);
 
-	static unsigned char L_enable_old = L_enable_new;
-	static unsigned char R_enable_old = R_enable_new;
+    static unsigned char L_enable_old = L_enable_new;
+    static unsigned char R_enable_old = R_enable_new;
 
-	bool enable_change = false;
+    bool enable_change = false;
 
-	if (L_enable_new && !L_enable_old)
-	{
-		L_active = !L_active;
-		enable_change = true;
-	}
+    if (L_enable_new && !L_enable_old)
+    {
+        L_active = !L_active;
+        enable_change = true;
+    }
 
-	if (R_enable_new && !R_enable_old)
-	{
-		R_active = !R_active;
-		enable_change = true;
-	}
+    if (R_enable_new && !R_enable_old)
+    {
+        R_active = !R_active;
+        enable_change = true;
+    }
 
-	if (enable_change)
-	{
-		printf("L hand = %s * R hand = %s\n", L_active ? "ENABLED" : "DISABLED", R_active ? "ENABLED" : "DISABLED");
-	}
+    if (enable_change)
+    {
+        printf("L hand = %s * R hand = %s\n", L_active ? "ENABLED" : "DISABLED", R_active ? "ENABLED" : "DISABLED");
+    }
 
-	L_enable_old = L_enable_new;
-	R_enable_old = R_enable_new;
-	///////////////////////////////////////////////////////////
+    L_enable_old = L_enable_new;
+    R_enable_old = R_enable_new;
+    ///////////////////////////////////////////////////////////
 
-	int sticklx = SDL_JoystickGetAxis(mStick, 1);
-	int stickly = SDL_JoystickGetAxis(mStick, 0);
-	int hatl = SDL_JoystickGetHat(mStick, 0);
+    int sticklx = SDL_JoystickGetAxis(mStick, 1);
+    int stickly = SDL_JoystickGetAxis(mStick, 0);
+    int hatl = SDL_JoystickGetHat(mStick, 0);
 
-	// trigger not pressed
-	if (SDL_JoystickGetAxis(mStick, 5) > -16)
-	{
-		if (abs(sticklx) > 16) VjoyL.x = -sticklx * 0.1 / 32768.0;
-		if (abs(stickly) > 16) VjoyL.y = -stickly * 0.1 / 32768.0;
+    // trigger not pressed
+    if (SDL_JoystickGetAxis(mStick, 5) > -16)
+    {
+        if (abs(sticklx) > 16) VjoyL.x = -sticklx * 0.1 / 32768.0;
+        if (abs(stickly) > 16) VjoyL.y = -stickly * 0.1 / 32768.0;
 
-		if (SDL_JoystickGetButton(mStick, 4)) VjoyL.z = 0.05;
-		if (SDL_JoystickGetButton(mStick, 6)) VjoyL.z = -0.05;
+        if (SDL_JoystickGetButton(mStick, 4)) VjoyL.z = 0.05;
+        if (SDL_JoystickGetButton(mStick, 6)) VjoyL.z = -0.05;
 
-		if (hatl & 15)
-		{
-			if (hatl & 4) El -= 0.01*PERIOD;
-			if (hatl & 1) El += 0.01*PERIOD;
-			if (hatl & 8) Et -= 0.01*PERIOD;
-			if (hatl & 2) Et += 0.01*PERIOD;
+        if (hatl & 15)
+        {
+            if (hatl & 4) El -= 0.01*PERIOD;
+            if (hatl & 1) El += 0.01*PERIOD;
+            if (hatl & 8) Et -= 0.01*PERIOD;
+            if (hatl & 2) Et += 0.01*PERIOD;
 
-			if (El < 0.02) El = 0.02;
-			if (El > 0.12) El = 0.12;
-			if (Et < 0.04) Et = 0.04;
-			if (Et > 0.16) Et = 0.16;
+            if (El < 0.02) El = 0.02;
+            if (El > 0.12) El = 0.12;
+            if (Et < 0.04) Et = 0.04;
+            if (Et > 0.16) Et = 0.16;
 
-			r1Ctrl->setExtensions(El, Er, Et);
-		}
-	}
-	else // trigger pressed
-	{
-		if (abs(sticklx) > 16) WjoyL.y = -sticklx * 45.0 / 32768.0;
-		if (abs(stickly) > 16) WjoyL.x = stickly * 45.0 / 32768.0;
+            r1Ctrl->setExtensions(El, Er, Et);
+        }
+    }
+    else // trigger pressed
+    {
+        if (abs(sticklx) > 16) WjoyL.y = -sticklx * 45.0 / 32768.0;
+        if (abs(stickly) > 16) WjoyL.x = stickly * 45.0 / 32768.0;
 
-		if (hatl & 8) WjoyL.z = 30.0;
-		if (hatl & 2) WjoyL.z = -30.0;
-	}
+        if (hatl & 8) WjoyL.z = 30.0;
+        if (hatl & 2) WjoyL.z = -30.0;
+    }
 
-	//bool Vlmove = VjoyL.mod2() != 0.0;
-	//bool Wlmove = WjoyL.mod2() != 0.0;
+    //bool Vlmove = VjoyL.mod2() != 0.0;
+    //bool Wlmove = WjoyL.mod2() != 0.0;
 
-	/////////////////////////////////////////
+    /////////////////////////////////////////
 
-	int stickrx = SDL_JoystickGetAxis(mStick, 3);
-	int stickry = SDL_JoystickGetAxis(mStick, 2);
+    int stickrx = SDL_JoystickGetAxis(mStick, 3);
+    int stickry = SDL_JoystickGetAxis(mStick, 2);
 
-	if (SDL_JoystickGetAxis(mStick, 4) > -16)
-	{
-		if (abs(stickrx) > 16) VjoyR.x = -stickrx * 0.1 / 32768.0;
-		if (abs(stickry) > 16) VjoyR.y = -stickry * 0.1 / 32768.0;
+    if (SDL_JoystickGetAxis(mStick, 4) > -16)
+    {
+        if (abs(stickrx) > 16) VjoyR.x = -stickrx * 0.1 / 32768.0;
+        if (abs(stickry) > 16) VjoyR.y = -stickry * 0.1 / 32768.0;
 
-		if (SDL_JoystickGetButton(mStick, 5)) VjoyR.z = 0.05;
-		if (SDL_JoystickGetButton(mStick, 7)) VjoyR.z = -0.05;
+        if (SDL_JoystickGetButton(mStick, 5)) VjoyR.z = 0.05;
+        if (SDL_JoystickGetButton(mStick, 7)) VjoyR.z = -0.05;
 
-		if (SDL_JoystickGetButton(mStick, 0))
-		{
-			Et -= 0.01*PERIOD;
-			if (Et < 0.04) Et = 0.04;
-			r1Ctrl->setExtensions(El, Er, Et);
-		}
+        if (SDL_JoystickGetButton(mStick, 0))
+        {
+            Et -= 0.01*PERIOD;
+            if (Et < 0.04) Et = 0.04;
+            r1Ctrl->setExtensions(El, Er, Et);
+        }
 
-		if (SDL_JoystickGetButton(mStick, 2))
-		{
-			Et += 0.01*PERIOD;
-			if (Et > 0.16) Et = 0.16;
-			r1Ctrl->setExtensions(El, Er, Et);
-		}
+        if (SDL_JoystickGetButton(mStick, 2))
+        {
+            Et += 0.01*PERIOD;
+            if (Et > 0.16) Et = 0.16;
+            r1Ctrl->setExtensions(El, Er, Et);
+        }
 
-		if (SDL_JoystickGetButton(mStick, 1))
-		{
-			Er -= 0.01*PERIOD;
-			if (Er < 0.02) Er = 0.02;
-			r1Ctrl->setExtensions(El, Er, Et);
-		}
+        if (SDL_JoystickGetButton(mStick, 1))
+        {
+            Er -= 0.01*PERIOD;
+            if (Er < 0.02) Er = 0.02;
+            r1Ctrl->setExtensions(El, Er, Et);
+        }
 
-		if (SDL_JoystickGetButton(mStick, 3))
-		{
-			Er += 0.01*PERIOD;
-			if (Er > 0.12) Er = 0.12;
-			r1Ctrl->setExtensions(El, Er, Et);
-		}
-	}
-	else
-	{
-		if (abs(stickrx) > 16) WjoyR.y =  -stickrx * 45.0 / 32768.0;
-		if (abs(stickry) > 16) WjoyR.x = stickry * 45.0 / 32768.0;
+        if (SDL_JoystickGetButton(mStick, 3))
+        {
+            Er += 0.01*PERIOD;
+            if (Er > 0.12) Er = 0.12;
+            r1Ctrl->setExtensions(El, Er, Et);
+        }
+    }
+    else
+    {
+        if (abs(stickrx) > 16) WjoyR.y =  -stickrx * 45.0 / 32768.0;
+        if (abs(stickry) > 16) WjoyR.x = stickry * 45.0 / 32768.0;
 
-		if (SDL_JoystickGetButton(mStick, 0)) WjoyR.z = -30.0;
-		if (SDL_JoystickGetButton(mStick, 2)) WjoyR.z = 30.0;
-	}
+        if (SDL_JoystickGetButton(mStick, 0)) WjoyR.z = -30.0;
+        if (SDL_JoystickGetButton(mStick, 2)) WjoyR.z = 30.0;
+    }
 
-	bool Vrmove = VjoyR.mod2() != 0.0;
-	bool Wrmove = WjoyR.mod2() != 0.0;
+    bool Vrmove = VjoyR.mod2() != 0.0;
+    bool Wrmove = WjoyR.mod2() != 0.0;
 
 #endif
 
 #ifdef ONLINE
-	mDriver.getPos(qfbk);
+    mDriver.getPos(qfbk);
 #endif
 
-	static cer::robot_model::Matrix qphantom = qfbk;
+    static cer::robot_model::Matrix qphantom = qfbk;
 
-	static cer::robot_model::Matrix qdot(22);
+    static cer::robot_model::Matrix qdot(22);
 
-	Vec3 VstarL = 5.0*(TargetL.Pj() - HandL.Pj());
-	Vec3 VstarR = 5.0*(TargetR.Pj() - HandR.Pj());
+    Vec3 VstarL = 5.0*(TargetL.Pj() - HandL.Pj());
+    Vec3 VstarR = 5.0*(TargetR.Pj() - HandR.Pj());
 
-	Vec3 WstarL = 5.0*(TargetL.Rj().quaternion() * HandL.Rj().quaternion().conj()).V;
-	Vec3 WstarR = 5.0*(TargetR.Rj().quaternion() * HandR.Rj().quaternion().conj()).V;
+    Vec3 WstarL = 5.0*(TargetL.Rj().quaternion() * HandL.Rj().quaternion().conj()).V;
+    Vec3 WstarR = 5.0*(TargetR.Rj().quaternion() * HandR.Rj().quaternion().conj()).V;
 
-	//VjoyL.print();
-	//VjoyR.print();
-	//WjoyL.print();
-	//WjoyR.print();
+    //VjoyL.print();
+    //VjoyR.print();
+    //WjoyL.print();
+    //WjoyR.print();
 
-	//VjoyL.clear();
-	//VjoyR.clear();
-	//WjoyL.clear();
-	//WjoyR.clear();
+    //VjoyL.clear();
+    //VjoyR.clear();
+    //WjoyL.clear();
+    //WjoyR.clear();
 
-	double vl3[] = { VjoyL.x, VjoyL.y, VjoyL.z };
-	double vr3[] = { VjoyR.x, VjoyR.y, VjoyR.z };
-	double wl3[] = { WjoyL.x, WjoyL.y, WjoyL.z };
-	double wr3[] = { WjoyR.x, WjoyR.y, WjoyR.z };
+    double vl3[] = { VjoyL.x, VjoyL.y, VjoyL.z };
+    double vr3[] = { VjoyR.x, VjoyR.y, VjoyR.z };
+    double wl3[] = { WjoyL.x, WjoyL.y, WjoyL.z };
+    double wr3[] = { WjoyR.x, WjoyR.y, WjoyR.z };
 
-	Vec3 ArpyL = TargetL.Rj().rpy();
-	Vec3 ArpyR = TargetR.Rj().rpy();
+    Vec3 ArpyL = TargetL.Rj().rpy();
+    Vec3 ArpyR = TargetR.Rj().rpy();
 
-	if (L_active && R_active)
-	{
-		r1Ctrl->velControl(qphantom, qdot, vl3, wl3, vr3, wr3);
+    if (L_active && R_active)
+    {
+        r1Ctrl->velControl(qphantom, qdot, vl3, wl3, vr3, wr3);
 
-		sendTarget("targetL", 255, 64, 0, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.666, ArpyL.x, ArpyL.y, ArpyL.z);
-		sendTarget("targetR", 0, 64, 255, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.666, ArpyR.x, ArpyR.y, ArpyR.z);
-	}
-	else if (L_active)
-	{
-		r1Ctrl->velControl(qphantom, qdot, vl3, wl3, NULL, NULL);
+        sendTarget("targetL", 255, 64, 0, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.666, ArpyL.x, ArpyL.y, ArpyL.z);
+        sendTarget("targetR", 0, 64, 255, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.666, ArpyR.x, ArpyR.y, ArpyR.z);
+    }
+    else if (L_active)
+    {
+        r1Ctrl->velControl(qphantom, qdot, vl3, wl3, NULL, NULL);
 
-		TargetR = HandR;
+        TargetR = HandR;
 
-		sendTarget("targetL", 0, 64, 255, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.666, ArpyL.x, ArpyL.y, ArpyL.z);
-		sendTarget("targetR", 192, 192, 192, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.5, ArpyR.x, ArpyR.y, ArpyR.z);
-	}
-	else if (R_active)
-	{
-		r1Ctrl->velControl(qphantom, qdot, NULL, NULL, vr3, wr3);
+        sendTarget("targetL", 0, 64, 255, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.666, ArpyL.x, ArpyL.y, ArpyL.z);
+        sendTarget("targetR", 192, 192, 192, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.5, ArpyR.x, ArpyR.y, ArpyR.z);
+    }
+    else if (R_active)
+    {
+        r1Ctrl->velControl(qphantom, qdot, NULL, NULL, vr3, wr3);
 
-		TargetL = HandL;
+        TargetL = HandL;
 
-		sendTarget("targetL", 192, 192, 192, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.5, ArpyL.x, ArpyL.y, ArpyL.z);
-		sendTarget("targetR", 0, 64, 255, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.666, ArpyR.x, ArpyR.y, ArpyR.z);
-	}
-	else
-	{
-		r1Ctrl->velControl(qphantom, qdot, NULL, NULL, NULL, NULL);
-	
-		TargetL = HandL;
-		TargetR = HandR;
+        sendTarget("targetL", 192, 192, 192, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.5, ArpyL.x, ArpyL.y, ArpyL.z);
+        sendTarget("targetR", 0, 64, 255, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.666, ArpyR.x, ArpyR.y, ArpyR.z);
+    }
+    else
+    {
+        r1Ctrl->velControl(qphantom, qdot, NULL, NULL, NULL, NULL);
+    
+        TargetL = HandL;
+        TargetR = HandR;
 
-		sendTarget("targetL", 192, 192, 192, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.5, ArpyL.x, ArpyL.y, ArpyL.z);
-		sendTarget("targetR", 192, 192, 192, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.5, ArpyR.x, ArpyR.y, ArpyR.z);
-	}
+        sendTarget("targetL", 192, 192, 192, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 16.0, 0.5, ArpyL.x, ArpyL.y, ArpyL.z);
+        sendTarget("targetR", 192, 192, 192, TargetR.Pj().x, TargetR.Pj().y, TargetR.Pj().z, 16.0, 0.5, ArpyR.x, ArpyR.y, ArpyR.z);
+    }
 
-	static int TAU = 1;
-	static double BETA = 0.1 / double(TAU);
-	static double ALFA = 1.0 - BETA;
+    static int TAU = 1;
+    static double BETA = 0.1 / double(TAU);
+    static double ALFA = 1.0 - BETA;
 
 #ifdef ONLINE
 
-	qdot(20) = qdot(21) = 0.0;
+    qdot(20) = qdot(21) = 0.0;
 
-	mDriver.setVel(qdot);
+    mDriver.setVel(qdot);
 
-	//mDriver.setVelHands(0.7*VhL,VhL,0.7*VhR,VhR);
+    //mDriver.setVelHands(0.7*VhL,VhL,0.7*VhR,VhR);
 
-	for (int j = 0; j < 22; ++j)
-	{
-		qphantom(j) += qdot(j)*PERIOD;
-		qphantom(j) = ALFA*qphantom(j) + BETA*qfbk(j);
-	}
+    for (int j = 0; j < 22; ++j)
+    {
+        qphantom(j) += qdot(j)*PERIOD;
+        qphantom(j) = ALFA*qphantom(j) + BETA*qfbk(j);
+    }
 
-	sendConfig(qfbk);
+    sendConfig(qfbk);
 
 #else
 
-	static int index = 0;
+    static int index = 0;
 
-	for (int j = 0; j < 22; ++j)
-	{
-		qphantom(j) += qdot(j)*PERIOD;
-		qphantom(j) = ALFA*qphantom(j) + BETA*qfbk_del[j][index];
-	}
+    for (int j = 0; j < 22; ++j)
+    {
+        qphantom(j) += qdot(j)*PERIOD;
+        qphantom(j) = ALFA*qphantom(j) + BETA*qfbk_del[j][index];
+    }
 
-	for (int j = 0; j < 22; ++j)
-	{
-		qdot_del[j][index] = qdot(j);	
-		qfbk_del[j][index] = qfbk(j);
-	}
+    for (int j = 0; j < 22; ++j)
+    {
+        qdot_del[j][index] = qdot(j);   
+        qfbk_del[j][index] = qfbk(j);
+    }
 
-	index = (index + 1) % TAU;
+    index = (index + 1) % TAU;
 
-	for (int j = 0; j < 22; ++j)
-	{
-		qfbk(j) += qdot_del[j][index] * PERIOD;
-	}
+    for (int j = 0; j < 22; ++j)
+    {
+        qfbk(j) += qdot_del[j][index] * PERIOD;
+    }
 
-	sendConfig(qphantom);
+    sendConfig(qphantom);
 
 #endif
 
-	///////////////////////////////////////////////
-	cer::robot_model::Vec3 COM = r1Model->getCOM();
-	COM.z = -0.160;
-	std::string G = "G";
-	sendCOM(G, 192, 192, 0, COM, 16.0, 1.0);
+    ///////////////////////////////////////////////
+    cer::robot_model::Vec3 COM = r1Model->getCOM();
+    COM.z = -0.160;
+    std::string G = "G";
+    sendCOM(G, 192, 192, 0, COM, 16.0, 1.0);
 
-	{
-		std::string name;
-		double x, y, z, size;
+    {
+        std::string name;
+        double x, y, z, size;
 
-		int N = r1Model->getNSpheres();
+        int N = r1Model->getNSpheres();
 
-		for (int n = 0; n < N; ++n)
-		{
-			r1Model->getSphere(n, x, y, z, size, name);
-			sendCover(name, x, y, z, size);
-		}
-	}
+        for (int n = 0; n < N; ++n)
+        {
+            r1Model->getSphere(n, x, y, z, size, name);
+            sendCover(name, x, y, z, size);
+        }
+    }
 }
 
 /////////////////////////////////////////
@@ -906,30 +906,30 @@ void R1ControlModule::sendTarget(const char* name, int R, int G, int B, double x
 
 void R1ControlModule::sendCover(const std::string& name, double x, double y, double z, double size)
 {
-	yarp::os::Bottle& botR = portObjects.prepare();
-	botR.clear();
-	botR.addString("object"); botR.addString(name);
-	botR.addDouble(size*1000.0);
-	botR.addDouble(0.0);
-	botR.addDouble(0.0);
-	botR.addDouble(x*1000.0);
-	botR.addDouble(y*1000.0);
-	botR.addDouble(z*1000.0);
+    yarp::os::Bottle& botR = portObjects.prepare();
+    botR.clear();
+    botR.addString("object"); botR.addString(name);
+    botR.addDouble(size*1000.0);
+    botR.addDouble(0.0);
+    botR.addDouble(0.0);
+    botR.addDouble(x*1000.0);
+    botR.addDouble(y*1000.0);
+    botR.addDouble(z*1000.0);
 
-	botR.addDouble(360.0);
-	botR.addDouble(360.0);
-	botR.addDouble(360.0);
+    botR.addDouble(360.0);
+    botR.addDouble(360.0);
+    botR.addDouble(360.0);
 
-	botR.addInt(255); botR.addInt(255); botR.addInt(255);
-	botR.addDouble(1.0);
-	//botR.addString("WORLD");
-	portObjects.writeStrict();
+    botR.addInt(255); botR.addInt(255); botR.addInt(255);
+    botR.addDouble(1.0);
+    //botR.addString("WORLD");
+    portObjects.writeStrict();
 }
 
 class CerTestModule : public yarp::os::RFModule
 {
 protected:
-	R1ControlModule *mRobotThread;
+    R1ControlModule *mRobotThread;
     yarp::os::Port mHandlerPort;
 
 public:
@@ -940,9 +940,7 @@ public:
 
     virtual bool configure(yarp::os::ResourceFinder &rf)
     {
-        yarp::os::Time::turboBoost();
-
-		mRobotThread = new R1ControlModule();
+        mRobotThread = new R1ControlModule();
 
         if (!mRobotThread->start())
         {
@@ -1047,33 +1045,33 @@ static double timeout = 15.0;
 
 if (newtarget)
 {
-	timeout = 1.5;
+    timeout = 1.5;
 
-	//alfa += dalfa*PERIOD;
+    //alfa += dalfa*PERIOD;
 
-	alfa += dalfa;
+    alfa += dalfa;
 
-	if (alfa > 45.0)
-	{
-		alfa = 45.0;
-		dalfa = -dalfa;
-		radius += dradius;
-	}
+    if (alfa > 45.0)
+    {
+        alfa = 45.0;
+        dalfa = -dalfa;
+        radius += dradius;
+    }
 
-	if (alfa < -135.0)
-	{
-		alfa = -135.0;
-		dalfa = -dalfa;
-		radius += dradius;
-	}
+    if (alfa < -135.0)
+    {
+        alfa = -135.0;
+        dalfa = -dalfa;
+        radius += dradius;
+    }
 }
 
 //static FILE *dump = fopen("70_cm_H_hand.txt", "w");
 
 if (radius > 1.0)
 {
-	//fclose(dump);
-	askToStop();
+    //fclose(dump);
+    askToStop();
 }
 
 TargetL.Pj().x = 0.044 + radius*cos(DEG2RAD*alfa);
@@ -1101,29 +1099,29 @@ static double heading_error = 0.0;
 
 if ((HandL.Pj() - TargetL.Pj()).mod() < 0.01)
 {
-	//fprintf(dump, "%f, %f, %f, 1, %f\n", TargetL.Pj().x, TargetL.Pj().y, 0.16 + TargetL.Pj().z, heading_error);
-	printf("%f, %f, %f, 1, %f\n", TargetL.Pj().x, TargetL.Pj().y, 0.16 + TargetL.Pj().z, heading_error);
+    //fprintf(dump, "%f, %f, %f, 1, %f\n", TargetL.Pj().x, TargetL.Pj().y, 0.16 + TargetL.Pj().z, heading_error);
+    printf("%f, %f, %f, 1, %f\n", TargetL.Pj().x, TargetL.Pj().y, 0.16 + TargetL.Pj().z, heading_error);
 
-	static char buff[32];
-	sprintf_s(buff, "T%d", ntarget++);
-	sendTarget(std::string(buff), 0, 192, 0, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 8.0, 0.666, 360.0, 360.0, 360.0);
+    static char buff[32];
+    sprintf_s(buff, "T%d", ntarget++);
+    sendTarget(std::string(buff), 0, 192, 0, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 8.0, 0.666, 360.0, 360.0, 360.0);
 
-	newtarget = true;
+    newtarget = true;
 }
 else if (timeout < 0.0)
 {
-	//fprintf(dump, "%f, %f, %f, 0, %f\n", TargetL.Pj().x, TargetL.Pj().y, 0.16 + TargetL.Pj().z, heading_error);
-	printf("%f, %f, %f, 0, %f\n", TargetL.Pj().x, TargetL.Pj().y, 0.16 + TargetL.Pj().z, heading_error);
+    //fprintf(dump, "%f, %f, %f, 0, %f\n", TargetL.Pj().x, TargetL.Pj().y, 0.16 + TargetL.Pj().z, heading_error);
+    printf("%f, %f, %f, 0, %f\n", TargetL.Pj().x, TargetL.Pj().y, 0.16 + TargetL.Pj().z, heading_error);
 
-	static char buff[32];
-	sprintf_s(buff, "T%d", ntarget++);
-	sendTarget(std::string(buff), 192, 0, 32, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 8.0, 0.666, 360.0, 360.0, 360.0);
+    static char buff[32];
+    sprintf_s(buff, "T%d", ntarget++);
+    sendTarget(std::string(buff), 192, 0, 32, TargetL.Pj().x, TargetL.Pj().y, TargetL.Pj().z, 8.0, 0.666, 360.0, 360.0, 360.0);
 
-	newtarget = true;
+    newtarget = true;
 }
 else
 {
-	newtarget = false;
+    newtarget = false;
 }
 
 static Vec3 Tl = TargetL.Pj();

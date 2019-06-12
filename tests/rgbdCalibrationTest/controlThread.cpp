@@ -104,8 +104,6 @@ void ControlThread::printStats()
 
 bool ControlThread::threadInit()
 {
-    Time::turboBoost();
-
     Property prop;
     if (!m_rf.check("RGBD_SENSOR_CLIENT"))
     {
@@ -147,7 +145,7 @@ void ControlThread::afterStart(bool s)
 }
 
 ControlThread::ControlThread(unsigned int _period, ResourceFinder &_rf) :
-RateThread(_period), m_rf(_rf)
+PeriodicThread((double)_period/1000.0), m_rf(_rf)
 {
    
 }

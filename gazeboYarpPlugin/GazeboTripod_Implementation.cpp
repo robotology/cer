@@ -5,6 +5,8 @@
 *
 */
 
+#include <string>
+
 #include "GazeboTripodMotionControl.h"
 #include <yarp/os/LogStream.h>
 
@@ -13,10 +15,10 @@ using namespace cer::dev;
 
 
     // AXIS IAxisInfo
-bool GazeboTripodMotionControl::getAxisName(int axis, yarp::os::ConstString& name)
+bool GazeboTripodMotionControl::getAxisName(int axis, std::string& name)
 {
     if (axis < 0 || axis >= (int)m_numberOfJoints) return false;
-    name =  yarp::os::ConstString(controlboard_joint_names.at(axis));
+    name =  std::string(controlboard_joint_names.at(axis));
     return true;
 }
 
@@ -33,7 +35,8 @@ bool GazeboTripodMotionControl::getEncoder(int j, double* v)
 {
     if (v && j >= 0 && j < (int)m_numberOfJoints)
     {
-        *v = m_last_motorElongat[j];
+        tripod_Sim2client(m_last_measJointPos, m_decoded_elong);
+        *v = m_decoded_elong[j];
         return true;
     }
     return false;
@@ -41,9 +44,11 @@ bool GazeboTripodMotionControl::getEncoder(int j, double* v)
 
 bool GazeboTripodMotionControl::getEncoders(double* encs)
 {
+    tripod_Sim2client(m_last_measJointPos, m_decoded_elong);
+
     if (!encs) return false;
     for(int j=0; j<m_numberOfJoints; j++)
-        encs[j] =  m_last_motorElongat[j];
+        encs[j] =  m_decoded_elong[j];
     return true;
 }
 
@@ -103,21 +108,31 @@ bool GazeboTripodMotionControl::getEncoderSpeed(int j, double* sp)
 
 bool GazeboTripodMotionControl::getEncoderSpeeds(double* spds)
 {
-//     return NOT_YET_IMPLEMENTED("getEncoderSpeeds");
-    return false;
+    if(nullptr == spds) return false;
+
+    for(int i=0; i< m_numberOfJoints; i++)
+        spds[i] = std::nan("");
+    return true;
 }
 
 
-bool GazeboTripodMotionControl::getEncoderAcceleration(int j, double* spds)
+bool GazeboTripodMotionControl::getEncoderAcceleration(int j, double* acc)
 {
-//     return NOT_YET_IMPLEMENTED("getEncoderAcceleration");
+    if (acc && j >= 0 && j < (int)m_numberOfJoints) {
+        *acc = std::nan("");
+        return true;
+    }
     return false;
 }
 
 bool GazeboTripodMotionControl::getEncoderAccelerations(double* accs)
 {
-//     return NOT_YET_IMPLEMENTED("getEncoderAccelerations");
-    return false;
+    if(nullptr == accs) return false;
+
+    for(int i=0; i< m_numberOfJoints; i++)
+        accs[i] = std::nan("");
+    
+    return true;
 }
 
 
@@ -127,21 +142,15 @@ bool GazeboTripodMotionControl::getEncodersTimed(double* encs, double* time)
     double my_time = m_lastTimestamp.getTime();
     for (unsigned int i = 0; i <m_numberOfJoints; ++i)
     {
-        encs[i] = m_last_motorElongat[i];
         time[i] = my_time;
     }
-    return true;
+    return getEncoders(encs);
 }
 
 bool GazeboTripodMotionControl::getEncoderTimed(int j, double* encs, double* time)
 {
-    if (time && encs && j >= 0 && j < (int)m_numberOfJoints)
-    {
-        *encs = m_last_motorElongat[j];
-        *time = m_lastTimestamp.getTime();
-        return true;
-    }
-    return false;
+    *time = m_lastTimestamp.getTime();
+    return getEncoder(j, encs);
 }
 
 
@@ -462,7 +471,7 @@ bool GazeboTripodMotionControl::setControlMode(const int j, const int mode)
         break;
         case VOCAB_CM_VELOCITY :
         case VOCAB_CM_TORQUE :
-        case VOCAB_CM_OPENLOOP :
+        case VOCAB_CM_PWM :
         default :
             yError() << "Mode " << yarp::os::Vocab::decode(mode) << " is not yet implemented for GazeboTripodMotionControl";
             ret = false;
@@ -553,7 +562,7 @@ bool GazeboTripodMotionControl::setPosition(int j, double ref)
     return false;
 }
 
-bool GazeboTripodMotionControl::setPositions(const int n_joint, const int *joints, double *refs)
+bool GazeboTripodMotionControl::setPositions(const int n_joint, const int *joints, const double *refs)
 {
     for (int i = 0; i < n_joint; i++)
     {

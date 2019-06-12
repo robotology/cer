@@ -8,8 +8,9 @@
 #include <iostream>
 #include <stdlib.h>
 #include <math.h>
+#include <string>
 #include <rtf/TestAssert.h>
-#include <rtf/yarp/YarpTestAsserter.h>
+#include <yarp/rtf/TestAsserter.h>
 #include <rtf/dll/Plugin.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/Time.h>
@@ -19,8 +20,8 @@
 #include <tripodTest.h>
 
 using namespace RTF;
-using namespace RTF::YARP;
 using namespace yarp::os;
+using namespace yarp::rtf;
 
 
 // prepare the plugin
@@ -51,7 +52,7 @@ bool TripodTest::checkTimeout(double start)
 }
 
 /**************** Main Test ***********************/
-TripodTest::TripodTest() : YarpTestCase("TripodTest")
+TripodTest::TripodTest() : yarp::rtf::TestCase("TripodTest")
 {
     joints.resize(0);
     joints.zero();
@@ -66,10 +67,10 @@ bool TripodTest::setup(yarp::os::Property& property)
     yTrace() << "\nParameters are:\n\t" << property.toString();
 
     // read param from config file
-    yarp::os::ConstString portPrefix("/tripodTest");
-    yarp::os::ConstString robotName = property.check(yarp::os::ConstString("robotName"), yarp::os::Value("cer")).asString();
-    double pos_tolerance = property.check(yarp::os::ConstString("posTolerance"), DEFAULT_POS_THRESHOLD).asDouble();
-    double vel_tolerance = property.check(yarp::os::ConstString("velTolerance"), DEFAULT_VEL_THRESHOLD).asDouble();
+    std::string portPrefix("/tripodTest");
+    std::string robotName = property.check("robotName", yarp::os::Value("cer")).asString();
+    double pos_tolerance = property.check("posTolerance", yarp::os::Value(DEFAULT_POS_THRESHOLD)).asDouble();
+    double vel_tolerance = property.check("velTolerance", yarp::os::Value(DEFAULT_VEL_THRESHOLD)).asDouble();
     mutualPosTolerance = pos_tolerance;
 
     // initialize device
@@ -244,7 +245,7 @@ void TripodTest::run()
         // wait until current position is different from initial position,
         // i.e. the motors actually moved a bit
         bool ret;
-        while(YarpTestAsserter::isApproxEqual(prevEncs, encoders, posTolerance))
+        while(TestAsserter::isApproxEqual(prevEncs, encoders, posTolerance))
         {
             prevEncs = encoders;
             yarp::os::Time::delay(0.05);
@@ -259,11 +260,11 @@ void TripodTest::run()
 
         // read current speed and check with the reference speed.
         iEnc->getEncoderSpeeds(encSpeeds.data());
-        RTF_TEST_CHECK(YarpTestAsserter::isApproxEqual(refSpeeds, encSpeeds, velTolerance),
+        RTF_TEST_CHECK(TestAsserter::isApproxEqual(refSpeeds, encSpeeds, velTolerance),
                        Asserter::format("Motor moving at correct speed of %d.", refSpeeds[0]) );
 
         // wait until the motors stop moving, i.e. the tripod reaches HW limits
-        while(YarpTestAsserter::isApproxEqual(prevEncs, encoders, posTolerance) == false)
+        while(TestAsserter::isApproxEqual(prevEncs, encoders, posTolerance) == false)
         {
             prevEncs = encoders;
             yarp::os::Time::delay(0.05);

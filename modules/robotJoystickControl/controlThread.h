@@ -26,18 +26,29 @@
 #include <iCub/ctrl/pids.h>
 #include <string>
 #include <math.h>
-#include "ros_messages/visualization_msgs_Marker.h"
-#include "ros_messages/visualization_msgs_MarkerArray.h"
+#include <yarp/rosmsg/visualization_msgs/Marker.h>
+#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+using namespace yarp::rosmsg;
 
 #define MAX_LINEAR_VEL  0.4  // maximum linear  velocity (m/s)
 #define MAX_ANGULAR_VEL 24.0 // maximum angular velocity (deg/s)
 
 
-class ControlThread : public yarp::os::RateThread
+struct robot_status
+{
+    int status;
+    int controlling;
+    yarp::sig::Vector         left_arm_xyz;
+    yarp::sig::Vector         right_arm_xyz;
+public:
+    robot_status() { left_arm_xyz.resize(3); right_arm_xyz.resize(3); }
+};
+
+class ControlThread : public yarp::os::PeriodicThread
 {
 private:
     Property            ctrl_options;
@@ -54,7 +65,7 @@ protected:
     PolyDriver                *driver_left_hand;
     PolyDriver                *driver_right_hand;
 
-    Publisher<visualization_msgs_MarkerArray> rosPublisherPort;
+    Publisher<visualization_msgs::MarkerArray> rosPublisherPort;
     Node *rosNode;
 
     BufferedPort<Bottle>      port_joystick_control;
@@ -63,6 +74,7 @@ protected:
     string                    localName;
     bool                      first_run;
     bool                      error_status;
+    int                       controlling;
 
     //connection to the robot
     RpcClient                 robotCmdPort_larm;
@@ -79,20 +91,20 @@ protected:
     IVelocityControl*         interface_torso_tripod_iVel;
     IPositionDirect*          interface_torso_tripod_iDir;
     IEncoders*                interface_torso_tripod_iEnc;
-    IControlMode2*            interface_torso_tripod_iCmd;
+    IControlMode *            interface_torso_tripod_iCmd;
 
     IPositionControl*         interface_torso_equiv_iPos;
     IVelocityControl*         interface_torso_equiv_iVel;
-    IControlMode2*            interface_torso_equiv_iCmd;
+    IControlMode *            interface_torso_equiv_iCmd;
 
-    IControlMode2*            interface_left_hand_iCmd;
+    IControlMode*             interface_left_hand_iCmd;
     IVelocityControl*         interface_left_hand_iVel;
 
-    IControlMode2*            interface_right_hand_iCmd;
+    IControlMode *            interface_right_hand_iCmd;
     IVelocityControl*         interface_right_hand_iVel;
 
     IPositionControl*         interface_head_iPos;
-    IControlMode2*            interface_head_iCmd;
+    IControlMode *            interface_head_iCmd;
     IVelocityControl*         interface_head_iVel;
 
     yarp::sig::Vector         initial_xyz_left;
@@ -121,20 +133,22 @@ public:
     virtual void afterStart(bool s);
     virtual void run();
     
-    void printStats();
+private:
     void goToPose(string arm_type, const yarp::sig::Vector &xd, const yarp::sig::Vector &od);
-    void velMoveHandler(const bool b, std::vector<int> joints, double speed, IControlMode2* imod, IVelocityControl* ivel);
+    void velMoveHandler(const bool b, std::vector<int> joints, double speed, IControlMode * imod, IVelocityControl* ivel);
     void reachingHandler(string arm_type, const bool b, const yarp::sig::Vector &pos, const yarp::sig::Vector &rpy);
     void saturate(double& v, double sat_lim);
     void updateRVIZ(const yarp::sig::Vector &xd, const yarp::sig::Vector &od);
-    void getCartesianArmPositions();
+    void getCartesianArmPositions(bool blocking);
 
     void option1(double* axis);
     void option2(double* axis);
     void option3(double* axis);
     void option4(double* axis);
 
-    int get_status();
+public:
+    robot_status get_status();
+    void printStats();
 };
 
 #endif

@@ -16,21 +16,21 @@
 */
 
 #include <string>
+#include <cmath>
 
 #include <yarp/os/all.h>
 #include <yarp/sig/all.h>
+#include <yarp/math/Math.h>
 
 #include <iCub/ctrl/math.h>
 #include <iCub/ctrl/minJerkCtrl.h>
 
 #include <cer_kinematics/tripod.h>
 
-#define MODE_HPR    "hpr"
-#define MODE_ZD_UD  "zd+ud"
-
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::sig;
+using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace cer::kinematics;
 
@@ -43,33 +43,22 @@ class IKSolver : public RFModule
     minJerkTrajGen *gen;
     Vector rho;
 
-    string mode;
-    bool use_hpr;
-
 public:
     /****************************************************************/
     bool configure(ResourceFinder &rf)
     {
-        solver.setParameters(TripodParameters(0.09,0.0,0.2,30.0));
+        Vector rot(4,0.0);
+        rot[2]=1.0; rot[3]=M_PI;
+        Matrix R=(rf.check("add-base-rotation")?axis2dcm(rot):eye(4,4));
+        solver.setParameters(TripodParameters(0.09,0.0,0.2,30.0,R));
 
-        mode=rf.check("mode",Value(MODE_ZD_UD)).asString().c_str();
-        int verbosity=rf.check("verbosity",Value(1)).asInt();
-
-        if ((mode!=MODE_ZD_UD) && (mode!=MODE_HPR))
-        {
-            yWarning("Unrecognized input mode!");
-            mode=MODE_ZD_UD;
-        }
-        use_hpr=(mode==MODE_HPR);
+        rho.resize(3,0.0);
+        solver.setVerbosity(rf.check("verbosity",Value(1)).asInt());
+        gen=new minJerkTrajGen(rho,getPeriod(),2.0);
 
         iPort.open("/solver:i");
         oPort.open("/solver:o");
 
-        rho.resize(3,0.0);
-        solver.setVerbosity(verbosity);
-        gen=new minJerkTrajGen(rho,getPeriod(),2.0);
-
-        yInfo("Using \"%s\" input mode",mode.c_str());
         return true;
     }
 
@@ -95,40 +84,23 @@ public:
         Bottle *ibData=iPort.read(false);
         if (ibData!=NULL)
         {
-            if (ibData->size()!=(use_hpr?3:5))
+            if (ibData->size()<5)
             {
-                yError("Wrong \"%s\" input size!",mode.c_str());
+                yError()<<"Wrong input size!";
                 return true;
             }
 
-            if (use_hpr)
-            {
-                Vector hpr(3);
-                hpr[0]=ibData->get(0).asDouble();
-                hpr[1]=ibData->get(1).asDouble();
-                hpr[2]=ibData->get(2).asDouble();
-                solver.setInitialGuess(rho);
-                solver.ikin(hpr,rho);
+            Vector ud(4);
+            double zd=ibData->get(0).asDouble();
+            ud[0]=ibData->get(1).asDouble();
+            ud[1]=ibData->get(2).asDouble();
+            ud[2]=ibData->get(3).asDouble();
+            ud[3]=ibData->get(4).asDouble();
+            solver.setInitialGuess(rho);
+            solver.ikin(zd,ud,rho);
 
-                yInfo("hpr=(%s); rho=(%s);",
-                      hpr.toString(5,5).c_str(),
-                      rho.toString(5,5).c_str());
-            }
-            else
-            {
-                Vector ud(4);
-                double zd=ibData->get(0).asDouble();
-                ud[0]=ibData->get(1).asDouble();
-                ud[1]=ibData->get(2).asDouble();
-                ud[2]=ibData->get(3).asDouble();
-                ud[3]=ibData->get(4).asDouble();
-                solver.setInitialGuess(rho);
-                solver.ikin(zd,ud,rho);
-
-                yInfo("zd=%g; ud=(%s); rho=(%s);",
-                      zd,ud.toString(5,5).c_str(),
-                      rho.toString(5,5).c_str());
-            }
+            yInfo()<<"zd="<<zd<<"; ud=("<<ud.toString(5,5)
+                   <<"); rho=("<<rho.toString(5,5)<<");";
         }
         else
         {
@@ -149,7 +121,7 @@ int main(int argc, char *argv[])
     Network yarp;
     if (!yarp.checkNetwork())
     {
-        yError("YARP server not available!");
+        yError()<<"YARP server not available!";
         return 1;
     }
     

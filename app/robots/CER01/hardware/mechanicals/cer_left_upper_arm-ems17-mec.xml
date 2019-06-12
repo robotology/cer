@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE params PUBLIC "-//YARP//DTD robotInterface 1.0//EN" "http://www.icub.org/DTD/robotInterfaceV1.0.dtd">
+<!DOCTYPE params PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
 
-<params robot="CER01" build="1">
+<params xmlns:xi="http://www.w3.org/2001/XInclude" robot="CER01" build="1">
     <group name="GENERAL">
-        <param name="MotioncontrolVersion">     3             </param>
+        <param name="MotioncontrolVersion">     5             </param>
         <param name="Joints">                   4             </param> 
         <param name="AxisMap">                  0             1           2             3           </param>
         <param name="AxisName">                 "l_shoulder_pitch_joint" "l_shoulder_roll_joint" "l_shoulder_yaw_joint" "l_elbow_joint" </param>
@@ -13,13 +13,15 @@
         <param name="Gearbox_E2J">                1              1           1              1       </param>
         <param name="useMotorSpeedFbk">           1              1           1              1       </param>
         <param name="MotorType">                "BLL_MECAP"   "BLL_MECAP" "BLL_MECAP"   "BLL_MECAP" </param>
+       <param name="fullscalePWM">          32000              32000              32000              32000                   </param>
+        <param name="ampsToSensor">          1000.0             1000.0             1000.0             1000.0                  </param>
         <param name="Verbose">   0      </param>
     </group>
 
     <group name="LIMITS">
     <!--    <param name="jntPosMax">                  85            70         85        95         </param>   no covers -->
         <param name="hardwareJntPosMax">             55            65         85        95         </param>
-        <param name="hardwareJntPosMin">            -25            0         -85        5          </param>
+        <param name="hardwareJntPosMin">            -25             0        -85         5          </param>
         <param name="rotorPosMin">                    0             0          0         0         </param> 
         <param name="rotorPosMax">                    0             0          0         0         </param>
     </group>

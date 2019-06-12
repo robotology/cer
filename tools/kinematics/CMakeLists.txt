@@ -2,18 +2,9 @@
 # Author: Ugo Pattacini
 # email:  ugo.pattacini@iit.it
 
-cmake_minimum_required(VERSION 2.8.9)
+cmake_minimum_required(VERSION 3.5)
 project(cer_kinematics-tools)
 
-get_property(cer_kinematics_INCLUDE_DIRS
-             TARGET cer_kinematics
-             PROPERTY BUILD_INTERFACE_INCLUDE_DIRECTORIES)
-
-include_directories(${YARP_INCLUDE_DIRS}
-                    ${ICUB_INCLUDE_DIRS}
-                    ${cer_kinematics_INCLUDE_DIRS})
-
-add_definitions(-D_USE_MATH_DEFINES)
 add_executable(cer_kinematics-tripod    cer_kinematics-tripod.cpp)
 add_executable(cer_kinematics-forward   cer_kinematics-forward.cpp)
 add_executable(cer_kinematics-arm       cer_kinematics-arm.cpp)
@@ -21,6 +12,11 @@ add_executable(cer_kinematics-head      cer_kinematics-head.cpp)
 add_executable(cer_kinematics-stability cer_kinematics-stability.cpp)
 add_executable(cer_kinematics-tracking  cer_kinematics-tracking.cpp)
 #add_executable(cer_kinematics-b2b       cer_kinematics-b2b.cpp)
+
+target_compile_definitions(cer_kinematics-tripod    PRIVATE _USE_MATH_DEFINES)
+target_compile_definitions(cer_kinematics-stability PRIVATE _USE_MATH_DEFINES)
+target_compile_definitions(cer_kinematics-tracking  PRIVATE _USE_MATH_DEFINES)
+#target_compile_definitions(cer_kinematics-b2b       PRIVATE _USE_MATH_DEFINES)
 
 target_link_libraries(cer_kinematics-tripod    ${YARP_LIBRARIES} ctrlLib cer_kinematics)
 target_link_libraries(cer_kinematics-forward   ${YARP_LIBRARIES} cer_kinematics)
