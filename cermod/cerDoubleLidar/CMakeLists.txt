@@ -30,12 +30,12 @@ if(ENABLE_cermod_cerDoubleLidar)
     add_definitions(-D_USE_MATH_DEFINES)
 
     yarp_install(TARGETS cerDoubleLidar
+                 EXPORT YARP_${YARP_PLUGIN_MASTER}
                  COMPONENT Runtime
-                 LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR})
+                 LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR}
+                 YARP_INI DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
     target_link_libraries(cerDoubleLidar ${YARP_LIBRARIES} )
 
-    yarp_install(FILES cerDoubleLidar.ini
-                 DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
 endif(ENABLE_cermod_cerDoubleLidar)
