@@ -18,7 +18,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(YARP 3.0.101 REQUIRED COMPONENTS OS sig dev math rosmsg idl_tools)
+find_package(YARP 3.1.101 REQUIRED COMPONENTS OS sig dev math rosmsg idl_tools)
 
 find_package(ICUB REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
