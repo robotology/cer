@@ -16,10 +16,10 @@ if(ENABLE_cermod_tripodMotionControl)
     add_definitions(-D_USE_MATH_DEFINES)
     target_link_libraries(tripodMotionControl ${YARP_LIBRARIES} cer_kinematics)
     yarp_install(TARGETS tripodMotionControl
+                 EXPORT YARP_${YARP_PLUGIN_MASTER}
                  COMPONENT Runtime
-                 LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR})
+                 LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR}
+                 YARP_INI DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
-    yarp_install(FILES tripodMotionControl.ini
-                 DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
 endif(ENABLE_cermod_tripodMotionControl)

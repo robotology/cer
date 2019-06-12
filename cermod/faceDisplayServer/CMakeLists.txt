@@ -27,10 +27,10 @@ IF (ENABLE_faceDisplayServer)
 
   yarp_install( TARGETS faceDisplayServer
                 COMPONENT Runtime
-                LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR})
+                 EXPORT YARP_${YARP_PLUGIN_MASTER}
+                LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR}
+                YARP_INI DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
-  yarp_install( FILES faceDisplayServer.ini
-                DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
-        
+       
 ENDIF (ENABLE_faceDisplayServer)
 

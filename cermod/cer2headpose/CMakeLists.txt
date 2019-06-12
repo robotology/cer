@@ -10,10 +10,6 @@ yarp_prepare_plugin(cer2headpose TYPE Cer2HeadPose
 
 if(ENABLE_cermod_cer2headpose)
 
-  yarp_install(FILES cer2headpose.ini
-               COMPONENT runtime
-               DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
-
   yarp_add_plugin(cer_pm_cer2headpose
                   cer2headpose.cpp
                   cer2headpose.h)
@@ -23,8 +19,10 @@ if(ENABLE_cermod_cer2headpose)
                                             YARP::YARP_sig)
 
   yarp_install(TARGETS cer_pm_cer2headpose
+               EXPORT YARP_${YARP_PLUGIN_MASTER}
                COMPONENT Runtime
                LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR}
-               ARCHIVE DESTINATION ${CER_STATIC_PLUGINS_INSTALL_DIR})
+               ARCHIVE DESTINATION ${CER_STATIC_PLUGINS_INSTALL_DIR}
+               YARP_INI DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
 endif()
