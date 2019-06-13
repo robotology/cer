@@ -16,6 +16,13 @@
 <param name="disableHomeAndPark">                 1               1        </param>   
 </group>
 
+
+<!-- mobile base does not require parking action -->
+<group name="PARKING_SEQUENCE">
+    <param name= "numberOfSequences">      0    </param>
+ </group>
+
+
 <group name="CALIBRATION">
 <param name="calibrationType">                    3               3        </param>
 <param name="calibration1">                       0               0        </param>

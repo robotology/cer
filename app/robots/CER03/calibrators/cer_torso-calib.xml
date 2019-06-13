@@ -10,10 +10,19 @@
 		    <param name="deviceName"> Torso_Calibrator </param>
 		</group>
 
-<group name="HOME">
-<param name="positionHome">                       0.05            0.0         0.0       0.0           </param>
-<param name="velocityHome">                       0.01            10          10        10            </param>
-</group>
+<group name="PARKING_SEQUENCE">
+    <param name= "numberOfSequences">      2    </param>
+ 
+    <group name="SEQUENCE_0">
+        <param name="position">                       0.14       0.00       0.00       0.00            </param>
+        <param name="velocity">                       0.01      10.00      10.00      10.00           </param>
+    </group>
+    <group name="SEQUENCE_1">
+        <param name="position">                       0.05       0.00       0.00       0.00            </param>
+        <param name="velocity">                       0.01      10.00      10.00      10.00            </param>
+    </group>
+ </group>
+
 
 <group name="CALIBRATION">
 <param name="calibrationType">                    9               9           9         12            </param>
@@ -41,6 +50,10 @@
 		<action phase="interrupt1" level="1" type="park">
 		    <param name="target">cer_torso_mc_wrapper</param>
 		</action>
+		<action phase="interrupt1" level="2" type="park">
+		    <param name="target">cer_torso_mc_wrapper</param>
+		</action>
+
 
 		<action phase="interrupt3" level="1" type="abort" />
 
