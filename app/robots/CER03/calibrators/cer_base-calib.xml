@@ -10,12 +10,6 @@
 		    <param name="deviceName"> Mobile_Base_Calibrator </param>
 		</group>
 
-<group name="HOME">
-<param name="positionHome">                       0.00            0.00     </param>
-<param name="velocityHome">                       10.00           10.00    </param>
-<param name="disableHomeAndPark">                 1               1        </param>   
-</group>
-
 
 <!-- mobile base does not require parking action -->
 <group name="PARKING_SEQUENCE">
