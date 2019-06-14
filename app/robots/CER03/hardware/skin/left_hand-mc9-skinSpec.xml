@@ -4,17 +4,17 @@
 <params xmlns:xi="http://www.w3.org/2001/XInclude" robot="CER03" build="1">
 
         <group name="defaultCfgBoard">
-            <param name="period">         50        </param> 
+            <param name="period">         50        </param>
             <param name="skinType">       0         </param>    <!--    0 ==> new skin
                                                                         1 ==> palm and fingertips skin
                                                                         2 ==> old skin without temperature compensation -->
             <param name="noLoad">         0xf0      </param>
             <param name="diagnostic">     false     </param>     <!-- used to config high level -->
         </group>
-        
-        
+
+
        <group name="defaultCfgTriangle">
-            <param name="enabled">        true      </param> 
+            <param name="enabled">        true      </param>
             <param name="shift">          2         </param>
             <param name="cdcOffset">      0x0000    </param>
         </group>
@@ -27,10 +27,10 @@
              psc @ CAN1:3 -> {[patch, jx, trg, taxels]} = { [thumb_proxy, j2, trg = 8 9, taxels = 24], [thumb_distal, j1, trg = 0 1 2, taxels = 36]}
           -->
 
-        
+
    <!--    <group name="specialCfgTriangles">
-           <param name="numOfSets">            1  </param> 
+           <param name="numOfSets">            1  </param>
      	   <param name="triangleSetCfg1">      2            5        0             6             1              0            0x2000      </param>
         </group> -->
-        
+
 </params>

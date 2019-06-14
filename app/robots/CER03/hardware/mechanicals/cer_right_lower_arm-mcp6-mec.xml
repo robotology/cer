@@ -55,7 +55,8 @@
         <group name="JOINTSET_0">
             <param name="listofjoints">  0 1 2         </param>
             <param name="constraint">    trifid        </param>
-            <param name="param1">        835500        </param> <!-- ~31 deg -->
+<!--           <param name="param1">        835500        </param> <!-- ~31 deg -->
+            <param name="param1">        244236        </param> <!-- ~17 deg -->
             <param name="param2">        0             </param>
         </group> 
         <group name="JOINTSET_1">

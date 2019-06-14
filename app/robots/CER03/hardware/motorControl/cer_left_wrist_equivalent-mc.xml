@@ -18,7 +18,7 @@
       <param name="Radius">      0.018   </param>
       <param name="Max_el">      0.120  </param>
       <param name="Min_el">      0.0    </param>
-      <param name="Max_alpha">   30.0   </param>
+      <param name="Max_alpha">   17.0   </param>
 
       <param name="BASE_TRANSFORMATION">   1.0    0.0     0.0    0.0
                                            0.0    1.0     0.0    0.0

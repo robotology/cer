@@ -10,10 +10,15 @@
         <param name="deviceName"> Left_Hand_Calibrator </param>
     </group>
 
-    <group name="HOME">
-        <param name="positionHome">                       30.00           30.00          </param>
-        <param name="velocityHome">                       40.00           40.00          </param>
-    </group>                                                                      
+
+    <group name="PARKING_SEQUENCE">
+       <param name= "numberOfSequences">      1    </param>
+
+       <group name="SEQUENCE_0">
+           <param name="position">                       30.00     30.00       </param>
+           <param name="velocity">                       40        40.00       </param>
+       </group>
+    </group>
 
     <group name="CALIBRATION">                                                    
         <param name="calibrationType">                       13              13          </param>

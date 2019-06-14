@@ -10,14 +10,25 @@
 		    <param name="deviceName"> Left_Arm_No_Hand_Calibrator </param>
 		</group>
 
-<group name="HOME">
-<param name="positionHome">                       0.00       5.00      0.00       0.00      0.00   0.03       0.0        0.0      </param>
-<param name="velocityHome">                      10.00      10.00     10.00      10.00     10.00   0.005      10.0       10.0     </param>
-</group>                                                                                                                     
-                                                                                                                             
+
+<group name="PARKING_SEQUENCE">
+    <param name= "numberOfSequences">      2    </param>
+
+    <group name="SEQUENCE_0">
+        <param name="position">                       25.00     16.00       -9.00     15.00      0.00   0.03       -5.0        0.0           </param>
+        <param name="velocity">                       10        10.00      10.00      10.00      10.00   0.005     10.0       10.0     </param>
+    </group>
+    <group name="SEQUENCE_1">
+        <param name="position">                       0.00       5.00      0.00       0.00      0.00   0.01        -5.0        0.0            </param>
+        <param name="velocity">                      10.00      10.00     10.00      10.00     10.00   0.005       10.0       10.0          </param>
+    </group>
+ </group>
+
+
+
 <group name="CALIBRATION">                                                                                                   
 <param name="calibrationType">                   12         12        12         12        10      8          8          8        </param>
-<param name="calibration1">                      11844     -30239    -3771      -30511     550     1500       1500       1500     </param>
+<param name="calibration1">                      12052     -22591    -3771      -30511     550     1500       1500       1500     </param>
 <param name="calibration2">                      0          0         0          0         0       700        700        700      </param>
 <param name="calibration3">                      0          0         0          0         0       0          0          0        </param>
 <param name="calibration4">                      0          0         0          0         0       0          0          0        </param>
@@ -40,6 +51,10 @@
 		<action phase="interrupt1" level="1" type="park">
 		    <param name="target">cer_left_arm_no_hand_mc_wrapper</param>
 		</action>
+		<action phase="interrupt1" level="2" type="park">
+		    <param name="target">cer_left_arm_no_hand_mc_wrapper</param>
+		</action>
+
 
 		<action phase="interrupt3" level="1" type="abort" />
 

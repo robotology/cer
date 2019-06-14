@@ -12,27 +12,27 @@
             <param name="type"> eomn_serv_SK_skin </param>
 
             <group name="PROPERTIES">
-            
+
                 <group name="CANBOARDS">
                     <param name="type">                 psc                 </param>
 
                     <group name="PROTOCOL">
-                        <param name="major">            2                   </param>    
-                        <param name="minor">            0                   </param>     
-                    </group>                    
+                        <param name="major">            2                   </param>
+                        <param name="minor">            0                   </param>
+                    </group>
                     <group name="FIRMWARE">
-                        <param name="major">            0                   </param>    
-                        <param name="minor">            0                   </param> 
+                        <param name="major">            0                   </param>
+                        <param name="minor">            0                   </param>
                         <param name="build">            0                   </param>
                     </group>
                 </group>
-           
-            </group>  
-        
-        </group> 
+
+            </group>
+
+        </group>
 
         <group name="patches">
-            <param name="skinCanAddrsPatch1"> 1 2 3 </param> 
+            <param name="skinCanAddrsPatch1"> 1 2 3 </param>
         </group>
         <xi:include href="../skin/right_hand-mc7-skinSpec.xml" />
     </device>

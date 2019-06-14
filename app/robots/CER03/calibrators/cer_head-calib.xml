@@ -10,10 +10,15 @@
         <param name="deviceName"> Head_Calibrator </param>
     </group>
 
-    <group name="HOME">
-        <param name="positionHome">                       0.00            0.00           </param>
-        <param name="velocityHome">                       10.00           10.00          </param>
-    </group>                                                                      
+
+    <group name="PARKING_SEQUENCE">
+    <param name= "numberOfSequences">      1    </param>
+
+    <group name="SEQUENCE_0">
+        <param name="position">                       0.00     0.00      </param>
+        <param name="velocity">                       10        10.00    </param>
+    </group>
+ </group>
 
     <group name="CALIBRATION">                                                    
         <param name="calibrationType">                    12              12             </param>
