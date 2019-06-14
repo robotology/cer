@@ -21,7 +21,7 @@
          </paramlist>
       </action>
 
-
-    </device>
+      <action phase="shutdown" level="3" type="detach"/>
+  </device>
 
 
