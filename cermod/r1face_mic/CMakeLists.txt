@@ -8,7 +8,7 @@ yarp_prepare_plugin(r1face_mic
                     CATEGORY device
                     TYPE cer::dev::R1faceMic
                     INCLUDE r1face_mic.h
-                    EXTRA_CONFIG WRAPPER=ServerSoundGrabber)
+                    EXTRA_CONFIG WRAPPER=AudioRecorderWrapper)
 
 if(ENABLE_cermod_r1face_mic)
 
