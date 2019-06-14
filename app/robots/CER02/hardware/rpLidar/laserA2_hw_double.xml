@@ -20,7 +20,8 @@
             <elem name="L_Back">   cer_laser_back_device </elem>
          </paramlist>
       </action>
-
+      
+      <action phase="shutdown" level="3" type="detach"/>
 
     </device>
 
