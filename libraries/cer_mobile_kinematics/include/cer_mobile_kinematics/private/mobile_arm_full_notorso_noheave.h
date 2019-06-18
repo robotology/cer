@@ -178,9 +178,13 @@ public:
         {
             double dx=xd[i][0]-x[idx_b+0];
             double dy=xd[i][1]-x[idx_b+1];
-            double view_angle=remainder(atan2(xd[i][1]-x[idx_b+1], xd[i][0]-x[idx_b+0])-x[idx_b+2], 2.0*M_PI);
-            grad_f[idx_b+0]+=2.0*view_angle*dy/(dx*dx+dy*dy);
-            grad_f[idx_b+1]+=-2.0*view_angle*dx/(dx*dx+dy*dy);
+            double norm = dx*dx+dy*dy;
+            if (norm < std::numeric_limits<double>::epsilon())
+                continue;
+
+            double view_angle=remainder(atan2(dy,dx)-x[idx_b+2], 2.0*M_PI);
+            grad_f[idx_b+0]+=2.0*view_angle*dy/norm;
+            grad_f[idx_b+1]+=-2.0*view_angle*dx/norm;
             grad_f[idx_b+2]+=-2.0*view_angle;
         }
 
