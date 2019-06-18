@@ -60,11 +60,11 @@
     <xi:include href="calibrators/cer_right_hand-calib.xml" />
 
     <!-- SKIN-->
-    <xi:include href="hardware/skin/left_hand-mc9-skin.xml" />
+    <!--<xi:include href="hardware/skin/left_hand-mc9-skin.xml" />
     <xi:include href="wrappers/skin/left_hand-skin_wrapper.xml" />
     <xi:include href="hardware/skin/right_hand-mc7-skin.xml" />
     <xi:include href="wrappers/skin/right_hand-skin_wrapper.xml" />
-
+-->
     <!-- PSC -->
     <xi:include href="wrappers/PSC/cer_right_arm-PSC_wrapper.xml" /> 
     <xi:include href="hardware/PSC/right_hand-psc.xml" />
