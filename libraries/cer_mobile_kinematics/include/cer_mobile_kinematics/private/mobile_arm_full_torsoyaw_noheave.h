@@ -16,21 +16,21 @@
 */
 
 /****************************************************************/
-class MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff : public MobileArmCommonNLP
+class MobileArmFullTorsoYawNoHeaveNLP_ForwardDiff : public MobileArmCommonNLP
 {
 protected:
     const double s_pos=0.01;
     const double s_ang=0.001;
 public:
     /****************************************************************/
-    MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff(MobileArmSolver &slv_, int nb_targets=1) : MobileArmCommonNLP(slv_, nb_targets)
+    MobileArmFullTorsoYawNoHeaveNLP_ForwardDiff(MobileArmSolver &slv_, int nb_targets=1) : MobileArmCommonNLP(slv_, nb_targets)
     {
     }
 
     /****************************************************************/
     string get_mode() const
     {
-        return "full_pose+mobile_base+no_torso_no_heave+forward_diff";
+        return "full_pose+mobile_base+torso_yaw_no_heave+forward_diff";
     }
 
     /****************************************************************/
@@ -39,7 +39,7 @@ public:
     {
         n=x.length();
         m=nb_targets*(2+3+3+1);
-        nnz_jac_g=nb_targets*(2*3+3*(3+nb_kin_DOF-4)+3*(1+nb_kin_DOF-4)+2);
+        nnz_jac_g=nb_targets*(2*3+3*(3+nb_kin_DOF-3)+3*(1+nb_kin_DOF-3)+2);
         if(domain_constr)
         {
             m++;
@@ -66,9 +66,8 @@ public:
             for (size_t j=0; j<3; j++)
                 x_l[idx_t[i]+j]=x_u[idx_t[i]+j]=x0[idx_t[0]+j];
 
-            x_l[idx_ua[i]+0]=x_u[idx_ua[i]+0]=x0[idx_ua[0]+0];
             iKinChain *chain=upper_arm.asChain();
-            for (size_t j=1; j<upper_arm.getDOF(); j++)
+            for (size_t j=0; j<upper_arm.getDOF(); j++)
             {
                 x_l[idx_ua[i]+j]=(*chain)[j].getMin();
                 x_u[idx_ua[i]+j]=(*chain)[j].getMax();
@@ -124,6 +123,7 @@ public:
         computeQuantities(x,new_x);
 
         Ipopt::Number view_angle=0.0;
+        Ipopt::Number postural_torso_yaw=0.0;
         Ipopt::Number postural_upper_arm=0.0;
         Ipopt::Number postural_lower_arm=0.0;
         Ipopt::Number tmp;
@@ -132,6 +132,14 @@ public:
         {
             tmp=remainder(atan2(xd[i][1]-x[idx_b+1], xd[i][0]-x[idx_b+0])-x[idx_b+2], 2.0*M_PI);
             view_angle+=tmp*tmp;
+        }
+
+        if (wpostural_torso_yaw!=0.0)
+        {
+            for (size_t i=0; i<nb_targets; i++)
+            {
+                postural_torso_yaw+=x[idx_ua[i]]*x[idx_ua[i]];
+            }
         }
 
         if (wpostural_upper_arm!=0.0)
@@ -158,6 +166,7 @@ public:
         }
 
         obj_value=view_angle+
+                  wpostural_torso_yaw*postural_torso_yaw+
                   wpostural_upper_arm*postural_upper_arm+
                   wpostural_lower_arm*postural_lower_arm;
 
@@ -196,7 +205,7 @@ public:
             grad_f[idx_t[i]+2]=0.0;
 
             // upper_arm
-            grad_f[idx_ua[i]+0]=0.0;
+            grad_f[idx_ua[i]+0]=2.0*wpostural_torso_yaw*x[idx_ua[i]+0];
             for (size_t j=1; j<upper_arm.getDOF(); j++)
                 grad_f[idx_ua[i]+j]=2.0*wpostural_upper_arm*(x[idx_ua[i]+j]-xref[idx_ua[0]+j]);
 
@@ -269,7 +278,7 @@ public:
                         idx++;
                     }
                 }
-                for (Ipopt::Index col=idx_ua[i]+1; col<idx_la[i]+3; col++)
+                for (Ipopt::Index col=idx_ua[i]; col<idx_la[i]+3; col++)
                 {
                     for (Ipopt::Index j=0; j<3; j++)
                     {
@@ -288,7 +297,7 @@ public:
                     iRow[idx]=9*i+6+j; jCol[idx]=2;
                     idx++;
                 }
-                for (Ipopt::Index col=idx_ua[i]+1; col<idx_la[i]+3; col++)
+                for (Ipopt::Index col=idx_ua[i]; col<idx_la[i]+3; col++)
                 {
                     for (Ipopt::Index j=0; j<3; j++)
                     {
@@ -360,7 +369,7 @@ public:
 
                 // g[2] (upper_arm)
                 Matrix grad=Hb.submatrix(0,2,0,2)*J_[i].submatrix(0,2,0,upper_arm.getDOF()-1);
-                for (size_t j=1; j<grad.cols(); j++)
+                for (size_t j=0; j<grad.cols(); j++)
                 {
                     for (size_t k=0; k<3; k++)
                     {
@@ -422,7 +431,7 @@ public:
 
                 // g[4] (upper_arm)
                 Matrix grado_ua=Rb.submatrix(0,2,0,2)*J_[i].submatrix(3,5,0,upper_arm.getDOF()-1);
-                for (size_t j=1; j<grado_ua.cols(); j++)
+                for (size_t j=0; j<grado_ua.cols(); j++)
                 {
                     w=grado_ua.getCol(j);
                     eo_d=dot(w,eo_u)*eo_u;
@@ -482,19 +491,19 @@ public:
 
 
 /****************************************************************/
-class MobileArmFullNoTorsoNoHeaveNLP_CentralDiff : public MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff
+class MobileArmFullTorsoYawNoHeaveNLP_CentralDiff : public MobileArmFullTorsoYawNoHeaveNLP_ForwardDiff
 {
 public:
     /****************************************************************/
-    MobileArmFullNoTorsoNoHeaveNLP_CentralDiff(MobileArmSolver &slv_, int nb_targets=1) :
-        MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff(slv_, nb_targets)
+    MobileArmFullTorsoYawNoHeaveNLP_CentralDiff(MobileArmSolver &slv_, int nb_targets=1) :
+        MobileArmFullTorsoYawNoHeaveNLP_ForwardDiff(slv_, nb_targets)
     {
     }
 
     /****************************************************************/
     string get_mode() const
     {
-        return "full_pose+mobile_base+no_torso_no_heave+central_diff";
+        return "full_pose+mobile_base+torso_yaw_no_heave+central_diff";
     }
 
     /****************************************************************/
@@ -524,7 +533,7 @@ public:
                         idx++;
                     }
                 }
-                for (Ipopt::Index col=idx_ua[i]+1; col<idx_la[i]+3; col++)
+                for (Ipopt::Index col=idx_ua[i]; col<idx_la[i]+3; col++)
                 {
                     for (Ipopt::Index j=0; j<3; j++)
                     {
@@ -543,7 +552,7 @@ public:
                     iRow[idx]=9*i+6+j; jCol[idx]=2;
                     idx++;
                 }
-                for (Ipopt::Index col=idx_ua[i]+1; col<idx_la[i]+3; col++)
+                for (Ipopt::Index col=idx_ua[i]; col<idx_la[i]+3; col++)
                 {
                     for (Ipopt::Index j=0; j<3; j++)
                     {
@@ -621,7 +630,7 @@ public:
 
                 // g[2] (upper_arm)
                 Matrix grad=Hb.submatrix(0,2,0,2)*J_[i].submatrix(0,2,0,upper_arm.getDOF()-1);
-                for (size_t j=1; j<grad.cols(); j++)
+                for (size_t j=0; j<grad.cols(); j++)
                 {
                     for (size_t k=0; k<3; k++)
                     {
@@ -692,7 +701,7 @@ public:
 
                 // g[4] (upper_arm)
                 Matrix grado_ua=Rb.submatrix(0,2,0,2)*J_[i].submatrix(3,5,0,upper_arm.getDOF()-1);
-                for (size_t j=1; j<grado_ua.cols(); j++)
+                for (size_t j=0; j<grado_ua.cols(); j++)
                 {
                     w=grado_ua.getCol(j);
                     eo_d=dot(w,eo_u)*eo_u;

@@ -51,6 +51,7 @@ namespace cer {
     namespace kinematics {
         #include <cer_mobile_kinematics/private/mobile_arm_common.h>
         #include <cer_mobile_kinematics/private/mobile_arm_full_notorso_noheave.h>
+        #include <cer_mobile_kinematics/private/mobile_arm_full_torsoyaw_noheave.h>
     }
 }
 
@@ -156,6 +157,12 @@ bool MobileArmSolver::ikin(const vector<Matrix> &Hd, Vector &q, int *exit_code)
             else
                 nlp=new MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff(*this,Hd.size());
             break;
+        case configuration::torso_yaw_no_heave:
+            if (slvParameters.use_central_difference)
+                nlp=new MobileArmFullTorsoYawNoHeaveNLP_CentralDiff(*this,Hd.size());
+            else
+                nlp=new MobileArmFullTorsoYawNoHeaveNLP_ForwardDiff(*this,Hd.size());
+            break;
         }
     }
     else
@@ -170,6 +177,12 @@ bool MobileArmSolver::ikin(const vector<Matrix> &Hd, Vector &q, int *exit_code)
                 nlp=new MobileArmFullNoTorsoNoHeaveNLP_CentralDiff(*this,Hd.size());
             else
                 nlp=new MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff(*this,Hd.size());
+            break;
+        case configuration::torso_yaw_no_heave:
+            if (slvParameters.use_central_difference)
+                nlp=new MobileArmFullTorsoYawNoHeaveNLP_CentralDiff(*this,Hd.size());
+            else
+                nlp=new MobileArmFullTorsoYawNoHeaveNLP_ForwardDiff(*this,Hd.size());
             break;
         }
     }

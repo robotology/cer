@@ -269,6 +269,8 @@ bool SolverParameters::setMode(const string &mode)
                 configuration=configuration::no_torso_heave;
             else if (submode=="no_torso_no_heave")
                 configuration=configuration::no_torso_no_heave;
+            else if (submode=="torso_yaw_no_heave")
+                configuration=configuration::torso_yaw_no_heave;
             else if (submode=="forward_diff")
                 use_central_difference=false;                
             else if (submode=="central_diff")
@@ -296,6 +298,8 @@ string SolverParameters::getMode() const
         mode+="no_torso_heave";
     else if (configuration==configuration::no_torso_no_heave)
         mode+="no_torso_no_heave";
+    else if (configuration==configuration::torso_yaw_no_heave)
+        mode+="torso_yaw_no_heave";
 
     mode+="+";
     mode+=(use_central_difference?"central_diff":"forward_diff");
