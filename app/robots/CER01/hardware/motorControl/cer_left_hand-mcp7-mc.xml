@@ -26,29 +26,44 @@
     </group>
 
 
-     <group name="CONTROLS">
-       <param name="positionControl">  JOINT_PID_V1           JOINT_PID_V1          </param> 
-       <param name="velocityControl">  none                   none                  </param> 
-       <param name="torqueControl">    none                   none                  </param> 
-        <param name="currentPid">      none                   none                  </param> 
+    <group name="CONTROLS">
+        <param name="positionControl">         JOINT_MINJERK_OUT_PWM_CTRL  JOINT_MINJERK_OUT_PWM_CTRL   </param>
+        <param name="velocityControl">         JOINT_MINJERK_OUT_PWM_CTRL  JOINT_MINJERK_OUT_PWM_CTRL   </param>
+        <param name="mixedControl">            JOINT_MINJERK_OUT_PWM_CTRL  JOINT_MINJERK_OUT_PWM_CTRL   </param>
+        <param name="posDirectControl">        JOINT_DIRECT_OUT_PWM_CTRL   JOINT_DIRECT_OUT_PWM_CTRL    </param>                
+        <param name="velDirectControl">        JOINT_DIRECT_OUT_PWM_CTRL   JOINT_DIRECT_OUT_PWM_CTRL    </param>
+        <param name="torqueControl">           none                        none                         </param>
+    </group>
+    
+    <group name="JOINT_MINJERK_OUT_PWM_CTRL">
+	    <param name="controlLaw">             minjerk                   </param>
+        <param name="outputType">             pwm                       </param>
+        <param name="fbkControlUnits">        machine_units             </param> 
+        <param name="outputControlUnits">     machine_units             </param>
+        <param name="kff">                        0            0        </param> 
+        <param name="kp">                      -100          100        </param>          
+        <param name="kd">                         0            0        </param>          
+        <param name="ki">                       -50           50        </param>              
+        <param name="maxOutput">               2500         2500        </param>                
+        <param name="maxInt">                   500          500        </param>                             
+        <param name="stictionUp">                 0            0        </param>          
+        <param name="stictionDwn">                0            0        </param>        
     </group>
 
-	<group name="JOINT_PID_V1">
-    <param name="controlLaw">    Pid_inPos_outPwm </param> 
-        <param name="fbkControlUnits">     metric_units              </param> 
-        <param name="outputControlUnits">  machine_units             </param>
-        <param name="pos_kp">             -100         100        </param>       
-        <param name="pos_kd">                0           0        </param>       
-        <param name="pos_ki">              -50          50        </param>         
-        <param name="pos_maxOutput">      2500        2500        </param>          
-        <param name="pos_maxInt">          500         500        </param>       
-        <param name="pos_shift">             0           0        </param>       
-        <param name="pos_ko">                0           0        </param>       
-        <param name="pos_stictionUp">        0           0        </param>       
-        <param name="pos_stictionDwn">       0           0        </param>     
-        <param name="pos_kff">               0           0        </param>   
+    <group name="JOINT_DIRECT_OUT_PWM_CTRL">
+	    <param name="controlLaw">             direct                    </param>
+        <param name="outputType">             pwm                       </param>
+        <param name="fbkControlUnits">        machine_units             </param> 
+        <param name="outputControlUnits">     machine_units             </param>
+        <param name="kff">                        0            0        </param> 
+        <param name="kp">                      -100          100        </param>          
+        <param name="kd">                         0            0        </param>          
+        <param name="ki">                       -50           50        </param>              
+        <param name="maxOutput">               2500         2500        </param>                
+        <param name="maxInt">                   500          500        </param>                             
+        <param name="stictionUp">                 0            0        </param>          
+        <param name="stictionDwn">                0            0        </param>        
     </group>
-
 
     <group name="IMPEDANCE">
         <param name="stiffness">       0      0           </param>    
