@@ -535,7 +535,7 @@ public:
                 {
                     if (verbosity>0)
                         yDebug() << "\t" << area.points[i].x << area.points[i].y;
-                    area.points.size();
+
                     coord.addDouble(area.points[i].x);
                     coord.addDouble(area.points[i].y);
                 }
@@ -617,7 +617,7 @@ public:
     }
 
     /****************************************************************/
-    bool ask(Property &request, Bottle &reply)
+    bool ask(Property &request, Bottle &reply, bool local=false)
     {
         if (closing)
             return false;
@@ -644,6 +644,14 @@ public:
             Bottle b; b.addList().read(q);
             request.put("q",b.get(0));
         }
+
+        Bottle *robotPose = request.find("q").asList();
+        Vector tu(4,0.0);
+        tu[2]=1.0;
+        tu[3]=M_PI/180*robotPose->get(2).asDouble();
+        Matrix baseTransform=axis2dcm(tu);
+        baseTransform[0][3]=robotPose->get(0).asDouble();
+        baseTransform[1][3]=robotPose->get(1).asDouble();
 
         if (!request.check("domain") && iloc && imap)
         {
@@ -692,6 +700,64 @@ public:
             request.put("domain",b.get(0));
         }
 
+        if(local)
+        {
+            if (Bottle *targetList=request.find("target").asList())
+            {
+                for (size_t i=0; i<targetList->size(); i++)
+                {
+                    Bottle *target=targetList->get(i).asList();
+                    if (!target)
+                    {
+                        yError("wrong target list format!");
+                        reply.clear();
+                        reply.addVocab(Vocab::encode("nack"));
+                        return false;
+                    }
+
+                    if (target->size()<7)
+                    {
+                        yError("wrong target size!");
+                        reply.clear();
+                        reply.addVocab(Vocab::encode("nack"));
+                        return false;
+                    }
+
+                    Vector xd(3);
+                    xd[0]=target->get(0).asDouble();
+                    xd[1]=target->get(1).asDouble();
+                    xd[2]=target->get(2).asDouble();
+                    Vector ud(4);
+                    ud[0]=target->get(3).asDouble();
+                    ud[1]=target->get(4).asDouble();
+                    ud[2]=target->get(5).asDouble();
+                    ud[3]=target->get(6).asDouble();
+
+                    Matrix Hd = axis2dcm(ud);
+                    Hd.setSubcol(xd,0,3);
+                    Hd = baseTransform*Hd;
+
+                    Vector x = Hd.subcol(0, 3, 3);
+                    Vector u = dcm2axis(Hd);
+                    target->clear();
+                    target->addDouble(x[0]);
+                    target->addDouble(x[1]);
+                    target->addDouble(x[2]);
+                    target->addDouble(u[0]);
+                    target->addDouble(u[1]);
+                    target->addDouble(u[2]);
+                    target->addDouble(u[3]);
+                    if (verbosity>0)
+                    {
+                        yDebug() << "Target transformed from local:";
+                        yDebug() << "\t" << xd.toString() << ud.toString();
+                        yDebug() << "                    to global:";
+                        yDebug() << "\t" << x.toString() << u.toString();
+                    }
+                }
+            }
+        }
+
         if (verbosity>0)
             yInfo("Forwarding request to solver: %s",request.toString().c_str());
 
@@ -704,11 +770,185 @@ public:
             if (reply.get(0).asVocab()==Vocab::encode("ack"))
             {
                 reply=reply.tail();
+                if (local)
+                {
+                    if(Bottle *replyPoseList = reply.find("q").asList())
+                    {
+                        for (int i=0 ; i<replyPoseList->size(); i++)
+                        {
+                            Bottle *replyPose = replyPoseList->get(i).asList();
+
+                            if (verbosity>0)
+                            {
+                                yDebug() << "Final base pose transformed from global:";
+                                yDebug() << "\t" << replyPose->get(0).asDouble() << replyPose->get(1).asDouble() << replyPose->get(2).asDouble();
+                            }
+                            Vector new_tu(4,0.0);
+                            new_tu[2]=1.0;
+                            new_tu[3]=M_PI/180*replyPose->get(2).asDouble();
+                            Matrix newBaseTransform=axis2dcm(tu);
+                            newBaseTransform[0][3]=replyPose->get(0).asDouble();
+                            newBaseTransform[1][3]=replyPose->get(1).asDouble();
+                            newBaseTransform=SE3inv(baseTransform)*newBaseTransform;
+                            replyPose->get(0)=Value(newBaseTransform[0][3]);
+                            replyPose->get(1)=Value(newBaseTransform[1][3]);
+                            replyPose->get(2)=Value(180.0/M_PI*dcm2axis(newBaseTransform)[3]);
+
+                            if (verbosity>0)
+                            {
+                                yDebug() << "                              to local:";
+                                yDebug() << "\t" << replyPose->get(0).asDouble() << replyPose->get(1).asDouble() << replyPose->get(2).asDouble();
+                            }
+                        }
+                    }
+
+                    if (Bottle *targetList=reply.find("x").asList())
+                    {
+                        for (int i=0 ; i<targetList->size(); i++)
+                        {
+                            Bottle *target=targetList->get(i).asList();
+                            if (!target)
+                            {
+                                yError("wrong target list format!");
+                                reply.clear();
+                                reply.addVocab(Vocab::encode("nack"));
+                                return false;
+                            }
+
+                            if (target->size()<7)
+                            {
+                                yError("wrong target size!");
+                                reply.clear();
+                                reply.addVocab(Vocab::encode("nack"));
+                                return false;
+                            }
+
+                            Vector xd(3);
+                            xd[0]=target->get(0).asDouble();
+                            xd[1]=target->get(1).asDouble();
+                            xd[2]=target->get(2).asDouble();
+                            Vector ud(4);
+                            ud[0]=target->get(3).asDouble();
+                            ud[1]=target->get(4).asDouble();
+                            ud[2]=target->get(5).asDouble();
+                            ud[3]=target->get(6).asDouble();
+
+                            Matrix Hd = axis2dcm(ud);
+                            Hd.setSubcol(xd,0,3);
+                            Hd = SE3inv(baseTransform)*Hd;
+
+                            Vector x = Hd.subcol(0, 3, 3);
+                            Vector u = dcm2axis(Hd);
+                            target->clear();
+                            target->addDouble(x[0]);
+                            target->addDouble(x[1]);
+                            target->addDouble(x[2]);
+                            target->addDouble(u[0]);
+                            target->addDouble(u[1]);
+                            target->addDouble(u[2]);
+                            target->addDouble(u[3]);
+                            if (verbosity>0)
+                            {
+                                yDebug() << "Target transformed from global:";
+                                yDebug() << "\t" << xd.toString() << ud.toString();
+                                yDebug() << "                      to local:";
+                                yDebug() << "\t" << x.toString() << u.toString();
+                            }
+                        }
+                    }
+                }
                 return true;
             }
             else if(reply.get(0).asVocab()==Vocab::encode("nack"))
             {
                 reply=reply.tail();
+                if (local)
+                {
+                    if(Bottle *replyPoseList = reply.find("q").asList())
+                    {
+                        for (int i=0 ; i<replyPoseList->size(); i++)
+                        {
+                            Bottle *replyPose = replyPoseList->get(i).asList();
+
+                            if (verbosity>0)
+                            {
+                                yDebug() << "Final base pose transformed from global:";
+                                yDebug() << "\t" << replyPose->get(0).asDouble() << replyPose->get(1).asDouble() << replyPose->get(2).asDouble();
+                            }
+                            Vector new_tu(4,0.0);
+                            new_tu[2]=1.0;
+                            new_tu[3]=M_PI/180*replyPose->get(2).asDouble();
+                            Matrix newBaseTransform=axis2dcm(tu);
+                            newBaseTransform[0][3]=replyPose->get(0).asDouble();
+                            newBaseTransform[1][3]=replyPose->get(1).asDouble();
+                            newBaseTransform=SE3inv(baseTransform)*newBaseTransform;
+                            replyPose->get(0)=Value(newBaseTransform[0][3]);
+                            replyPose->get(1)=Value(newBaseTransform[1][3]);
+                            replyPose->get(2)=Value(180.0/M_PI*dcm2axis(newBaseTransform)[3]);
+
+                            if (verbosity>0)
+                            {
+                                yDebug() << "                              to local:";
+                                yDebug() << "\t" << replyPose->get(0).asDouble() << replyPose->get(1).asDouble() << replyPose->get(2).asDouble();
+                            }
+                        }
+                    }
+
+                    if (Bottle *targetList=reply.find("x").asList())
+                    {
+                        for (int i=0 ; i<targetList->size(); i++)
+                        {
+                            Bottle *target=targetList->get(i).asList();
+                            if (!target)
+                            {
+                                yError("wrong target list format!");
+                                reply.clear();
+                                reply.addVocab(Vocab::encode("nack"));
+                                return false;
+                            }
+
+                            if (target->size()<7)
+                            {
+                                yError("wrong target size!");
+                                reply.clear();
+                                reply.addVocab(Vocab::encode("nack"));
+                                return false;
+                            }
+
+                            Vector xd(3);
+                            xd[0]=target->get(0).asDouble();
+                            xd[1]=target->get(1).asDouble();
+                            xd[2]=target->get(2).asDouble();
+                            Vector ud(4);
+                            ud[0]=target->get(3).asDouble();
+                            ud[1]=target->get(4).asDouble();
+                            ud[2]=target->get(5).asDouble();
+                            ud[3]=target->get(6).asDouble();
+
+                            Matrix Hd = axis2dcm(ud);
+                            Hd.setSubcol(xd,0,3);
+                            Hd = SE3inv(baseTransform)*Hd;
+
+                            Vector x = Hd.subcol(0, 3, 3);
+                            Vector u = dcm2axis(Hd);
+                            target->clear();
+                            target->addDouble(x[0]);
+                            target->addDouble(x[1]);
+                            target->addDouble(x[2]);
+                            target->addDouble(u[0]);
+                            target->addDouble(u[1]);
+                            target->addDouble(u[2]);
+                            target->addDouble(u[3]);
+                            if (verbosity>0)
+                            {
+                                yDebug() << "Target transformed from global:";
+                                yDebug() << "\t" << xd.toString() << ud.toString();
+                                yDebug() << "                      to local:";
+                                yDebug() << "\t" << x.toString() << u.toString();
+                            }
+                        }
+                    }
+                }
                 return false;
             }
             else
@@ -974,7 +1214,25 @@ public:
                 {
                     Property p(b->toString().c_str());
                     Bottle payLoad;
-                    if (ask(p,payLoad))
+                    if (ask(p,payLoad,false))
+                    {
+                        reply.addVocab(Vocab::encode("ack"));
+                        reply.append(payLoad);
+                    }
+                    else if (payLoad.size()>0)
+                    {
+                        reply.addVocab(Vocab::encode("nack"));
+                        reply.append(payLoad);
+                    }
+                }
+            }
+            else if (cmd_0==Vocab::encode("askLocal"))
+            {
+                if (Bottle *b=cmd.get(1).asList())
+                {
+                    Property p(b->toString().c_str());
+                    Bottle payLoad;
+                    if (ask(p,payLoad,true))
                     {
                         reply.addVocab(Vocab::encode("ack"));
                         reply.append(payLoad);
