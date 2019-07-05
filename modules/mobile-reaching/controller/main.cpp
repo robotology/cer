@@ -649,9 +649,9 @@ public:
         Vector tu(4,0.0);
         tu[2]=1.0;
         tu[3]=M_PI/180*robotPose->get(2).asDouble();
-        Matrix baseTransform=axis2dcm(tu);
-        baseTransform[0][3]=robotPose->get(0).asDouble();
-        baseTransform[1][3]=robotPose->get(1).asDouble();
+        Matrix torsoTransform=axis2dcm(tu);
+        torsoTransform[0][3]=robotPose->get(0).asDouble()+0.044*cos(tu[3]);
+        torsoTransform[1][3]=robotPose->get(1).asDouble()+0.044*sin(tu[3]);
 
         if (!request.check("domain") && iloc && imap)
         {
@@ -735,7 +735,7 @@ public:
 
                     Matrix Hd = axis2dcm(ud);
                     Hd.setSubcol(xd,0,3);
-                    Hd = baseTransform*Hd;
+                    Hd = torsoTransform*Hd;
 
                     Vector x = Hd.subcol(0, 3, 3);
                     Vector u = dcm2axis(Hd);
@@ -786,13 +786,13 @@ public:
                             Vector new_tu(4,0.0);
                             new_tu[2]=1.0;
                             new_tu[3]=M_PI/180*replyPose->get(2).asDouble();
-                            Matrix newBaseTransform=axis2dcm(tu);
-                            newBaseTransform[0][3]=replyPose->get(0).asDouble();
-                            newBaseTransform[1][3]=replyPose->get(1).asDouble();
-                            newBaseTransform=SE3inv(baseTransform)*newBaseTransform;
-                            replyPose->get(0)=Value(newBaseTransform[0][3]);
-                            replyPose->get(1)=Value(newBaseTransform[1][3]);
-                            replyPose->get(2)=Value(180.0/M_PI*dcm2axis(newBaseTransform)[3]);
+                            Matrix newTorsoTransform=axis2dcm(tu);
+                            newTorsoTransform[0][3]=replyPose->get(0).asDouble();
+                            newTorsoTransform[1][3]=replyPose->get(1).asDouble();
+                            newTorsoTransform=SE3inv(torsoTransform)*newTorsoTransform;
+                            replyPose->get(0)=Value(newTorsoTransform[0][3]);
+                            replyPose->get(1)=Value(newTorsoTransform[1][3]);
+                            replyPose->get(2)=Value(180.0/M_PI*dcm2axis(newTorsoTransform)[3]);
 
                             if (verbosity>0)
                             {
@@ -835,7 +835,7 @@ public:
 
                             Matrix Hd = axis2dcm(ud);
                             Hd.setSubcol(xd,0,3);
-                            Hd = SE3inv(baseTransform)*Hd;
+                            Hd = SE3inv(torsoTransform)*Hd;
 
                             Vector x = Hd.subcol(0, 3, 3);
                             Vector u = dcm2axis(Hd);
@@ -881,7 +881,7 @@ public:
                             Matrix newBaseTransform=axis2dcm(tu);
                             newBaseTransform[0][3]=replyPose->get(0).asDouble();
                             newBaseTransform[1][3]=replyPose->get(1).asDouble();
-                            newBaseTransform=SE3inv(baseTransform)*newBaseTransform;
+                            newBaseTransform=SE3inv(torsoTransform)*newBaseTransform;
                             replyPose->get(0)=Value(newBaseTransform[0][3]);
                             replyPose->get(1)=Value(newBaseTransform[1][3]);
                             replyPose->get(2)=Value(180.0/M_PI*dcm2axis(newBaseTransform)[3]);
@@ -927,7 +927,7 @@ public:
 
                             Matrix Hd = axis2dcm(ud);
                             Hd.setSubcol(xd,0,3);
-                            Hd = SE3inv(baseTransform)*Hd;
+                            Hd = SE3inv(torsoTransform)*Hd;
 
                             Vector x = Hd.subcol(0, 3, 3);
                             Vector u = dcm2axis(Hd);
