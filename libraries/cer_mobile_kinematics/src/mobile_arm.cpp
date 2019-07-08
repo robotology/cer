@@ -25,6 +25,7 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/LockGuard.h>
 #include <yarp/math/Math.h>
+#include <yarp/math/SVD.h>
 
 #include <iCub/ctrl/math.h>
 #include <iCub/iKin/iKinFwd.h>
@@ -267,6 +268,18 @@ bool MobileArmSolver::ikin(const vector<Matrix> &Hd, Vector &q, int *exit_code)
     }
 }
 
+/****************************************************************/
+bool MobileArmSolver::getManip(const yarp::sig::Vector &q, yarp::sig::Vector &manip)
+{
+    Ipopt::SmartPtr<MobileArmFullNoTorsoNoHeaveNLP_CentralDiff> nlp=new MobileArmFullNoTorsoNoHeaveNLP_CentralDiff(*this,1);
+
+    Vector q_rad(q);
+    for(size_t i=6; i<12; i++)
+        q_rad[i]=M_PI/180*q_rad[i];
+    manip=nlp->computeManipulability(q_rad.size(), q_rad.data(), 0, true);
+
+    return true;
+}
 
 /****************************************************************/
 MobileArmCOM::MobileArmCOM(MobileArmSolver &solver_, const double external_weight,

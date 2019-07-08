@@ -185,6 +185,8 @@ public:
                       int *exit_code=NULL)
     {}
 
+    virtual bool getManip(const yarp::sig::Vector &q, yarp::sig::Vector &manip);
+
     /**
      * Destructor.
      */

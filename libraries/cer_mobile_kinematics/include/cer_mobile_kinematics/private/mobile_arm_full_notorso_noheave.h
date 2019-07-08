@@ -15,6 +15,89 @@
  * Public License for more details
 */
 
+Vector iExpMap(const Matrix &M, const double &delta_t)
+{
+    Vector v(6,0.0);
+    double theta,si,co,sinc,mcosc,msinc,det;
+    Vector u;
+
+    Matrix Rd=M.submatrix(0,2, 0,2);
+    u=dcm2axis(Rd);
+    u*=u[3];
+    u.pop_back();
+
+    for (int i=0; i<3; i++)
+        v[3+i]=u[i];
+
+    theta=sqrt(u[0]*u[0] + u[1]*u[1] + u[2]*u[2]);
+    si=sin(theta);
+    co=cos(theta);
+    if (fabs(theta)<1e-8)
+        sinc=1.0;
+    else
+        sinc=si/theta;
+    if (fabs(theta) < 2.4e-4)
+    {
+        mcosc=0.5;
+        msinc=1./6.0;
+    }
+    else
+    {
+        mcosc=(1.0-co)/(theta*theta);
+        msinc=((1.0-si/theta)/theta/theta) ;
+    }
+
+    Matrix a(3,3);
+    a[0][0] = sinc + u[0]*u[0]*msinc;
+    a[0][1] = u[0]*u[1]*msinc - u[2]*mcosc;
+    a[0][2] = u[0]*u[2]*msinc + u[1]*mcosc;
+
+    a[1][0] = u[0]*u[1]*msinc + u[2]*mcosc;
+    a[1][1] = sinc + u[1]*u[1]*msinc;
+    a[1][2] = u[1]*u[2]*msinc - u[0]*mcosc;
+
+    a[2][0] = u[0]*u[2]*msinc - u[1]*mcosc;
+    a[2][1] = u[1]*u[2]*msinc + u[0]*mcosc;
+    a[2][2] = sinc + u[2]*u[2]*msinc;
+
+    det = a[0][0]*a[1][1]*a[2][2] + a[1][0]*a[2][1]*a[0][2]
+         + a[0][1]*a[1][2]*a[2][0] - a[2][0]*a[1][1]*a[0][2]
+         - a[1][0]*a[0][1]*a[2][2] - a[0][0]*a[2][1]*a[1][2];
+
+    if (fabs(det) > 1.e-5)
+    {
+        v[0] =  (M[0][3]*a[1][1]*a[2][2]
+                +   M[1][3]*a[2][1]*a[0][2]
+                +   M[2][3]*a[0][1]*a[1][2]
+                -   M[2][3]*a[1][1]*a[0][2]
+                -   M[1][3]*a[0][1]*a[2][2]
+                -   M[0][3]*a[2][1]*a[1][2])/det;
+        v[1] =  (a[0][0]*M[1][3]*a[2][2]
+                +   a[1][0]*M[2][3]*a[0][2]
+                +   M[0][3]*a[1][2]*a[2][0]
+                -   a[2][0]*M[1][3]*a[0][2]
+                -   a[1][0]*M[0][3]*a[2][2]
+                -   a[0][0]*M[2][3]*a[1][2])/det;
+        v[2] =  (a[0][0]*a[1][1]*M[2][3]
+                +   a[1][0]*a[2][1]*M[0][3]
+                +   a[0][1]*M[1][3]*a[2][0]
+                -   a[2][0]*a[1][1]*M[0][3]
+                -   a[1][0]*a[0][1]*M[2][3]
+                -   a[0][0]*a[2][1]*M[1][3])/det;
+    }
+    else
+    {
+        v[0] = M[0][3];
+        v[1] = M[1][3];
+        v[2] = M[2][3];
+    }
+
+    // Apply the sampling time to the computed velocity
+    v /= delta_t;
+
+    return v;
+}
+
 /****************************************************************/
 class MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff : public MobileArmCommonNLP
 {
@@ -130,12 +213,200 @@ public:
         return true;
     }
 
+    Vector computeManipulability(Ipopt::Index n, const Ipopt::Number *x, int target_idx, bool new_x)
+    {
+        // Kinematics Jacobian
+        Matrix Jtorso(6,3);
+        Matrix Jtripod(6,3);
+        Matrix Jarm;
+
+        Ipopt::Number x_dx[n];
+        for (Ipopt::Index i=0; i<n; i++)
+            x_dx[i]=x[i];
+
+        TripodState d_fw;
+
+        if(new_x)
+        {
+            // Base
+
+            // Torso
+
+            // Upper arm
+            Vector q_loc;
+            for (size_t i=0; i<upper_arm.getDOF(); i++)
+                q_loc.push_back(x[idx_ua[target_idx]+i]);
+
+            TripodState d1_loc=tripod_fkin(1,x,nullptr,target_idx);
+            TripodState d2_loc=tripod_fkin(2,x,nullptr,target_idx);
+
+            upper_arm.setH0(H0);
+            upper_arm.setHN(HN);
+            Matrix H_loc=upper_arm.getH(q_loc);
+            Matrix T_loc=d1_loc.T*H_loc*d2_loc.T*TN;
+
+            upper_arm.setH0(d1_loc.T*H0);
+            upper_arm.setHN(HN*d2_loc.T*TN);
+            Jarm=upper_arm.GeoJacobian();
+
+            upper_arm.setH0(H0);
+            upper_arm.setHN(HN);
+
+            // Lower arm
+            Matrix fw;
+            Matrix M=d1_loc.T*H_loc;
+            Matrix He=M*d2_loc.T*TN;
+            Matrix R=T_loc.submatrix(0,2,0,2);
+
+            for(int i=0 ; i<3 ; i++)
+            {
+                x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i]+drho;
+                d_fw = tripod_fkin(2,x_dx,nullptr,target_idx);
+                fw = M*d_fw.T*TN;
+                Vector w = iExpMap(SE3inv(He)*fw, drho);
+                Jtripod.setSubcol(R*w.subVector(0,2), 0,i);
+                Jtripod.setSubcol(R*w.subVector(3,5), 3,i);
+                x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i];
+            }
+        }
+        else
+        {
+            // Torso
+
+            // Upper arm
+            Jarm = J_[target_idx];
+
+            // Lower arm
+            Matrix fw;
+            Matrix M=d1[target_idx].T*H[target_idx];
+            Matrix He=M*d2[target_idx].T*TN;
+
+            for(int i=0 ; i<3 ; i++)
+            {
+                x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i]+drho;
+                d_fw = tripod_fkin(2,x_dx,nullptr,target_idx);
+                fw = M*d_fw.T*TN;
+                Vector w = iExpMap(SE3inv(He)*fw, drho);
+                Jtripod.setSubcol(T[target_idx].submatrix(0,2,0,2)*w.subVector(0,2), 0,i);
+                Jtripod.setSubcol(T[target_idx].submatrix(0,2,0,2)*w.subVector(3,5), 3,i);
+                x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i];
+            }
+        }
+
+        Matrix Jkin = cat(cat(Jtorso,Jarm),Jtripod);
+
+        // Constraints Jacobian
+
+        Matrix Jconstr(2,nb_kin_DOF);
+
+        // torso yaw locked
+        Jconstr[0][3]=1.0;
+
+        // equality constraint g[0] (wrist heave fixed)
+        if(new_x)
+        {
+            TripodState din2_loc;
+            tripod_fkin(2,x,&din2_loc,target_idx);
+
+            for(int i=0 ; i<3 ; i++)
+            {
+                x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i]+drho;
+                tripod_fkin(2,x_dx,&d_fw,target_idx);
+                Jconstr[1][idx_la[0]-3+i]=(d_fw.p[2]-din2_loc.p[2])/drho;
+                x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i];
+            }
+        }
+        else
+        {
+            for(int i=0 ; i<3 ; i++)
+            {
+                x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i]+drho;
+                tripod_fkin(2,x_dx,&d_fw,target_idx);
+                Jconstr[1][idx_la[0]-3+i]=(d_fw.p[2]-din2[target_idx].p[2])/drho;
+                x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i];
+            }
+        }
+
+        Matrix Jconstrained = Jkin * (eye(nb_kin_DOF,nb_kin_DOF)-pinv(Jconstr)*Jconstr);
+
+        // Joint limit penalty
+
+        Ipopt::Number x_l[n];
+        Ipopt::Number x_u[n];
+        get_bounds_info(n, x_l, x_u, -1, nullptr, nullptr);
+
+        Matrix J(6, nb_kin_DOF);
+        for(int j=3 ; j<nb_kin_DOF ; j++)
+        {
+            int idx=idx_t[target_idx]+j;
+            double t=x[idx];
+            double l=x_l[idx];
+            double u=x_u[idx];
+
+            double coef=0.0;
+            if(u-l>0 && (u-t)>std::numeric_limits<double>::epsilon() && (t-l)>std::numeric_limits<double>::epsilon())
+                coef=1.0/sqrt(1+fabs(0.25*(u-l)*(u-l)*(2*t-u-l)/((u-t)*(u-t)*(t-l)*(t-l))));
+
+            for(int i=0 ; i<6 ; i++)
+                J[i][j]=coef*Jconstrained[i][j];
+        }
+
+yDebug() << "Jkin\n" << Jkin.toString();
+yDebug() << "manip kin" << sqrt(det(Jkin.submatrix(0,2,0,nb_kin_DOF-1)*Jkin.submatrix(0,2,0,nb_kin_DOF-1).transposed())) << sqrt(det(Jkin*Jkin.transposed()));
+yDebug() << "Jconstrained\n" << Jconstrained.toString();
+yDebug() << "manip constr" << sqrt(det(Jconstrained.submatrix(0,2,0,nb_kin_DOF-1)*Jconstrained.submatrix(0,2,0,nb_kin_DOF-1).transposed())) << sqrt(det(Jconstrained*Jconstrained.transposed()));
+yDebug() << "Jlim\n" << J.toString();
+yDebug() << "manip lim" << sqrt(det(J.submatrix(0,2,0,nb_kin_DOF-1)*J.submatrix(0,2,0,nb_kin_DOF-1).transposed())) << sqrt(det(J*J.transposed()));
+
+        Vector manip(9);
+        double d=det(J*J.transposed());
+        manip[0]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
+        d=det(J.submatrix(0,2,0,nb_kin_DOF-1)*J.submatrix(0,2,0,nb_kin_DOF-1).transposed());
+        manip[1]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
+        d=det(J.submatrix(3,5,0,nb_kin_DOF-1)*J.submatrix(3,5,0,nb_kin_DOF-1).transposed());
+        manip[2]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
+
+        d=det(Jconstrained*Jconstrained.transposed());
+        manip[3]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
+        d=det(Jconstrained.submatrix(0,2,0,nb_kin_DOF-1)*Jconstrained.submatrix(0,2,0,nb_kin_DOF-1).transposed());
+        manip[4]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
+        d=det(Jconstrained.submatrix(3,5,0,nb_kin_DOF-1)*Jconstrained.submatrix(3,5,0,nb_kin_DOF-1).transposed());
+        manip[5]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
+
+        d=det(Jkin*Jkin.transposed());
+        manip[6]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
+        d=det(Jkin.submatrix(0,2,0,nb_kin_DOF-1)*Jkin.submatrix(0,2,0,nb_kin_DOF-1).transposed());
+        manip[7]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
+        d=det(Jkin.submatrix(3,5,0,nb_kin_DOF-1)*Jkin.submatrix(3,5,0,nb_kin_DOF-1).transposed());
+        manip[8]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
+
+        for(int i=0; i<manip.size(); i++)
+        {
+            if(manip[i]>std::numeric_limits<double>::epsilon())
+                manip[i] = 1.0/manip[i];
+            else
+                manip[i] = 1.0/std::numeric_limits<double>::epsilon();
+        }
+Matrix U;
+Vector S;
+Matrix V ;
+SVD(J,U,S,V);
+yDebug() << "singv" << S.toString();
+yDebug() << "cond" << S[0] / S[5];
+        //manip[0]=manip[3];
+        //manip[0]=S[0] / S[5];
+        //manip[0] = manip[3];
+        return manip;
+
+    }
+
     /****************************************************************/
     bool eval_f(Ipopt::Index n, const Ipopt::Number *x, bool new_x,
                 Ipopt::Number &obj_value)
     {
         computeQuantities(x,new_x);
 
+        Ipopt::Number manipulability=0.0;
         Ipopt::Number postural_upper_arm=0.0;
         Ipopt::Number postural_lower_arm=0.0;
         Ipopt::Number tmp;
@@ -163,7 +434,14 @@ public:
             }
         }
 
-        obj_value=wpostural_upper_arm*postural_upper_arm+
+        for (size_t i=0; i<nb_targets; i++)
+        {
+            tmp=computeManipulability(n,x,i, false)[0];
+            manipulability+=tmp;
+        }
+
+        obj_value=manipulability+
+                  wpostural_upper_arm*postural_upper_arm+
                   wpostural_lower_arm*postural_lower_arm;
 
         return true;
@@ -182,6 +460,20 @@ public:
 
         for (size_t i=0; i<nb_targets; i++)
         {
+            Ipopt::Number x_dx[n];
+            for (Ipopt::Index j=0; j<n; j++)
+                x_dx[j]=x[j];
+
+            double manip=computeManipulability(n,x_dx,i,false)[0];
+
+            // base
+            for (size_t j=0; j<3; j++)
+            {
+                x_dx[idx_b+j]=x[idx_b+j]+drho;
+                grad_f[idx_b+j]+=(computeManipulability(n,x_dx,i,true)[0]-manip)/drho;
+                x_dx[idx_b+j]=x[idx_b+j];
+            }
+
             // torso
             grad_f[idx_t[i]+0]=0.0;
             grad_f[idx_t[i]+1]=0.0;
@@ -190,12 +482,23 @@ public:
             // upper_arm
             grad_f[idx_ua[i]+0]=0.0;
             for (size_t j=1; j<upper_arm.getDOF(); j++)
+            {
                 grad_f[idx_ua[i]+j]=2.0*wpostural_upper_arm*(x[idx_ua[i]+j]-xref[idx_ua[0]+j]);
+                x_dx[idx_ua[i]+j]=x[idx_ua[i]+j]+drho;
+                grad_f[idx_ua[i]+j]+=(computeManipulability(n,x_dx,i,true)[0]-manip)/drho;
+                x_dx[idx_ua[i]+j]=x[idx_ua[i]+j];
+            }
 
             // lower_arm
             grad_f[idx_la[i]+0]=2.0*wpostural_lower_arm*(x[idx_la[i]+0]-x[idx_la[i]+1]);
             grad_f[idx_la[i]+1]=2.0*wpostural_lower_arm*(2.0*x[idx_la[i]+1]-x[idx_la[i]+0]-x[idx_la[i]+2]);
             grad_f[idx_la[i]+2]=2.0*wpostural_lower_arm*(x[idx_la[i]+2]-x[idx_la[i]+1]);
+            for (size_t j=0; j<3; j++)
+            {
+                x_dx[idx_la[i]+j]=x[idx_la[i]+j]+drho;
+                grad_f[idx_la[i]+j]+=(computeManipulability(n,x_dx,i,true)[0]-manip)/drho;
+                x_dx[idx_la[i]+j]=x[idx_la[i]+j];
+            }
         }
 
         return true;
