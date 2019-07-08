@@ -21,6 +21,7 @@ class MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff : public MobileArmCommonNLP
 protected:
     const double s_pos=0.01;
     const double s_ang=0.001;
+    const double max_angle=M_PI/4;
 public:
     /****************************************************************/
     MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff(MobileArmSolver &slv_, int nb_targets=1) : MobileArmCommonNLP(slv_, nb_targets)
@@ -38,8 +39,8 @@ public:
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
         n=x.length();
-        m=nb_targets*(2+3+3+1);
-        nnz_jac_g=nb_targets*(2*3+3*(3+nb_kin_DOF-4)+3*(1+nb_kin_DOF-4)+2);
+        m=nb_targets*(2+3+3+1+1);
+        nnz_jac_g=nb_targets*(2*3+3*(3+nb_kin_DOF-4)+3*(1+nb_kin_DOF-4)+2+3);
         if(domain_constr)
         {
             m++;
@@ -55,63 +56,75 @@ public:
     bool get_bounds_info(Ipopt::Index n, Ipopt::Number *x_l, Ipopt::Number *x_u,
                          Ipopt::Index m, Ipopt::Number *g_l, Ipopt::Number *g_u)
     {
-        for (size_t i=0; i<3; i++)
+        if(n>0)
         {
-            x_l[idx_b+i]=std::numeric_limits<double>::lowest();
-            x_u[idx_b+i]=std::numeric_limits<double>::max();
-        }
-
-        for (size_t i=0; i<nb_targets; i++)
-        {
-            for (size_t j=0; j<3; j++)
-                x_l[idx_t[i]+j]=x_u[idx_t[i]+j]=x0[idx_t[0]+j];
-
-            x_l[idx_ua[i]+0]=x_u[idx_ua[i]+0]=x0[idx_ua[0]+0];
-            iKinChain *chain=upper_arm.asChain();
-            for (size_t j=1; j<upper_arm.getDOF(); j++)
+            for (size_t i=0; i<3; i++)
             {
-                x_l[idx_ua[i]+j]=(*chain)[j].getMin();
-                x_u[idx_ua[i]+j]=(*chain)[j].getMax();
+                x_l[idx_b+i]=std::numeric_limits<double>::lowest();
+                x_u[idx_b+i]=std::numeric_limits<double>::max();
             }
 
-            for (size_t j=0; j<3; j++)
+            for (size_t i=0; i<nb_targets; i++)
             {
-                x_l[idx_la[i]+j]=lower_arm.l_min;
-                x_u[idx_la[i]+j]=lower_arm.l_max;
+                for (size_t j=0; j<3; j++)
+                    x_l[idx_t[i]+j]=x_u[idx_t[i]+j]=x0[idx_t[0]+j];
+
+                x_l[idx_ua[i]+0]=x_u[idx_ua[i]+0]=x0[idx_ua[0]+0];
+                iKinChain *chain=upper_arm.asChain();
+                for (size_t j=1; j<upper_arm.getDOF(); j++)
+                {
+                    x_l[idx_ua[i]+j]=(*chain)[j].getMin();
+                    x_u[idx_ua[i]+j]=(*chain)[j].getMax();
+                }
+
+                for (size_t j=0; j<3; j++)
+                {
+                    x_l[idx_la[i]+j]=lower_arm.l_min;
+                    x_u[idx_la[i]+j]=lower_arm.l_max;
+                }
             }
         }
 
-        for (Ipopt::Index i=0; i<nb_targets; i++)
+        if(m>0)
         {
-            g_l[9*i+0]=g_u[9*i+0]=0.0;
-            g_l[9*i+1]=lower_arm.cos_alpha_max; g_u[9*i+1]=1.0;
+            for (Ipopt::Index i=0; i<nb_targets; i++)
+            {
+                g_l[10*i+0]=g_u[10*i+0]=0.0;
 
-            g_l[9*i+2]=g_u[9*i+2]=0.0;
-            g_l[9*i+3]=g_u[9*i+3]=0.0;
-            g_l[9*i+4]=g_u[9*i+4]=0.0;
+                g_l[10*i+1]=lower_arm.cos_alpha_max;
+                g_u[10*i+1]=1.0;
 
-            g_l[9*i+5]=cover_shoulder_avoidance[1]; g_u[9*i+5]=std::numeric_limits<double>::max();
+                g_l[10*i+2]=g_u[10*i+2]=0.0;
+                g_l[10*i+3]=g_u[10*i+3]=0.0;
+                g_l[10*i+4]=g_u[10*i+4]=0.0;
 
-            g_l[9*i+6]=g_u[9*i+6]=0.0;
-            g_l[9*i+7]=g_u[9*i+7]=0.0;
-            g_l[9*i+8]=g_u[9*i+8]=0.0;
-        }
+                g_l[10*i+5]=cover_shoulder_avoidance[1];
+                g_u[10*i+5]=std::numeric_limits<double>::max();
 
-        if(domain_constr)
-        {
-            g_l[9*nb_targets]=0.0;
-            g_u[9*nb_targets]=std::numeric_limits<double>::max();
-        }
+                g_l[10*i+6]=g_u[10*i+6]=0.0;
+                g_l[10*i+7]=g_u[10*i+7]=0.0;
+                g_l[10*i+8]=g_u[10*i+8]=0.0;
 
-        latch_idx.clear();
-        latch_gl.clear();
-        latch_gu.clear();
+                g_l[10*i+9]=-max_angle;
+                g_u[10*i+9]=max_angle;
+            }
 
-        for (size_t i=0; i<nb_targets; i++)
-        {
-            latch_idx.push_back(1);
-            latch_gl.push_back(g_l[9*i+1]);
-            latch_gu.push_back(g_u[9*i+1]);
+            if(domain_constr)
+            {
+                g_l[10*nb_targets]=0.0;
+                g_u[10*nb_targets]=std::numeric_limits<double>::max();
+            }
+
+            latch_idx.clear();
+            latch_gl.clear();
+            latch_gu.clear();
+
+            for (size_t i=0; i<nb_targets; i++)
+            {
+                latch_idx.push_back(1);
+                latch_gl.push_back(g_l[10*i+1]);
+                latch_gu.push_back(g_u[10*i+1]);
+            }
         }
 
         return true;
@@ -123,16 +136,9 @@ public:
     {
         computeQuantities(x,new_x);
 
-        Ipopt::Number view_angle=0.0;
         Ipopt::Number postural_upper_arm=0.0;
         Ipopt::Number postural_lower_arm=0.0;
         Ipopt::Number tmp;
-
-        for (size_t i=0; i<nb_targets; i++)
-        {
-            tmp=remainder(atan2(xd[i][1]-x[idx_b+1], xd[i][0]-x[idx_b+0])-x[idx_b+2], 2.0*M_PI);
-            view_angle+=tmp*tmp;
-        }
 
         if (wpostural_upper_arm!=0.0)
         {
@@ -157,8 +163,7 @@ public:
             }
         }
 
-        obj_value=view_angle+
-                  wpostural_upper_arm*postural_upper_arm+
+        obj_value=wpostural_upper_arm*postural_upper_arm+
                   wpostural_lower_arm*postural_lower_arm;
 
         return true;
@@ -174,19 +179,6 @@ public:
         grad_f[idx_b+0]=0;
         grad_f[idx_b+1]=0;
         grad_f[idx_b+2]=0;
-        for (size_t i=0; i<nb_targets; i++)
-        {
-            double dx=xd[i][0]-x[idx_b+0];
-            double dy=xd[i][1]-x[idx_b+1];
-            double norm = dx*dx+dy*dy;
-            if (norm < std::numeric_limits<double>::epsilon())
-                continue;
-
-            double view_angle=remainder(atan2(dy,dx)-x[idx_b+2], 2.0*M_PI);
-            grad_f[idx_b+0]+=2.0*view_angle*dy/norm;
-            grad_f[idx_b+1]+=-2.0*view_angle*dx/norm;
-            grad_f[idx_b+2]+=-2.0*view_angle;
-        }
 
         for (size_t i=0; i<nb_targets; i++)
         {
@@ -218,24 +210,26 @@ public:
         for (Ipopt::Index i=0; i<nb_targets; i++)
         {
             double e2=hd2-din2[i].p[2];
-            g[9*i+0]=e2*e2;
-            g[9*i+1]=din2[i].n[2];
+            g[10*i+0]=e2*e2;
+            g[10*i+1]=din2[i].n[2];
 
             Vector xe=Hb*Hbt*T[i].getCol(3).subVector(0,3);
             xe.pop_back();
             for(Ipopt::Index j=0; j<3 ;j++)
-                g[9*i+2+j]=s_pos*(xd[i][j]-xe[j]);
+                g[10*i+2+j]=s_pos*(xd[i][j]-xe[j]);
 
-            g[9*i+5]=-cover_shoulder_avoidance[0]*x[idx_ua[i]+1]+x[idx_ua[i]+2];
+            g[10*i+5]=-cover_shoulder_avoidance[0]*x[idx_ua[i]+1]+x[idx_ua[i]+2];
 
             Vector e=dcm2axis(Rd[i]*(Rb*T[i]).transposed());
             e*=s_ang*e[3];
             for(Ipopt::Index j=0; j<3 ;j++)
-                g[9*i+6+j]=e[j];
+                g[10*i+6+j]=e[j];
+
+            g[10*i+9]=remainder(atan2(xd[i][1]-x[idx_b+1], xd[i][0]-x[idx_b+0])-x[idx_b+2], 2.0*M_PI);
         }
 
         if(domain_constr)
-            g[9*nb_targets] = domain_dist;
+            g[10*nb_targets] = domain_dist;
 
         latch_x_verifying_alpha(n,x,g);
 
@@ -253,19 +247,19 @@ public:
             for (size_t i=0; i<nb_targets; i++)
             {
                 // g[0,1] (lower_arm)
-                iRow[idx]=9*i+0; jCol[idx]=idx_la[i]+0;idx++;
-                iRow[idx]=9*i+1; jCol[idx]=idx_la[i]+0;idx++;
-                iRow[idx]=9*i+0; jCol[idx]=idx_la[i]+1;idx++;
-                iRow[idx]=9*i+1; jCol[idx]=idx_la[i]+1;idx++;
-                iRow[idx]=9*i+0; jCol[idx]=idx_la[i]+2;idx++;
-                iRow[idx]=9*i+1; jCol[idx]=idx_la[i]+2;idx++;
+                iRow[idx]=10*i+0; jCol[idx]=idx_la[i]+0;idx++;
+                iRow[idx]=10*i+1; jCol[idx]=idx_la[i]+0;idx++;
+                iRow[idx]=10*i+0; jCol[idx]=idx_la[i]+1;idx++;
+                iRow[idx]=10*i+1; jCol[idx]=idx_la[i]+1;idx++;
+                iRow[idx]=10*i+0; jCol[idx]=idx_la[i]+2;idx++;
+                iRow[idx]=10*i+1; jCol[idx]=idx_la[i]+2;idx++;
 
                 // g[2] (reaching position)
                 for (Ipopt::Index col=0; col<3; col++)
                 {
                     for (Ipopt::Index j=0; j<3; j++)
                     {
-                        iRow[idx]=9*i+2+j; jCol[idx]=col;
+                        iRow[idx]=10*i+2+j; jCol[idx]=col;
                         idx++;
                     }
                 }
@@ -273,36 +267,43 @@ public:
                 {
                     for (Ipopt::Index j=0; j<3; j++)
                     {
-                        iRow[idx]=9*i+2+j; jCol[idx]=col;
+                        iRow[idx]=10*i+2+j; jCol[idx]=col;
                         idx++;
                     }
                 }
 
                 // g[3] (cover constraints)
-                iRow[idx]=9*i+5; jCol[idx]=idx_ua[i]+1;idx++;
-                iRow[idx]=9*i+5; jCol[idx]=idx_ua[i]+2;idx++;
+                iRow[idx]=10*i+5; jCol[idx]=idx_ua[i]+1;idx++;
+                iRow[idx]=10*i+5; jCol[idx]=idx_ua[i]+2;idx++;
 
                 // g[4] (reaching orientation)
                 for (Ipopt::Index j=0; j<3; j++)
                 {
-                    iRow[idx]=9*i+6+j; jCol[idx]=2;
+                    iRow[idx]=10*i+6+j; jCol[idx]=2;
                     idx++;
                 }
                 for (Ipopt::Index col=idx_ua[i]+1; col<idx_la[i]+3; col++)
                 {
                     for (Ipopt::Index j=0; j<3; j++)
                     {
-                        iRow[idx]=9*i+6+j; jCol[idx]=col;
+                        iRow[idx]=10*i+6+j; jCol[idx]=col;
                         idx++;
                     }
+                }
+
+                // g[5] (objects in front)
+                for (Ipopt::Index j=0; j<3; j++)
+                {
+                    iRow[idx]=10*i+9; jCol[idx]=j;
+                    idx++;
                 }
             }
 
             // g[5] (domain boundaries constraints)
             if(domain_constr)
             {
-                iRow[idx]=9*nb_targets; jCol[idx]=0;idx++;
-                iRow[idx]=9*nb_targets; jCol[idx]=1;
+                iRow[idx]=10*nb_targets; jCol[idx]=0;idx++;
+                iRow[idx]=10*nb_targets; jCol[idx]=1;
             }
         }
         else
@@ -459,6 +460,23 @@ public:
                 values[idx]=s_ang*(e_fwo[1]-eo[1])/drho;idx++;
                 values[idx]=s_ang*(e_fwo[2]-eo[2])/drho;idx++;
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2];
+
+                // g[5] (object in front)
+                double dx=xd[i][0]-x[idx_b+0];
+                double dy=xd[i][1]-x[idx_b+1];
+                double norm = dx*dx+dy*dy;
+                if (norm < std::numeric_limits<double>::epsilon())
+                {
+                    values[idx]=0;idx++;
+                    values[idx]=0;idx++;
+                    values[idx]=0;idx++;
+                }
+                else
+                {
+                    values[idx]=dy/norm;idx++;
+                    values[idx]=-dx/norm;idx++;
+                    values[idx]=-1.0;idx++;
+                }
             }
 
             // g[5] (domain boundaries constraints)
@@ -509,19 +527,19 @@ public:
             for (size_t i=0; i<nb_targets; i++)
             {
                 // g[0,1] (lower_arm)
-                iRow[idx]=9*i+0; jCol[idx]=idx_la[i]+0;idx++;
-                iRow[idx]=9*i+1; jCol[idx]=idx_la[i]+0;idx++;
-                iRow[idx]=9*i+0; jCol[idx]=idx_la[i]+1;idx++;
-                iRow[idx]=9*i+1; jCol[idx]=idx_la[i]+1;idx++;
-                iRow[idx]=9*i+0; jCol[idx]=idx_la[i]+2;idx++;
-                iRow[idx]=9*i+1; jCol[idx]=idx_la[i]+2;idx++;
+                iRow[idx]=10*i+0; jCol[idx]=idx_la[i]+0;idx++;
+                iRow[idx]=10*i+1; jCol[idx]=idx_la[i]+0;idx++;
+                iRow[idx]=10*i+0; jCol[idx]=idx_la[i]+1;idx++;
+                iRow[idx]=10*i+1; jCol[idx]=idx_la[i]+1;idx++;
+                iRow[idx]=10*i+0; jCol[idx]=idx_la[i]+2;idx++;
+                iRow[idx]=10*i+1; jCol[idx]=idx_la[i]+2;idx++;
 
                 // g[2] (reaching position)
                 for (Ipopt::Index col=0; col<3; col++)
                 {
                     for (Ipopt::Index j=0; j<3; j++)
                     {
-                        iRow[idx]=9*i+2+j; jCol[idx]=col;
+                        iRow[idx]=10*i+2+j; jCol[idx]=col;
                         idx++;
                     }
                 }
@@ -529,26 +547,26 @@ public:
                 {
                     for (Ipopt::Index j=0; j<3; j++)
                     {
-                        iRow[idx]=9*i+2+j; jCol[idx]=col;
+                        iRow[idx]=10*i+2+j; jCol[idx]=col;
                         idx++;
                     }
                 }
 
                 // g[3] (cover constraints)
-                iRow[idx]=9*i+5; jCol[idx]=idx_ua[i]+1;idx++;
-                iRow[idx]=9*i+5; jCol[idx]=idx_ua[i]+2;idx++;
+                iRow[idx]=10*i+5; jCol[idx]=idx_ua[i]+1;idx++;
+                iRow[idx]=10*i+5; jCol[idx]=idx_ua[i]+2;idx++;
 
                 // g[4] (reaching orientation)
                 for (Ipopt::Index j=0; j<3; j++)
                 {
-                    iRow[idx]=9*i+6+j; jCol[idx]=2;
+                    iRow[idx]=10*i+6+j; jCol[idx]=2;
                     idx++;
                 }
                 for (Ipopt::Index col=idx_ua[i]+1; col<idx_la[i]+3; col++)
                 {
                     for (Ipopt::Index j=0; j<3; j++)
                     {
-                        iRow[idx]=9*i+6+j; jCol[idx]=col;
+                        iRow[idx]=10*i+6+j; jCol[idx]=col;
                         idx++;
                     }
                 }
@@ -557,8 +575,8 @@ public:
             // g[5] (domain boundaries constraints)
             if(domain_constr)
             {
-                iRow[idx]=9*nb_targets; jCol[idx]=0;idx++;
-                iRow[idx]=9*nb_targets; jCol[idx]=1;
+                iRow[idx]=10*nb_targets; jCol[idx]=0;idx++;
+                iRow[idx]=10*nb_targets; jCol[idx]=1;
             }
         }
         else

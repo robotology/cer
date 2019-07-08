@@ -311,7 +311,7 @@ public:
     {
         if(domain.size()>5)
         {
-            this->lambda.resize(9*nb_targets+1);
+            this->lambda.resize(10*nb_targets+1);
             domain_constr=true;
             domain_poly.resize(domain.size()/2, Vector(2));
 
@@ -323,7 +323,7 @@ public:
         }
         else
         {
-            this->lambda.resize(9*nb_targets);
+            this->lambda.resize(10*nb_targets);
             domain_constr=false;
             domain_poly.clear();
         }
@@ -358,9 +358,9 @@ public:
         this->zU.resize(idx_la.back()+3);
         this->lambda=lambda;
         if(domain_constr)
-            this->lambda.resize(9*nb_targets+1);
+            this->lambda.resize(10*nb_targets+1);
         else
-            this->lambda.resize(9*nb_targets);
+            this->lambda.resize(10*nb_targets);
     }
 
     /****************************************************************/
@@ -434,7 +434,7 @@ public:
                 H[i]=upper_arm.getH(q[i]);
                 T[i]=d1[i].T*H[i]*d2[i].T*TN;
 
-                upper_arm.setH0(H0*d1[i].T); upper_arm.setHN(HN*d2[i].T*TN);
+                upper_arm.setH0(d1[i].T*H0); upper_arm.setHN(HN*d2[i].T*TN);
                 H_[i]=upper_arm.getH(q[i]);
                 J_[i]=upper_arm.GeoJacobian();
             }
