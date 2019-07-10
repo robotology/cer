@@ -329,14 +329,14 @@ public:
 
         Matrix Jconstrained = Jkin * (eye(nb_kin_DOF,nb_kin_DOF)-pinv(Jconstr)*Jconstr);
 
-        // Joint limit penalty
+        // Joint limit penalty (upper arm omly)
 
         Ipopt::Number x_l[n];
         Ipopt::Number x_u[n];
         get_bounds_info(n, x_l, x_u, -1, nullptr, nullptr);
 
         Matrix J(6, nb_kin_DOF);
-        for(int j=3 ; j<nb_kin_DOF ; j++)
+        for(int j=3 ; j<3+upper_arm.getDOF() ; j++)
         {
             int idx=idx_t[target_idx]+j;
             double t=x[idx];
@@ -350,13 +350,6 @@ public:
             for(int i=0 ; i<6 ; i++)
                 J[i][j]=coef*Jconstrained[i][j];
         }
-
-yDebug() << "Jkin\n" << Jkin.toString();
-yDebug() << "manip kin" << sqrt(det(Jkin.submatrix(0,2,0,nb_kin_DOF-1)*Jkin.submatrix(0,2,0,nb_kin_DOF-1).transposed())) << sqrt(det(Jkin*Jkin.transposed()));
-yDebug() << "Jconstrained\n" << Jconstrained.toString();
-yDebug() << "manip constr" << sqrt(det(Jconstrained.submatrix(0,2,0,nb_kin_DOF-1)*Jconstrained.submatrix(0,2,0,nb_kin_DOF-1).transposed())) << sqrt(det(Jconstrained*Jconstrained.transposed()));
-yDebug() << "Jlim\n" << J.toString();
-yDebug() << "manip lim" << sqrt(det(J.submatrix(0,2,0,nb_kin_DOF-1)*J.submatrix(0,2,0,nb_kin_DOF-1).transposed())) << sqrt(det(J*J.transposed()));
 
         Vector manip(9);
         double d=det(J*J.transposed());
@@ -387,17 +380,8 @@ yDebug() << "manip lim" << sqrt(det(J.submatrix(0,2,0,nb_kin_DOF-1)*J.submatrix(
             else
                 manip[i] = 1.0/std::numeric_limits<double>::epsilon();
         }
-Matrix U;
-Vector S;
-Matrix V ;
-SVD(J,U,S,V);
-yDebug() << "singv" << S.toString();
-yDebug() << "cond" << S[0] / S[5];
-        //manip[0]=manip[3];
-        //manip[0]=S[0] / S[5];
-        //manip[0] = manip[3];
-        return manip;
 
+        return manip;
     }
 
     /****************************************************************/
