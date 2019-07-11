@@ -67,7 +67,7 @@ protected:
     IVelocityControl*         iVel;
     IPositionDirect*          iDir;
     IEncoders*                iEnc;
-    IControlMode2*            iCmd;
+    IControlMode *            iCmd;
     
     double                    elong;
     double                    pitch;

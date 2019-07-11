@@ -54,7 +54,7 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
 
     if (!drvHand.view(imod))
     {
-        yError() << "Teleoperation Module: dynamic_cast to IControlMode2 interface failed";
+        yError() << "Teleoperation Module: dynamic_cast to IControlMode  interface failed";
         return false;
     }
 

@@ -15,11 +15,10 @@ yarp_prepare_plugin(faceDisplayClient
     yarp_add_plugin(faceDisplayClient faceDisplayClient.cpp faceDisplayClient.h)
     TARGET_LINK_LIBRARIES(faceDisplayClient  ${YARP_LIBRARIES} )
     yarp_install( TARGETS faceDisplayClient
+                  EXPORT YARP_${YARP_PLUGIN_MASTER}
                   COMPONENT Runtime
-                  LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR})
-
-    yarp_install( FILES faceDisplayClient.ini
-                  DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
+                  LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR}
+                  YARP_INI DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
 ENDIF (ENABLE_faceDisplayClient)
 
