@@ -479,144 +479,71 @@ public:
             return true;
         }
 
-        if (!request.check("q"))
-        {
-            Vector qj=getEncoders();
-
-            Vector q(3+qj.size(), 0.0);
-            q.setSubvector(3,qj);
-
-            if(iloc)
-            {
-                Map2DLocation p;
-                iloc->getCurrentPosition(p);
-                q[0]=p.x;
-                q[1]=p.y;
-                q[2]=p.theta;
-                bd.map_id=p.map_id;
-            }
-
-            Bottle b; b.addList().read(q);
-            request.put("q",b.get(0));
-        }
-
-
-        if (!request.check("domain") && iloc && imap)
-        {
-            Map2DLocation loc;
-            iloc->getCurrentPosition(loc);
-            vector<string> areaNames;
-            imap->getAreasList(areaNames);
-
-            if (verbosity>0)
-            {
-                yDebug() << "Area list:";
-                for(int i=0 ; i<areaNames.size() ; i++)
-                    yDebug() << "\t" << areaNames[i];
-            }
-
-            Map2DArea area;
-            bool in_known_area=false;
-            for(size_t i=0 ; i<areaNames.size() ; i++)
-            {
-                imap->getArea(areaNames[i], area);
-                if(area.checkLocationInsideArea(loc))
-                {
-                    if (verbosity>0)
-                        yDebug() << "Currently in" << areaNames[i];
-                    in_known_area=true;
-                    break;
-                }
-            }
-
-            Bottle b;
-            Bottle &coord = b.addList();
-
-            if (in_known_area)
-            {
-                if (verbosity>0)
-                    yDebug() << "Area points list:";
-                for(size_t i=0 ; i<area.points.size() ; i++)
-                {
-                    if (verbosity>0)
-                        yDebug() << "\t" << area.points[i].x << area.points[i].y;
-
-                    coord.addDouble(area.points[i].x);
-                    coord.addDouble(area.points[i].y);
-                }
-            }
-            request.put("domain",b.get(0));
-        }
-
-        if (verbosity>0)
-            yInfo("Forwarding request to solver: %s",request.toString().c_str());
-
         Bottle reply;
-        bool latch_controlling=controlling;
-        if (solverPort.write(request,reply))
+        if(!ask(request, reply))
         {
-            if (verbosity>0)
-                yInfo("Received reply from solver: %s",reply.toString().c_str());
-
-            if (reply.get(0).asVocab()==Vocab::encode("ack"))
-            {
-                if ((reply.size()>1) && !reply.check("parameters"))
-                {
-                    Bottle *payLoadJointsList=reply.find("q").asList();
-                    Bottle *payLoadPoseList=reply.find("x").asList();
-
-                    if ((payLoadJointsList!=NULL) && (payLoadPoseList!=NULL))
-                    {
-                        Bottle *payLoadJoints=payLoadJointsList->get(0).asList();
-                        Bottle *payLoadPose=payLoadPoseList->get(0).asList();
-
-                        LockGuard lg(mutex);
-                        // process only if we didn't receive
-                        // a stop request in the meanwhile
-                        if (controlling==latch_controlling)
-                        {
-                            bd.x=payLoadJoints->get(0).asDouble();
-                            bd.y=payLoadJoints->get(1).asDouble();
-                            bd.theta=payLoadJoints->get(2).asDouble();
-
-                            NavigationStatusEnum navStatus;
-                            inav->getNavigationStatus(navStatus);
-                            if(navStatus!=navigation_status_idle)
-                                inav->stopNavigation();
-                            if(!inav->gotoTargetByAbsoluteLocation(bd))
-                            {
-                                yError("Cannot navigate to destination!");
-                                return false;
-                            }
-
-                            for (size_t i=0; i<qd.length(); i++)
-                                qd[i]=payLoadJoints->get(3+i).asDouble();
-
-                            if (xd.length()==0)
-                                xd.resize((size_t)payLoadPose->size());
-
-                            for (size_t i=0; i<xd.length(); i++)
-                                xd[i]=payLoadPose->get(i).asDouble();
-
-                            target=reply.tail();
-
-                            if (!controlling)
-                                gen->init(getEncoders());
-
-                            controlling=true;
-                            if (verbosity>0)
-                                yInfo("Going to: %s",qd.toString(3,3).c_str());
-                        }
-                    }
-                }
-
-                return true;
-            }
-            else
-                yError("Solver failed, the object is probably not reachable!");
+            yError() << "Could not find where to go";
+            return false;
         }
-        else
-            yError("Unable to communicate with the solver");
+
+        bool latch_controlling=controlling;
+
+        if ((reply.size()>1) && !reply.check("parameters"))
+        {
+            Bottle *payLoadJointsList=reply.find("q").asList();
+            Bottle *payLoadPoseList=reply.find("x").asList();
+
+            if ((payLoadJointsList!=NULL) && (payLoadPoseList!=NULL))
+            {
+                Bottle *payLoadJoints=payLoadJointsList->get(0).asList();
+                Bottle *payLoadPose=payLoadPoseList->get(0).asList();
+
+                LockGuard lg(mutex);
+                // process only if we didn't receive
+                // a stop request in the meanwhile
+                if (controlling==latch_controlling)
+                {
+                    Map2DLocation p;
+                    iloc->getCurrentPosition(p);
+
+                    bd.x=payLoadJoints->get(0).asDouble();
+                    bd.y=payLoadJoints->get(1).asDouble();
+                    bd.theta=payLoadJoints->get(2).asDouble();
+                    bd.map_id=p.map_id;
+
+                    NavigationStatusEnum navStatus;
+                    inav->getNavigationStatus(navStatus);
+                    if(navStatus!=navigation_status_idle)
+                        inav->stopNavigation();
+
+                    if(!inav->gotoTargetByAbsoluteLocation(bd))
+                    {
+                        yError("Cannot navigate to destination!");
+                        return false;
+                    }
+
+                    for (size_t i=0; i<qd.length(); i++)
+                        qd[i]=payLoadJoints->get(3+i).asDouble();
+
+                    if (xd.length()==0)
+                        xd.resize((size_t)payLoadPose->size());
+
+                    for (size_t i=0; i<xd.length(); i++)
+                        xd[i]=payLoadPose->get(i).asDouble();
+
+                    target=reply.tail();
+
+                    if (!controlling)
+                        gen->init(getEncoders());
+
+                    controlling=true;
+                    if (verbosity>0)
+                        yInfo("Going to: %s",qd.toString(3,3).c_str());
+
+                    return true;
+                }
+            }
+        }
 
         return false;
     }
@@ -722,7 +649,7 @@ public:
 
                     if (target->size()<7)
                     {
-                        yError("wrong target size!");
+                        yError("wrong target size, must be 7!");
                         reply.clear();
                         reply.addVocab(Vocab::encode("nack"));
                         return false;
@@ -763,6 +690,83 @@ public:
             }
         }
 
+        int nbAddedTargets = 0;
+        if (request.check("margin"))
+        {
+            if (Bottle *margins=request.find("margin").asList())
+            {
+                if (margins->size() != 6)
+                {
+                    yError("wrong margin size, must be 6!");
+                    reply.clear();
+                    reply.addVocab(Vocab::encode("nack"));
+                    return false;
+                }
+
+                Vector marginP(3);
+                Vector marginO(3);
+                for(size_t i=0 ; i<3 ; i++)
+                {
+                    marginP[i] = margins->get(i).asDouble();
+                    marginO[i] = margins->get(i+3).asDouble();
+                }
+
+                if (Bottle *targetList=request.find("target").asList())
+                {
+                    for (size_t i=0, imax=targetList->size(); i<imax; i++)
+                    {
+                        Bottle *target=targetList->get(i).asList();
+                        Vector xd(3);
+                        xd[0]=target->get(0).asDouble();
+                        xd[1]=target->get(1).asDouble();
+                        xd[2]=target->get(2).asDouble();
+                        Vector ud(4);
+                        ud[0]=target->get(3).asDouble();
+                        ud[1]=target->get(4).asDouble();
+                        ud[2]=target->get(5).asDouble();
+                        ud[3]=target->get(6).asDouble();
+                        Matrix Hd = axis2dcm(ud);
+
+                        for (size_t j=0; j<3; j++)
+                        {
+                            if(fabs(marginP[j]) > std::numeric_limits<double>::epsilon())
+                            {
+                                Vector newTarget(7);
+                                newTarget.setSubvector(0, xd+marginP[j]*Hd.getCol(j).subVector(0,2));
+                                newTarget.setSubvector(3, ud);
+
+                                targetList->addList().read(newTarget);
+                                nbAddedTargets++;
+
+                                newTarget.setSubvector(0, xd-marginP[j]*Hd.getCol(j).subVector(0,2));
+                                targetList->addList().read(newTarget);
+                                nbAddedTargets++;
+                            }
+
+                            if(fabs(marginO[j]) > std::numeric_limits<double>::epsilon())
+                            {
+                                Vector newTarget(7);
+                                newTarget.setSubvector(0, xd);
+                                Vector o(4,0.0);
+                                o[j]=1.0;
+                                o[3]=marginO[j];
+                                Matrix R=axis2dcm(o);
+                                newTarget.setSubvector(3, dcm2axis(Hd*R));
+
+                                targetList->addList().read(newTarget);
+                                nbAddedTargets++;
+
+                                newTarget.setSubvector(3, dcm2axis(Hd*R.transposed()));
+
+                                targetList->addList().read(newTarget);
+                                nbAddedTargets++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         if (verbosity>0)
             yInfo("Forwarding request to solver: %s",request.toString().c_str());
 
@@ -772,12 +776,17 @@ public:
             if (verbosity>0)
                 yInfo("Received reply from solver: %s",reply.toString().c_str());
 
-            if (reply.get(0).asVocab()==Vocab::encode("ack"))
+            bool success = (reply.get(0).asVocab()==Vocab::encode("ack"));
+            if (success || (reply.get(0).asVocab()==Vocab::encode("nack")))
             {
                 reply=reply.tail();
-                if (local)
+
+                if(Bottle *replyPoseList = reply.find("q").asList())
                 {
-                    if(Bottle *replyPoseList = reply.find("q").asList())
+                    for (int i=0 ; i<nbAddedTargets; i++)
+                        replyPoseList->pop();
+
+                    if (local)
                     {
                         for (int i=0 ; i<replyPoseList->size(); i++)
                         {
@@ -807,8 +816,14 @@ public:
                             }
                         }
                     }
+                }
 
-                    if (Bottle *targetList=reply.find("x").asList())
+                if (Bottle *targetList=reply.find("x").asList())
+                {
+                    for (int i=0 ; i<nbAddedTargets; i++)
+                        targetList->pop();
+
+                    if (local)
                     {
                         for (int i=0 ; i<targetList->size(); i++)
                         {
@@ -863,100 +878,8 @@ public:
                         }
                     }
                 }
-                return true;
-            }
-            else if(reply.get(0).asVocab()==Vocab::encode("nack"))
-            {
-                reply=reply.tail();
-                if (local)
-                {
-                    if(Bottle *replyPoseList = reply.find("q").asList())
-                    {
-                        for (int i=0 ; i<replyPoseList->size(); i++)
-                        {
-                            Bottle *replyPose = replyPoseList->get(i).asList();
 
-                            if (verbosity>0)
-                            {
-                                yDebug() << "Final base pose transformed from global:";
-                                yDebug() << "\t" << replyPose->get(0).asDouble() << replyPose->get(1).asDouble() << replyPose->get(2).asDouble();
-                            }
-                            Vector new_tu(4,0.0);
-                            new_tu[2]=1.0;
-                            new_tu[3]=M_PI/180.0*replyPose->get(2).asDouble();
-                            Matrix newTorsoTransform=axis2dcm(new_tu);
-                            newTorsoTransform[0][3]=replyPose->get(0).asDouble();
-                            newTorsoTransform[1][3]=replyPose->get(1).asDouble();
-                            newTorsoTransform=SE3inv(torsoTransform)*newTorsoTransform;
-                            replyPose->get(0)=Value(newTorsoTransform[0][3]);
-                            replyPose->get(1)=Value(newTorsoTransform[1][3]);
-                            new_tu=dcm2axis(newTorsoTransform);
-                            replyPose->get(2)=Value(180.0/M_PI*new_tu[2]*new_tu[3]);
-
-                            if (verbosity>0)
-                            {
-                                yDebug() << "                              to local:";
-                                yDebug() << "\t" << replyPose->get(0).asDouble() << replyPose->get(1).asDouble() << replyPose->get(2).asDouble();
-                            }
-                        }
-                    }
-
-                    if (Bottle *targetList=reply.find("x").asList())
-                    {
-                        for (int i=0 ; i<targetList->size(); i++)
-                        {
-                            Bottle *target=targetList->get(i).asList();
-                            if (!target)
-                            {
-                                yError("wrong target list format!");
-                                reply.clear();
-                                reply.addVocab(Vocab::encode("nack"));
-                                return false;
-                            }
-
-                            if (target->size()<7)
-                            {
-                                yError("wrong target size!");
-                                reply.clear();
-                                reply.addVocab(Vocab::encode("nack"));
-                                return false;
-                            }
-
-                            Vector xd(3);
-                            xd[0]=target->get(0).asDouble();
-                            xd[1]=target->get(1).asDouble();
-                            xd[2]=target->get(2).asDouble();
-                            Vector ud(4);
-                            ud[0]=target->get(3).asDouble();
-                            ud[1]=target->get(4).asDouble();
-                            ud[2]=target->get(5).asDouble();
-                            ud[3]=target->get(6).asDouble();
-
-                            Matrix Hd = axis2dcm(ud);
-                            Hd.setSubcol(xd,0,3);
-                            Hd = SE3inv(torsoTransform)*Hd;
-
-                            Vector x = Hd.subcol(0, 3, 3);
-                            Vector u = dcm2axis(Hd);
-                            target->clear();
-                            target->addDouble(x[0]);
-                            target->addDouble(x[1]);
-                            target->addDouble(x[2]);
-                            target->addDouble(u[0]);
-                            target->addDouble(u[1]);
-                            target->addDouble(u[2]);
-                            target->addDouble(u[3]);
-                            if (verbosity>0)
-                            {
-                                yDebug() << "Target transformed from global:";
-                                yDebug() << "\t" << xd.toString() << ud.toString();
-                                yDebug() << "                      to local:";
-                                yDebug() << "\t" << x.toString() << u.toString();
-                            }
-                        }
-                    }
-                }
-                return false;
+                return success;
             }
             else
                 yError("Invalid reply from solver!");
