@@ -269,7 +269,14 @@ bool MobileArmSolver::ikin(const vector<Matrix> &Hd, Vector &q, int *exit_code)
 }
 
 /****************************************************************/
-bool MobileArmSolver::getManip(const yarp::sig::Vector &q, yarp::sig::Vector &manip)
+bool MobileArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
+{
+    vector<Matrix> Hd_(1,Hd);
+    return ikin(Hd_,q,exit_code);
+}
+
+/****************************************************************/
+bool MobileArmSolver::getManip(const Vector &q, Vector &manip)
 {
     Ipopt::SmartPtr<MobileArmFullNoTorsoNoHeaveNLP_CentralDiff> nlp=new MobileArmFullNoTorsoNoHeaveNLP_CentralDiff(*this,1);
 

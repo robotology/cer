@@ -182,8 +182,7 @@ public:
                       int *exit_code=NULL);
 
     virtual bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &q,
-                      int *exit_code=NULL)
-    {}
+                      int *exit_code=NULL);
 
     virtual bool getManip(const yarp::sig::Vector &q, yarp::sig::Vector &manip);
 
