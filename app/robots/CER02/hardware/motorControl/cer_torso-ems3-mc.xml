@@ -51,7 +51,7 @@
         <param name="maxOutput">              32000        32000       32000         0       </param>                
         <param name="maxInt">                  4000         4000        4000         0       </param>                             
         <param name="stictionUp">                 0            0           0         0       </param>          
-        <param name="stictionDwn">                0            0           0         0       </param>        
+        <param name="stictionDown">                0            0           0         0       </param>        
     </group>
 
     <group name="JOINT_DIRECT_OUT_DC_PWM_CTRL">
@@ -66,7 +66,7 @@
         <param name="maxOutput">              32000        32000       32000         0       </param>                
         <param name="maxInt">                  4000         4000        4000         0       </param>                             
         <param name="stictionUp">                 0            0           0         0       </param>          
-        <param name="stictionDwn">                0            0           0         0       </param>        
+        <param name="stictionDown">                0            0           0         0       </param>        
     </group>
     
     <group name="JOINT_MINJERK_OUT_WORM_VEL_CTRL">

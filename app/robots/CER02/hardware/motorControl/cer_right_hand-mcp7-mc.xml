@@ -47,7 +47,7 @@
         <param name="maxOutput">               3360         3360        </param>                
         <param name="maxInt">                  1000         1000        </param>                             
         <param name="stictionUp">                 0            0        </param>          
-        <param name="stictionDwn">                0            0        </param>       
+        <param name="stictionDown">                0            0        </param>       
     </group>
 
     <group name="JOINT_DIRECT_OUT_PWM_CTRL">
@@ -62,7 +62,7 @@
         <param name="maxOutput">               3360         3360        </param>                
         <param name="maxInt">                  1000         1000        </param>                             
         <param name="stictionUp">                 0            0        </param>          
-        <param name="stictionDwn">                0            0        </param>        
+        <param name="stictionDown">                0            0        </param>        
     </group>
     
     <group name="IMPEDANCE">
