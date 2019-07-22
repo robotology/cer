@@ -48,7 +48,7 @@
         <param name="maxOutput">              32000        32000           0         0       </param>                
         <param name="maxInt">                  4000         4000           0         0       </param>                             
         <param name="stictionUp">                 0            0           0         0       </param>          
-        <param name="stictionDown">                0            0           0         0       </param>        
+        <param name="stictionDown">               0            0           0         0       </param>        
     </group>
 
     <group name="JOINT_DIRECT_OUT_PWM_CTRL">
@@ -70,26 +70,26 @@
         <param name="controlLaw">          low_lev_current      </param> 
         <param name="fbkControlUnits">     machine_units        </param> 
         <param name="outputControlUnits">  machine_units        </param>
-        <param name="cur_kff">                     0         0   0   0   </param>
-        <param name="cur_kp">                      8         8   0   0   </param>       
-        <param name="cur_kd">                      0         0   0   0   </param>       
-        <param name="cur_ki">                      2         2   0   0   </param>
-        <param name="cur_shift">                  10        10   0   0   </param>
-        <param name="cur_maxOutput">           32000     32000   0   0   </param>                 
-        <param name="cur_maxInt">              32000     32000   0   0   </param>         
+        <param name="kff">                     0         0   0   0   </param>
+        <param name="kp">                      8         8   0   0   </param>       
+        <param name="kd">                      0         0   0   0   </param>       
+        <param name="ki">                      2         2   0   0   </param>
+        <param name="shift">                  10        10   0   0   </param>
+        <param name="maxOutput">           32000     32000   0   0   </param>                 
+        <param name="maxInt">              32000     32000   0   0   </param>         
     </group>
 
     <group name="2FOC_VEL_CONTROL">
         <param name="controlLaw">          low_lev_velocity     </param> 
         <param name="fbkControlUnits">     machine_units        </param> 
         <param name="outputControlUnits">  machine_units        </param>
-        <param name="spd_kff">                 0          0    0    0 </param>
-        <param name="spd_kp">                 12         12    0    0 </param>       
-        <param name="spd_kd">                  0          0    0    0 </param>       
-        <param name="spd_ki">                 16         16    0    0 </param>
-        <param name="spd_shift">              10         10    0    0 </param>
-        <param name="spd_maxOutput">       32000      32000    0    0 </param>                 
-        <param name="spd_maxInt">          32000      32000    0    0 </param>        
+        <param name="kff">                 0          0    0    0 </param>
+        <param name="kp">                 12         12    0    0 </param>       
+        <param name="kd">                  0          0    0    0 </param>       
+        <param name="ki">                 16         16    0    0 </param>
+        <param name="shift">              10         10    0    0 </param>
+        <param name="maxOutput">       32000      32000    0    0 </param>                 
+        <param name="maxInt">          32000      32000    0    0 </param>        
     </group>
 
     <group name="IMPEDANCE">

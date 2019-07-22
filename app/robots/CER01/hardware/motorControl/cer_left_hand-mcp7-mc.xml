@@ -33,6 +33,9 @@
         <param name="posDirectControl">        JOINT_DIRECT_OUT_PWM_CTRL   JOINT_DIRECT_OUT_PWM_CTRL    </param>                
         <param name="velDirectControl">        JOINT_DIRECT_OUT_PWM_CTRL   JOINT_DIRECT_OUT_PWM_CTRL    </param>
         <param name="torqueControl">           none                        none                         </param>
+        
+        <param name="currentPid">              none none </param>
+        <param name="speedPid">                none none </param>
     </group>
     
     <group name="JOINT_MINJERK_OUT_PWM_CTRL">
@@ -47,7 +50,7 @@
         <param name="maxOutput">               2500         2500        </param>                
         <param name="maxInt">                   500          500        </param>                             
         <param name="stictionUp">                 0            0        </param>          
-        <param name="stictionDown">                0            0        </param>        
+        <param name="stictionDown">               0            0        </param>        
     </group>
 
     <group name="JOINT_DIRECT_OUT_PWM_CTRL">
@@ -62,7 +65,7 @@
         <param name="maxOutput">               2500         2500        </param>                
         <param name="maxInt">                   500          500        </param>                             
         <param name="stictionUp">                 0            0        </param>          
-        <param name="stictionDown">                0            0        </param>        
+        <param name="stictionDown">               0            0        </param>        
     </group>
 
     <group name="IMPEDANCE">
