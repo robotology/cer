@@ -70,7 +70,7 @@
     </group>
     
     <group name="2FOC_VEL_CONTROL">
-        <param name="controlLaw">          low_lev_velocity     </param> 
+        <param name="controlLaw">          low_lev_speed        </param> 
         <param name="fbkControlUnits">     machine_units        </param> 
         <param name="outputControlUnits">  machine_units        </param>
         <param name="kff">                 0          0     </param>
