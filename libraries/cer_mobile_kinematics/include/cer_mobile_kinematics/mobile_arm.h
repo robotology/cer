@@ -184,7 +184,7 @@ public:
     virtual bool ikin(const yarp::sig::Matrix &Hd, yarp::sig::Vector &q,
                       int *exit_code=NULL);
 
-    virtual bool getManip(const yarp::sig::Vector &q, yarp::sig::Vector &manip);
+    virtual double getManip(const yarp::sig::Vector &q, bool add_joint_limit);
 
     /**
      * Destructor.

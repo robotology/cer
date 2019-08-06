@@ -81,7 +81,6 @@ class Controller : public RFModule
     minJerkTrajGen* gen;
     
     BufferedPort<Vector> statePort;
-    BufferedPort<Vector> manipPort;
     TargetPort targetPort;
     RpcServer rpcPort;
     RpcClient solverPort;
@@ -391,7 +390,6 @@ public:
 
         //
         statePort.open("/cer_mobile-reaching-controller/"+arm_type+"/state:o");
-        manipPort.open("/cer_mobile-reaching-controller/"+arm_type+"/manip:o");
         solverPort.open("/cer_mobile-reaching-controller/"+arm_type+"/solver:rpc");
 
         targetPort.open("/cer_mobile-reaching-controller/"+arm_type+"/target:i");
@@ -436,9 +434,6 @@ public:
 
         if (!targetPort.isClosed())
             targetPort.close(); 
-
-        if (!manipPort.isClosed())
-            manipPort.close();
 
         if (!statePort.isClosed())
             statePort.close();
@@ -916,10 +911,6 @@ public:
 
         statePort.setEnvelope(txInfo);
         statePort.writeStrict();
-
-        Vector &manip=manipPort.prepare();
-        solver.getManip(q,manip);
-        manipPort.writeStrict();
 
         if (controlling)
         {

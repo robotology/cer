@@ -276,16 +276,15 @@ bool MobileArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 }
 
 /****************************************************************/
-bool MobileArmSolver::getManip(const Vector &q, Vector &manip)
+double MobileArmSolver::getManip(const Vector &q, bool add_joint_limit)
 {
     Ipopt::SmartPtr<MobileArmFullNoTorsoNoHeaveNLP_CentralDiff> nlp=new MobileArmFullNoTorsoNoHeaveNLP_CentralDiff(*this,1);
 
     Vector q_rad(q);
     for(size_t i=6; i<12; i++)
         q_rad[i]=M_PI/180*q_rad[i];
-    manip=nlp->computeManipulability(q_rad.size(), q_rad.data(), 0, true);
 
-    return true;
+    return nlp->computeManipulability(q_rad.size(), q_rad.data(), 0, true, add_joint_limit);
 }
 
 /****************************************************************/

@@ -213,7 +213,8 @@ public:
         return true;
     }
 
-    Vector computeManipulability(Ipopt::Index n, const Ipopt::Number *x, int target_idx, bool new_x)
+    double computeManipulability(Ipopt::Index n, const Ipopt::Number *x,
+                                 int target_idx, bool new_x, bool add_joint_limits=false)
     {
         // Kinematics Jacobian
         Matrix Jtorso(6,3);
@@ -329,56 +330,40 @@ public:
 
         Matrix Jconstrained = Jkin * (eye(nb_kin_DOF,nb_kin_DOF)-pinv(Jconstr)*Jconstr);
 
-        // Joint limit penalty (upper arm omly)
+        double d=det(Jconstrained*Jconstrained.transposed());
+        double manip=0;
 
-        Ipopt::Number x_l[n];
-        Ipopt::Number x_u[n];
-        get_bounds_info(n, x_l, x_u, -1, nullptr, nullptr);
+        if (d>std::numeric_limits<double>::epsilon())
+            manip=sqrt(d);
 
-        Matrix J(6, nb_kin_DOF);
-        for(int j=3 ; j<3+upper_arm.getDOF() ; j++)
+        if (add_joint_limits)
         {
-            int idx=idx_t[target_idx]+j;
-            double t=x[idx];
-            double l=x_l[idx];
-            double u=x_u[idx];
+            // Joint limit penalty (upper arm only)
 
-            double coef=0.0;
-            if(u-l>0 && (u-t)>std::numeric_limits<double>::epsilon() && (t-l)>std::numeric_limits<double>::epsilon())
-                coef=1.0/sqrt(1+fabs(0.25*(u-l)*(u-l)*(2*t-u-l)/((u-t)*(u-t)*(t-l)*(t-l))));
+            Ipopt::Number x_l[n];
+            Ipopt::Number x_u[n];
+            get_bounds_info(n, x_l, x_u, -1, nullptr, nullptr);
 
-            for(int i=0 ; i<6 ; i++)
-                J[i][j]=coef*Jconstrained[i][j];
-        }
+            Matrix Jlim(6, nb_kin_DOF);
+            for(int j=3 ; j<3+upper_arm.getDOF() ; j++)
+            {
+                int idx=idx_t[target_idx]+j;
+                double t=x[idx];
+                double l=x_l[idx];
+                double u=x_u[idx];
 
-        Vector manip(9);
-        double d=det(J*J.transposed());
-        manip[0]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
-        d=det(J.submatrix(0,2,0,nb_kin_DOF-1)*J.submatrix(0,2,0,nb_kin_DOF-1).transposed());
-        manip[1]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
-        d=det(J.submatrix(3,5,0,nb_kin_DOF-1)*J.submatrix(3,5,0,nb_kin_DOF-1).transposed());
-        manip[2]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
+                double coef=0.0;
+                if(u-l>0 && (u-t)>std::numeric_limits<double>::epsilon() && (t-l)>std::numeric_limits<double>::epsilon())
+                    coef=1.0/sqrt(1+fabs(0.25*(u-l)*(u-l)*(2*t-u-l)/((u-t)*(u-t)*(t-l)*(t-l))));
 
-        d=det(Jconstrained*Jconstrained.transposed());
-        manip[3]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
-        d=det(Jconstrained.submatrix(0,2,0,nb_kin_DOF-1)*Jconstrained.submatrix(0,2,0,nb_kin_DOF-1).transposed());
-        manip[4]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
-        d=det(Jconstrained.submatrix(3,5,0,nb_kin_DOF-1)*Jconstrained.submatrix(3,5,0,nb_kin_DOF-1).transposed());
-        manip[5]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
+                for(int i=0 ; i<6 ; i++)
+                    Jlim[i][j]=coef*Jconstrained[i][j];
+            }
 
-        d=det(Jkin*Jkin.transposed());
-        manip[6]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
-        d=det(Jkin.submatrix(0,2,0,nb_kin_DOF-1)*Jkin.submatrix(0,2,0,nb_kin_DOF-1).transposed());
-        manip[7]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
-        d=det(Jkin.submatrix(3,5,0,nb_kin_DOF-1)*Jkin.submatrix(3,5,0,nb_kin_DOF-1).transposed());
-        manip[8]=(d>std::numeric_limits<double>::epsilon())?sqrt(d):0;
-
-        for(int i=0; i<manip.size(); i++)
-        {
-            if(manip[i]>std::numeric_limits<double>::epsilon())
-                manip[i] = 1.0/manip[i];
-            else
-                manip[i] = 1.0/std::numeric_limits<double>::epsilon();
+            d=det(Jlim*Jlim.transposed());
+            manip=0;
+            if (d>std::numeric_limits<double>::epsilon())
+                manip=sqrt(d);
         }
 
         return manip;
@@ -420,7 +405,7 @@ public:
 
         for (size_t i=0; i<nb_targets; i++)
         {
-            tmp=computeManipulability(n,x,i, false)[0];
+            tmp=-computeManipulability(n,x,i, false);
             manipulability+=tmp;
         }
 
@@ -448,13 +433,13 @@ public:
             for (Ipopt::Index j=0; j<n; j++)
                 x_dx[j]=x[j];
 
-            double manip=computeManipulability(n,x_dx,i,false)[0];
+            double manip=-computeManipulability(n,x_dx,i,false);
 
             // base
             for (size_t j=0; j<3; j++)
             {
                 x_dx[idx_b+j]=x[idx_b+j]+drho;
-                grad_f[idx_b+j]+=(computeManipulability(n,x_dx,i,true)[0]-manip)/drho;
+                grad_f[idx_b+j]+=(-computeManipulability(n,x_dx,i,true)-manip)/drho;
                 x_dx[idx_b+j]=x[idx_b+j];
             }
 
@@ -469,7 +454,7 @@ public:
             {
                 grad_f[idx_ua[i]+j]=2.0*wpostural_upper_arm*(x[idx_ua[i]+j]-xref[idx_ua[0]+j]);
                 x_dx[idx_ua[i]+j]=x[idx_ua[i]+j]+drho;
-                grad_f[idx_ua[i]+j]+=(computeManipulability(n,x_dx,i,true)[0]-manip)/drho;
+                grad_f[idx_ua[i]+j]+=(-computeManipulability(n,x_dx,i,true)-manip)/drho;
                 x_dx[idx_ua[i]+j]=x[idx_ua[i]+j];
             }
 
@@ -480,7 +465,7 @@ public:
             for (size_t j=0; j<3; j++)
             {
                 x_dx[idx_la[i]+j]=x[idx_la[i]+j]+drho;
-                grad_f[idx_la[i]+j]+=(computeManipulability(n,x_dx,i,true)[0]-manip)/drho;
+                grad_f[idx_la[i]+j]+=(-computeManipulability(n,x_dx,i,true)-manip)/drho;
                 x_dx[idx_la[i]+j]=x[idx_la[i]+j];
             }
         }
