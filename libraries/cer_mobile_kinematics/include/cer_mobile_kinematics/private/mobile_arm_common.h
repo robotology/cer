@@ -41,7 +41,7 @@ protected:
 
     int nb_targets;
     int nb_kin_DOF;
-    Matrix Hb,Rb,Hbt,H0,HN;
+    Matrix Hb,Rb,H0,HN;
     vector<Matrix> Hd,Rd;
     vector<Vector> xd;
     Vector x0,x,xref;
@@ -162,8 +162,6 @@ public:
         nb_kin_DOF=idx_la[0]+3-3;
 
         Hb=Rb=eye(4,4);
-        Hbt=eye(4,4);
-        Hbt[0][3]=0.044;
         H0=upper_arm.getH0();
         HN=upper_arm.getHN();
 
@@ -226,7 +224,7 @@ public:
         M[0][3] = x[idx_b];
         M[1][3] = x[idx_b+1];
 
-        return M*Hbt*d1.T*upper_arm.getH(CTRL_DEG2RAD*x.subVector(idx_ua[0],idx_ua[0]+upper_arm.getDOF()-1))*d2.T*TN;
+        return M*d1.T*upper_arm.getH(CTRL_DEG2RAD*x.subVector(idx_ua[0],idx_ua[0]+upper_arm.getDOF()-1))*d2.T*TN;
     }
 
     /****************************************************************/
@@ -254,7 +252,7 @@ public:
         M[0][3] = x[idx_b];
         M[1][3] = x[idx_b+1];
 
-        return M*Hbt*T;
+        return M*T;
     }
 
     /****************************************************************/

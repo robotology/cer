@@ -500,7 +500,7 @@ public:
             g[10*i+0]=e2*e2;
             g[10*i+1]=din2[i].n[2];
 
-            Vector xe=Hb*Hbt*T[i].getCol(3).subVector(0,3);
+            Vector xe=Hb*T[i].getCol(3).subVector(0,3);
             xe.pop_back();
             for(Ipopt::Index j=0; j<3 ;j++)
                 g[10*i+2+j]=s_pos*(xd[i][j]-xe[j]);
@@ -640,7 +640,7 @@ public:
                 o[2] = 1.0;
                 o[3] = M_PI/2.0+x[idx_b+2];
                 Matrix Ro=axis2dcm(o);
-                Vector v=Ro*Hbt*T[i].getCol(3).subVector(0,3);
+                Vector v=Ro*T[i].getCol(3).subVector(0,3);
 
                 values[idx]=-s_pos*v[0];idx++;
                 values[idx]=-s_pos*v[1];idx++;
@@ -658,12 +658,11 @@ public:
                 }
 
                 // g[2] (lower_arm)
-                Vector xe=Hb*Hbt*T[i].getCol(3).subVector(0,3);
+                Vector xe=Hb*T[i].getCol(3).subVector(0,3);
                 xe.pop_back();
-
                 Vector e=xd[i]-xe;
                 Vector e_fw;
-                Matrix M=Hb*Hbt*d1[i].T*H[i];
+                Matrix M=Hb*d1[i].T*H[i];
 
                 x_dx[idx_la[i]+0]=x[idx_la[i]+0]+drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
@@ -941,14 +940,14 @@ public:
                 xe.pop_back();
                 Vector e=xd[i]-xe;
                 Vector e_fw,e_bw;
-                Matrix M=d1[i].T*H[i];
+                Matrix M=Hb*d1[i].T*H[i];
 
                 x_dx[idx_la[i]+0]=x[idx_la[i]+0]+drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
-                e_fw=xd[i]-(Hb*M*d_fw.T*TN).getCol(3).subVector(0,2);
+                e_fw=xd[i]-(M*d_fw.T*TN).getCol(3).subVector(0,2);
                 x_dx[idx_la[i]+0]=x[idx_la[i]+0]-drho;
                 d_bw=tripod_fkin(2,x_dx,nullptr,i);
-                e_bw=xd[i]-(Hb*M*d_bw.T*TN).getCol(3).subVector(0,2);
+                e_bw=xd[i]-(M*d_bw.T*TN).getCol(3).subVector(0,2);
                 values[idx]=0.5*s_pos*(e_fw[0]-e_bw[0])/drho;idx++;
                 values[idx]=0.5*s_pos*(e_fw[1]-e_bw[1])/drho;idx++;
                 values[idx]=0.5*s_pos*(e_fw[2]-e_bw[2])/drho;idx++;
@@ -956,10 +955,10 @@ public:
 
                 x_dx[idx_la[i]+1]=x[idx_la[i]+1]+drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
-                e_fw=xd[i]-(Hb*M*d_fw.T*TN).getCol(3).subVector(0,2);
+                e_fw=xd[i]-(M*d_fw.T*TN).getCol(3).subVector(0,2);
                 x_dx[idx_la[i]+1]=x[idx_la[i]+1]-drho;
                 d_bw=tripod_fkin(2,x_dx,nullptr,i);
-                e_bw=xd[i]-(Hb*M*d_bw.T*TN).getCol(3).subVector(0,2);
+                e_bw=xd[i]-(M*d_bw.T*TN).getCol(3).subVector(0,2);
                 values[idx]=0.5*s_pos*(e_fw[0]-e_bw[0])/drho;idx++;
                 values[idx]=0.5*s_pos*(e_fw[1]-e_bw[1])/drho;idx++;
                 values[idx]=0.5*s_pos*(e_fw[2]-e_bw[2])/drho;idx++;
@@ -967,10 +966,10 @@ public:
 
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2]+drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
-                e_fw=xd[i]-(Hb*M*d_fw.T*TN).getCol(3).subVector(0,2);
+                e_fw=xd[i]-(M*d_fw.T*TN).getCol(3).subVector(0,2);
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2]-drho;
                 d_bw=tripod_fkin(2,x_dx,nullptr,i);
-                e_bw=xd[i]-(Hb*M*d_bw.T*TN).getCol(3).subVector(0,2);
+                e_bw=xd[i]-(M*d_bw.T*TN).getCol(3).subVector(0,2);
                 values[idx]=0.5*s_pos*(e_fw[0]-e_bw[0])/drho;idx++;
                 values[idx]=0.5*s_pos*(e_fw[1]-e_bw[1])/drho;idx++;
                 values[idx]=0.5*s_pos*(e_fw[2]-e_bw[2])/drho;idx++;
@@ -1013,10 +1012,10 @@ public:
 
                 x_dx[idx_la[i]+0]=x[idx_la[i]+0]+drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
-                e_fwo=dcm2axis(Rd[i]*(Rb*M*d_fw.T*TN).transposed()); e_fwo*=e_fwo[3]; e_fwo.pop_back();
+                e_fwo=dcm2axis(Rd[i]*(M*d_fw.T*TN).transposed()); e_fwo*=e_fwo[3]; e_fwo.pop_back();
                 x_dx[idx_la[i]+0]=x[idx_la[i]+0]-drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
-                e_bwo=dcm2axis(Rd[i]*(Rb*M*d_fw.T*TN).transposed()); e_bwo*=e_bwo[3]; e_bwo.pop_back();
+                e_bwo=dcm2axis(Rd[i]*(M*d_fw.T*TN).transposed()); e_bwo*=e_bwo[3]; e_bwo.pop_back();
                 values[idx]=s_ang*0.5*(e_fwo[0]-e_bwo[0])/drho;idx++;
                 values[idx]=s_ang*0.5*(e_fwo[1]-e_bwo[1])/drho;idx++;
                 values[idx]=s_ang*0.5*(e_fwo[2]-e_bwo[2])/drho;idx++;
@@ -1024,10 +1023,10 @@ public:
 
                 x_dx[idx_la[i]+1]=x[idx_la[i]+1]+drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
-                e_fwo=dcm2axis(Rd[i]*(Rb*M*d_fw.T*TN).transposed()); e_fwo*=e_fwo[3]; e_fwo.pop_back();
+                e_fwo=dcm2axis(Rd[i]*(M*d_fw.T*TN).transposed()); e_fwo*=e_fwo[3]; e_fwo.pop_back();
                 x_dx[idx_la[i]+1]=x[idx_la[i]+1]-drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
-                e_bwo=dcm2axis(Rd[i]*(Rb*M*d_fw.T*TN).transposed()); e_bwo*=e_bwo[3]; e_bwo.pop_back();
+                e_bwo=dcm2axis(Rd[i]*(M*d_fw.T*TN).transposed()); e_bwo*=e_bwo[3]; e_bwo.pop_back();
                 values[idx]=s_ang*0.5*(e_fwo[0]-e_bwo[0])/drho;idx++;
                 values[idx]=s_ang*0.5*(e_fwo[1]-e_bwo[1])/drho;idx++;
                 values[idx]=s_ang*0.5*(e_fwo[2]-e_bwo[2])/drho;idx++;
@@ -1035,10 +1034,10 @@ public:
 
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2]+drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
-                e_fwo=dcm2axis(Rd[i]*(Rb*M*d_fw.T*TN).transposed()); e_fwo*=e_fwo[3]; e_fwo.pop_back();
+                e_fwo=dcm2axis(Rd[i]*(M*d_fw.T*TN).transposed()); e_fwo*=e_fwo[3]; e_fwo.pop_back();
                 x_dx[idx_la[i]+2]=x[idx_la[i]+2]-drho;
                 d_fw=tripod_fkin(2,x_dx,nullptr,i);
-                e_bwo=dcm2axis(Rd[i]*(Rb*M*d_fw.T*TN).transposed()); e_bwo*=e_bwo[3]; e_bwo.pop_back();
+                e_bwo=dcm2axis(Rd[i]*(M*d_fw.T*TN).transposed()); e_bwo*=e_bwo[3]; e_bwo.pop_back();
                 values[idx]=s_ang*0.5*(e_fwo[0]-e_bwo[0])/drho;idx++;
                 values[idx]=s_ang*0.5*(e_fwo[1]-e_bwo[1])/drho;idx++;
                 values[idx]=s_ang*0.5*(e_fwo[2]-e_bwo[2])/drho;idx++;

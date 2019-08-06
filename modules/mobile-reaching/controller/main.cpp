@@ -577,13 +577,13 @@ public:
             request.put("q",b.get(0));
         }
 
-        Bottle *robotPose = request.find("q").asList();
+        Bottle *robotPose=request.find("q").asList();
         Vector tu(4,0.0);
         tu[2]=1.0;
         tu[3]=M_PI/180.0*robotPose->get(2).asDouble();
-        Matrix torsoTransform=axis2dcm(tu);
-        torsoTransform[0][3]=robotPose->get(0).asDouble()+0.044*cos(tu[3]);
-        torsoTransform[1][3]=robotPose->get(1).asDouble()+0.044*sin(tu[3]);
+        Matrix baseTransform=axis2dcm(tu);
+        baseTransform[0][3]=robotPose->get(0).asDouble();
+        baseTransform[1][3]=robotPose->get(1).asDouble();
 
         if (!request.check("domain") && iloc && imap)
         {
@@ -614,7 +614,7 @@ public:
             }
 
             Bottle b;
-            Bottle &coord = b.addList();
+            Bottle &coord=b.addList();
 
             if (in_known_area)
             {
@@ -665,12 +665,12 @@ public:
                     ud[2]=target->get(5).asDouble();
                     ud[3]=target->get(6).asDouble();
 
-                    Matrix Hd = axis2dcm(ud);
+                    Matrix Hd=axis2dcm(ud);
                     Hd.setSubcol(xd,0,3);
-                    Hd = torsoTransform*Hd;
+                    Hd=baseTransform*Hd;
 
-                    Vector x = Hd.subcol(0, 3, 3);
-                    Vector u = dcm2axis(Hd);
+                    Vector x=Hd.subcol(0, 3, 3);
+                    Vector u=dcm2axis(Hd);
                     target->clear();
                     target->addDouble(x[0]);
                     target->addDouble(x[1]);
@@ -690,7 +690,7 @@ public:
             }
         }
 
-        int nbAddedTargets = 0;
+        int nbAddedTargets=0;
         if (request.check("margin"))
         {
             if (Bottle *margins=request.find("margin").asList())
@@ -707,8 +707,8 @@ public:
                 Vector marginO(3);
                 for(size_t i=0 ; i<3 ; i++)
                 {
-                    marginP[i] = margins->get(i).asDouble();
-                    marginO[i] = margins->get(i+3).asDouble();
+                    marginP[i]=margins->get(i).asDouble();
+                    marginO[i]=margins->get(i+3).asDouble();
                 }
 
                 if (Bottle *targetList=request.find("target").asList())
@@ -725,7 +725,7 @@ public:
                         ud[1]=target->get(4).asDouble();
                         ud[2]=target->get(5).asDouble();
                         ud[3]=target->get(6).asDouble();
-                        Matrix Hd = axis2dcm(ud);
+                        Matrix Hd=axis2dcm(ud);
 
                         for (size_t j=0; j<3; j++)
                         {
@@ -776,12 +776,12 @@ public:
             if (verbosity>0)
                 yInfo("Received reply from solver: %s",reply.toString().c_str());
 
-            bool success = (reply.get(0).asVocab()==Vocab::encode("ack"));
+            bool success=(reply.get(0).asVocab()==Vocab::encode("ack"));
             if (success || (reply.get(0).asVocab()==Vocab::encode("nack")))
             {
                 reply=reply.tail();
 
-                if(Bottle *replyPoseList = reply.find("q").asList())
+                if(Bottle *replyPoseList=reply.find("q").asList())
                 {
                     for (int i=0 ; i<nbAddedTargets; i++)
                         replyPoseList->pop();
@@ -790,7 +790,7 @@ public:
                     {
                         for (int i=0 ; i<replyPoseList->size(); i++)
                         {
-                            Bottle *replyPose = replyPoseList->get(i).asList();
+                            Bottle *replyPose=replyPoseList->get(i).asList();
 
                             if (verbosity>0)
                             {
@@ -800,13 +800,13 @@ public:
                             Vector new_tu(4,0.0);
                             new_tu[2]=1.0;
                             new_tu[3]=M_PI/180.0*replyPose->get(2).asDouble();
-                            Matrix newTorsoTransform=axis2dcm(new_tu);
-                            newTorsoTransform[0][3]=replyPose->get(0).asDouble();
-                            newTorsoTransform[1][3]=replyPose->get(1).asDouble();
-                            newTorsoTransform=SE3inv(torsoTransform)*newTorsoTransform;
-                            replyPose->get(0)=Value(newTorsoTransform[0][3]);
-                            replyPose->get(1)=Value(newTorsoTransform[1][3]);
-                            new_tu=dcm2axis(newTorsoTransform);
+                            Matrix newBaseTransform=axis2dcm(tu);
+                            newBaseTransform[0][3]=replyPose->get(0).asDouble();
+                            newBaseTransform[1][3]=replyPose->get(1).asDouble();
+                            newBaseTransform=SE3inv(baseTransform)*newBaseTransform;
+                            replyPose->get(0)=Value(newBaseTransform[0][3]);
+                            replyPose->get(1)=Value(newBaseTransform[1][3]);
+                            new_tu=dcm2axis(newBaseTransform);
                             replyPose->get(2)=Value(180.0/M_PI*new_tu[2]*new_tu[3]);
 
                             if (verbosity>0)
@@ -854,12 +854,12 @@ public:
                             ud[2]=target->get(5).asDouble();
                             ud[3]=target->get(6).asDouble();
 
-                            Matrix Hd = axis2dcm(ud);
+                            Matrix Hd=axis2dcm(ud);
                             Hd.setSubcol(xd,0,3);
-                            Hd = SE3inv(torsoTransform)*Hd;
+                            Hd=SE3inv(baseTransform)*Hd;
 
-                            Vector x = Hd.subcol(0, 3, 3);
-                            Vector u = dcm2axis(Hd);
+                            Vector x=Hd.subcol(0, 3, 3);
+                            Vector u=dcm2axis(Hd);
                             target->clear();
                             target->addDouble(x[0]);
                             target->addDouble(x[1]);
