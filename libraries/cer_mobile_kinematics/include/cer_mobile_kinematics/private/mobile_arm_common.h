@@ -309,7 +309,6 @@ public:
     {
         if(domain.size()>5)
         {
-            this->lambda.resize(10*nb_targets+1);
             domain_constr=true;
             domain_poly.resize(domain.size()/2, Vector(2));
 
@@ -321,10 +320,17 @@ public:
         }
         else
         {
-            this->lambda.resize(10*nb_targets);
             domain_constr=false;
             domain_poly.clear();
         }
+
+        Ipopt::Index n;
+        Ipopt::Index m;
+        Ipopt::Index nnz_jac_g;
+        Ipopt::Index nnz_h_lag;
+        IndexStyleEnum index_style;
+        get_nlp_info(n, m, nnz_jac_g, nnz_h_lag , index_style);
+        this->lambda.resize(m);
     }
 
     /****************************************************************/
@@ -351,14 +357,19 @@ public:
                                 const Vector &lambda)
     {
         this->zL=zL;
-        this->zL.resize(idx_la.back()+3);
         this->zU=zU;
-        this->zU.resize(idx_la.back()+3);
         this->lambda=lambda;
-        if(domain_constr)
-            this->lambda.resize(10*nb_targets+1);
-        else
-            this->lambda.resize(10*nb_targets);
+
+        Ipopt::Index n;
+        Ipopt::Index m;
+        Ipopt::Index nnz_jac_g;
+        Ipopt::Index nnz_h_lag;
+        IndexStyleEnum index_style;
+        get_nlp_info(n, m, nnz_jac_g, nnz_h_lag , index_style);
+
+        this->zL.resize(n);
+        this->zU.resize(n);
+        this->lambda.resize(m);
     }
 
     /****************************************************************/
