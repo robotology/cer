@@ -488,7 +488,7 @@ public:
                 }
             }
 
-            // g[5] (domain boundaries constraints)
+            // g[6] (domain boundaries constraints)
             if(domain_constr)
             {
                 iRow[idx]=10*nb_targets; jCol[idx]=0;idx++;
@@ -632,7 +632,7 @@ public:
                 }
             }
 
-            // g[5] (domain boundaries constraints)
+            // g[6] (domain boundaries constraints)
             if(domain_constr)
             {
                 Vector v(2);
@@ -667,6 +667,61 @@ public:
     string get_mode() const
     {
         return "full_pose+mobile_base+no_torso_no_heave+central_diff";
+    }
+
+    /****************************************************************/
+    bool eval_grad_f(Ipopt::Index n, const Ipopt::Number* x, bool new_x,
+                     Ipopt::Number *grad_f)
+    {
+        computeQuantities(x,new_x);
+
+        // base
+        grad_f[idx_b+0]=0;
+        grad_f[idx_b+1]=0;
+        grad_f[idx_b+2]=0;
+
+        for (size_t i=0; i<nb_targets; i++)
+        {
+            Ipopt::Number x_dx[n];
+            for (Ipopt::Index j=0; j<n; j++)
+                x_dx[j]=x[j];
+
+            double m_bw, m_fw;
+
+            // torso
+            grad_f[idx_t[i]+0]=0.0;
+            grad_f[idx_t[i]+1]=0.0;
+            grad_f[idx_t[i]+2]=0.0;
+
+            // upper_arm
+            grad_f[idx_ua[i]+0]=0.0;
+            for (size_t j=1; j<upper_arm.getDOF(); j++)
+            {
+                grad_f[idx_ua[i]+j]=2.0*wpostural_upper_arm*(x[idx_ua[i]+j]-xref[idx_ua[0]+j]);
+                x_dx[idx_ua[i]+j]=x[idx_ua[i]+j]+drho;
+                m_fw=-computeManipulability(n,x_dx,i,true);
+                x_dx[idx_ua[i]+j]=x[idx_ua[i]+j]-drho;
+                m_bw=-computeManipulability(n,x_dx,i,true);
+                grad_f[idx_ua[i]+j]+=0.5*(m_fw-m_bw)/drho;
+                x_dx[idx_ua[i]+j]=x[idx_ua[i]+j];
+            }
+
+            // lower_arm
+            grad_f[idx_la[i]+0]=2.0*wpostural_lower_arm*(x[idx_la[i]+0]-x[idx_la[i]+1]);
+            grad_f[idx_la[i]+1]=2.0*wpostural_lower_arm*(2.0*x[idx_la[i]+1]-x[idx_la[i]+0]-x[idx_la[i]+2]);
+            grad_f[idx_la[i]+2]=2.0*wpostural_lower_arm*(x[idx_la[i]+2]-x[idx_la[i]+1]);
+            for (size_t j=0; j<3; j++)
+            {
+                x_dx[idx_la[i]+j]=x[idx_la[i]+j]+drho;
+                m_fw=-computeManipulability(n,x_dx,i,true);
+                x_dx[idx_la[i]+j]=x[idx_la[i]+j]-drho;
+                m_bw=-computeManipulability(n,x_dx,i,true);
+                grad_f[idx_la[i]+j]+=0.5*(m_fw-m_bw)/drho;
+                x_dx[idx_la[i]+j]=x[idx_la[i]+j];
+            }
+        }
+
+        return true;
     }
 
     /****************************************************************/
@@ -723,9 +778,16 @@ public:
                         idx++;
                     }
                 }
+
+                // g[5] (objects in front)
+                for (Ipopt::Index j=0; j<3; j++)
+                {
+                    iRow[idx]=10*i+9; jCol[idx]=j;
+                    idx++;
+                }
             }
 
-            // g[5] (domain boundaries constraints)
+            // g[6] (domain boundaries constraints)
             if(domain_constr)
             {
                 iRow[idx]=10*nb_targets; jCol[idx]=0;idx++;
@@ -858,9 +920,26 @@ public:
                     values[idx]=s_ang*0.5*(e_fwo[2]-e_bwo[2])/drho;idx++;
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j];
                 }
+
+                // g[5] (object in front)
+                double dx=xd[i][0]-x[idx_b+0];
+                double dy=xd[i][1]-x[idx_b+1];
+                double norm = dx*dx+dy*dy;
+                if (norm < std::numeric_limits<double>::epsilon())
+                {
+                    values[idx]=0;idx++;
+                    values[idx]=0;idx++;
+                    values[idx]=0;idx++;
+                }
+                else
+                {
+                    values[idx]=dy/norm;idx++;
+                    values[idx]=-dx/norm;idx++;
+                    values[idx]=-1.0;idx++;
+                }
             }
 
-            // g[5] (domain boundaries constraints)
+            // g[6] (domain boundaries constraints)
             if(domain_constr)
             {
                 Vector v(2);

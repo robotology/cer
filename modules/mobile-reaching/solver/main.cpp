@@ -149,7 +149,7 @@ public:
         p.warm_start=true;
         p.max_cpu_time=1;
         p.weight_postural_torso=0*1;
-        p.weight_postural_torso_yaw=0*1e-2;
+        p.weight_postural_torso_yaw=1e-2;
         p.weight_postural_upper_arm=0*1e-2;
         p.weight_postural_lower_arm=0*1;
 
