@@ -562,4 +562,85 @@ public:
     }
 };
 
+Vector iExpMap(const Matrix &M, const double &delta_t)
+{
+    Vector v(6,0.0);
+    double theta,si,co,sinc,mcosc,msinc,det;
+    Vector u;
 
+    Matrix Rd=M.submatrix(0,2, 0,2);
+    u=dcm2axis(Rd);
+    u*=u[3];
+    u.pop_back();
+
+    for (int i=0; i<3; i++)
+        v[3+i]=u[i];
+
+    theta=sqrt(u[0]*u[0] + u[1]*u[1] + u[2]*u[2]);
+    si=sin(theta);
+    co=cos(theta);
+    if (fabs(theta)<1e-8)
+        sinc=1.0;
+    else
+        sinc=si/theta;
+    if (fabs(theta) < 2.4e-4)
+    {
+        mcosc=0.5;
+        msinc=1./6.0;
+    }
+    else
+    {
+        mcosc=(1.0-co)/(theta*theta);
+        msinc=((1.0-si/theta)/theta/theta) ;
+    }
+
+    Matrix a(3,3);
+    a[0][0] = sinc + u[0]*u[0]*msinc;
+    a[0][1] = u[0]*u[1]*msinc - u[2]*mcosc;
+    a[0][2] = u[0]*u[2]*msinc + u[1]*mcosc;
+
+    a[1][0] = u[0]*u[1]*msinc + u[2]*mcosc;
+    a[1][1] = sinc + u[1]*u[1]*msinc;
+    a[1][2] = u[1]*u[2]*msinc - u[0]*mcosc;
+
+    a[2][0] = u[0]*u[2]*msinc - u[1]*mcosc;
+    a[2][1] = u[1]*u[2]*msinc + u[0]*mcosc;
+    a[2][2] = sinc + u[2]*u[2]*msinc;
+
+    det = a[0][0]*a[1][1]*a[2][2] + a[1][0]*a[2][1]*a[0][2]
+         + a[0][1]*a[1][2]*a[2][0] - a[2][0]*a[1][1]*a[0][2]
+         - a[1][0]*a[0][1]*a[2][2] - a[0][0]*a[2][1]*a[1][2];
+
+    if (fabs(det) > 1.e-5)
+    {
+        v[0] =  (M[0][3]*a[1][1]*a[2][2]
+                +   M[1][3]*a[2][1]*a[0][2]
+                +   M[2][3]*a[0][1]*a[1][2]
+                -   M[2][3]*a[1][1]*a[0][2]
+                -   M[1][3]*a[0][1]*a[2][2]
+                -   M[0][3]*a[2][1]*a[1][2])/det;
+        v[1] =  (a[0][0]*M[1][3]*a[2][2]
+                +   a[1][0]*M[2][3]*a[0][2]
+                +   M[0][3]*a[1][2]*a[2][0]
+                -   a[2][0]*M[1][3]*a[0][2]
+                -   a[1][0]*M[0][3]*a[2][2]
+                -   a[0][0]*M[2][3]*a[1][2])/det;
+        v[2] =  (a[0][0]*a[1][1]*M[2][3]
+                +   a[1][0]*a[2][1]*M[0][3]
+                +   a[0][1]*M[1][3]*a[2][0]
+                -   a[2][0]*a[1][1]*M[0][3]
+                -   a[1][0]*a[0][1]*M[2][3]
+                -   a[0][0]*a[2][1]*M[1][3])/det;
+    }
+    else
+    {
+        v[0] = M[0][3];
+        v[1] = M[1][3];
+        v[2] = M[2][3];
+    }
+
+    // Apply the sampling time to the computed velocity
+    v /= delta_t;
+
+    return v;
+}
