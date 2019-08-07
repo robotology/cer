@@ -686,9 +686,16 @@ public:
         }
 
         int nbAddedTargets=0;
-        if (request.check("margin"))
+        if (request.check("marginL") || request.check("marginG"))
         {
-            if (Bottle *margins=request.find("margin").asList())
+            bool globalNoise=false;
+            Bottle *margins;
+            if (margins=request.find("marginG").asList())
+                globalNoise=true;
+            else
+                margins=request.find("marginL").asList();
+
+            if(margins)
             {
                 if (margins->size() != 6)
                 {
@@ -720,20 +727,36 @@ public:
                         ud[1]=target->get(4).asDouble();
                         ud[2]=target->get(5).asDouble();
                         ud[3]=target->get(6).asDouble();
+
                         Matrix Hd=axis2dcm(ud);
+                        Matrix Rd=Hd.submatrix(0,2,0,2);
 
                         for (size_t j=0; j<3; j++)
                         {
                             if(fabs(marginP[j]) > std::numeric_limits<double>::epsilon())
                             {
                                 Vector newTarget(7);
-                                newTarget.setSubvector(0, xd+marginP[j]*Hd.getCol(j).subVector(0,2));
+                                if(globalNoise)
+                                {
+                                    newTarget.setSubvector(0, xd);
+                                    newTarget[j]+=marginP[j];
+                                }
+                                else
+                                    newTarget.setSubvector(0, xd+marginP[j]*Rd.getCol(j));
+
                                 newTarget.setSubvector(3, ud);
 
                                 targetList->addList().read(newTarget);
                                 nbAddedTargets++;
 
-                                newTarget.setSubvector(0, xd-marginP[j]*Hd.getCol(j).subVector(0,2));
+                                if(globalNoise)
+                                {
+                                    newTarget.setSubvector(0, xd);
+                                    newTarget[j]-=marginP[j];
+                                }
+                                else
+                                    newTarget.setSubvector(0, xd-marginP[j]*Rd.getCol(j));
+
                                 targetList->addList().read(newTarget);
                                 nbAddedTargets++;
                             }
@@ -746,12 +769,18 @@ public:
                                 o[j]=1.0;
                                 o[3]=marginO[j];
                                 Matrix R=axis2dcm(o);
-                                newTarget.setSubvector(3, dcm2axis(Hd*R));
+                                if(globalNoise)
+                                    newTarget.setSubvector(3, dcm2axis(R*Hd));
+                                else
+                                    newTarget.setSubvector(3, dcm2axis(Hd*R));
 
                                 targetList->addList().read(newTarget);
                                 nbAddedTargets++;
 
-                                newTarget.setSubvector(3, dcm2axis(Hd*R.transposed()));
+                                if(globalNoise)
+                                    newTarget.setSubvector(3, dcm2axis(R.transposed()*Hd));
+                                else
+                                    newTarget.setSubvector(3, dcm2axis(Hd*R.transposed()));
 
                                 targetList->addList().read(newTarget);
                                 nbAddedTargets++;
@@ -795,7 +824,7 @@ public:
                             Vector new_tu(4,0.0);
                             new_tu[2]=1.0;
                             new_tu[3]=M_PI/180.0*replyPose->get(2).asDouble();
-                            Matrix newBaseTransform=axis2dcm(tu);
+                            Matrix newBaseTransform=axis2dcm(new_tu);
                             newBaseTransform[0][3]=replyPose->get(0).asDouble();
                             newBaseTransform[1][3]=replyPose->get(1).asDouble();
                             newBaseTransform=SE3inv(baseTransform)*newBaseTransform;

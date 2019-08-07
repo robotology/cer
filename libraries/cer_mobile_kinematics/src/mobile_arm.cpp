@@ -229,7 +229,8 @@ bool MobileArmSolver::ikin(const vector<Matrix> &Hd, Vector &q, int *exit_code)
             nlp->tripod_fkin(1,qt,&din1);
             nlp->tripod_fkin(2,qt,&din2);
             Vector x=H.getCol(3).subVector(0,2);
-            Vector e_u=dcm2axis(Hd[i]*H.transposed());
+            Vector e_u=dcm2axis(Hd[i].submatrix(0,2,0,2)*H.submatrix(0,2,0,2).transposed());
+
             e_u*=e_u[3]; e_u.pop_back();
 
             yInfo()<<" *** Arm Solver: ** Target" << i;
