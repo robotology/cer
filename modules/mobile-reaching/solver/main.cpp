@@ -26,6 +26,7 @@
 
 #include <iCub/ctrl/math.h>
 #include <iCub/iKin/iKinFwd.h>
+#include <cer_kinematics/utils.h>
 #include <cer_mobile_kinematics/mobile_arm.h>
 
 using namespace std;
@@ -36,6 +37,7 @@ using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace iCub::iKin;
 using namespace cer::kinematics;
+using namespace cer::mobile_kinematics;
 
 
 /****************************************************************/
@@ -142,7 +144,7 @@ public:
         bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
         verbosity=rf.check("verbosity",Value(0)).asInt();
 
-        SolverParameters p=solver.getSolverParameters();
+        MobileSolverParameters p=solver.getSolverParameters();
         p.setMode("full_pose");
         p.torso_heave=0.0;
         p.lower_arm_heave=0.02;
@@ -193,7 +195,7 @@ public:
         if(verbosity>0)
             yInfo() << "Received command:" << cmd.toString();
 
-        SolverParameters p=solver.getSolverParameters();
+        MobileSolverParameters p=solver.getSolverParameters();
         reply.addVocab(Vocab::encode("nack"));
 
         if (cmd.check("get"))

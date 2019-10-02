@@ -7,8 +7,10 @@ project(cer_mobile_kinematics)
 set(headers_private include/${PROJECT_NAME}/private/mobile_arm_common.h
                     include/${PROJECT_NAME}/private/mobile_arm_full_notorso_noheave.h
                     include/${PROJECT_NAME}/private/mobile_arm_full_torsoyaw_noheave.h)
-set(headers         include/${PROJECT_NAME}/mobile_arm.h)
-set(sources         src/mobile_arm.cpp)
+set(headers         include/${PROJECT_NAME}/mobile_utils.h
+                    include/${PROJECT_NAME}/mobile_arm.h)
+set(sources         src/mobile_utils.cpp
+                    src/mobile_arm.cpp)
 
 source_group("Header Files" FILES ${headers_private} ${headers})
 source_group("Source Files" FILES ${sources})

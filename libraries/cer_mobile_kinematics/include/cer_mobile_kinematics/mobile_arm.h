@@ -15,8 +15,8 @@
  * Public License for more details
 */
 
-#ifndef __CER_KINEMATICS_ARM_H__
-#define __CER_KINEMATICS_ARM_H__
+#ifndef __CER_KINEMATICS_MOBILE_ARM_H__
+#define __CER_KINEMATICS_MOBILE_ARM_H__
 
 #include <deque>
 #include <vector>
@@ -24,10 +24,10 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>
 
-#include <cer_kinematics/utils.h>
+#include <cer_mobile_kinematics/mobile_utils.h>
 
 namespace cer {
-namespace kinematics {
+namespace mobile_kinematics {
 
 /**
  * Class to handle direct and inverse kinematics of the robot 
@@ -35,11 +35,11 @@ namespace kinematics {
  * 
  * @author Ugo Pattacini
  */
-class MobileArmSolver : public Solver
+class MobileArmSolver : public cer::kinematics::Solver
 {
 protected:
-    ArmParameters armParameters;
-    SolverParameters slvParameters;
+    cer::kinematics::ArmParameters armParameters;
+    MobileSolverParameters slvParameters;
     bool domain_constr;
     yarp::sig::Vector domainPoly;
     yarp::sig::Vector q0;
@@ -61,8 +61,8 @@ public:
      * @param verb      integers greater than 0 enable successive 
      *                  levels of verbosity (default=0).
      */
-    MobileArmSolver(const ArmParameters &armParams=ArmParameters(),
-              const SolverParameters &slvParams=SolverParameters(),
+    MobileArmSolver(const cer::kinematics::ArmParameters &armParams=cer::kinematics::ArmParameters(),
+              const MobileSolverParameters &slvParams=MobileSolverParameters(),
               const yarp::sig::Vector &domain=yarp::sig::Vector(),
               const int verb=0);
 
@@ -71,7 +71,7 @@ public:
      * 
      * @param params arm parameters.
      */
-    virtual void setArmParameters(const ArmParameters &params)
+    virtual void setArmParameters(const cer::kinematics::ArmParameters &params)
     {
         armParameters=params;
     }
@@ -81,7 +81,7 @@ public:
      * 
      * @return arm parameters.
      */
-    virtual const ArmParameters& getArmParameters() const
+    virtual const cer::kinematics::ArmParameters& getArmParameters() const
     {
         return armParameters;
     }
@@ -91,7 +91,7 @@ public:
      * 
      * @param params solver parameters.
      */
-    virtual void setSolverParameters(const SolverParameters &params)
+    virtual void setSolverParameters(const MobileSolverParameters &params)
     {
         slvParameters=params;
     }
@@ -101,7 +101,7 @@ public:
      *
      * @return solver parameters.
      */
-    virtual const SolverParameters& getSolverParameters() const
+    virtual const MobileSolverParameters& getSolverParameters() const
     {
         return slvParameters;
     }

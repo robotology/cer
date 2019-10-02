@@ -17,6 +17,7 @@
 
 #include <string>
 #include <vector>
+#include <cmath>
 #include <algorithm>
 
 #include <yarp/os/all.h>
@@ -29,6 +30,7 @@
 #include <yarp/dev/INavigation2D.h>
 
 #include <iCub/ctrl/minJerkCtrl.h>
+#include <cer_kinematics/utils.h>
 #include <cer_mobile_kinematics/mobile_arm.h>
 
 #define MIN_TS  0.01    // [s]
@@ -40,6 +42,7 @@ using namespace yarp::sig;
 using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace cer::kinematics;
+using namespace cer::mobile_kinematics;
 
 // forward declaration
 class Controller;
