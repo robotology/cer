@@ -128,7 +128,7 @@ public:
         Matrix Jtripod(6,3);
         Matrix Jarm;
 
-        Ipopt::Number x_dx[n];
+        vector<Ipopt::Number> x_dx(n);
         for (Ipopt::Index i=0; i<n; i++)
             x_dx[i]=x[i];
 
@@ -169,7 +169,7 @@ public:
             for(int i=0 ; i<3 ; i++)
             {
                 x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i]+drho;
-                d_fw = tripod_fkin(2,x_dx,nullptr,target_idx);
+                d_fw = tripod_fkin(2,x_dx.data(),nullptr,target_idx);
                 fw = M*d_fw.T*TN;
                 Vector w = iExpMap(SE3inv(He)*fw, drho);
                 Jtripod.setSubcol(R*w.subVector(0,2), 0,i);
@@ -192,7 +192,7 @@ public:
             for(int i=0 ; i<3 ; i++)
             {
                 x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i]+drho;
-                d_fw = tripod_fkin(2,x_dx,nullptr,target_idx);
+                d_fw = tripod_fkin(2,x_dx.data(),nullptr,target_idx);
                 fw = M*d_fw.T*TN;
                 Vector w = iExpMap(SE3inv(He)*fw, drho);
                 Jtripod.setSubcol(T[target_idx].submatrix(0,2,0,2)*w.subVector(0,2), 0,i);
@@ -216,7 +216,7 @@ public:
             for(int i=0 ; i<3 ; i++)
             {
                 x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i]+drho;
-                tripod_fkin(2,x_dx,&d_fw,target_idx);
+                tripod_fkin(2,x_dx.data(),&d_fw,target_idx);
                 Jconstr[0][idx_la[0]-3+i]=(d_fw.p[2]-din2_loc.p[2])/drho;
                 x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i];
             }
@@ -226,7 +226,7 @@ public:
             for(int i=0 ; i<3 ; i++)
             {
                 x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i]+drho;
-                tripod_fkin(2,x_dx,&d_fw,target_idx);
+                tripod_fkin(2,x_dx.data(),&d_fw,target_idx);
                 Jconstr[0][idx_la[0]-3+i]=(d_fw.p[2]-din2[target_idx].p[2])/drho;
                 x_dx[idx_la[target_idx]+i]=x[idx_la[target_idx]+i];
             }
@@ -244,9 +244,9 @@ public:
         {
             // Joint limit penalty (upper arm only)
 
-            Ipopt::Number x_l[n];
-            Ipopt::Number x_u[n];
-            get_bounds_info(n, x_l, x_u, -1, nullptr, nullptr);
+            vector<Ipopt::Number> x_l(n);
+            vector<Ipopt::Number> x_u(n);
+            get_bounds_info(n, x_l.data(), x_u.data(), -1, nullptr, nullptr);
 
             Matrix Jlim(6, nb_kin_DOF);
             for(int j=3 ; j<3+upper_arm.getDOF() ; j++)
@@ -343,11 +343,11 @@ public:
 
         for (size_t i=0; i<nb_targets; i++)
         {
-            Ipopt::Number x_dx[n];
+            vector<Ipopt::Number> x_dx(n);
             for (Ipopt::Index j=0; j<n; j++)
                 x_dx[j]=x[j];
 
-            double manip=-computeManipulability(n,x_dx,i,false);
+            double manip=-computeManipulability(n,x_dx.data(),i,false);
 
             // base
 
@@ -358,7 +358,7 @@ public:
 
             grad_f[idx_ua[i]]=2*wpostural_torso_yaw*x[idx_ua[i]];
             x_dx[idx_ua[i]]=x[idx_ua[i]]+drho;
-            grad_f[idx_ua[i]]+=(-computeManipulability(n,x_dx,i,true)-manip)/drho;
+            grad_f[idx_ua[i]]+=(-computeManipulability(n,x_dx.data(),i,true)-manip)/drho;
             x_dx[idx_ua[i]]=x[idx_ua[i]];
 
             // upper_arm
@@ -366,7 +366,7 @@ public:
             {
                 grad_f[idx_ua[i]+j]=2.0*wpostural_upper_arm*(x[idx_ua[i]+j]-xref[idx_ua[0]+j]);
                 x_dx[idx_ua[i]+j]=x[idx_ua[i]+j]+drho;
-                grad_f[idx_ua[i]+j]+=(-computeManipulability(n,x_dx,i,true)-manip)/drho;
+                grad_f[idx_ua[i]+j]+=(-computeManipulability(n,x_dx.data(),i,true)-manip)/drho;
                 x_dx[idx_ua[i]+j]=x[idx_ua[i]+j];
             }
 
@@ -377,7 +377,7 @@ public:
             for (size_t j=0; j<3; j++)
             {
                 x_dx[idx_la[i]+j]=x[idx_la[i]+j]+drho;
-                grad_f[idx_la[i]+j]+=(-computeManipulability(n,x_dx,i,true)-manip)/drho;
+                grad_f[idx_la[i]+j]+=(-computeManipulability(n,x_dx.data(),i,true)-manip)/drho;
                 x_dx[idx_la[i]+j]=x[idx_la[i]+j];
             }
         }
@@ -496,7 +496,7 @@ public:
         {
             computeQuantities(x,new_x);
 
-            Ipopt::Number x_dx[n];
+            vector<Ipopt::Number> x_dx(n);
             for (Ipopt::Index i=0; i<n; i++)
                 x_dx[i]=x[i];
 
@@ -511,7 +511,7 @@ public:
                 for (size_t j=0; j<3; j++)
                 {
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j]+drho;
-                    tripod_fkin(2,x_dx,&d_fw,i);
+                    tripod_fkin(2,x_dx.data(),&d_fw,i);
                     values[idx]=-2.0*e2*(d_fw.p[2]-din2[i].p[2])/drho;idx++;
                     values[idx]=(d_fw.n[2]-din2[i].n[2])/drho;idx++;
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j];
@@ -557,7 +557,7 @@ public:
                 for (size_t j=0; j<3; j++)
                 {
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j]+drho;
-                    d_fw=tripod_fkin(2,x_dx,nullptr,i);
+                    d_fw=tripod_fkin(2,x_dx.data(),nullptr,i);
                     e_fw=xd[i]-(Hb*M*d_fw.T*TN).getCol(3).subVector(0,2);
                     values[idx]=s_pos*(e_fw[0]-e[0])/drho;idx++;
                     values[idx]=s_pos*(e_fw[1]-e[1])/drho;idx++;
@@ -603,7 +603,7 @@ public:
                 for (size_t j=0; j<3; j++)
                 {
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j]+drho;
-                    d_fw=tripod_fkin(2,x_dx,nullptr,i);
+                    d_fw=tripod_fkin(2,x_dx.data(),nullptr,i);
                     e_fwo=dcm2axis(Rd[i]*(Rb*M*d_fw.T*TN).transposed()); e_fwo*=e_fwo[3]; e_fwo.pop_back();
                     values[idx]=s_ang*(e_fwo[0]-eo[0])/drho;idx++;
                     values[idx]=s_ang*(e_fwo[1]-eo[1])/drho;idx++;
@@ -681,7 +681,7 @@ public:
 
         for (size_t i=0; i<nb_targets; i++)
         {
-            Ipopt::Number x_dx[n];
+            vector<Ipopt::Number> x_dx(n);
             for (Ipopt::Index j=0; j<n; j++)
                 x_dx[j]=x[j];
 
@@ -696,9 +696,9 @@ public:
 
             grad_f[idx_ua[i]]=2*wpostural_torso_yaw*x[idx_ua[i]];
             x_dx[idx_ua[i]]=x[idx_ua[i]]+drho;
-            m_fw=-computeManipulability(n,x_dx,i,true);
+            m_fw=-computeManipulability(n,x_dx.data(),i,true);
             x_dx[idx_ua[i]]=x[idx_ua[i]]-drho;
-            m_bw=-computeManipulability(n,x_dx,i,true);
+            m_bw=-computeManipulability(n,x_dx.data(),i,true);
             grad_f[idx_ua[i]]+=0.5*(m_fw-m_bw)/drho;
             x_dx[idx_ua[i]]=x[idx_ua[i]];
 
@@ -708,9 +708,9 @@ public:
             {
                 grad_f[idx_ua[i]+j]=2.0*wpostural_upper_arm*(x[idx_ua[i]+j]-xref[idx_ua[0]+j]);
                 x_dx[idx_ua[i]+j]=x[idx_ua[i]+j]+drho;
-                m_fw=-computeManipulability(n,x_dx,i,true);
+                m_fw=-computeManipulability(n,x_dx.data(),i,true);
                 x_dx[idx_ua[i]+j]=x[idx_ua[i]+j]-drho;
-                m_bw=-computeManipulability(n,x_dx,i,true);
+                m_bw=-computeManipulability(n,x_dx.data(),i,true);
                 grad_f[idx_ua[i]+j]+=0.5*(m_fw-m_bw)/drho;
                 x_dx[idx_ua[i]+j]=x[idx_ua[i]+j];
             }
@@ -722,9 +722,9 @@ public:
             for (size_t j=0; j<3; j++)
             {
                 x_dx[idx_la[i]+j]=x[idx_la[i]+j]+drho;
-                m_fw=-computeManipulability(n,x_dx,i,true);
+                m_fw=-computeManipulability(n,x_dx.data(),i,true);
                 x_dx[idx_la[i]+j]=x[idx_la[i]+j]-drho;
-                m_bw=-computeManipulability(n,x_dx,i,true);
+                m_bw=-computeManipulability(n,x_dx.data(),i,true);
                 grad_f[idx_la[i]+j]+=0.5*(m_fw-m_bw)/drho;
                 x_dx[idx_la[i]+j]=x[idx_la[i]+j];
             }
@@ -809,7 +809,7 @@ public:
         {
             computeQuantities(x,new_x);
 
-            Ipopt::Number x_dx[n];
+            vector<Ipopt::Number> x_dx(n);
             for (Ipopt::Index i=0; i<n; i++)
                 x_dx[i]=x[i];
 
@@ -824,9 +824,9 @@ public:
                 for (size_t j=0; j<3; j++)
                 {
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j]+drho;
-                    tripod_fkin(2,x_dx,&d_fw,i);
+                    tripod_fkin(2,x_dx.data(),&d_fw,i);
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j]-drho;
-                    tripod_fkin(2,x_dx,&d_bw,i);
+                    tripod_fkin(2,x_dx.data(),&d_bw,i);
                     values[idx]=-e2*(d_fw.p[2]-d_bw.p[2])/drho;idx++;
                     values[idx]=(d_fw.n[2]-d_bw.n[2])/(2.0*drho);idx++;
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j];
@@ -872,10 +872,10 @@ public:
                 for (size_t j=0; j<3; j++)
                 {
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j]+drho;
-                    d_fw=tripod_fkin(2,x_dx,nullptr,i);
+                    d_fw=tripod_fkin(2,x_dx.data(),nullptr,i);
                     e_fw=xd[i]-(Hb*M*d_fw.T*TN).getCol(3).subVector(0,2);
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j]-drho;
-                    d_bw=tripod_fkin(2,x_dx,nullptr,i);
+                    d_bw=tripod_fkin(2,x_dx.data(),nullptr,i);
                     e_bw=xd[i]-(Hb*M*d_bw.T*TN).getCol(3).subVector(0,2);
                     values[idx]=0.5*s_pos*(e_fw[0]-e_bw[0])/drho;idx++;
                     values[idx]=0.5*s_pos*(e_fw[1]-e_bw[1])/drho;idx++;
@@ -921,10 +921,10 @@ public:
                 for (size_t j=0; j<3; j++)
                 {
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j]+drho;
-                    d_fw=tripod_fkin(2,x_dx,nullptr,i);
+                    d_fw=tripod_fkin(2,x_dx.data(),nullptr,i);
                     e_fwo=dcm2axis(Rd[i]*(Rb*M*d_fw.T*TN).transposed()); e_fwo*=e_fwo[3]; e_fwo.pop_back();
                     x_dx[idx_la[i]+j]=x[idx_la[i]+j]-drho;
-                    d_fw=tripod_fkin(2,x_dx,nullptr,i);
+                    d_fw=tripod_fkin(2,x_dx.data(),nullptr,i);
                     e_bwo=dcm2axis(Rd[i]*(Rb*M*d_fw.T*TN).transposed()); e_bwo*=e_bwo[3]; e_bwo.pop_back();
                     values[idx]=s_ang*0.5*(e_fwo[0]-e_bwo[0])/drho;idx++;
                     values[idx]=s_ang*0.5*(e_fwo[1]-e_bwo[1])/drho;idx++;

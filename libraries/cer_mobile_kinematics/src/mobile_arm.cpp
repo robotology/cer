@@ -33,8 +33,8 @@
 #include <IpTNLP.hpp>
 #include <IpIpoptApplication.hpp>
 
-#include <cer_mobile_kinematics/mobile_arm.h>
 #include <cer_kinematics/private/helpers.h>
+#include <cer_mobile_kinematics/mobile_arm.h>
 
 // COMMON PART -- begin
 #define DELTA_RHO       1e-6
@@ -46,10 +46,11 @@ using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace iCub::iKin;
 using namespace cer::kinematics;
+using namespace cer::mobile_kinematics;
 // COMMON PART -- end
 
 namespace cer {
-    namespace kinematics {
+    namespace mobile_kinematics {
         #include <cer_mobile_kinematics/private/mobile_arm_common.h>
         #include <cer_mobile_kinematics/private/mobile_arm_full_notorso_noheave.h>
         #include <cer_mobile_kinematics/private/mobile_arm_full_torsoyaw_noheave.h>
@@ -59,7 +60,7 @@ namespace cer {
 
 /****************************************************************/
 MobileArmSolver::MobileArmSolver(const ArmParameters &armParams,
-                     const SolverParameters &slvParams,
+                     const MobileSolverParameters &slvParams,
                      const Vector &domain,
                      const int verb) :
                      Solver(verb),

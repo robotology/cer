@@ -5,6 +5,7 @@
 project(cer_mobile-reaching-controller)
 
 add_executable(${PROJECT_NAME} main.cpp)
+target_compile_definitions(${PROJECT_NAME} PRIVATE _USE_MATH_DEFINES)
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES} ctrlLib cer_mobile_kinematics)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
