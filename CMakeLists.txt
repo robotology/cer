@@ -54,6 +54,7 @@ add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"               
 
 if(IPOPT_FOUND)
     add_subdirectory(libraries/cer_kinematics)
+    add_subdirectory(libraries/cer_mobile_kinematics)
 endif()
 
 add_subdirectory(libraries/cer_kinematics_alt)

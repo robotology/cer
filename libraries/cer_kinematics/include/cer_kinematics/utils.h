@@ -156,7 +156,8 @@ namespace configuration {
         no_heave,
         heave,
         no_torso_no_heave,
-        no_torso_heave
+        no_torso_heave,
+        torso_yaw_no_heave
     };
 };
 
@@ -177,7 +178,7 @@ struct SolverParameters
     /**
      * select the solver configuration: configuration::no_heave, 
      * configuration::heave, configuration::no_torso_no_heave, 
-     * configuration::no_torso_heave. 
+     * configuration::no_torso_heave, configuration::torso_yaw_no_heave.
      */
     int configuration;
 
@@ -305,7 +306,7 @@ struct SolverParameters
      * mode.\n The helper does also set suitable tolerance values. 
      *  
      * @param mode  a string that can be a combination of  
-     *              ["full_pose"|"xyz_pose"]+["heave"|"no_heave"|"no_torso_no_heave"|"no_torso_heave"]+["forward_diff"|"central_diff"].
+     *              ["full_pose"|"xyz_pose"]+["heave"|"no_heave"|"no_torso_no_heave"|"no_torso_heave"|"torso_yaw_no_heave"]+["forward_diff"|"central_diff"].
      *              Examples: "full_pose+central_diff",
      *              "xyz_pose+no_heave",
      *              "full_pose+heave+forward_diff".
