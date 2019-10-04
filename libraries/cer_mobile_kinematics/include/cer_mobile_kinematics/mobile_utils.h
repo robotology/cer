@@ -22,7 +22,6 @@
 #include <string>
 #include <set>
 
-#include <yarp/os/Mutex.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
 #include <iCub/iKin/iKinFwd.h>

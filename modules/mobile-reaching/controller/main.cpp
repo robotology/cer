@@ -15,6 +15,7 @@
  * Public License for more details
 */
 
+#include <mutex>
 #include <string>
 #include <vector>
 #include <cmath>
@@ -89,7 +90,7 @@ class Controller : public RFModule
     RpcClient solverPort;
     Stamp txInfo;
 
-    Mutex mutex;
+    mutex mtx;
     int verbosity;
     bool closing;
     bool controlling;
@@ -472,7 +473,7 @@ public:
 
         if (request.check("stop"))
         {
-            LockGuard lg(mutex);
+            lock_guard<mutex> lg(mtx);
             stopControl();
             return true;
         }
@@ -496,7 +497,7 @@ public:
                 Bottle *payLoadJoints=payLoadJointsList->get(0).asList();
                 Bottle *payLoadPose=payLoadPoseList->get(0).asList();
 
-                LockGuard lg(mutex);
+                lock_guard<mutex> lg(mtx);
                 // process only if we didn't receive
                 // a stop request in the meanwhile
                 if (controlling==latch_controlling)
@@ -920,7 +921,7 @@ public:
     /****************************************************************/
     bool updateModule()
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         getCurrentMode();        
 
         Matrix Hee;
@@ -988,29 +989,22 @@ public:
                 string cmd_1=cmd.get(1).asString();
                 if (cmd_1=="T")
                 {
-                    mutex.lock();
+                    lock_guard<mutex> lg(mtx);
                     gen->setT(cmd.get(2).asDouble());
-                    mutex.unlock();
-
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (cmd_1=="Ts")
                 {
+                    lock_guard<mutex> lg(mtx);
                     Ts=cmd.get(2).asDouble();
                     Ts=std::max(Ts,MIN_TS);
-
-                    mutex.lock();
                     gen->setTs(Ts);
-                    mutex.unlock();
-
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (cmd_1=="verbosity")
                 {
-                    mutex.lock();
+                    lock_guard<mutex> lg(mtx);
                     verbosity=cmd.get(2).asInt();
-                    mutex.unlock();
-
                     reply.addVocab(Vocab::encode("ack"));
                 }
                 else if (cmd_1=="mode")
@@ -1062,43 +1056,33 @@ public:
                 string cmd_1=cmd.get(1).asString();
                 if (cmd_1=="done")
                 {
+                    lock_guard<mutex> lg(mtx);
                     reply.addVocab(Vocab::encode("ack"));
-
-                    mutex.lock();
                     reply.addInt(controlling?0:1);
-                    mutex.unlock();
                 }
                 else if (cmd_1=="target")
                 {
+                    lock_guard<mutex> lg(mtx);
                     reply.addVocab(Vocab::encode("ack"));
-
-                    mutex.lock();
                     reply.addList()=target;
-                    mutex.unlock();
                 }
                 else if (cmd_1=="T")
                 {
+                    lock_guard<mutex> lg(mtx);
                     reply.addVocab(Vocab::encode("ack"));
-
-                    mutex.lock();
                     reply.addDouble(gen->getT());
-                    mutex.unlock();
                 }
                 else if (cmd_1=="Ts")
                 {
+                    lock_guard<mutex> lg(mtx);
                     reply.addVocab(Vocab::encode("ack"));
-
-                    mutex.lock();
                     reply.addDouble(Ts);
-                    mutex.unlock();
                 }
                 else if (cmd_1=="verbosity")
                 {
+                    lock_guard<mutex> lg(mtx);
                     reply.addVocab(Vocab::encode("ack"));
-
-                    mutex.lock();
                     reply.addInt(verbosity);
-                    mutex.unlock();
                 }
                 else if (cmd_1=="mode")
                 {
@@ -1204,10 +1188,8 @@ public:
         }
         else if (cmd_0==Vocab::encode("stop"))
         {
-            mutex.lock();
+            lock_guard<mutex> lg(mtx);
             stopControl();
-            mutex.unlock();
-
             reply.addVocab(Vocab::encode("ack"));
         }
 

@@ -24,7 +24,6 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Value.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/LockGuard.h>
 
 #define SLEEP_TIME 0.005f
 
@@ -267,7 +266,7 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, 
 bool R1faceMic::startRecording()
 {
     if (m_isRecording == true) return true;
-    LockGuard lock(m_mutex);
+    lock_guard<mutex> lock(m_mutex);
     m_isRecording = true;
 #ifdef BUFFER_AUTOCLEAR
     inputBuffer->clear();
@@ -280,7 +279,7 @@ bool R1faceMic::startRecording()
 bool R1faceMic::stopRecording()
 {
     if (m_isRecording == false) return true;
-    LockGuard lock(m_mutex);
+    lock_guard<mutex> lock(m_mutex);
     m_isRecording = false;
 #ifdef BUFFER_AUTOCLEAR
     inputBuffer->clear();
@@ -325,7 +324,7 @@ bool R1faceMic::getRecordingAudioBufferCurrentSize(yarp::dev::AudioBufferSize& s
 
 bool R1faceMic::resetRecordingAudioBuffer()
 {
-    LockGuard lock(m_mutex);
+    lock_guard<mutex> lock(m_mutex);
     inputBuffer->clear();
     yDebug() << "R1faceMic::resetRecordingAudioBuffer";
     return true;

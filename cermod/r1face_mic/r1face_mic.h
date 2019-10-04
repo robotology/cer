@@ -7,6 +7,7 @@
  */
 
 #include <atomic>
+#include <mutex>
 
 #include <yarp/dev/CircularAudioBuffer.h>
 
@@ -115,7 +116,7 @@ private:
     int selected_chan;
     int userChannelsNum;
     size_t record_waiting_counter;
-    yarp::os::Mutex m_mutex;
+    std::mutex m_mutex;
 
     int32_t                     *rawBuffer;
     inputData                   *tmpData;

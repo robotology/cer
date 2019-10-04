@@ -23,7 +23,6 @@
 
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/math/Math.h>
 
 #include <iCub/ctrl/math.h>
@@ -109,7 +108,7 @@ bool ArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
 /****************************************************************/
 bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
 {
-    LockGuard lg(makeThreadSafe);
+    lock_guard<mutex> lg(makeThreadSafe);
     yAssert((Hd.rows()==4)&&(Hd.cols()==4));
 
     int mode=computeMode();

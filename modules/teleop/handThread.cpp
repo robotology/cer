@@ -156,9 +156,8 @@ void HandThread::updateRVIZ(const Vector &xd, const Vector &od)
 
     m = axis2dcm(od);
     m.setSubcol(xd, 0, 3);
-    mutex.lock();
+    mtx.lock();
     criticalSection.tf = m;
-    mutex.unlock();
 
     time      = (uint64_t)(yarpTimeStamp * 1000000000UL);
     nsec_part = (time % 1000000000UL);
