@@ -20,13 +20,13 @@
 
 //  Yarp stuff
 #include <stdint.h>
+#include <mutex>
 #include <vector>
 #include <yarp/os/Bottle.h>
 #include <yarp/os/Time.h>
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/Wrapper.h>
-#include <yarp/os/Semaphore.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/ControlBoardInterfacesImpl.h>
 
@@ -223,7 +223,7 @@ private:
                                        * if FALSE then we wait for the 'attachAll' function to be called in order to get the pointer to the
                                        * low-level device like canBus/embObjMotionControl. */
 
-    yarp::os::Semaphore                      _mutex;
+    std::mutex                              _mutex;
 
     /* Set the direction of conversion: user2HW true means commands are converted from user perspective to
      * low-level HW implementation, i.e. from heave+angles into 3 elongations.
@@ -309,8 +309,7 @@ public:
     virtual bool detachAll();
 
     bool refreshEncoders(double *times);
-    Semaphore               semaphore;
-    std::string   deviceDescription;
+    std::string deviceDescription;
 
     /////////   Axis info INTERFACE   /////////
     virtual bool getAxisName(int axis, std::string& name) override;

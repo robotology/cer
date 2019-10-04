@@ -18,11 +18,11 @@
 #ifndef __CER_KINEMATICS_UTILS_H__
 #define __CER_KINEMATICS_UTILS_H__
 
+#include <mutex>
 #include <limits>
 #include <string>
 #include <set>
 
-#include <yarp/os/Mutex.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
 #include <iCub/iKin/iKinFwd.h>
@@ -365,7 +365,7 @@ public:
 class Solver
 {
 protected:
-    static yarp::os::Mutex makeThreadSafe;
+    static std::mutex makeThreadSafe;
     SolverIterateCallback *callback;
     int verbosity;
 

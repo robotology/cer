@@ -1,3 +1,4 @@
+#include <mutex>
 #include <string>
 #include <vector>
 #include <yarp/sig/Matrix.h>
@@ -10,10 +11,8 @@
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Searchable.h>
-#include <yarp/os/Mutex.h>
 #include <yarp/os/Publisher.h>
 #include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
-#include <yarp/os/LockGuard.h>
 
 class HandThread : public yarp::os::PeriodicThread
 {
@@ -52,13 +51,13 @@ public:
 
     yarp::sig::Matrix getMatrix()
     {
-        yarp::os::LockGuard l(mutex);
+        std::lock_guard<std::mutex> lg(mtx);
         return criticalSection.tf;
     }
 
     void         setData(CommandData newdata)
     {
-        mutex.lock();
+        std::lock_guard<std::mutex> lg(mtx);
         criticalSection.absoluteRotation = newdata.absoluteRotation;
         criticalSection.button0          = newdata.button0         ;
         criticalSection.button1          = newdata.button1         ;
@@ -68,7 +67,6 @@ public:
         criticalSection.simultMovRot     = newdata.simultMovRot    ;
         criticalSection.singleButton     = newdata.singleButton    ;
         criticalSection.targetDistance   = newdata.targetDistance  ;
-        mutex.unlock();
     }
     void         setGrabTrigger();
     void         setDragTrigger();
@@ -146,7 +144,7 @@ private:
     double             button1;
     bool               button2;
     int                controlMode;
-    yarp::os::Mutex    mutex;
+    std::mutex         mtx;
     double             gain;
     double             wrist_heave;
     std::string        mode;
@@ -169,7 +167,7 @@ private:
     double getPeriod();
     void   getData()
     {
-        mutex.lock();
+        std::lock_guard<std::mutex> lg(mtx);
         pose             = criticalSection.pose;
         button0          = criticalSection.button0;
         button1          = criticalSection.button1;
@@ -179,7 +177,6 @@ private:
         singleButton     = criticalSection.singleButton;
         simultMovRot     = criticalSection.simultMovRot;
         absoluteRotation = criticalSection.absoluteRotation;
-        mutex.unlock();
     }
 
 };

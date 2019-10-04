@@ -9,7 +9,6 @@
 #include "cerDoubleLidar.h"
 
 #include <yarp/os/LogStream.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/ResourceFinder.h>
 #include <math.h>
 #include <cmath>
@@ -217,7 +216,7 @@ bool cerDoubleLidar::createLasersDevices(void)
 
 bool cerDoubleLidar::open(yarp::os::Searchable& config)
 {
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     yDebug() << "cerDoubleLidar::open()";
     
     if(!m_lFrontCfg.loadConfig(config))
@@ -330,7 +329,7 @@ bool cerDoubleLidar::verifyLasersConfigurations(void)
 
 bool cerDoubleLidar::getDistanceRange(double& min, double& max)
 {
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
         return false;
     return m_dev_laserFront->getDistanceRange(min, max);
@@ -338,7 +337,7 @@ bool cerDoubleLidar::getDistanceRange(double& min, double& max)
 
 bool cerDoubleLidar::setDistanceRange(double min, double max)
 {
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
         return false;
     double curmin, curmax;
@@ -358,7 +357,7 @@ bool cerDoubleLidar::setDistanceRange(double min, double max)
 
 bool cerDoubleLidar::getScanLimits(double& min, double& max)
 {
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
         return false;
     return m_dev_laserFront->getScanLimits(min, max);
@@ -367,7 +366,7 @@ bool cerDoubleLidar::getScanLimits(double& min, double& max)
 
 bool cerDoubleLidar::setScanLimits(double min, double max)
 {
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
         return false;
 
@@ -388,7 +387,7 @@ bool cerDoubleLidar::setScanLimits(double min, double max)
 
 bool cerDoubleLidar::getHorizontalResolution(double& step)
 {
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
         return false;
     return m_dev_laserFront->getHorizontalResolution(step);
@@ -396,7 +395,7 @@ bool cerDoubleLidar::getHorizontalResolution(double& step)
 
 bool cerDoubleLidar::setHorizontalResolution(double step)
 {
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
         return false;
 
@@ -417,7 +416,7 @@ bool cerDoubleLidar::setHorizontalResolution(double step)
 
 bool cerDoubleLidar::getScanRate(double& rate)
 {
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
         return false;
 
@@ -427,7 +426,7 @@ bool cerDoubleLidar::getScanRate(double& rate)
 
 bool cerDoubleLidar::setScanRate(double rate)
 {
-   yarp::os::LockGuard guard(m_mutex);
+   std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
         return false;
 
@@ -513,7 +512,7 @@ void cerDoubleLidar::calculate(int sensNum, double distance, int &newSensNum, do
 
 bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
 {
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
 
     if(!m_inited)
     {
@@ -562,7 +561,7 @@ bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data
     return false;
     
     //Some transformation is missing in the following piece of code
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     
     if(!m_inited)
         return false;
@@ -595,7 +594,7 @@ bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data
 
 bool cerDoubleLidar::getDeviceStatus(Device_status &status)
 {
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
         return false;
     Device_status statusFront, statusBack;
@@ -617,7 +616,7 @@ bool cerDoubleLidar::getDeviceStatus(Device_status &status)
 
 bool cerDoubleLidar::getDeviceInfo (std::string &device_info)
 {
-    yarp::os::LockGuard guard(m_mutex);
+    std::lock_guard<std::mutex> guard(m_mutex);
     return true;
 }
 

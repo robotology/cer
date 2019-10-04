@@ -12,21 +12,17 @@
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/Time.h>
-#include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/dev/IRangefinder2D.h>
 #include <yarp/dev/Wrapper.h>
 
 #include <boost/shared_ptr.hpp>
 
-
-
 #include <string>
 #include <functional>
 #include <unordered_map>
 #include <vector>
-
-
+#include <mutex>
 
 namespace cer {
     namespace dev {
@@ -109,12 +105,10 @@ private:
     bool m_inited;
     bool m_onSimulator; //if true the device looks for front and back laser devices in gazebo, else creates them
 
-    
-    yarp::os::Mutex       m_mutex; //MI SERVE??????
+    std::mutex m_mutex; //MI SERVE??????
 
     LaserCfg_t m_lFrontCfg;
     LaserCfg_t m_lBackCfg;
-
 };
 
 #endif //GAZEBOYARP_CONTROLBOARDDRIVER_HH

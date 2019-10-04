@@ -150,10 +150,10 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
 
     // clear display
     cv::Mat black(IMAGE_HEIGHT,IMAGE_WIDTH, CV_8UC3, cv::Scalar(0,0,0));
-    mutex.wait();
+    mtx.lock();
     if(-1 == ::write(fd, black.data, black.total()*3) )
         yError() << "Failed setting image to display";
-    mutex.post();
+    mtx.unlock();
     imagePort.init(fd);
 
     // Load all required pieces of image
@@ -472,10 +472,10 @@ void FaceDisplayServer::run()
         {
             for(int offset=0; offset<img->imageSize && !isStopping(); offset+= (imageSize+rowSize))
             {
-                mutex.wait();
+                mtx.lock();
                 if(-1 == ::write(fd, img->imageData+offset, imageSize) )
                     yError() << "Failed setting image to display";
-                mutex.post();
+                mtx.unlock();
                 yarp::os::Time::delay(1.0);
             }
         }
@@ -507,19 +507,19 @@ void FaceDisplayServer::run()
             int centralOffset = 7*imageSize +7*rowSize;
             for(int offset=centralOffset; (offset<img->imageSize) && (!isStopping()); offset+= (imageSize+rowSize))
             {
-                mutex.wait();
+                mtx.lock();
                 if(-1 == ::write(fd, img->imageData+offset, imageSize) )
                     yError() << "Failed setting image to display";
-                mutex.post();
+                mtx.unlock();
                 yarp::os::Time::delay(1.0);
             }
 
             for(int offset=centralOffset; (offset>0) && (!isStopping()); offset-= (imageSize+rowSize))
             {
-                mutex.wait();
+                mtx.lock();
                 if(-1 == ::write(fd, img->imageData+offset, imageSize) )
                     yError() << "Failed setting image to display";
-                mutex.post();
+                mtx.unlock();
                 yarp::os::Time::delay(1.0);
             }
         }
@@ -560,11 +560,10 @@ void FaceDisplayServer::run()
     // save to file for debugging purpose
     // cv::imwrite(std::string(rootPath + "/runtime/runtime-HappyEye.bmp").c_str(), face);
 
-    mutex.wait();
+    mtx.lock();
     if(-1 == ::write(fd, face.data, faceSize) )
         yError() << "Failed setting image to display";
-    mutex.post();
-
+    mtx.unlock();
 
     // normal workflow
     while(!isStopping())
@@ -839,10 +838,10 @@ void FaceDisplayServer::run()
                 break;
             }
 
-            mutex.wait();
+            mtx.lock();
             if(-1 == ::write(fd, currentFace->data, currentFace->total()*currentFace->elemSize()) )
                 yError() << "Failed setting image to display";
-            mutex.post();
+            mtx.unlock();
         }
     }
 }

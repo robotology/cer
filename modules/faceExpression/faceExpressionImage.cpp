@@ -287,23 +287,20 @@ void BlinkThread::afterStart(bool s) { }
 
 void BlinkThread::activateBars(bool activate)
 {
-    mutex.lock();
+    lock_guard<mutex> lg(mtx);
     doBars = activate;
-    mutex.unlock();
 }
 
 void BlinkThread::activateTalk(bool activate)
 {
-    mutex.lock();
+    lock_guard<mutex> lg(mtx);
     doTalk = activate;
-    mutex.unlock();
 }
 
 void BlinkThread::activateBlink(bool activate)
 {
-    mutex.lock();
+    lock_guard<mutex> lg(mtx);
     doBlink = activate;
-    mutex.unlock();
 }
 
 bool BlinkThread::threadInit()
@@ -357,7 +354,7 @@ void BlinkThread::run()
 		return;
 	}
 	
-    mutex.lock();
+    lock_guard<mutex> lg(mtx);
     // Compute hear bars sizes
     // Left side
     float percentage = 0.5;
@@ -402,8 +399,6 @@ void BlinkThread::run()
             yarp::os::Time::delay(delays[index]);
     }
     while(doBlink);
-    
-    mutex.unlock();
 }
 
 bool BlinkThread::updateBars(float percentage)
@@ -455,25 +450,22 @@ void BlinkThread::updateTalk()
 
 void BlinkThread::threadRelease()
 {
-    mutex.lock();
+    lock_guard<mutex> lg(mtx);
     yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
     img.setExternal(faceRest.data, faceWidth, faceHeight);
     port.writeStrict();
-    mutex.unlock();
 }
 
 void BlinkThread::activateDraw(bool activate)
 {
-    mutex.lock();
+    lock_guard<mutex> lg(mtx);
     doDraw = activate;
-    mutex.unlock();
 }
 
 void BlinkThread::blackReset()
 {
-    mutex.lock();
+    lock_guard<mutex> lg(mtx);
     yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = port.prepare();
     img.setExternal(faceBlack.data, faceWidth, faceHeight);
     port.writeStrict();
-    mutex.unlock();
 }
