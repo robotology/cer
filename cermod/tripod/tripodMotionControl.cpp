@@ -452,8 +452,7 @@ tripodMotionControl::tripodMotionControl() :
     ImplementInteractionMode(this),
     ImplementRemoteVariables(this),
     ImplementMotor(this),
-    ImplementPWMControl(this),
-    _mutex(1)
+    ImplementPWMControl(this)
 //     ,SAFETY_THRESHOLD(2.0)
 {
     verbose             = false;
