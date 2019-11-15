@@ -16,6 +16,7 @@ source_group("Header Files" FILES ${headers_private} ${headers})
 source_group("Source Files" FILES ${sources})
 
 add_library(${PROJECT_NAME} ${headers_private} ${headers} ${sources})
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${headers}")
 target_compile_definitions(${PROJECT_NAME} PRIVATE ${IPOPT_DEFINITIONS} _USE_MATH_DEFINES)
 
 target_include_directories(${PROJECT_NAME} PUBLIC  "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
