@@ -14,7 +14,7 @@ if(ENABLE_cermod_cer2headpose)
                   cer2headpose.cpp
                   cer2headpose.h)
 
-  target_link_libraries(cer_pm_cer2headpose YARP::YARP_OS
+  target_link_libraries(cer_pm_cer2headpose YARP::YARP_os
                                             YARP::YARP_init
                                             YARP::YARP_sig)
 

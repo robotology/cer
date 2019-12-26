@@ -14,7 +14,7 @@ if(ENABLE_cermod_oculus2cer)
                   oculus2cer.cpp
                   oculus2cer.h)
 
-  target_link_libraries(cer_pm_oculus2cer YARP::YARP_OS
+  target_link_libraries(cer_pm_oculus2cer YARP::YARP_os
                                           YARP::YARP_init)
 
   yarp_install(TARGETS cer_pm_oculus2cer
