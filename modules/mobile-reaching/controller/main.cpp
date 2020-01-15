@@ -40,6 +40,7 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
 using namespace yarp::sig;
+using namespace yarp::dev::Nav2D;
 using namespace yarp::math;
 using namespace iCub::ctrl;
 using namespace cer::kinematics;
