@@ -32,7 +32,7 @@ using namespace cer::kinematics;
 namespace cer {
 namespace kinematics {
 
-yarp::os::Mutex Solver::makeThreadSafe;
+std::mutex Solver::makeThreadSafe;
 
 /****************************************************************/
 bool stepModeParser(string &mode, string &submode)
@@ -261,7 +261,7 @@ bool SolverParameters::setMode(const string &mode)
                 tol=1e-5;
                 constr_tol=1e-4;
             }
-            if (submode=="heave")
+            else if (submode=="heave")
                 configuration=configuration::heave;
             else if (submode=="no_heave")
                 configuration=configuration::no_heave;

@@ -452,8 +452,7 @@ tripodMotionControl::tripodMotionControl() :
     ImplementInteractionMode(this),
     ImplementRemoteVariables(this),
     ImplementMotor(this),
-    ImplementPWMControl(this),
-    _mutex(1)
+    ImplementPWMControl(this)
 //     ,SAFETY_THRESHOLD(2.0)
 {
     verbose             = false;
@@ -921,10 +920,9 @@ bool tripodMotionControl::getJointType(int axis, yarp::dev::JointTypeEnum& type)
 bool tripodMotionControl::refreshEncoders(double *times)
 {
     bool ret = false;
-    _mutex.wait();
+    lock_guard<mutex> lg(_mutex);
     if(!_device.iJntEnc)
     {
-        _mutex.post();
         return true;
     }
     if(times !=  NULL)
@@ -955,7 +953,6 @@ bool tripodMotionControl::refreshEncoders(double *times)
         // Becareful of overflowing of error messages
         yError() << "TripodMotionControl: error updating encoders";
     }
-    _mutex.post();
     return ret;
 }
 
@@ -1156,7 +1153,7 @@ bool tripodMotionControl::positionMoveRaw(int j, double ref)
     bool ret = true;  // private var
 
     // calling IK library before propagate the command to HW
-    _mutex.wait();
+    lock_guard<mutex> lg(_mutex);
     _userRef_positions[j] = ref;
 
     if(_directionHW2User)
@@ -1181,14 +1178,13 @@ bool tripodMotionControl::positionMoveRaw(int j, double ref)
 
     ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
-    _mutex.post();
     return ret;
 }
 
 bool tripodMotionControl::positionMoveRaw(const double *refs)
 {
     bool ret = true;
-    _mutex.wait();
+    lock_guard<mutex> lg(_mutex);
     for(int i=0, index=0; i< _njoints; i++, index++)
     {
         _userRef_positions[i] = refs[i];
@@ -1208,7 +1204,6 @@ bool tripodMotionControl::positionMoveRaw(const double *refs)
             yError() << "Requested position is not reachable";
         }
     }
-    _mutex.post();
 
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
@@ -1216,7 +1211,6 @@ bool tripodMotionControl::positionMoveRaw(const double *refs)
     ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
     ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
-    _mutex.post();
     return ret;
 }
 
@@ -1224,7 +1218,7 @@ bool tripodMotionControl::relativeMoveRaw(int j, double delta)
 {
     bool ret = true;
 
-    _mutex.wait();
+    lock_guard<mutex> lg(_mutex);
     // TODO does it make any sense to add values likt this?? Those could be angle or quaternion or whatever!!!!
     // How to sum those up depends on the chosen representation!! Verify and maybe add a parameter in config files
     // to specify the type and choose correct sum procedure
@@ -1245,7 +1239,6 @@ bool tripodMotionControl::relativeMoveRaw(int j, double delta)
             yError() << "Requested position is not reachable";
         }
     }
-    _mutex.post();
 
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
@@ -1253,7 +1246,6 @@ bool tripodMotionControl::relativeMoveRaw(int j, double delta)
     ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
     ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
-    _mutex.post();
     return ret;
 }
 
@@ -1264,7 +1256,7 @@ bool tripodMotionControl::relativeMoveRaw(const double *deltas)
     // TODO does it make any sense to add values like this?? Those could be angle or quaternion or whatever!!!!
     // How to sum those up depends on the chosen representation!! Verify and maybe add a parameter in config files
     // to specify the type and choose correct sum procedure
-    _mutex.wait();
+    lock_guard<mutex> lg(_mutex);
     for(int i=0; i<_njoints; i++)
         _userRef_positions[i] += deltas[i];
 
@@ -1283,7 +1275,6 @@ bool tripodMotionControl::relativeMoveRaw(const double *deltas)
             yError() << "Requested position is not reachable";
         }
     }
-    _mutex.post();
 
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
@@ -1291,7 +1282,6 @@ bool tripodMotionControl::relativeMoveRaw(const double *deltas)
     ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
     ret &= _device.pos->positionMove(_njoints, _axisMap,_robotRef_positions.data());
 
-    _mutex.post();
     return ret;
 }
 
@@ -1434,7 +1424,7 @@ bool tripodMotionControl::positionMoveRaw(const int n_joint, const int *joints, 
         return false;
     }
 
-    _mutex.wait();
+    lock_guard<mutex> lg(_mutex);
     for(int i=0, index=0; i< n_joint; i++, index++)
     {
         _userRef_positions[joints[i]] = refs[i];
@@ -1454,7 +1444,6 @@ bool tripodMotionControl::positionMoveRaw(const int n_joint, const int *joints, 
             yError() << "Requested position is not reachable";
         }
     }
-    _mutex.post();
 
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
@@ -1462,7 +1451,6 @@ bool tripodMotionControl::positionMoveRaw(const int n_joint, const int *joints, 
     ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
     ret &= _device.pos->positionMove(_njoints, _axisMap, _robotRef_positions.data());
 
-    _mutex.post();
     return ret;
 }
 
@@ -1479,7 +1467,7 @@ bool tripodMotionControl::relativeMoveRaw(const int n_joint, const int *joints, 
         return false;
     }
 
-    _mutex.wait();
+    lock_guard<mutex> lg(_mutex);
     for(int i=0, index=0; i< n_joint; i++, index++)
     {
         _userRef_positions[joints[i]] += deltas[i];
@@ -1499,7 +1487,6 @@ bool tripodMotionControl::relativeMoveRaw(const int n_joint, const int *joints, 
             yError() << "Requested position is not reachable";
         }
     }
-    _mutex.post();
 
     compute_speeds(_robotRef_positions, _lastRobot_encoders);
     // all joints may need to move in order to achieve the new requested position
@@ -1507,7 +1494,6 @@ bool tripodMotionControl::relativeMoveRaw(const int n_joint, const int *joints, 
     ret &= _device.pos->setRefSpeeds(_njoints, _axisMap, _robotRef_speeds.data());
     ret &= _device.pos->positionMove(_njoints, _axisMap, _robotRef_positions.data());
 
-    _mutex.post();
     return ret;
 }
 
@@ -2020,7 +2006,7 @@ bool tripodMotionControl::setPositionRaw(int j, double ref)
         return false;
 
     // calling IK library before propagate the command to HW
-    _mutex.wait();
+    lock_guard<mutex> lg(_mutex);
     _userRef_positions[j] = ref;
     if(_directionHW2User)
     {
@@ -2036,7 +2022,6 @@ bool tripodMotionControl::setPositionRaw(int j, double ref)
             yError() << "Requested position is not reachable";
         }
     }
-    _mutex.post();
 
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference
@@ -2055,7 +2040,7 @@ bool tripodMotionControl::setPositionsRaw(const int n_joint, const int *joints, 
     }
 
     // calling IK library before propagate the command to HW
-    _mutex.wait();
+    lock_guard<mutex> lg(_mutex);
     for(int i=0; i<n_joint; i++)
         _userRef_positions[joints[i]] = refs[i];
 
@@ -2073,7 +2058,6 @@ bool tripodMotionControl::setPositionsRaw(const int n_joint, const int *joints, 
             yError() << "Requested position is not reachable";
         }
     }
-    _mutex.post();
 
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference
@@ -2083,7 +2067,7 @@ bool tripodMotionControl::setPositionsRaw(const int n_joint, const int *joints, 
 bool tripodMotionControl::setPositionsRaw(const double *refs)
 {
     // calling IK library before propagate the command to HW
-    _mutex.wait();
+    lock_guard<mutex> lg(_mutex);
     memcpy(_userRef_positions.data(), refs, _njoints*sizeof(double));
 
     if(_directionHW2User)
@@ -2100,7 +2084,6 @@ bool tripodMotionControl::setPositionsRaw(const double *refs)
             yError() << "Requested position is not reachable";
         }
     }
-    _mutex.post();
 
     // all joints may need to move in order to achieve the new requested position
     // even if only one user virtual joint has got new reference

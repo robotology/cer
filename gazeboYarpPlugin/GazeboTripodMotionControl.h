@@ -27,7 +27,6 @@
 #include <yarp/dev/IInteractionMode.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/Time.h>
-#include <yarp/os/Semaphore.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/dev/IPidControl.h>
 #include <string>

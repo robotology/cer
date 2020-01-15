@@ -20,7 +20,6 @@
 
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Time.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/math/Math.h>
 
 #include <iCub/ctrl/math.h>
@@ -296,7 +295,7 @@ bool HeadSolver::fkin(const Vector &q, Matrix &H, const int frame)
 /****************************************************************/
 bool HeadSolver::ikin(const Vector &xd, Vector &q, int *exit_code)
 {
-    LockGuard lg(makeThreadSafe);
+    lock_guard<mutex> lg(makeThreadSafe);
     yAssert(xd.length()==3);
 
     int print_level=std::max(verbosity-5,0);

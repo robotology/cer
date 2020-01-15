@@ -1,3 +1,4 @@
+#include <mutex>
 #include <string>
 #include <iostream>
 
@@ -83,7 +84,7 @@ private:
     int index;
     int indexes[11];
     float delays[11];
-    yarp::os::Mutex mutex;
+    std::mutex mtx;
 };
 
 class FaceExpressionImageModule: public yarp::os::RFModule

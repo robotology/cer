@@ -18,7 +18,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
-find_package(YARP 3.2 REQUIRED COMPONENTS OS sig dev math rosmsg idl_tools)
+find_package(YARP 3.3.0 REQUIRED COMPONENTS os sig dev math rosmsg idl_tools)
 
 find_package(ICUB REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
@@ -54,6 +54,7 @@ add_install_rpath_support(LIB_DIRS "${CMAKE_INSTALL_FULL_LIBDIR}"               
 
 if(IPOPT_FOUND)
     add_subdirectory(libraries/cer_kinematics)
+    add_subdirectory(libraries/cer_mobile_kinematics)
 endif()
 
 add_subdirectory(libraries/cer_kinematics_alt)
@@ -75,7 +76,7 @@ install_basic_package_files(${PROJECT_NAME} VARS_PREFIX ${VARS_PREFIX}
                                             VERSION ${${VARS_PREFIX}_VERSION}
                                             COMPATIBILITY AnyNewerVersion
                                             TARGETS_PROPERTY ${VARS_PREFIX}_TARGETS
-                                            DEPENDENCIES "YARP 3.1 REQUIRED COMPONENTS OS sig dev math rosmsg" "ICUB REQUIRED"
+                                            DEPENDENCIES "YARP 3.3.0 REQUIRED COMPONENTS os sig dev math rosmsg" "ICUB REQUIRED"
                                             NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
 include(AddUninstallTarget)

@@ -9,6 +9,7 @@
 
 #include <unistd.h>
 #include <stdint.h>
+#include <mutex>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/mat.hpp>
@@ -22,9 +23,7 @@
 
 #include <yarp/sig/Image.h>
 #include <yarp/dev/Wrapper.h>
-#include <yarp/os/Semaphore.h>
 #include <yarp/dev/PolyDriver.h>
-
 
 namespace cer{
     namespace dev{
@@ -111,12 +110,11 @@ class ImagePort : public yarp::os::BufferedPort<yarp::sig::FlexImage>
 {
 private:
     int _fd;
-    yarp::os::Semaphore *mutex;
+    std::mutex mtx;
     using BufferedPort<yarp::sig::FlexImage>::onRead;
 
 public:
-
-    ImagePort(yarp::os::Semaphore *_mutex) : mutex(_mutex)    { _fd =0; };
+    ImagePort(std::mutex &_mtx) : mtx(_mtx) { _fd=0; };
 
     bool init(int fd)   { _fd = fd; }
 
@@ -126,7 +124,7 @@ public:
         yDebug() <<  "Got a new image of size: w " << img.width() << " h " << img.height() << " bytesize " <<img.getRawImageSize();
 
         if( (img.width() != IMAGE_WIDTH) || (img.height() != IMAGE_HEIGHT) || img.getPixelCode() != VOCAB_PIXEL_RGB)
-        mutex->wait();
+        mtx.lock();
         if(_fd)
         {
             if(-1 == ::write(_fd, img.getRawImage(), img.getRawImageSize()) )
@@ -134,7 +132,7 @@ public:
         }
         else
             yError() << "Display not available or initted";
-        mutex->post();
+        mtx.unlock();
     }
 };
 
@@ -167,7 +165,7 @@ private:
     std::string             deviceFileName;
 
     int _rate;
-    yarp::os::Semaphore     mutex;
+    std::mutex              mtx;
     yarp::sig::FlexImage    image;
     std::string             sensorId;
 

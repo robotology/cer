@@ -5,6 +5,7 @@
 if(IPOPT_FOUND)
     add_subdirectory(reaching)
     add_subdirectory(gaze-controller)
+    add_subdirectory(mobile-reaching)
 endif()
 
 add_subdirectory(altVelController)

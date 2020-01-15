@@ -18,11 +18,11 @@
 #ifndef __CER_KINEMATICS_UTILS_H__
 #define __CER_KINEMATICS_UTILS_H__
 
+#include <mutex>
 #include <limits>
 #include <string>
 #include <set>
 
-#include <yarp/os/Mutex.h>
 #include <yarp/sig/Matrix.h>
 #include <yarp/math/Math.h>
 #include <iCub/iKin/iKinFwd.h>
@@ -178,7 +178,7 @@ struct SolverParameters
      * select the solver configuration: configuration::no_heave, 
      * configuration::heave, configuration::no_torso_no_heave, 
      * configuration::no_torso_heave. 
-     */
+                                                                    */
     int configuration;
 
     /**
@@ -313,7 +313,7 @@ struct SolverParameters
      *       therefore the preferred order is: pose + mode + diff.
      * @return true/false on success/failure. 
      */
-    bool setMode(const std::string &mode);
+    virtual bool setMode(const std::string &mode);
 
     /**
      * Helper to retrieve the string corresponding to the internal 
@@ -321,7 +321,7 @@ struct SolverParameters
      *  
      * @return the string encoding the internal state. 
      */
-    std::string getMode() const;
+    virtual std::string getMode() const;
 };
 
 
@@ -365,7 +365,7 @@ public:
 class Solver
 {
 protected:
-    static yarp::os::Mutex makeThreadSafe;
+    static std::mutex makeThreadSafe;
     SolverIterateCallback *callback;
     int verbosity;
 

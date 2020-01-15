@@ -16,6 +16,7 @@
 */
 
 #include <cstdio>
+#include <mutex>
 #include <cmath>
 #include <string>
 
@@ -36,7 +37,7 @@ using namespace cer::kinematics;
 /****************************************************************/
 class Target : public PeriodicThread
 {
-    mutable Mutex mutex;
+    mutable mutex mtx;
     Vector c,xd;
     double f,R;
     int cnt;
@@ -53,7 +54,7 @@ class Target : public PeriodicThread
     /****************************************************************/
     void run()
     {
-        LockGuard lg(mutex);        
+        lock_guard<mutex> lg(mtx);
         const double t=Time::now()-t0;
         const double phi=2.0*M_PI*f*t;
 
@@ -91,7 +92,7 @@ public:
     /****************************************************************/
     Vector get_xd(int &cnt) const
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         cnt=this->cnt;
         return xd;
     }
@@ -99,7 +100,7 @@ public:
     /****************************************************************/
     void print(const int cnt, const Vector &x) const
     {
-        LockGuard lg(mutex);
+        lock_guard<mutex> lg(mtx);
         helperPrint(Time::now()-t0,"x",cnt,x);
     }
 };
