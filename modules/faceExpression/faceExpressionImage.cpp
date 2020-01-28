@@ -4,6 +4,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 #include <yarp/os/Time.h>
 #include <yarp/os/Searchable.h>
@@ -59,18 +60,18 @@ bool FaceExpressionImageModule::configure(ResourceFinder &rf)
     }
 
     // Load basic images
-    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_1.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_2.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_3.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_4.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_5.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
-    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_6.bmp").c_str(),  CV_LOAD_IMAGE_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_1.bmp").c_str(),  cv::IMREAD_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_2.bmp").c_str(),  cv::IMREAD_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_3.bmp").c_str(),  cv::IMREAD_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_4.bmp").c_str(),  cv::IMREAD_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_5.bmp").c_str(),  cv::IMREAD_COLOR));
+    th.blinkEye.push_back(cv::imread(std::string(imagePath + "/blink_6.bmp").c_str(),  cv::IMREAD_COLOR));
 
     // Load image for bars
-    th.blinkBar = imread(std::string(imagePath + "/happyBar.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+    th.blinkBar = imread(std::string(imagePath + "/happyBar.bmp").c_str(), cv::IMREAD_COLOR);
 
     // Load image for 'nose' bar
-    th.noseBar = cv::imread(std::string(imagePath + "/noseBar.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+    th.noseBar = cv::imread(std::string(imagePath + "/noseBar.bmp").c_str(), cv::IMREAD_COLOR);
     th.noseBar0_len = th.noseBar.cols;
 
     // Verify all images are loaded correctly
