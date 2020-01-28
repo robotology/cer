@@ -110,7 +110,7 @@ class ImagePort : public yarp::os::BufferedPort<yarp::sig::FlexImage>
 {
 private:
     int _fd;
-    std::mutex mtx;
+    std::mutex &mtx;
     using BufferedPort<yarp::sig::FlexImage>::onRead;
 
 public:
