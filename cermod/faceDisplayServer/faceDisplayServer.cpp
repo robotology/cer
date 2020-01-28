@@ -37,7 +37,7 @@ using namespace std;
 // Constructor used when there is only one output port
 FaceDisplayServer::FaceDisplayServer(): sensorId("low-res display"),
                                         selfTest(0),
-                                        imagePort(&mutex),
+                                        imagePort(mutex),
                                         face(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
                                         faceExpression(FACE_EXPR),
                                         moveUp(0),
