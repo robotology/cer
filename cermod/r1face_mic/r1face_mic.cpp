@@ -9,6 +9,7 @@
 
 #include <fcntl.h>
 #include <string.h>
+#include <mutex>
 
 #ifdef WIN32
 #define SIMULATE_ONLY
@@ -40,6 +41,7 @@
 #define IOCTL_SAMPLERATE    _IOW(MAGIC_NUM, 1, int )
 #define IOCTL_SETBURST      _IOWR(MAGIC_NUM, 38, int )
 
+using namespace std;
 using namespace cer::dev;
 using namespace yarp::dev;
 using namespace yarp::os;
