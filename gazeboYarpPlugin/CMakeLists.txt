@@ -42,8 +42,7 @@ if(GAZEBO_TRIPOD_PLUGIN)
     target_compile_definitions(gazeboTripod PRIVATE _GAZEBO_TRIPOD_USES_IKIN_)
   endif()
 
-  target_link_libraries(gazeboTripod gazebo_yarp_lib_common
-                                     gazebo_yarp_singleton
+  target_link_libraries(gazeboTripod gazebo_yarp_singleton
                                      cer_kinematics
                                      ${YARP_LIBRARIES}
                                      ${GAZEBO_LIBRARIES}
