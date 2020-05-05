@@ -117,7 +117,6 @@ public:
 int main(int argc, char *argv[])
 {
     ResourceFinder rf;
-    rf.setVerbose(true);
     rf.setDefaultContext("cer");
     rf.setDefaultConfigFile("rgbdCalibrationTest.ini");
     rf.configure(argc,argv);

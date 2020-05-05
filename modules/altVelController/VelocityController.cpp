@@ -1010,7 +1010,6 @@ int main(int argc, char *argv[])
     }
 
     yarp::os::ResourceFinder rf;
-    rf.setVerbose(true);
     rf.setDefaultConfigFile("iCubWalk.ini");
     rf.setDefaultContext("iCubWalk");
     rf.configure(argc,argv);

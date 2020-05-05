@@ -31,7 +31,6 @@ using namespace yarp::os;
 int main(int argc, char *argv[])
 {
     ResourceFinder rf;
-    rf.setVerbose(true);
     rf.setDefaultContext("faceExpressionImage");
     rf.setDefaultConfigFile("faceExpressionImage.ini");
     rf.configure(argc,argv);

@@ -201,7 +201,6 @@ int main(int argc, char** argv)
     //char* fargv[] = {"selfCollision","--name", "r1", "--model","R1"};
 
     yarp::os::ResourceFinder rf;
-    rf.setVerbose(true);
     rf.configure(argc, argv);
 
     SelfCollisionModule module;
