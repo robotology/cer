@@ -11,13 +11,8 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <iostream>
-#include <opencv/cv.h>
-#include <opencv/cxcore.h>
-#include <opencv/highgui.h>
 
 #include <opencv2/core/mat.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/imgcodecs.hpp>
 
@@ -194,10 +189,11 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
         return false;
     }
 
-    cv::cvtColor(imgHappyEye, imgHappyEye,CV_BGR2RGB);
-    cv::cvtColor(imgHappyBars,imgHappyBars,CV_BGR2RGB);
-    cv::cvtColor(imgSadEye,   imgSadEye,CV_BGR2RGB);
-    cv::cvtColor(imgSadBars,  imgSadBars,CV_BGR2RGB);
+
+    cv::cvtColor(imgHappyEye, imgHappyEye,cv::COLOR_BGR2RGB);
+    cv::cvtColor(imgHappyBars,imgHappyBars,cv::COLOR_BGR2RGB);
+    cv::cvtColor(imgSadEye,   imgSadEye,cv::COLOR_BGR2RGB);
+    cv::cvtColor(imgSadBars,  imgSadBars,cv::COLOR_BGR2RGB);
 
 //     yDebug() << "imgFace      cols " << face.cols << " rows " << face.rows << " channels " << face.channels();
 //     yDebug() << "imgHappyEye  cols " << imgHappyEye.cols << " rows " << imgHappyEye.rows << " channels " << imgHappyEye.channels() << " tot " << imgHappyEye.total() << " elemSize " << imgHappyEye.elemSize();
@@ -301,9 +297,9 @@ void FaceDisplayServer::run()
             {
                 yError() << "img not valid at index " << i;
                 return;
-            }    
+            }
+            cv::cvtColor(img[i], img[i], cv::COLOR_BGR2RGB);
 
-            cv::cvtColor(img[i], img[i], CV_BGR2RGB);
         }
 
         imageIdx = 0;
@@ -396,10 +392,8 @@ void FaceDisplayServer::run()
 
         cv::Mat image_tmp   = cv::imread(std::string(rootPath + "/homer.bmp").c_str(), cv::IMREAD_COLOR);
 
-
-        cv::cvtColor(image_1,image_1,CV_BGR2RGB);
-        cv::cvtColor(image_2,image_2,CV_BGR2RGB);
-
+        cv::cvtColor(image_1,image_1,cv::COLOR_BGR2RGB);
+        cv::cvtColor(image_2,image_2,cv::COLOR_BGR2RGB);
         cv::Mat *image_init, *image_final;
 
         image_init  = &image_1;
@@ -462,8 +456,7 @@ void FaceDisplayServer::run()
         }
 
         // Conver into BGR
-        cv::cvtColor(img,img,CV_BGR2RGB);
-
+        cv::cvtColor(img,img,cv::COLOR_BGR2RGB);
         int imageSize = IMAGE_WIDTH*IMAGE_HEIGHT*3;
         int rowSize = IMAGE_WIDTH*3;
         //  there is a dummy line between each image for easier understanding
@@ -494,8 +487,8 @@ void FaceDisplayServer::run()
             return;
         }
 
-        // Conver into BGR
-        cv::cvtColor(img,img,CV_BGR2RGB);
+        // Conver into BGRc
+        cv::cvtColor(img,img,cv::COLOR_BGR2RGB);
 
         int imageSize = IMAGE_WIDTH*IMAGE_HEIGHT*3;
         int rowSize = IMAGE_WIDTH*3;
@@ -830,7 +823,7 @@ void FaceDisplayServer::run()
                     }
 
 //                     Conver into BGR
-                    cv::cvtColor(imageFromFile,imageFromFile,CV_BGR2RGB);
+                    cv::cvtColor(imageFromFile,imageFromFile,cv::COLOR_BGR2RGB);
                     currentFace = &imageFromFile;
                 }
                 break;

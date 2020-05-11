@@ -116,7 +116,7 @@ private:
 public:
     ImagePort(std::mutex &_mtx) : mtx(_mtx) { _fd=0; };
 
-    bool init(int fd)   { _fd = fd; }
+    bool init(int fd)   { _fd = fd;  return true;}
 
     virtual void onRead(yarp::sig::FlexImage& img)
     {
