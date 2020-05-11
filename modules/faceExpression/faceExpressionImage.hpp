@@ -2,7 +2,7 @@
 #include <string>
 #include <iostream>
 
-#include <opencv/cv.h>
+#include <opencv2/core/version.hpp>
 #include <opencv2/core/mat.hpp>
 
 #include <yarp/sig/Image.h>
