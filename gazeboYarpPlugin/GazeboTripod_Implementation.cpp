@@ -592,12 +592,14 @@ bool GazeboTripodMotionControl::setPositions(const double *refs)
 bool GazeboTripodMotionControl::setPid (int j, const Pid &pid)
 {
     // Converting all gains for degrees-based unit to radians-based
-    m_positionPIDs[j].p = convertUserGainToGazeboGain(j, pid.kp);
-    m_positionPIDs[j].i = convertUserGainToGazeboGain(j, pid.ki);
-    m_positionPIDs[j].d = convertUserGainToGazeboGain(j, pid.kd);
+    m_positionPIDs[j].SetPGain(convertUserGainToGazeboGain(j, pid.kp));
+    m_positionPIDs[j].SetIGain(convertUserGainToGazeboGain(j, pid.ki));
+    m_positionPIDs[j].SetDGain(convertUserGainToGazeboGain(j, pid.kd));
     // The output limits are only related to the output, so they don't need to be converted
-    m_positionPIDs[j].maxInt = pid.max_int;
-    m_positionPIDs[j].maxOut = pid.max_output;
+    m_positionPIDs[j].SetIMax(pid.max_int);
+    m_positionPIDs[j].SetIMin(-pid.max_int);
+    m_positionPIDs[j].SetCmdMax(pid.max_output);
+    m_positionPIDs[j].SetCmdMin(-pid.max_output);
 }
 
 bool GazeboTripodMotionControl::setPids (const Pid *pids)
@@ -617,13 +619,13 @@ bool GazeboTripodMotionControl::getErrors (double */*errs*/) { return false; }
 bool GazeboTripodMotionControl::getPid (int j, Pid *pid)
 {
     // Converting all gains for degrees-based unit to radians-based
-    pid->kp = convertGazeboGainToUserGain(j, m_positionPIDs[j].p);
-    pid->ki = convertGazeboGainToUserGain(j, m_positionPIDs[j].i);
-    pid->kd = convertGazeboGainToUserGain(j, m_positionPIDs[j].d);
+    pid->kp = convertGazeboGainToUserGain(j, m_positionPIDs[j].GetPGain());
+    pid->ki = convertGazeboGainToUserGain(j, m_positionPIDs[j].GetIGain());
+    pid->kd = convertGazeboGainToUserGain(j, m_positionPIDs[j].GetDGain());
 
     // The output limits are only related to the output, so they don't need to be converted
-    pid->max_int = m_positionPIDs[j].maxInt;
-    pid->max_output = m_positionPIDs[j].maxOut;
+    pid->max_int = m_positionPIDs[j].GetIMax();
+    pid->max_output = m_positionPIDs[j].GetCmdMax();
     return true;
 }
 
@@ -674,7 +676,7 @@ bool GazeboTripodMotionControl::getInteractionModes(yarp::dev::InteractionModeEn
 bool GazeboTripodMotionControl::setInteractionMode(int j, yarp::dev::InteractionModeEnum mode)
 {
     if (j < 0 || j >= (int)m_numberOfJoints) return false;
-    prepareResetJointMsg(j);
+    resetAllPidsForJointAtIndex(j);
     m_interactionMode[j] = (int) mode;
     return true;
 }

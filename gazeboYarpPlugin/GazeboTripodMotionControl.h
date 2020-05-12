@@ -32,6 +32,9 @@
 #include <string>
 #include <vector>
 
+#include <gazebo/common/PID.hh>
+#include <gazebo/common/Time.hh>
+
 #include <cer_kinematics/tripod.h>
 
 #include <boost/shared_ptr.hpp>
@@ -41,12 +44,20 @@
 namespace cer {
     namespace dev {
         class GazeboTripodMotionControl;
+
+        struct PidControlTypeEnumHashFunction {
+            size_t operator() (const yarp::dev::PidControlTypeEnum& key) const {
+                std::size_t hash = std::hash<int>()(static_cast<int>(key));
+                return hash;
+            }
+        };
     }
 }
 
 namespace gazebo {
     namespace common {
         class UpdateInfo;
+        class PID;
     }
 
     namespace physics {
@@ -58,18 +69,6 @@ namespace gazebo {
     namespace event {
         class Connection;
         typedef boost::shared_ptr<Connection> ConnectionPtr;
-    }
-
-    namespace transport {
-        class Node;
-        class Publisher;
-
-        typedef boost::shared_ptr<Node> NodePtr;
-        typedef boost::shared_ptr<Publisher> PublisherPtr;
-    }
-
-    namespace msgs {
-        class JointCmd;
     }
 }
 
@@ -297,30 +296,6 @@ public:
 
 private:
 
-    /* PID structures */
-
-    /**
-     * Internal PID gains structure used in
-     * GazeboYarpPlugins.
-     * The gains are stored in radians based units
-     * for joint whose configuration space is given
-     * by an anguar quantity, and meter based units
-     * for joints whose configuratios space is given
-     * by a linear quantity.
-     *
-     * \note The gains for angular quantities in YARP
-     *       are instead usually expressed in degrees-
-     *       based quantity, so an appropriate conversion
-     *       is used in the setPids/getPids functions.
-     */
-    struct PID {
-        double p;
-        double i;
-        double d;
-        double maxInt;
-        double maxOut;
-    };
-
     enum PIDFeedbackTerm {
         PIDFeedbackTermProportionalTerm = 1,
         PIDFeedbackTermIntegrativeTerm = 1 << 1,
@@ -385,16 +360,18 @@ private:
     yarp::sig::Vector m_trajectoryGenerationReferenceSpeed; /**< reference speed for trajectory generation in position mode [Degrees/Seconds]*/
     yarp::sig::Vector m_trajectoryGenerationReferenceAcceleraton; /**< reference acceleration for trajectory generation in position mode. Currently NOT USED in trajectory generation! [Degrees/Seconds^2] */
 
+    typedef std::unordered_map<yarp::dev::PidControlTypeEnum, std::vector<gazebo::common::PID>,
+    cer::dev::PidControlTypeEnumHashFunction> PIDMap;
+    PIDMap m_pids;
+
     std::vector<std::string> m_jointNames;
     std::vector<std::string> controlboard_joint_names;
     std::vector<gazebo::physics::JointPtr> m_jointPointers; /* pointers for each joint, avoiding several calls to getJoint(joint_name) */
-    gazebo::transport::NodePtr m_gazeboNode;
-    gazebo::transport::PublisherPtr m_jointCommandPublisher;
-    std::vector<GazeboTripodMotionControl::PID> m_positionPIDs;
-    std::vector<GazeboTripodMotionControl::PID> m_velocityPIDs;
-    std::vector<GazeboTripodMotionControl::PID> m_impedancePosPDs;
+    std::vector<gazebo::common::PID> m_positionPIDs;
+    std::vector<gazebo::common::PID> m_velocityPIDs;
+    std::vector<gazebo::common::PID> m_impedancePosPDs;
 
-    yarp::sig::Vector m_torqueOffsett;
+    yarp::sig::Vector m_torqueOffset;
     yarp::sig::Vector m_minStiffness;
     yarp::sig::Vector m_minDamping;
     yarp::sig::Vector m_maxStiffness;
@@ -407,6 +384,7 @@ private:
     bool started;
     int m_clock;
     int _T_controller;
+    gazebo::common::Time m_previousTime;
 
     /*
      * TRIPOD Kinematic data
@@ -426,22 +404,12 @@ private:
     void setMinMaxPos();
     bool setJointNames();
     bool configureJointType();
-    void setPIDsForGroup(std::string, std::vector<GazeboTripodMotionControl::PID>&, enum PIDFeedbackTerm pidTerms);
+    void setPIDsForGroup(std::string, PIDMap::mapped_type&, enum PIDFeedbackTerm pidTerms);
     void setMinMaxImpedance();
     void setPIDs();
-    bool sendPositionsToGazebo(yarp::sig::Vector& refs);
-    bool sendPositionToGazebo(int j,double ref);
-    void prepareJointMsg(gazebo::msgs::JointCmd& j_cmd, const int joint_index, const double ref);
-    bool sendVelocitiesToGazebo(yarp::sig::Vector& refs);
-    bool sendVelocityToGazebo(int j,double ref);
-    void prepareJointVelocityMsg(gazebo::msgs::JointCmd& j_cmd, const int j, const double ref);
-    bool sendTorquesToGazebo(yarp::sig::Vector& refs);
-    bool sendTorqueToGazebo(const int j,const double ref);
-    void prepareJointTorqueMsg(gazebo::msgs::JointCmd& j_cmd, const int j, const double ref);
-    void sendImpPositionToGazebo ( const int j, const double des );
-    void sendImpPositionsToGazebo ( yarp::sig::Vector& dess );
     void computeTrajectory(const int j);
-    void prepareResetJointMsg(int j);
+
+    void resetAllPidsForJointAtIndex(int j);
 
         /**
      * \brief convert data read from Gazebo to user unit sistem,
