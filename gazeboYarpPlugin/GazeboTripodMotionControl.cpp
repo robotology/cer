@@ -260,7 +260,7 @@ bool GazeboTripodMotionControl::gazebo_init()
     m_positionPIDs.reserve(m_numberOfJoints);
     m_velocityPIDs.reserve(m_numberOfJoints);
     m_impedancePosPDs.reserve(m_numberOfJoints);
-    m_torqueOffsett.resize(m_numberOfJoints);
+    m_torqueOffset.resize(m_numberOfJoints);
     m_minStiffness.resize(m_numberOfJoints, 0.0);
     m_maxStiffness.resize(m_numberOfJoints, 1000.0);
     m_minDamping.resize(m_numberOfJoints, 0.0);
@@ -268,6 +268,11 @@ bool GazeboTripodMotionControl::gazebo_init()
     m_positionThreshold.resize(m_numberOfJoints);
     m_jointTypes.resize(m_numberOfJoints);
     m_speedLimits.resize(m_numberOfJoints);
+
+    // Prepare PID structures
+    m_pids[VOCAB_PIDTYPE_POSITION].reserve(m_numberOfJoints);
+    m_pids[VOCAB_PIDTYPE_VELOCITY].reserve(m_numberOfJoints);
+    m_pids[VOCAB_PIDTYPE_TORQUE].reserve(m_numberOfJoints);
 
     // Initial zeroing of all vectors
     m_positions.zero();
@@ -290,7 +295,7 @@ bool GazeboTripodMotionControl::gazebo_init()
     m_interactionMode = new int[m_numberOfJoints];
     m_isMotionDone = new bool[m_numberOfJoints];
     m_clock = 0;
-    m_torqueOffsett = 0;
+    m_torqueOffset = 0;
 
     for (unsigned int j = 0; j < m_numberOfJoints; ++j)
     {
@@ -319,14 +324,6 @@ bool GazeboTripodMotionControl::gazebo_init()
 
     this->m_updateConnection =
     gazebo::event::Events::ConnectWorldUpdateBegin(boost::bind(&GazeboTripodMotionControl::onUpdate, this, _1));
-
-    m_gazeboNode = gazebo::transport::NodePtr(new gazebo::transport::Node);
-    #if (GAZEBO_MAJOR_VERSION >= 9)
-    m_gazeboNode->Init(this->m_robot->GetWorld()->Name());
-    #else
-    m_gazeboNode->Init(this->m_robot->GetWorld()->GetName());
-    #endif
-    m_jointCommandPublisher = m_gazeboNode->Advertise<gazebo::msgs::JointCmd>(std::string("~/") + this->m_robot->GetName() + "/joint_cmd");
 
     _T_controller = 1;
 
@@ -418,6 +415,12 @@ bool GazeboTripodMotionControl::configureJointType()
     return ret;
 }
 
+void GazeboTripodMotionControl::resetAllPidsForJointAtIndex(int j)
+{
+    m_pids[VOCAB_PIDTYPE_POSITION][j].Reset();
+    m_pids[VOCAB_PIDTYPE_VELOCITY][j].Reset();
+}
+
 void GazeboTripodMotionControl::computeTrajectory(const int j)
 {
     double step = (m_trajectoryGenerationReferenceSpeed[j] / 1000.0) * m_robotRefreshPeriod * _T_controller;
@@ -451,6 +454,13 @@ void GazeboTripodMotionControl::computeTrajectory(const int j)
 
 void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info)
 {
+    static bool firstTime = true;
+    if (firstTime) {
+        firstTime = false;
+        m_previousTime = _info.simTime;
+    }
+    gazebo::common::Time stepTime = _info.simTime - m_previousTime;
+    m_previousTime = _info.simTime;
     m_clock++;
 
     // Sensing position & torque
@@ -471,6 +481,7 @@ void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info
     //logger.log(m_velocities[2]);
     for (unsigned int j = 0; j < m_numberOfJoints; ++j)
     {
+        double forceReference = 0;
         m_last_measJointPos[j] = m_positions[j] - m_zeroPosition[j];
 
         //set pos joint value, set m_referenceVelocities joint value
@@ -480,22 +491,24 @@ void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info
                 if (m_controlMode[j] == VOCAB_CM_POSITION) {
                     computeTrajectory(j);
                 }
-                sendPositionToGazebo(j, m_referencePositions[j]);
-//                 yInfo() << "OnUpdate, m_referencePositions are " << m_referencePositions.toString();
+                gazebo::common::PID &pid = m_pids[VOCAB_PIDTYPE_POSITION][j];
+                forceReference = pid.Update(convertUserToGazebo(j, m_positions[j]) - convertUserToGazebo(j, m_referencePositions[j]), stepTime);
+//                yInfo() << "OnUpdate, m_referencePositions are " << m_referencePositions.toString();
             }
         } else if ((m_controlMode[j] == VOCAB_CM_VELOCITY) && (m_interactionMode[j] == VOCAB_IM_STIFF)) {//set vmo joint value
             if (m_clock % _T_controller == 0) {
-                sendVelocityToGazebo(j, m_referenceVelocities[j]);
+                gazebo::common::PID &pid = m_pids[VOCAB_PIDTYPE_VELOCITY][j];
+                forceReference = pid.Update(convertUserToGazebo(j, m_velocities[j]) - convertUserToGazebo(j, m_referenceVelocities[j]), stepTime);
             }
         } else if (m_controlMode[j] == VOCAB_CM_TORQUE) {
             if (m_clock % _T_controller == 0) {
-                sendTorqueToGazebo(j, m_referenceTorques[j]);
+                forceReference = m_referenceTorques[j];
             }
         } else if (m_controlMode[j] == VOCAB_CM_PWM) {
             //PWM control sends torques to gazebo at this moment.
             //Check if gazebo implements a "motor" entity and change the code accordingly.
             if (m_clock % _T_controller == 0) {
-                sendTorqueToGazebo(j, m_referenceTorques[j]);
+                forceReference = m_referenceTorques[j];
             }
         } else if ((m_controlMode[j] == VOCAB_CM_POSITION || m_controlMode[j] == VOCAB_CM_POSITION_DIRECT)
             && (m_interactionMode[j] == VOCAB_IM_COMPLIANT)) {
@@ -503,7 +516,8 @@ void GazeboTripodMotionControl::onUpdate(const gazebo::common::UpdateInfo& _info
                 if (m_controlMode[j] == VOCAB_CM_POSITION) {
                     computeTrajectory(j);
                 }
-                sendImpPositionToGazebo(j, m_referencePositions[j]);
+                double q = m_positions[j] - m_zeroPosition[j];
+                forceReference  = -m_impedancePosPDs[j].GetPGain() * (q - m_referencePositions[j]) - m_impedancePosPDs[j].GetDGain() * m_velocities[j] + m_torqueOffset[j];
             }
         }
     }
@@ -572,7 +586,7 @@ bool GazeboTripodMotionControl::setJointNames()  //WORKS
 }
 
 void GazeboTripodMotionControl::setPIDsForGroup(std::string pidGroupName,
-                                                   std::vector<GazeboTripodMotionControl::PID>& pids,
+                                                   PIDMap::mapped_type &pids,
                                                    enum PIDFeedbackTerm pidTerms)
 {
     yarp::os::Property prop;
@@ -584,16 +598,18 @@ void GazeboTripodMotionControl::setPIDsForGroup(std::string pidGroupName,
 
             yarp::os::Bottle& pid = m_pluginParameters.findGroup(pidGroupName.c_str()).findGroup(property_name.str().c_str());
 
-            GazeboTripodMotionControl::PID pidValue = {0, 0, 0, -1, -1};
+            gazebo::common::PID pidValue;
             if (pidTerms & PIDFeedbackTermProportionalTerm)
-                pidValue.p = pid.get(1).asDouble();
+                pidValue.SetPGain(pid.get(1).asDouble());
             if (pidTerms & PIDFeedbackTermDerivativeTerm)
-                pidValue.d = pid.get(2).asDouble();
+                pidValue.SetDGain(pid.get(2).asDouble());
             if (pidTerms & PIDFeedbackTermIntegrativeTerm)
-                pidValue.i = pid.get(3).asDouble();
+                pidValue.SetIGain(pid.get(3).asDouble());
 
-            pidValue.maxInt = pid.get(4).asDouble();
-            pidValue.maxOut = pid.get(5).asDouble();
+            pidValue.SetIMax(pid.get(4).asDouble());
+            pidValue.SetIMin(-pid.get(4).asDouble());
+            pidValue.SetCmdMax(pid.get(5).asDouble());
+            pidValue.SetCmdMin(-pid.get(5).asDouble());
 
 
             pids.push_back(pidValue);
@@ -605,7 +621,7 @@ void GazeboTripodMotionControl::setPIDsForGroup(std::string pidGroupName,
         std::cout<<"PID gain information not found in plugin parameters, using default gains ( "
         <<"P " << default_p << " I " << default_i << " D " << default_d << " )" <<std::endl;
         for (unsigned int i = 0; i < m_numberOfJoints; ++i) {
-            GazeboTripodMotionControl::PID pid = {500, 0.1, 1.0, -1, -1};
+            gazebo::common::PID pid = {500, 0.1, 1.0, 0.0, 0.0};
             pids.push_back(pid);
         }
     }
@@ -674,147 +690,6 @@ void GazeboTripodMotionControl::setPIDs()
     setPIDsForGroup("GAZEBO_PIDS", m_positionPIDs, PIDFeedbackTermAllTerms);
     setPIDsForGroup("GAZEBO_VELOCITY_PIDS", m_velocityPIDs, PIDFeedbackTerm(PIDFeedbackTermProportionalTerm | PIDFeedbackTermIntegrativeTerm));
     setPIDsForGroup("GAZEBO_IMPEDANCE_POSITION_PIDS", m_impedancePosPDs, PIDFeedbackTerm(PIDFeedbackTermProportionalTerm | PIDFeedbackTermDerivativeTerm));
-}
-
-bool GazeboTripodMotionControl::sendPositionsToGazebo(Vector &refs)
-{
-    for (unsigned int j=0; j<m_numberOfJoints; j++) {
-        sendPositionToGazebo(j,refs[j]);
-    }
-    return true;
-}
-
-bool GazeboTripodMotionControl::sendPositionToGazebo(int j,double ref)
-{
-    gazebo::msgs::JointCmd j_cmd;
-
-    if(ref != m_oldReferencePositions[j])
-    {
-        // std::cout << "Sending new command: new ref is " << ref << "; old ref was " << m_oldReferencePositions[j] << std::endl;
-        prepareJointMsg(j_cmd,j,ref);
-        m_jointCommandPublisher->WaitForConnection();
-        m_jointCommandPublisher->Publish(j_cmd);
-        m_oldReferencePositions[j] = ref;
-    }
-    return true;
-}
-
-void GazeboTripodMotionControl::prepareJointMsg(gazebo::msgs::JointCmd& j_cmd, const int joint_index, const double ref)
-{
-    j_cmd.set_name(m_jointPointers[joint_index]->GetScopedName());
-    j_cmd.mutable_position()->set_target(convertUserToGazebo(joint_index, ref));
-    // No need to set PIDS here, they are set in the corresponding simulated joint.
-}
-
-bool GazeboTripodMotionControl::sendVelocitiesToGazebo(yarp::sig::Vector& refs) //NOT TESTED
-{
-    for (unsigned int j = 0; j < m_numberOfJoints; j++) {
-        sendVelocityToGazebo(j,refs[j]);
-    }
-    return true;
-}
-
-bool GazeboTripodMotionControl::sendVelocityToGazebo(int j,double ref)
-{
-    gazebo::msgs::JointCmd j_cmd;
-    prepareJointVelocityMsg(j_cmd,j,ref);
-    m_jointCommandPublisher->WaitForConnection();
-    m_jointCommandPublisher->Publish(j_cmd);
-
-    return true;
-}
-
-void GazeboTripodMotionControl::prepareJointVelocityMsg(gazebo::msgs::JointCmd& j_cmd, const int j, const double ref) //NOT TESTED
-{
-    GazeboTripodMotionControl::PID velocityPID = m_velocityPIDs[j];
-
-    j_cmd.set_name(m_jointPointers[j]->GetScopedName());
-    j_cmd.mutable_velocity()->set_p_gain(velocityPID.p);
-    j_cmd.mutable_velocity()->set_i_gain(velocityPID.i);
-    j_cmd.mutable_velocity()->set_d_gain(velocityPID.d);
-    j_cmd.mutable_velocity()->set_i_max(velocityPID.maxInt);
-    j_cmd.mutable_velocity()->set_i_min(-velocityPID.maxInt);
-    j_cmd.mutable_velocity()->set_limit(velocityPID.maxOut);
-
-    j_cmd.mutable_velocity()->set_target(convertUserToGazebo(j, ref));
-}
-
-bool GazeboTripodMotionControl::sendTorquesToGazebo(yarp::sig::Vector& refs) //NOT TESTED
-{
-    for (unsigned int j = 0; j < m_numberOfJoints; j++) {
-        sendTorqueToGazebo(j,refs[j]);
-    }
-    return true;
-}
-
-bool GazeboTripodMotionControl::sendTorqueToGazebo(const int j,const double ref) //NOT TESTED
-{
-    gazebo::msgs::JointCmd j_cmd;
-    prepareJointTorqueMsg(j_cmd,j,ref);
-    m_jointCommandPublisher->WaitForConnection();
-    m_jointCommandPublisher->Publish(j_cmd);
-    return true;
-}
-
-void GazeboTripodMotionControl::prepareJointTorqueMsg(gazebo::msgs::JointCmd& j_cmd, const int j, const double ref) //NOT TESTED
-{
-    j_cmd.set_name(m_jointPointers[j]->GetScopedName());
-//    j_cmd.mutable_position()->set_p_gain(0.0);
-//    j_cmd.mutable_position()->set_i_gain(0.0);
-//    j_cmd.mutable_position()->set_d_gain(0.0);
-//    j_cmd.mutable_velocity()->set_p_gain(0.0);
-//    j_cmd.mutable_velocity()->set_i_gain(0.0);
-//    j_cmd.mutable_velocity()->set_d_gain(0.0);
-    j_cmd.set_force(ref);
-}
-
-void GazeboTripodMotionControl::sendImpPositionToGazebo ( const int j, const double des )
-{
-    if(j >= 0 && j < m_numberOfJoints) {
-        /*
-         Here joint positions and speeds are in [deg] and [deg/sec].
-         Therefore also stiffness and damping has to be [Nm/deg] and [Nm*sec/deg].
-         */
-        //std::cout<<"m_velocities"<<j<<" : "<<m_velocities[j]<<std::endl;
-        double q = m_positions[j] - m_zeroPosition[j];
-        double t_ref = -m_impedancePosPDs[j].p * (q - des) - m_impedancePosPDs[j].d * m_velocities[j] + m_torqueOffsett[j];
-        sendTorqueToGazebo(j, t_ref);
-    }
-}
-
-void GazeboTripodMotionControl::sendImpPositionsToGazebo ( Vector &dess )
-{
-    for(unsigned int i = 0; i < m_numberOfJoints; ++i)
-        sendImpPositionToGazebo(i, dess[i]);
-}
-
-double GazeboTripodMotionControl::convertGazeboToUser(int joint, ignition::math::Angle value)
-{
-    double newValue = 0;
-    switch(m_jointTypes[joint])
-    {
-        case JointType_Revolute:
-        {
-            newValue = value.Degree();
-            break;
-        }
-
-        case JointType_Prismatic:
-        {
-            // For prismatic joints there is no getMeter() or something like that. The only way is to use .radiant() to get internal
-            // value without changes
-            newValue = value.Radian();
-            break;
-        }
-
-        default:
-        {
-            yError() << "Cannot convert measure from Gazebo to User units, type of joint not supported for axes " <<
-                                m_jointNames[joint] << " type is " << m_jointTypes[joint];
-            break;
-        }
-    }
-    return newValue;
 }
 
 double GazeboTripodMotionControl::convertGazeboToUser(int joint, double value)
