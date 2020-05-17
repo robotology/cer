@@ -11,7 +11,6 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/ResourceFinder.h>
 #include <math.h>
-#include <cmath>
 
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -477,34 +476,46 @@ static inline double convertAngle_rad2degree(double angle)
 
 void cerDoubleLidar::calculate(int sensNum, double distance, int &newSensNum, double &newdistance, double x_off, double y_off, double t_off)
 {
-    //calculate the input angle in degree
-    double angle_input = (sensNum*m_resolution);
-    double angle_rad = convertAngle_degree2rad(angle_input);
+	yDebug() << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>NEW";
+    if (distance != std::numeric_limits<double>::infinity())
+    {
+        //calculate the input angle in degree
+        double angle_input = (sensNum*m_resolution);
+        double angle_rad = convertAngle_degree2rad(angle_input);
 
-#ifdef DO_NOTHING_DEBUG
-    x_off=0;
-    y_off=0;
-    t_off=0;
-#endif 
+    #ifdef DO_NOTHING_DEBUG
+        x_off=0;
+        y_off=0;
+        t_off=0;
+    #endif 
 
-    //calculate vertical and horizontal components of input angle
-    double Ay = (sin(angle_rad+t_off)*distance);
-    double Ax = (cos(angle_rad+t_off)*distance);
+        //calculate vertical and horizontal components of input angle
+        double Ay = (sin(angle_rad+t_off)*distance);
+        double Ax = (cos(angle_rad+t_off)*distance);
 
-    //calculate vertical and horizontal components of new angle with offset.
-    double By = Ay + y_off;
-    double Bx = Ax + x_off;
-    
-    double betarad = atan2(By,Bx); //the output is -pi +pi
-    double beta2 = convertAngle_rad2degree(betarad); //the output is -180 +180
-    
-    //compute the new slot
-    newSensNum= (double)(beta2/m_resolution);
-    if (newSensNum > 720) newSensNum-= 720;
-    if (newSensNum < 0)   newSensNum+= 720;
-    
-    //compute the distance
-    newdistance = std::sqrt((Bx*Bx)+(By*By));
+        //calculate vertical and horizontal components of new angle with offset.
+        double By = Ay + y_off;
+        double Bx = Ax + x_off;
+
+        double betarad = atan2(By,Bx); //the output is -pi +pi
+        double beta2 = convertAngle_rad2degree(betarad); //the output is -180 +180
+
+        //compute the new slot
+        newSensNum= (double)(beta2/m_resolution);
+        if (newSensNum > 720) newSensNum-= 720;
+        if (newSensNum < 0)   newSensNum+= 720;
+
+        //compute the distance
+        newdistance = std::sqrt((Bx*Bx)+(By*By));
+    }
+    else
+    {
+        double angle = (sensNum*m_resolution) + t_off;
+        newSensNum= (double)(angle /m_resolution);
+        if (newSensNum > 720) newSensNum-= 720;
+        if (newSensNum < 0)   newSensNum+= 720;
+        newdistance = std::numeric_limits<double>::infinity();
+    }
 
 }
 
@@ -522,7 +533,7 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
     yarp::sig::Vector dataBack;
     
     //if(out.size() != m_samples)
-        out.resize(m_samples, INFINITY);
+        out.resize(m_samples, std::nan(""));
     
     if(!m_dev_laserFront->getRawData(dataFront))
         return false;
@@ -531,7 +542,7 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
     
     for(int i=0; i<m_samples; i++)
     {
-         out[i] = INFINITY;
+         out[i] = std::nan("");
     }
 
     for(int i=0; i<m_samples; i++)
@@ -540,15 +551,15 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
         int newindex;
        
         //When hardware has problems, it gives me 0.0, so I skip it
-        if((dataFront[i]!= INFINITY)&& (dataFront[i]!=0.0))
+        if(dataFront[i]!=0.0 && !isnan(dataFront[i]))
         {
             calculate(i, dataFront[i], newindex, newvalue, m_lFrontCfg.pose.x, m_lFrontCfg.pose.y, m_lFrontCfg.pose.theta);
             out[newindex] = newvalue;
         }
-        if((dataBack[i] != INFINITY)&& (dataBack[i]!=0.0))
+        if(dataBack[i]!=0.0 && !isnan(dataFront[i]))
         {
-                calculate(i, dataBack[i], newindex, newvalue, m_lBackCfg.pose.x, m_lBackCfg.pose.y, m_lBackCfg.pose.theta);
-                out[newindex] = newvalue;
+            calculate(i, dataBack[i], newindex, newvalue, m_lBackCfg.pose.x, m_lBackCfg.pose.y, m_lBackCfg.pose.theta);
+            out[newindex] = newvalue;
         }
     }
     
@@ -557,7 +568,7 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
 
 bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
 {
-    yError() << "getLaserMeasurement ot yet implemented";
+    yError() << "cerDoubleLidar: getLaserMeasurement ot yet implemented";
     return false;
     
     //Some transformation is missing in the following piece of code
@@ -584,7 +595,7 @@ bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data
         if(rhoFront!= INFINITY)
             data[i].set_polar(rhoFront, thetaFront);
         else  if(rhoBack != INFINITY)
-                data[i].set_polar(rhoBack, thetaBack);
+            data[i].set_polar(rhoBack, thetaBack);
         else
             data[i].set_polar(INFINITY, i*m_resolution);
     }
