@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" ?>
-<robot_database  xmlns:xi="http://www.w3.org/2001/XInclude">
-    <xi:include href="./CER01/CER.xml" />
-    <xi:include href="./CER02/CER.xml" />
-    <xi:include href="./CER03/CER.xml" />
-</robot_database > 
