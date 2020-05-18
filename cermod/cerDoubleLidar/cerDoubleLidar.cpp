@@ -1,8 +1,12 @@
 /*
- * Copyright (C) 2013-2015 Fondazione Istituto Italiano di Tecnologia RBCS & iCub Facility & ADVR
+ * Copyright (C) 2013-2020 Fondazione Istituto Italiano di Tecnologia
  * Authors: see AUTHORS file.
  * CopyPolicy: Released under the terms of the LGPLv2.1 or any later version, see LGPL.TXT or LGPL3.TXT
  */
+
+#ifndef _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
+#endif
 
 #include <cstdio>
 #include <string>
@@ -11,6 +15,16 @@
 #include <yarp/os/LogStream.h>
 #include <yarp/os/ResourceFinder.h>
 #include <math.h>
+#include <limits>
+#include <cmath>
+
+#ifndef DEG2RAD
+#define DEG2RAD M_PI/180.0
+#endif
+
+#ifndef RAD2DEG
+#define RAD2DEG 180/M_PI
+#endif
 
 using namespace yarp::os;
 using namespace yarp::sig;
@@ -61,12 +75,6 @@ bool cerDoubleLidar::LaserCfg_t::loadConfig(yarp::os::Searchable& config)
 
 
 cerDoubleLidar::cerDoubleLidar():
-    m_driver_laserFront(nullptr),
-    m_dev_laserFront(nullptr),
-    m_driver_laserBack(nullptr),
-    m_dev_laserBack(nullptr),
-    m_samples(0),
-    m_resolution(1),
     m_inited(false),
     m_onSimulator(true),
     m_lFrontCfg(LaserCfg_t::Laser::front),
@@ -144,7 +152,7 @@ bool cerDoubleLidar::attachAll(const PolyDriverList &p)
     }
 
 
-   if(!getLasersInterfaces())
+    if(!getLasersInterfaces())
         return false;
 
     if(!verifyLasersConfigurations())
@@ -218,14 +226,24 @@ bool cerDoubleLidar::open(yarp::os::Searchable& config)
     std::lock_guard<std::mutex> guard(m_mutex);
     yDebug() << "cerDoubleLidar::open()";
     
-    if(!m_lFrontCfg.loadConfig(config))
+     //parse all the parameters related to the linear/angular range of the sensor
+     yDebug() << config.toString();
+    if (this->parseConfiguration(config) == false)
     {
+        yError() << "cerDoubleLidar: error parsing parameters";
         return false;
     }
-    yDebug() << "x:" << m_lFrontCfg.pose.x << "y:" << m_lFrontCfg.pose.y << "z:" << m_lFrontCfg.pose.z << "t:" << m_lFrontCfg.pose.theta << m_lBackCfg.sensorName;
+    
+    if(!m_lFrontCfg.loadConfig(config))
+    {
+        yError() << "cerDoubleLidar: m_lFrontCfg.loadConfig() failed";
+        return false;
+    }
+    yDebug() << "x:" << m_lFrontCfg.pose.x << "y:" << m_lFrontCfg.pose.y << "z:" << m_lFrontCfg.pose.z << "t:" << m_lFrontCfg.pose.theta << m_lFrontCfg.sensorName;
 
     if(!m_lBackCfg.loadConfig(config))
     {
+        yError() << "cerDoubleLidar: m_lBackCfg.loadConfig() failed";
         return false;
     }
     yDebug() << "x:" << m_lBackCfg.pose.x << "y:" << m_lBackCfg.pose.y << "z:" << m_lBackCfg.pose.z << "t:" << m_lBackCfg.pose.theta << m_lBackCfg.sensorName;
@@ -233,8 +251,7 @@ bool cerDoubleLidar::open(yarp::os::Searchable& config)
     //currently if z values differs, than return error
     if(m_lFrontCfg.pose.z != m_lBackCfg.pose.z)
     {
-        yError() << "cerDoubleLidar: poses of laser front and back have different z values";
-        return false;
+        yWarning() << "cerDoubleLidar: poses of laser front and back have different z values";
     }
 
     if (config.check("subdevice"))
@@ -277,61 +294,75 @@ bool cerDoubleLidar::close()
 
 bool cerDoubleLidar::verifyLasersConfigurations(void)
 {
-    double minFront, maxFront, minBack, maxBack;
-    if(!m_dev_laserFront->getScanLimits(minFront, maxFront))
+    double min_angle[2], max_angle[2];
+    double min_dist[2], max_dist[2];
+    double resolution[2];
+        
     {
-        yError() << "cerDoubleLidar: error getting scan limits for front laser";
-        return false;
+        if(!m_dev_laserFront->getScanLimits(min_angle[0], max_angle[0]))
+        {
+            yError() << "cerDoubleLidar: error in getScanLimits for front laser";
+            return false;
+        }
+
+        if(!m_dev_laserBack->getScanLimits(min_angle[1], max_angle[1]))
+        {
+            yError() << "cerDoubleLidar: error in getScanLimits for back laser";
+            return false;
+        }
+
+        /*
+        if( (min_angle[0] != min_angle[1]) || (max_angle[0] != max_angle[1]) )
+        {
+            yError() << "cerDoubleLidar: front and back laser differ in getScanLimits";
+            return false;
+        }*/
     }
 
-    if(!m_dev_laserBack->getScanLimits(minBack, maxBack))
     {
-        yError() << "cerDoubleLidar: error getting scan limits for back laser";
-        return false;
-    }
+        if(!m_dev_laserFront->getDistanceRange(min_dist[0], max_dist[0]))
+        {
+            yError() << "cerDoubleLidar: error in getDistanceRange for front laser";
+            return false;
+        }
 
-    if( (minFront != minBack) || (maxFront != maxBack) )
-    {
-        yError() << "cerDoubleLidar: front and back laser differ in scan limits";
-        return false;
-    }
+        if(!m_dev_laserBack->getDistanceRange(min_dist[1], max_dist[1]))
+        {
+            yError() << "cerDoubleLidar: error in getDistanceRange for back laser";
+            return false;
+        }
 
-    double resolutionFront, resolutionBack;
-    if(!m_dev_laserFront->getHorizontalResolution(resolutionFront))
+        /*
+        if( (min_dist[0] != min_dist[1]) || (max_dist[0] != max_dist[1]) )
+        {
+            yError() << "cerDoubleLidar: front and back laser differ in getDistanceRange";
+            return false;
+        }*/
+   }
+
+    if(!m_dev_laserFront->getHorizontalResolution(resolution[0]))
     {
         yError() << "cerDoubleLidar: error getting resolution for front laser";
         return false;
     }
 
-    if(!m_dev_laserBack->getHorizontalResolution(resolutionBack))
+    if(!m_dev_laserBack->getHorizontalResolution(resolution[1]))
     {
         yError() << "cerDoubleLidar: error getting resolution for back laser";
         return false;
     }
 
-    if(resolutionFront != resolutionBack)
+    if(m_resolution != resolution[0] ||
+       m_resolution != resolution[1])
     {
-        yError() << "cerDoubleLidar: front and back laser differ in resolution";
+        yError() << "cerDoubleLidar: front laser, back laser and user configuration are different!" << m_resolution << resolution[0] << resolution[1];
         return false;
     }
-
-    //here I'm sure front and back have same config
-    m_samples = (maxFront -minFront) /resolutionFront;
-
-    m_resolution = resolutionFront;
 
     m_inited = true;
 
     return true;
 
-}
-
-bool cerDoubleLidar::getDistanceRange(double& min, double& max)
-{
-    std::lock_guard<std::mutex> guard(m_mutex);
-    if(!m_inited)
-        return false;
-    return m_dev_laserFront->getDistanceRange(min, max);
 }
 
 bool cerDoubleLidar::setDistanceRange(double min, double max)
@@ -351,15 +382,6 @@ bool cerDoubleLidar::setDistanceRange(double min, double max)
         m_dev_laserFront->setDistanceRange(curmin, curmax);
         return false;
     }
-    return true;
-}
-
-bool cerDoubleLidar::getScanLimits(double& min, double& max)
-{
-    std::lock_guard<std::mutex> guard(m_mutex);
-    if(!m_inited)
-        return false;
-    return m_dev_laserFront->getScanLimits(min, max);
     return true;
 }
 
@@ -384,14 +406,6 @@ bool cerDoubleLidar::setScanLimits(double min, double max)
     return true;
 }
 
-bool cerDoubleLidar::getHorizontalResolution(double& step)
-{
-    std::lock_guard<std::mutex> guard(m_mutex);
-    if(!m_inited)
-        return false;
-    return m_dev_laserFront->getHorizontalResolution(step);
-}
-
 bool cerDoubleLidar::setHorizontalResolution(double step)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
@@ -411,16 +425,6 @@ bool cerDoubleLidar::setHorizontalResolution(double step)
         return false;
     }
     return true;
-}
-
-bool cerDoubleLidar::getScanRate(double& rate)
-{
-    std::lock_guard<std::mutex> guard(m_mutex);
-    if(!m_inited)
-        return false;
-
-    return (m_dev_laserFront->getScanRate(rate));
-
 }
 
 bool cerDoubleLidar::setScanRate(double rate)
@@ -444,44 +448,29 @@ bool cerDoubleLidar::setScanRate(double rate)
     return true;
 }
 
-#define PI 3.14159265
-
-static double convertAngle_user2Hw(double userAngle)
+void cerDoubleLidar::calculate(int sensNum, double distance, double x_off, double y_off, double t_off)
 {
-    double hwAngle =  userAngle + 90.0;
-    if(hwAngle>360)
-        hwAngle = hwAngle - 360.0;
-    return hwAngle;
-}
-
-static double convertAngle_hw2user(double hwAngle)
-{
-    double userAngle = hwAngle-90.0;
-    if(userAngle<0)
-        userAngle = userAngle+360.0;
-    return userAngle;
-}
-
-static inline double convertAngle_degree2rad(double angle)
-{
-    return angle*PI/180.0;
-}
-
-
-static inline double convertAngle_rad2degree(double angle)
-{
-    return angle*180.0/PI;
-}
-
-
-void cerDoubleLidar::calculate(int sensNum, double distance, int &newSensNum, double &newdistance, double x_off, double y_off, double t_off)
-{
-	yDebug() << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>NEW";
-    if (distance != std::numeric_limits<double>::infinity())
+    if (distance == std::numeric_limits<double>::infinity())
     {
-        //calculate the input angle in degree
+        //if we received an infinity, put it in the right slot
+        double angle = (sensNum*m_resolution) + t_off *RAD2DEG;
+        int newSensNum= (double)(angle /m_resolution);
+        if (newSensNum >= 720) newSensNum-= 720;
+        if (newSensNum < 0)   newSensNum+= 720;
+        
+        //assignment on empty slots
+        if (std::isnan(m_laser_data[newSensNum]))
+        { m_laser_data[newSensNum] = std::numeric_limits<double>::infinity();}
+    }
+    else if (std::isnan(distance))
+    {
+        //if we received an NaN, just skip it
+    }
+    else
+    {
+        //if we receivned a valid value, process it and put it in the right slot
         double angle_input = (sensNum*m_resolution);
-        double angle_rad = convertAngle_degree2rad(angle_input);
+        double angle_rad = angle_input*DEG2RAD;
 
     #ifdef DO_NOTHING_DEBUG
         x_off=0;
@@ -498,23 +487,18 @@ void cerDoubleLidar::calculate(int sensNum, double distance, int &newSensNum, do
         double Bx = Ax + x_off;
 
         double betarad = atan2(By,Bx); //the output is -pi +pi
-        double beta2 = convertAngle_rad2degree(betarad); //the output is -180 +180
+        double beta2 = betarad*RAD2DEG; //the output is -180 +180
 
         //compute the new slot
-        newSensNum= (double)(beta2/m_resolution);
-        if (newSensNum > 720) newSensNum-= 720;
+        int newSensNum= (double)(beta2/m_resolution);
+        if (newSensNum >= 720) newSensNum-= 720;
         if (newSensNum < 0)   newSensNum+= 720;
 
         //compute the distance
-        newdistance = std::sqrt((Bx*Bx)+(By*By));
-    }
-    else
-    {
-        double angle = (sensNum*m_resolution) + t_off;
-        newSensNum= (double)(angle /m_resolution);
-        if (newSensNum > 720) newSensNum-= 720;
-        if (newSensNum < 0)   newSensNum+= 720;
-        newdistance = std::numeric_limits<double>::infinity();
+        double newdistance = std::sqrt((Bx*Bx)+(By*By));
+        
+        //assigniment
+        m_laser_data[newSensNum] = newdistance;
     }
 
 }
@@ -532,102 +516,44 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
     yarp::sig::Vector dataFront;
     yarp::sig::Vector dataBack;
     
-    //if(out.size() != m_samples)
-        out.resize(m_samples, std::nan(""));
+    for(size_t i=0; i<m_sensorsNum; i++)
+    {
+         m_laser_data[i] = std::nan("");
+    }
     
     if(!m_dev_laserFront->getRawData(dataFront))
+    {
+        out = m_laser_data;
         return false;
+    }
     if(!m_dev_laserBack->getRawData(dataBack))
+    {
+        out = m_laser_data;
         return false;
-    
-    for(int i=0; i<m_samples; i++)
-    {
-         out[i] = std::nan("");
     }
-
-    for(int i=0; i<m_samples; i++)
+    
+    for(size_t i=0; i<m_sensorsNum; i++)
     {
-        double newvalue;
-        int newindex;
-       
+     //   yDebug() << i << m_sensorsNum;
         //When hardware has problems, it gives me 0.0, so I skip it
-        if(dataFront[i]!=0.0 && !isnan(dataFront[i]))
+        if(dataFront[i]!=0.0)
         {
-            calculate(i, dataFront[i], newindex, newvalue, m_lFrontCfg.pose.x, m_lFrontCfg.pose.y, m_lFrontCfg.pose.theta);
-            out[newindex] = newvalue;
+            calculate(i, dataFront[i], m_lFrontCfg.pose.x, m_lFrontCfg.pose.y, m_lFrontCfg.pose.theta);
+
         }
-        if(dataBack[i]!=0.0 && !isnan(dataFront[i]))
+        if(dataBack[i]!=0.0)
         {
-            calculate(i, dataBack[i], newindex, newvalue, m_lBackCfg.pose.x, m_lBackCfg.pose.y, m_lBackCfg.pose.theta);
-            out[newindex] = newvalue;
+            calculate(i, dataBack[i], m_lBackCfg.pose.x, m_lBackCfg.pose.y, m_lBackCfg.pose.theta);
         }
     }
     
+   // applyLimitsOnLaserData();
+    out = m_laser_data;
     return true;
 }
 
 bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
 {
-    yError() << "cerDoubleLidar: getLaserMeasurement ot yet implemented";
+    yError() << "cerDoubleLidar: getLaserMeasurement not yet implemented";
     return false;
-    
-    //Some transformation is missing in the following piece of code
-    std::lock_guard<std::mutex> guard(m_mutex);
-    
-    if(!m_inited)
-        return false;
-    std::vector<LaserMeasurementData> dataFront;
-    std::vector<LaserMeasurementData> dataBack;
-    if(data.size() != m_samples)
-        data.resize(m_samples);
-    
-    if(!m_dev_laserFront->getLaserMeasurement(dataFront))
-        return false;
-    if(!m_dev_laserBack->getLaserMeasurement(dataBack))
-        return false;
-    
-    for(int i=0; i<m_samples; i++)
-    {
-        double rhoFront, thetaFront, rhoBack, thetaBack;
-        dataFront[i].get_polar(rhoFront, thetaFront);
-        dataBack[i].get_polar(rhoBack, thetaBack);
-        
-        if(rhoFront!= INFINITY)
-            data[i].set_polar(rhoFront, thetaFront);
-        else  if(rhoBack != INFINITY)
-            data[i].set_polar(rhoBack, thetaBack);
-        else
-            data[i].set_polar(INFINITY, i*m_resolution);
-    }
-
-    return true;
 }
-
-bool cerDoubleLidar::getDeviceStatus(Device_status &status)
-{
-    std::lock_guard<std::mutex> guard(m_mutex);
-    if(!m_inited)
-        return false;
-    Device_status statusFront, statusBack;
-    if(! m_dev_laserFront->getDeviceStatus(statusFront))
-        return false;
-    if(! m_dev_laserBack->getDeviceStatus(statusBack))
-        return false;
-    if(statusFront == statusBack)
-        status = statusFront;
-    else
-    {
-        //TODO
-        yError() << "cerDoubleLidar: the status of laser front (" << statusFront << ") differs from the status of laser back (" << statusBack << ")";
-        return false;
-    }
-
-    return true;
-}
-
-bool cerDoubleLidar::getDeviceInfo (std::string &device_info)
-{
-    std::lock_guard<std::mutex> guard(m_mutex);
-    return true;
-}
-

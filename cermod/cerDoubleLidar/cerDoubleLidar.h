@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013-2015 Fondazione Istituto Italiano di Tecnologia RBCS & iCub Facility & ADVR
+ * Copyright (C) 2013-2020 Fondazione Istituto Italiano di Tecnologia
  * Authors: see AUTHORS file.
  * CopyPolicy: Released under the terms of the LGPLv2.1 or any later version, see LGPL.TXT or LGPL3.TXT
  */
@@ -13,7 +13,7 @@
 #include <yarp/sig/Vector.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Stamp.h>
-#include <yarp/dev/IRangefinder2D.h>
+#include <yarp/dev/Lidar2DDeviceBase.h>
 #include <yarp/dev/Wrapper.h>
 
 #include <boost/shared_ptr.hpp>
@@ -32,7 +32,7 @@ namespace cer {
 
 class cer::dev::cerDoubleLidar :
     public yarp::dev::DeviceDriver,
-    public yarp::dev::IRangefinder2D,
+    public yarp::dev::Lidar2DDeviceBase,
     public yarp::dev::IMultipleWrapper
 {
     struct LaserPose_t
@@ -76,36 +76,26 @@ public:
     //IRangefinder2D interface
     virtual bool getRawData(yarp::sig::Vector &data) override;
     virtual bool getLaserMeasurement(std::vector<yarp::dev::LaserMeasurementData> &data) override;
-    virtual bool getDeviceStatus     (Device_status &status) override;
-    virtual bool getDeviceInfo       (std::string &device_info) override; //
-    virtual bool getDistanceRange    (double& min, double& max) override;
     virtual bool setDistanceRange    (double min, double max) override;
-    virtual bool getScanLimits        (double& min, double& max) override;
     virtual bool setScanLimits        (double min, double max) override;
-    virtual bool getHorizontalResolution      (double& step) override;
     virtual bool setHorizontalResolution      (double step) override;
-    virtual bool getScanRate         (double& rate) override;
     virtual bool setScanRate         (double rate) override;
 
 private:
 
-    void calculate(int sensNum, double distance, int &newSensNum, double &newdistance, double x_off, double y_off, double t_off);
+    void calculate(int sensNum, double distance, double x_off, double y_off, double t_off);
     bool verifyLasersConfigurations(void);
     bool getLasersInterfaces(void);
     bool createLasersDevices(void);
     
-    yarp::dev::PolyDriver * m_driver_laserFront;
-    yarp::dev::IRangefinder2D* m_dev_laserFront;
+    yarp::dev::PolyDriver * m_driver_laserFront = nullptr;
+    yarp::dev::IRangefinder2D* m_dev_laserFront = nullptr;
 
-    yarp::dev::PolyDriver * m_driver_laserBack;
-    yarp::dev::IRangefinder2D* m_dev_laserBack;
+    yarp::dev::PolyDriver * m_driver_laserBack = nullptr;
+    yarp::dev::IRangefinder2D* m_dev_laserBack = nullptr;
     
-    int m_samples;
-    double m_resolution;
     bool m_inited;
     bool m_onSimulator; //if true the device looks for front and back laser devices in gazebo, else creates them
-
-    std::mutex m_mutex; //MI SERVE??????
 
     LaserCfg_t m_lFrontCfg;
     LaserCfg_t m_lBackCfg;
