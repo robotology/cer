@@ -31,6 +31,7 @@
 #include <yarp/dev/IPidControl.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include <gazebo/common/PID.hh>
 #include <gazebo/common/Time.hh>
