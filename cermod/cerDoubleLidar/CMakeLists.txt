@@ -11,19 +11,6 @@ yarp_prepare_plugin(cerDoubleLidar
 
 if(ENABLE_cermod_cerDoubleLidar)
 
-  if(WIN32)
-    set(RPLIDAR_ARCH_DIR win32)
-  elseif(APPLE)
-    set(RPLIDAR_ARCH_DIR macOS)
-  elseif(UNIX)
-    set(RPLIDAR_ARCH_DIR linux)
-  endif()
-
-  set(RPLIDAR_SDK_SRCS ${RPLIDAR_SDK_ROOT}/src/rplidar_driver.cpp
-                       ${RPLIDAR_SDK_ROOT}/src/arch/${RPLIDAR_ARCH_DIR}/net_serial.cpp
-                       ${RPLIDAR_SDK_ROOT}/src/arch/${RPLIDAR_ARCH_DIR}/timer.cpp
-                       ${RPLIDAR_SDK_ROOT}/src/hal/thread.cpp)
-
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     yarp_add_plugin(cerDoubleLidar cerDoubleLidar.h cerDoubleLidar.cpp)

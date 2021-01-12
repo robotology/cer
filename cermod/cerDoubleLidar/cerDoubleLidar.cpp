@@ -105,7 +105,7 @@ bool cerDoubleLidar::getLasersInterfaces(void)
         yInfo() << "****cerDoubleLidar: laserBack device found. OK";
     }
 
-    if(!m_driver_laserFront->view(m_dev_laserFront))
+    if(!m_driver_laserFront->view(m_ILaserFrontData))
     {
         yError() << "cerDoubleLidar: cannot get interface of laser front";
         return false;
@@ -115,9 +115,13 @@ bool cerDoubleLidar::getLasersInterfaces(void)
         yInfo() << "****cerDoubleLidar: get interface of laser front. OK";
     }
 
+    if (!m_driver_laserFront->view(m_ILaserFrontStamp))
+    {
+        yError() << "cerDoubleLidar: cannot get IPreciselyTimed of laser front";
+        return false;
+    }
 
-
-    if(!m_driver_laserBack->view(m_dev_laserBack))
+    if(!m_driver_laserBack->view(m_ILaserBackData))
     {
         yError() << "cerDoubleLidar: cannot get interface of laser Back";
         return false;
@@ -125,6 +129,12 @@ bool cerDoubleLidar::getLasersInterfaces(void)
     else
     {
         yInfo() << "****cerDoubleLidar: get interface of laser Back. OK";
+    }
+
+    if (!m_driver_laserBack->view(m_ILaserBackStamp))
+    {
+        yError() << "cerDoubleLidar: cannot get IPreciselyTimed of laser back";
+        return false;
     }
 
     return true;
@@ -164,6 +174,7 @@ bool cerDoubleLidar::attachAll(const PolyDriverList &p)
 bool cerDoubleLidar::detachAll(void)
 {
     m_inited=false;
+    return true;
 }
 
 
@@ -278,8 +289,8 @@ bool cerDoubleLidar::close()
     if(nullptr!=m_driver_laserFront)
     {
         m_driver_laserFront->close();
-        delete m_dev_laserFront;
-        m_dev_laserFront=nullptr;
+        delete m_driver_laserFront;
+        m_driver_laserFront=nullptr;
     }
 
     if(nullptr!=m_driver_laserBack)
@@ -299,13 +310,13 @@ bool cerDoubleLidar::verifyLasersConfigurations(void)
     double resolution[2];
         
     {
-        if(!m_dev_laserFront->getScanLimits(min_angle[0], max_angle[0]))
+        if(!m_ILaserFrontData->getScanLimits(min_angle[0], max_angle[0]))
         {
             yError() << "cerDoubleLidar: error in getScanLimits for front laser";
             return false;
         }
 
-        if(!m_dev_laserBack->getScanLimits(min_angle[1], max_angle[1]))
+        if(!m_ILaserBackData->getScanLimits(min_angle[1], max_angle[1]))
         {
             yError() << "cerDoubleLidar: error in getScanLimits for back laser";
             return false;
@@ -320,13 +331,13 @@ bool cerDoubleLidar::verifyLasersConfigurations(void)
     }
 
     {
-        if(!m_dev_laserFront->getDistanceRange(min_dist[0], max_dist[0]))
+        if(!m_ILaserFrontData->getDistanceRange(min_dist[0], max_dist[0]))
         {
             yError() << "cerDoubleLidar: error in getDistanceRange for front laser";
             return false;
         }
 
-        if(!m_dev_laserBack->getDistanceRange(min_dist[1], max_dist[1]))
+        if(!m_ILaserBackData->getDistanceRange(min_dist[1], max_dist[1]))
         {
             yError() << "cerDoubleLidar: error in getDistanceRange for back laser";
             return false;
@@ -340,13 +351,13 @@ bool cerDoubleLidar::verifyLasersConfigurations(void)
         }*/
    }
 
-    if(!m_dev_laserFront->getHorizontalResolution(resolution[0]))
+    if(!m_ILaserFrontData->getHorizontalResolution(resolution[0]))
     {
         yError() << "cerDoubleLidar: error getting resolution for front laser";
         return false;
     }
 
-    if(!m_dev_laserBack->getHorizontalResolution(resolution[1]))
+    if(!m_ILaserBackData->getHorizontalResolution(resolution[1]))
     {
         yError() << "cerDoubleLidar: error getting resolution for back laser";
         return false;
@@ -371,15 +382,15 @@ bool cerDoubleLidar::setDistanceRange(double min, double max)
     if(!m_inited)
         return false;
     double curmin, curmax;
-    if(!m_dev_laserFront->getDistanceRange(curmin, curmax))
+    if(!m_ILaserFrontData->getDistanceRange(curmin, curmax))
         return false;
 
-    if(!m_dev_laserFront->setDistanceRange(min, max))
+    if(!m_ILaserFrontData->setDistanceRange(min, max))
         return false;
 
-    if(!m_dev_laserBack->setDistanceRange(min,max))
+    if(!m_ILaserBackData->setDistanceRange(min,max))
     {
-        m_dev_laserFront->setDistanceRange(curmin, curmax);
+        m_ILaserFrontData->setDistanceRange(curmin, curmax);
         return false;
     }
     return true;
@@ -392,15 +403,15 @@ bool cerDoubleLidar::setScanLimits(double min, double max)
         return false;
 
     double curmin, curmax;
-    if(!m_dev_laserFront->getScanLimits(curmin, curmax))
+    if(!m_ILaserFrontData->getScanLimits(curmin, curmax))
         return false;
 
-    if(!m_dev_laserFront->setScanLimits(min, max))
+    if(!m_ILaserFrontData->setScanLimits(min, max))
         return false;
 
-    if(!m_dev_laserBack->setScanLimits(min,max))
+    if(!m_ILaserBackData->setScanLimits(min,max))
     {
-        m_dev_laserFront->setScanLimits(curmin, curmax);
+        m_ILaserFrontData->setScanLimits(curmin, curmax);
         return false;
     }
     return true;
@@ -413,15 +424,15 @@ bool cerDoubleLidar::setHorizontalResolution(double step)
         return false;
 
     double curstep;
-    if(!m_dev_laserFront->getHorizontalResolution(curstep))
+    if(!m_ILaserFrontData->getHorizontalResolution(curstep))
         return false;
 
-    if(!m_dev_laserFront->setHorizontalResolution(step))
+    if(!m_ILaserFrontData->setHorizontalResolution(step))
         return false;
 
-    if(!m_dev_laserBack->setHorizontalResolution(step))
+    if(!m_ILaserBackData->setHorizontalResolution(step))
     {
-        m_dev_laserFront->setHorizontalResolution(curstep);
+        m_ILaserFrontData->setHorizontalResolution(curstep);
         return false;
     }
     return true;
@@ -434,15 +445,15 @@ bool cerDoubleLidar::setScanRate(double rate)
         return false;
 
     double currate;
-    if(!m_dev_laserFront->getScanRate(currate))
+    if(!m_ILaserFrontData->getScanRate(currate))
         return false;
 
-    if(!m_dev_laserFront->setScanRate(rate))
+    if(!m_ILaserFrontData->setScanRate(rate))
         return false;
 
-    if(!m_dev_laserBack->setScanRate(rate))
+    if(!m_ILaserBackData->setScanRate(rate))
     {
-        m_dev_laserFront->setScanRate(currate);
+        m_ILaserFrontData->setScanRate(currate);
         return false;
     }
     return true;
@@ -503,8 +514,6 @@ void cerDoubleLidar::calculate(int sensNum, double distance, double x_off, doubl
 
 }
 
-
-
 bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
@@ -521,16 +530,19 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
          m_laser_data[i] = std::nan("");
     }
     
-    if(!m_dev_laserFront->getRawData(dataFront))
+    if(!m_ILaserFrontData->getRawData(dataFront))
     {
         out = m_laser_data;
         return false;
     }
-    if(!m_dev_laserBack->getRawData(dataBack))
+    m_frontStamp = m_ILaserFrontStamp->getLastInputStamp();
+
+    if(!m_ILaserBackData->getRawData(dataBack))
     {
         out = m_laser_data;
         return false;
     }
+    m_backStamp = m_ILaserBackStamp->getLastInputStamp();
     
     for(size_t i=0; i<m_sensorsNum; i++)
     {
@@ -547,7 +559,11 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
         }
     }
     
-   // applyLimitsOnLaserData();
+    //For now, I am using the front lidar timestamp as the timestamp for the doubleLidar.
+    //I think that it does not worth to compute the mean value. It can be eventually improved in the future.
+    m_timestamp = m_frontStamp;
+
+    // applyLimitsOnLaserData();
     out = m_laser_data;
     return true;
 }
@@ -556,4 +572,10 @@ bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data
 {
     yError() << "cerDoubleLidar: getLaserMeasurement not yet implemented";
     return false;
+}
+
+bool cerDoubleLidar::updateLogic()
+{
+    //this is empty because no thread is needed, we just take data in getRawData()
+    return true;
 }
