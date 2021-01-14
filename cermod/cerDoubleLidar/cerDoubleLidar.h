@@ -10,13 +10,12 @@
 #include <yarp/os/Property.h>
 #include <yarp/dev/Drivers.h>
 #include <yarp/dev/DeviceDriver.h>
+#include <yarp/dev/IPreciselyTimed.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/dev/Lidar2DDeviceBase.h>
 #include <yarp/dev/Wrapper.h>
-
-#include <boost/shared_ptr.hpp>
 
 #include <string>
 #include <functional>
@@ -81,6 +80,10 @@ public:
     virtual bool setHorizontalResolution      (double step) override;
     virtual bool setScanRate         (double rate) override;
 
+public:
+    //Lidar2DDeviceBase
+    bool acquireDataFromHW() override final;
+
 private:
 
     void calculate(int sensNum, double distance, double x_off, double y_off, double t_off);
@@ -89,11 +92,15 @@ private:
     bool createLasersDevices(void);
     
     yarp::dev::PolyDriver * m_driver_laserFront = nullptr;
-    yarp::dev::IRangefinder2D* m_dev_laserFront = nullptr;
+    yarp::dev::IRangefinder2D* m_ILaserFrontData = nullptr;
+    yarp::dev::IPreciselyTimed* m_ILaserFrontStamp = nullptr;
+    yarp::os::Stamp m_frontStamp;
 
     yarp::dev::PolyDriver * m_driver_laserBack = nullptr;
-    yarp::dev::IRangefinder2D* m_dev_laserBack = nullptr;
-    
+    yarp::dev::IRangefinder2D* m_ILaserBackData = nullptr;
+    yarp::dev::IPreciselyTimed * m_ILaserBackStamp = nullptr;
+    yarp::os::Stamp m_backStamp;
+
     bool m_inited;
     bool m_onSimulator; //if true the device looks for front and back laser devices in gazebo, else creates them
 
