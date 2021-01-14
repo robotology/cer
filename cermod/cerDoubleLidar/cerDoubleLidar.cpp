@@ -574,7 +574,7 @@ bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data
     return false;
 }
 
-bool cerDoubleLidar::updateLogic()
+bool cerDoubleLidar::acquireDataFromHW()
 {
     //this is empty because no thread is needed, we just take data in getRawData()
     return true;

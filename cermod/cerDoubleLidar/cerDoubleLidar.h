@@ -82,7 +82,7 @@ public:
 
 public:
     //Lidar2DDeviceBase
-    bool updateLogic() override final;
+    bool acquireDataFromHW() override final;
 
 private:
 
