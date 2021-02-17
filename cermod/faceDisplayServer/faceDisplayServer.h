@@ -9,7 +9,6 @@
 
 #include <unistd.h>
 #include <stdint.h>
-#include <mutex>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/core/mat.hpp>
@@ -23,7 +22,9 @@
 
 #include <yarp/sig/Image.h>
 #include <yarp/dev/Wrapper.h>
+#include <yarp/os/Semaphore.h>
 #include <yarp/dev/PolyDriver.h>
+
 
 namespace cer{
     namespace dev{
@@ -106,25 +107,40 @@ typedef struct auxdisp_regs {
  * \endcode
  */
 
+   
 class ImagePort : public yarp::os::BufferedPort<yarp::sig::FlexImage>
 {
 private:
+    int whichport;
     int _fd;
-    std::mutex &mtx;
+    yarp::os::Semaphore *mutex = nullptr;
     using BufferedPort<yarp::sig::FlexImage>::onRead;
-
+    double* lastReceived;
+    
 public:
-    ImagePort(std::mutex &_mtx) : mtx(_mtx) { _fd=0; };
 
-    bool init(int fd)   { _fd = fd;  return true;}
+    ImagePort(int _whichport, double* _rectimebuf, yarp::os::Semaphore *_mutex) : mutex(_mutex)
+    {
+       lastReceived= _rectimebuf;
+       whichport = _whichport;
+       _fd =0;
+    };
+
+    bool init(int fd)   { _fd = fd; }
 
     virtual void onRead(yarp::sig::FlexImage& img)
     {
+        if (whichport==1 && yarp::os::Time::now()-lastReceived[0]<1.0)
+        {
+            yDebug() <<  "port" << whichport << "low priority image was skipped";
+            return;
+        } 
+              
         // process data in b
-        yDebug() <<  "Got a new image of size: w " << img.width() << " h " << img.height() << " bytesize " <<img.getRawImageSize();
+        yDebug() <<  "Got a new image on port" << whichport << "with size: w " << img.width() << " h " << img.height() << " bytesize " <<img.getRawImageSize();
 
         if( (img.width() != IMAGE_WIDTH) || (img.height() != IMAGE_HEIGHT) || img.getPixelCode() != VOCAB_PIXEL_RGB)
-        mtx.lock();
+        mutex->wait();
         if(_fd)
         {
             if(-1 == ::write(_fd, img.getRawImage(), img.getRawImageSize()) )
@@ -132,7 +148,9 @@ public:
         }
         else
             yError() << "Display not available or initted";
-        mtx.unlock();
+        mutex->post();
+        
+        lastReceived[whichport]=yarp::os::Time::now();
     }
 };
 
@@ -159,13 +177,15 @@ public:
 private:
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
     yarp::os::Port          rpcPort;
-    ImagePort               imagePort;      // receive images to be displayed
-
+    double                  lastReceived[10];
+    ImagePort               imagePort1;      // receive images to be displayed
+    ImagePort               imagePort2;
+    
     std::string             rootPath;
     std::string             deviceFileName;
 
     int _rate;
-    std::mutex              mtx;
+    yarp::os::Semaphore     mutex;
     yarp::sig::FlexImage    image;
     std::string             sensorId;
 

@@ -11,10 +11,14 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <iostream>
+#include <opencv/cv.h>
+#include <opencv/cxcore.h>
+#include <opencv/highgui.h>
 
 #include <opencv2/core/mat.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/imgcodecs.hpp>
 
 #include <faceDisplayServer.h>
 #include <IFaceDisplayInterface.h>
@@ -33,7 +37,8 @@ using namespace std;
 // Constructor used when there is only one output port
 FaceDisplayServer::FaceDisplayServer(): sensorId("low-res display"),
                                         selfTest(0),
-                                        imagePort(mtx),
+                                        imagePort1(0,lastReceived,&mutex),
+                                        imagePort2(1,lastReceived,&mutex),
                                         face(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
                                         faceExpression(FACE_EXPR),
                                         moveUp(0),
@@ -72,13 +77,14 @@ std::string FaceDisplayServer::getId()
 bool FaceDisplayServer::open(yarp::os::Searchable &config)
 {
     Property params;
-    std::string   rpcPortName, imagePortName;
+    std::string   rpcPortName, imagePortName1, imagePortName2;
 
     params.fromString(config.toString().c_str());
     yTrace() << "FaceDisplayServer params are: " << config.toString();
 
     rpcPortName   = config.check("name", yarp::os::Value("/robot/faceDisplay/rpc"), "Name of the port receiving input commands").toString();
-    imagePortName = config.check("name", yarp::os::Value("/robot/faceDisplay/image:i"), "Name of the port receiving images").toString();
+    imagePortName1 = config.check("name", yarp::os::Value("/robot/faceDisplay/image:i"), "Name of the port receiving images").toString();
+    imagePortName2 = config.check("name2", yarp::os::Value("/robot/faceDisplay/image2:i"), "Name of the port receiving images").toString();
 
     deviceFileName = config.check("display", yarp::os::Value("/dev/auxdisp"), "Device file to use in the system, i.e. '/dev/auxdisp'").toString();
     rootPath = config.check("path", yarp::os::Value("/home/r1-user/AUXDISP"), "Where images are located").toString();
@@ -89,13 +95,19 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
         return false;
     }
 
-    imagePort.useCallback();                    // input images will go to onRead() callback
-    if(!imagePort.open(imagePortName))
+    imagePort1.useCallback();                    // input images will go to onRead() callback
+    if(!imagePort1.open(imagePortName1))
     {
-        yError() << "Failed to open port " << imagePortName.c_str();
+        yError() << "Failed to open port " << imagePortName1.c_str();
         return false;
     }
-
+    imagePort2.useCallback();                    // input images will go to onRead() callback
+    if(!imagePort2.open(imagePortName2))
+    {
+        yError() << "Failed to open port " << imagePortName2.c_str();
+        return false;
+    }
+    
     // open device file and init some stuff
     if ((fd=::open(deviceFileName.c_str(), O_RDWR)) < 0)
     {
@@ -146,18 +158,19 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
 
     // clear display
     cv::Mat black(IMAGE_HEIGHT,IMAGE_WIDTH, CV_8UC3, cv::Scalar(0,0,0));
-    mtx.lock();
+    mutex.wait();
     if(-1 == ::write(fd, black.data, black.total()*3) )
         yError() << "Failed setting image to display";
-    mtx.unlock();
-    imagePort.init(fd);
+    mutex.post();
+    imagePort1.init(fd);
+    imagePort2.init(fd);
 
     // Load all required pieces of image
     bool ok = true;
-    imgHappyEye  = cv::imread(std::string(rootPath + "/runtime/happyEye.bmp").c_str(),  cv::IMREAD_COLOR);
-    imgHappyBars = cv::imread(std::string(rootPath + "/runtime/happyBars.bmp").c_str(), cv::IMREAD_COLOR);
-    imgSadEye    = cv::imread(std::string(rootPath + "/runtime/sadEye.bmp").c_str(),    cv::IMREAD_UNCHANGED);
-    imgSadBars   = cv::imread(std::string(rootPath + "/runtime/sadBars.bmp").c_str(),   cv::IMREAD_UNCHANGED);
+    imgHappyEye  = cv::imread(std::string(rootPath + "/runtime/happyEye.bmp").c_str(),  CV_LOAD_IMAGE_COLOR);
+    imgHappyBars = cv::imread(std::string(rootPath + "/runtime/happyBars.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+    imgSadEye    = cv::imread(std::string(rootPath + "/runtime/sadEye.bmp").c_str(),    CV_LOAD_IMAGE_UNCHANGED);
+    imgSadBars   = cv::imread(std::string(rootPath + "/runtime/sadBars.bmp").c_str(),   CV_LOAD_IMAGE_UNCHANGED);
 
     if(imgHappyEye.empty() )
     {
@@ -189,11 +202,10 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
         return false;
     }
 
-
-    cv::cvtColor(imgHappyEye, imgHappyEye,cv::COLOR_BGR2RGB);
-    cv::cvtColor(imgHappyBars,imgHappyBars,cv::COLOR_BGR2RGB);
-    cv::cvtColor(imgSadEye,   imgSadEye,cv::COLOR_BGR2RGB);
-    cv::cvtColor(imgSadBars,  imgSadBars,cv::COLOR_BGR2RGB);
+    cv::cvtColor(imgHappyEye, imgHappyEye,CV_BGR2RGB);
+    cv::cvtColor(imgHappyBars,imgHappyBars,CV_BGR2RGB);
+    cv::cvtColor(imgSadEye,   imgSadEye,CV_BGR2RGB);
+    cv::cvtColor(imgSadBars,  imgSadBars,CV_BGR2RGB);
 
 //     yDebug() << "imgFace      cols " << face.cols << " rows " << face.rows << " channels " << face.channels();
 //     yDebug() << "imgHappyEye  cols " << imgHappyEye.cols << " rows " << imgHappyEye.rows << " channels " << imgHappyEye.channels() << " tot " << imgHappyEye.total() << " elemSize " << imgHappyEye.elemSize();
@@ -276,30 +288,31 @@ void FaceDisplayServer::run()
     if(selfTest == 1)
     {
         // preload the images
-        cv::Mat img[10];
+        IplImage *img[10];
 
-        img[0] = cv::imread(std::string(rootPath + "/RobotE_PNG_80x32_16bit_01.bmp").c_str(), cv::IMREAD_COLOR);
-        img[1] = cv::imread(std::string(rootPath + "/RobotE_PNG_80x32_16bit_02.bmp").c_str(), cv::IMREAD_COLOR);
-        img[2] = cv::imread(std::string(rootPath + "/RobotE_PNG_80x32_16bit_03.bmp").c_str(), cv::IMREAD_COLOR);
-        img[3] = cv::imread(std::string(rootPath + "/RobotE_PNG_80x32_16bit_03_clean.bmp").c_str(), cv::IMREAD_COLOR);
-        img[4] = cv::imread(std::string(rootPath + "/RobotE_PNG_80x32_16bit_04.bmp").c_str(), cv::IMREAD_COLOR);
+        img[0] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_01.bmp").c_str(), 1);
+        img[1] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_02.bmp").c_str(), 1);
+        img[2] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_03.bmp").c_str(), 1);
+        img[3] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_03_clean.bmp").c_str(), 1);
+        img[4] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_04.bmp").c_str(), 1);
 
-        img[5] = cv::imread(std::string(rootPath + "/RobotE_PNG_80x32_16bit_05.bmp").c_str(), cv::IMREAD_COLOR);
-        img[6] = cv::imread(std::string(rootPath + "/Anger.bmp").c_str(), cv::IMREAD_COLOR);
-        img[7] = cv::imread(std::string(rootPath + "/balette.bmp").c_str(), cv::IMREAD_COLOR);
-        img[8] = cv::imread(std::string(rootPath + "/CCPP2.bmp").c_str(), cv::IMREAD_COLOR);
-        img[9] = cv::imread(std::string(rootPath + "/CCPP4.bmp").c_str(), cv::IMREAD_COLOR);
+        img[5] = cvLoadImage(std::string(rootPath + "/RobotE_PNG_80x32_16bit_05.bmp").c_str(), 1);
+        img[6] = cvLoadImage(std::string(rootPath + "/Anger.bmp").c_str(), 1);
+        img[7] = cvLoadImage(std::string(rootPath + "/balette.bmp").c_str(), 1);
+        img[8] = cvLoadImage(std::string(rootPath + "/CCPP2.bmp").c_str(), 1);
+        img[9] = cvLoadImage(std::string(rootPath + "/CCPP4.bmp").c_str(), 1);
+
 
         // Convert into BGR
         for(int i=0; i<10; i++)
         {
-            if(!img[i].data)
-            {
+            if(img[i] == NULL)
                 yError() << "img not valid at index " << i;
-                return;
-            }
-            cv::cvtColor(img[i], img[i], cv::COLOR_BGR2RGB);
 
+            cvCvtColor(img[i], img[i], CV_BGR2RGB);
+
+            if(img[i] == NULL)
+                yError() << "img not valid at index " << i;
         }
 
         imageIdx = 0;
@@ -307,7 +320,7 @@ void FaceDisplayServer::run()
 
         while(!isStopping())
         {
-            if(-1 == ::write(fd, img[imageIdx].data, img[imageIdx].rows*img[imageIdx].cols) )
+            if(-1 == ::write(fd, img[imageIdx]->imageData, img[imageIdx]->imageSize) )
                 yError() << "Failed setting image to display";
 
             imageIdx++;
@@ -387,13 +400,15 @@ void FaceDisplayServer::run()
     if(selfTest == 3)
     {
         bool toggleImage = false;
-        cv::Mat image_1  = cv::imread(std::string(rootPath + "/fra.bmp").c_str(), cv::IMREAD_COLOR);
-        cv::Mat image_2  = cv::imread(std::string(rootPath + "/homer.bmp").c_str(), cv::IMREAD_COLOR);
+        cv::Mat image_1  = cv::imread(std::string(rootPath + "/fra.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
+        cv::Mat image_2  = cv::imread(std::string(rootPath + "/homer.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
 
-        cv::Mat image_tmp   = cv::imread(std::string(rootPath + "/homer.bmp").c_str(), cv::IMREAD_COLOR);
+        cv::Mat image_tmp   = cv::imread(std::string(rootPath + "/homer.bmp").c_str(), CV_LOAD_IMAGE_COLOR);
 
-        cv::cvtColor(image_1,image_1,cv::COLOR_BGR2RGB);
-        cv::cvtColor(image_2,image_2,cv::COLOR_BGR2RGB);
+
+        cv::cvtColor(image_1,image_1,CV_BGR2RGB);
+        cv::cvtColor(image_2,image_2,CV_BGR2RGB);
+
         cv::Mat *image_init, *image_final;
 
         image_init  = &image_1;
@@ -447,27 +462,29 @@ void FaceDisplayServer::run()
         yInfo() << "Running selfTest 4";
 
         // load the image
-        cv::Mat img = cv::imread("/home/linaro/AUXDISP/All_ins/All_greens-dx2sx-central.bmp", cv::IMREAD_COLOR);
+        IplImage* img;
+        img = cvLoadImage("/home/linaro/AUXDISP/All_ins/All_greens-dx2sx-central.bmp", 1);
 
-        if(!img.data)
+        if(!img)
         {
             yError() << "Cannot load image " << "/home/linaro/AUXDISP/All_ins/All_greens-dx2sx-central.bmp";
             return;
         }
 
         // Conver into BGR
-        cv::cvtColor(img,img,cv::COLOR_BGR2RGB);
+        cvCvtColor(img,img,CV_BGR2RGB);
+
         int imageSize = IMAGE_WIDTH*IMAGE_HEIGHT*3;
         int rowSize = IMAGE_WIDTH*3;
         //  there is a dummy line between each image for easier understanding
         while(!isStopping())
         {
-            for(int offset=0; offset<img.rows*img.cols && !isStopping(); offset+= (imageSize+rowSize))
+            for(int offset=0; offset<img->imageSize && !isStopping(); offset+= (imageSize+rowSize))
             {
-                mtx.lock();
-                if(-1 == ::write(fd, img.data+offset, imageSize) )
+                mutex.wait();
+                if(-1 == ::write(fd, img->imageData+offset, imageSize) )
                     yError() << "Failed setting image to display";
-                mtx.unlock();
+                mutex.post();
                 yarp::os::Time::delay(1.0);
             }
         }
@@ -479,16 +496,17 @@ void FaceDisplayServer::run()
         yInfo() << "Running selfTest 5";
 
         // load the image
-        cv::Mat img = cv::imread("/home/linaro/AUXDISP/All_ins/All_greens-up2down-central.bmp", cv::IMREAD_COLOR);
+        IplImage* img;
+        img = cvLoadImage("/home/linaro/AUXDISP/All_ins/All_greens-up2down-central.bmp", 1);
 
-        if(!img.data)
+        if(!img)
         {
             yError() << "Cannot load image " << "/home/linaro/AUXDISP/All_ins/All_greens-up2down-central.bmp";
             return;
         }
 
-        // Conver into BGRc
-        cv::cvtColor(img,img,cv::COLOR_BGR2RGB);
+        // Conver into BGR
+        cvCvtColor(img,img,CV_BGR2RGB);
 
         int imageSize = IMAGE_WIDTH*IMAGE_HEIGHT*3;
         int rowSize = IMAGE_WIDTH*3;
@@ -496,21 +514,21 @@ void FaceDisplayServer::run()
         while(!isStopping())
         {
             int centralOffset = 7*imageSize +7*rowSize;
-            for(int offset=centralOffset; (offset<img.rows*img.cols) && (!isStopping()); offset+= (imageSize+rowSize))
+            for(int offset=centralOffset; (offset<img->imageSize) && (!isStopping()); offset+= (imageSize+rowSize))
             {
-                mtx.lock();
-                if(-1 == ::write(fd, img.data+offset, imageSize) )
+                mutex.wait();
+                if(-1 == ::write(fd, img->imageData+offset, imageSize) )
                     yError() << "Failed setting image to display";
-                mtx.unlock();
+                mutex.post();
                 yarp::os::Time::delay(1.0);
             }
 
             for(int offset=centralOffset; (offset>0) && (!isStopping()); offset-= (imageSize+rowSize))
             {
-                mtx.lock();
-                if(-1 == ::write(fd, img.data+offset, imageSize) )
+                mutex.wait();
+                if(-1 == ::write(fd, img->imageData+offset, imageSize) )
                     yError() << "Failed setting image to display";
-                mtx.unlock();
+                mutex.post();
                 yarp::os::Time::delay(1.0);
             }
         }
@@ -551,10 +569,11 @@ void FaceDisplayServer::run()
     // save to file for debugging purpose
     // cv::imwrite(std::string(rootPath + "/runtime/runtime-HappyEye.bmp").c_str(), face);
 
-    mtx.lock();
+    mutex.wait();
     if(-1 == ::write(fd, face.data, faceSize) )
         yError() << "Failed setting image to display";
-    mtx.unlock();
+    mutex.post();
+
 
     // normal workflow
     while(!isStopping())
@@ -814,7 +833,7 @@ void FaceDisplayServer::run()
                 case IMAGE_EXPR:
                 {
                     yTrace() << "setting image";
-                    imageFromFile  = cv::imread(imageFileName,  cv::IMREAD_COLOR);
+                    imageFromFile  = cv::imread(imageFileName,  CV_LOAD_IMAGE_ANYCOLOR);
 
                     if(imageFromFile.empty())
                     {
@@ -823,16 +842,16 @@ void FaceDisplayServer::run()
                     }
 
 //                     Conver into BGR
-                    cv::cvtColor(imageFromFile,imageFromFile,cv::COLOR_BGR2RGB);
+                    cv::cvtColor(imageFromFile,imageFromFile,CV_BGR2RGB);
                     currentFace = &imageFromFile;
                 }
                 break;
             }
 
-            mtx.lock();
+            mutex.wait();
             if(-1 == ::write(fd, currentFace->data, currentFace->total()*currentFace->elemSize()) )
                 yError() << "Failed setting image to display";
-            mtx.unlock();
+            mutex.post();
         }
     }
 }
