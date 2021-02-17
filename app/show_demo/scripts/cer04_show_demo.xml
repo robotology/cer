@@ -1,0 +1,47 @@
+<application>
+<name>CER03_show_demo</name>
+
+<dependencies>	
+cerSrv
+</dependencies>
+
+<!-- applications -->
+<application>
+    <name>Base_demo</name>
+    <prefix></prefix>
+</application>
+
+<!-- modules -->
+<module>
+    <name>baseControl</name>
+    <parameters>--context show_demo --from baseCtrl_cer04_high_speed.ini</parameters>
+    <node>r1-base</node>
+</module>
+
+<module>
+    <name>joystickCtrl</name>
+    <parameters>--force_configuration --context show_demo --from joystick_cer_high_speed_linux_xbox.ini --GENERAL::outputPortName /joystick2:o</parameters>
+    <node>r1-base</node>
+</module>
+
+<module>
+    <name>joystickCtrl</name>
+    <parameters>--force_configuration --context show_demo --from joystick_cer_high_speed_linux_xbox.ini --GENERAL::outputPortName /joystickMain:o</parameters>
+    <node>terminal</node>
+</module>
+
+
+<!-- connections -->
+<connection>
+	<from>/joystickMain:o</from>
+	<to>/baseControl/joystick1:i</to>
+	<protocol>tcp</protocol>
+</connection>
+
+<connection>
+	<from>/joystick2:o</from>
+	<to>/baseControl/joystick2:i</to>
+	<protocol>tcp</protocol>
+</connection>
+
+</application>
