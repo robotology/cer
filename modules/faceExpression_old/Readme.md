@@ -1,3 +1,5 @@
+*** THIS MODULE HAS BEEN DEPRECATED ***
+
 Face Expression Image:
 
 Generates face image in 80x32 resolution for CER face display.

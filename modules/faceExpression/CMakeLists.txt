@@ -4,11 +4,11 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
 
-project(faceExpressionImage2)
+project(faceExpressionImage)
 
-option(ENABLE_faceExpressionImage2 "Compile blinking module for face display" false)
+option(ENABLE_faceExpressionImage "Compile blinking module for face display" false)
 
-if(ENABLE_faceExpressionImage2)
+if(ENABLE_faceExpressionImage)
 
     ## Use opencv
     find_package(OpenCV)
@@ -34,4 +34,4 @@ if(ENABLE_faceExpressionImage2)
 
     install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
-endif(ENABLE_faceExpressionImage2)
+endif(ENABLE_faceExpressionImage)
