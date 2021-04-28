@@ -37,10 +37,10 @@ bool FaceExpressionImageModule::configure(ResourceFinder &rf)
         yError() << "RFModule cannot read from RPC port (" << m_rpcPort.getName() << ")";
     }
 
-    if (1) m_thread_output = new DrawingThread(rf, 0.033, m_image, m_mutex);
-    if (1) m_thread_eyes   = new EyesThread(rf, 0.020, m_image, m_mutex);
-    if (1) m_thread_ears   = new EarsThread(rf, 0.020, m_image, m_mutex);
-    if (1) m_thread_mouth  = new MouthThread(rf, 0.020, m_image, m_mutex);
+    if (1) m_thread_output = new DrawingThread(rf, getName(), 0.033, m_image, m_mutex);
+    if (1) m_thread_eyes   = new EyesThread(rf, getName(), 0.020, m_image, m_mutex);
+    if (1) m_thread_ears   = new EarsThread(rf, getName(), 0.020, m_image, m_mutex);
+    if (1) m_thread_mouth  = new MouthThread(rf, getName(), 0.020, m_image, m_mutex);
 
     if (m_thread_output) 
         if (!m_thread_output->start())
@@ -98,15 +98,30 @@ bool FaceExpressionImageModule::respond(const Bottle& command, Bottle& reply)
 
         case VOCAB_RESET:
         {
-            //th.activateDraw(true);@@@@@@@
-            //th.threadRelease();
+            if (m_thread_eyes)
+            {
+                m_thread_eyes->activateBlink(false);
+                m_thread_eyes->reset();
+            }
+            if (m_thread_mouth)
+            {
+                m_thread_mouth->activateTalk(false);
+                m_thread_mouth->reset();
+            }
+            if (m_thread_ears)
+            {
+                m_thread_ears->activateBars(false);
+                m_thread_ears->reset();
+            }
         }
         break;
 
         case VOCAB_BLACK_RESET:
         {
-            //th.activateDraw(false);@@@@@@@
-            //th.blackReset();
+            if (m_thread_output)
+            {
+                m_thread_output->blackReset();
+            }
         }
         break;
 

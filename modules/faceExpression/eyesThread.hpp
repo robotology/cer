@@ -29,12 +29,13 @@
 class EyesThread : public yarp::os::PeriodicThread
 {
 public:
-    EyesThread(yarp::os::ResourceFinder& _rf, double _period, cv::Mat& _image, std::mutex& _mutex);
+    EyesThread(yarp::os::ResourceFinder& _rf, std::string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex);
 
     yarp::os::ResourceFinder& m_rf;
     std::mutex& m_mutex;
     std::string m_imagePath;
     cv::Mat&                m_face;
+    std::string m_moduleName;
 
     cv::Mat                 faceRest;
     cv::Mat                 faceBlack;
@@ -43,6 +44,7 @@ public:
     cv::Mat                 blackBar;
     std::vector<cv::Mat>    blinkEye;
 
+    double                  m_last_blink = 0;
     cv::Scalar              barColor;
 
     // Offset values for placing stuff and size
@@ -68,6 +70,7 @@ public:
 
     void activateBlink(bool activate);
     bool updateBlink(int index);
+    void reset();
 
     bool m_doBlink;
 

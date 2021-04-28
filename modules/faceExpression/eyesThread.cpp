@@ -21,11 +21,12 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::math;
 
-EyesThread::EyesThread(ResourceFinder& _rf, double _period, cv::Mat& _image, std::mutex& _mutex) :
+EyesThread::EyesThread(ResourceFinder& _rf, std::string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex) :
     PeriodicThread(_period),
     m_face(_image),
     m_mutex(_mutex),
-    m_rf(_rf)
+    m_rf(_rf),
+    m_moduleName(_moduleName)
 {
     //indexes
     indexes[0] = 0;
@@ -52,19 +53,6 @@ EyesThread::EyesThread(ResourceFinder& _rf, double _period, cv::Mat& _image, std
     delays[8] = 0.065;
     delays[9] = 0.065;
     delays[10] = 0.065;
-
-
-/*
-    // Load image for bars
-    th.blinkBar = imread(std::string(m_imagePath + "/happyBar.bmp").c_str(), cv::IMREAD_COLOR);
-
-    if (th.blinkBar.empty())
-    {
-        yError() << "Image required for hear bars was not found.";
-        ok = false;
-    }
-*/
-
 }
 
 void EyesThread::afterStart(bool s) { }
@@ -112,7 +100,6 @@ bool EyesThread::threadInit()
         return false;
     }
 
-
     // Reset image to black
     faceRest.create(FACE_HEIGHT, FACE_WIDTH, CV_8UC3);
     faceRest.setTo(cv::Scalar(0,0,0));
@@ -121,51 +108,48 @@ bool EyesThread::threadInit()
     ((Mat)blinkEye[indexes[0]]).copyTo(faceRest(cv::Rect(leftEye_x,  leftEye_y,  eyeWidth, eyeHeight)));
     ((Mat)blinkEye[indexes[0]]).copyTo(faceRest(cv::Rect(rightEye_x, rightEye_y, eyeWidth, eyeHeight)));
 
-
-    // Get color from image
-    //barColor = Scalar(blinkBar.at<cv::Vec3b>(0, 0));
-
-    // Create a Mat for maximum bar size @@@@@@
-    //blinkBar.resize(hearBar1_maxLen, barWidth);
-    //blinkBar.setTo(barColor);
-
     // Add nose
     noseBar.copyTo(faceRest(cv::Rect(noseBar0_x, noseBar0_y, noseBar.cols, noseBar.rows)));
 
     faceRest.copyTo(m_face);
 
+    m_last_blink = yarp::os::Time::now();
     return true;
 }
 
 void EyesThread::run()
 {
-    bool  doubleBlink = false;
-    float blink_per_minute = 20;
-
-    float period_percent = ((float)rand() / (float)RAND_MAX);
-    float period_sec = 60 / (blink_per_minute + 6 * period_percent) / 0.1;
-
-    static int shall_blink = 0;
-    float r;
-
-    shall_blink++;
-
-    if (shall_blink >= period_sec)
+    if (m_doBlink==false)
     {
-        m_doBlink = true;
-        r = ((float)rand() / (float)RAND_MAX) * 100;
-        r < 30 ? doubleBlink = true : doubleBlink = false;
-        shall_blink = 0;
+        reset();
+        return;
     }
 
-    if (doubleBlink)
+    bool  doubleBlink = false;
+    bool  executeBlink = false;
+    float blinks_per_minute = 15;
+    float extra_blinks_per_minute = ((float)rand() / (float)RAND_MAX) * 6;
+    float blinks_per_second = (blinks_per_minute+ extra_blinks_per_minute)/60;
+    float period_sec = 1/ blinks_per_second;
+
+    if (yarp::os::Time::now()-m_last_blink >= period_sec)
     {
-        m_doBlink = true;
+        executeBlink = true;
+        float r = ((float)rand() / (float)RAND_MAX) * 100;
+        if (r < 30) //30% of probability of double blink
+        {
+            doubleBlink = true;
+        }
+        else
+        {
+            doubleBlink = false;
+        }
+        m_last_blink = yarp::os::Time::now();
     }
 
     do
     {
-        if(m_doBlink)
+        if(executeBlink)
         {
             index++;
             updateBlink(index);
@@ -173,16 +157,23 @@ void EyesThread::run()
             if(index >= BLINK_STEP_NUM)
             {
                 index = 0;
-                m_doBlink = false;
+                if (doubleBlink==true)
+                {
+                    doubleBlink = false;
+                }
+                else
+                {
+                    executeBlink = false;
+                }
             }
         }
 
-        if(m_doBlink)
+        if(executeBlink)
         {
             yarp::os::Time::delay(delays[index]);
         }
     }
-    while(m_doBlink);
+    while(executeBlink);
 }
 
 bool EyesThread::updateBlink(int index)
@@ -196,6 +187,14 @@ bool EyesThread::updateBlink(int index)
     noseBar.copyTo(m_face(cv::Rect(noseBar0_x, noseBar0_y, noseBar.cols, noseBar.rows)));
 
     return true;
+}
+
+void EyesThread::reset()
+{
+    lock_guard<mutex> lg(m_mutex);
+    ((Mat)blinkEye[indexes[0]]).copyTo(faceRest(cv::Rect(leftEye_x, leftEye_y, eyeWidth, eyeHeight)));
+    ((Mat)blinkEye[indexes[0]]).copyTo(faceRest(cv::Rect(rightEye_x, rightEye_y, eyeWidth, eyeHeight)));
+    noseBar.copyTo(faceRest(cv::Rect(noseBar0_x, noseBar0_y, noseBar.cols, noseBar.rows)));
 }
 
 void EyesThread::threadRelease()

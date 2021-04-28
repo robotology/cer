@@ -29,22 +29,23 @@
 class MouthThread : public yarp::os::PeriodicThread
 {
 public:
-    MouthThread(yarp::os::ResourceFinder& _rf, double _period, cv::Mat& _image, std::mutex& _mutex);
+    MouthThread(yarp::os::ResourceFinder& _rf, std::string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex);
 
     yarp::os::ResourceFinder& m_rf;
     yarp::os::BufferedPort<yarp::dev::audioPlayerStatus > m_audioPlayPort;
     std::mutex& m_mutex;
     std::string m_imagePath;
+    std::string m_moduleName;
 
     cv::Mat&                m_face;
-    cv::Mat                 defaultPlainMouth;
-    cv::Mat                 blackMouth;
+    cv::Mat                 m_defaultPlainMouth;
+    cv::Mat                 m_blackMouth;
 
-    size_t                  mouth_w=16;
-    size_t                  mouth_h=3;
+    size_t                  m_mouth_w=16;
+    size_t                  m_mouth_h=3;
 
-    // Offset values for placing stuff and size
-    int barWidth;
+    bool                    m_doTalk = false;
+    bool                    m_audioIsPlaying = false;
 
     bool threadInit()  override;
     void threadRelease()  override;
@@ -53,12 +54,7 @@ public:
 
     void activateTalk (bool activate);
     void updateTalk();
-
-    bool m_doTalk;
-
-private:
-
-    bool m_audioIsPlaying=false;
+    void reset();
 };
 
 #endif

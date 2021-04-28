@@ -20,11 +20,12 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::math;
 
-DrawingThread::DrawingThread(ResourceFinder& _rf, double _period, cv::Mat& _image, std::mutex& _mutex):
+DrawingThread::DrawingThread(ResourceFinder& _rf, string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex):
                PeriodicThread(_period),
                m_image(_image),
                m_mutex(_mutex),
-               m_rf(_rf)
+               m_rf(_rf),
+               m_moduleName(_moduleName)
 {
 }
 
@@ -32,7 +33,11 @@ void DrawingThread::afterStart(bool s) { }
 
 bool DrawingThread::threadInit()
 {
-    m_imageOutPort.open("/face:o");
+    if (m_imageOutPort.open("/"+ m_moduleName + "/image:o") == false)
+    {
+        yError() << "Cannot open port";
+        return false;
+    }
     return true;
 }
 
@@ -48,17 +53,10 @@ void DrawingThread::run()
 void DrawingThread::threadRelease()
 {
     m_imageOutPort.close();
-/*    lock_guard<mutex> lg(m_mutex);
-    yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = m_imagePort.prepare();
-    img.setExternal(faceRest.data, faceWidth, faceHeight);
-    m_imagePort.writeStrict();*/
 }
-/*
+
 void DrawingThread::blackReset()
 {
     lock_guard<mutex> lg(m_mutex);
-    yarp::sig::ImageOf<yarp::sig::PixelRgb> &img = m_imagePort.prepare();
-    img.setExternal(faceBlack.data, faceWidth, faceHeight);
-    m_imagePort.writeStrict();
+    m_image.setTo((Scalar(0, 0, 0)));
 }
-*/

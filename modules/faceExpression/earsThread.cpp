@@ -16,11 +16,12 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::math;
 
-EarsThread::EarsThread(ResourceFinder& _rf, double _period, cv::Mat& _image, std::mutex& _mutex) :
+EarsThread::EarsThread(ResourceFinder& _rf, string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex) :
     PeriodicThread(_period),
     m_face(_image),
     m_mutex(_mutex),
-    m_rf(_rf)
+    m_rf(_rf),
+    m_moduleName(_moduleName)
 {
 }
 
@@ -51,17 +52,18 @@ bool EarsThread::threadInit()
     earBarR1_x = FACE_WIDTH - 1 - earBar1_x;
 
 
-    m_audioRecPort.open("/ears:i");
-
-    // Get color from image
-    barColor = Scalar(0,255,0);
+    if (m_audioRecPort.open("/"+ m_moduleName+"/earsAudioData:i")==false)
+    {
+        yError() << "Cannot open port";
+        return false;
+    }
 
     // Create a Mat for maximum bar size
-    earBar.create(earBar1_maxLen, barWidth, CV_8UC3);
-    earBar.setTo(barColor);
+    m_earBar.create(earBar1_maxLen, barWidth, CV_8UC3);
+    m_earBar.setTo(m_barColor);
 
-    blackBar.create(32, 32, CV_8UC3); //@@@@@@@
-    blackBar.setTo(Scalar(0, 0, 0));
+    m_blackBar.create(32, barWidth, CV_8UC3);
+    m_blackBar.setTo(Scalar(0, 0, 0));
 
     return true;
 }
@@ -76,15 +78,15 @@ void EarsThread::run()
         m_audioIsRecording=Rstatus->enabled;
     }
 
-    if(1/*m_doBars && m_audioIsRecording()*/)
+    if(m_doBars || m_audioIsRecording)
     {
         percentage = (float)rand() / (float)RAND_MAX;
+        updateBars(percentage);
     }
     else
     {
-        percentage = 1.0;
+        reset();
     }
-    updateBars(percentage);
 }
 
 bool EarsThread::updateBars(float percentage)
@@ -95,18 +97,18 @@ bool EarsThread::updateBars(float percentage)
     earBar1_len = earBar1_minLen + (earBar1_maxLen - earBar1_minLen) *  percentage;
 
     // Reset bars to black
-    blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBar0_x,  0, barWidth, 32)));
-    blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBar1_x,  0, barWidth, 32)));
-    blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBarR0_x, 0, barWidth, 32)));
-    blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBarR1_x, 0, barWidth, 32)));
+    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBar0_x,  0, barWidth, 32)));
+    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBar1_x,  0, barWidth, 32)));
+    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBarR0_x, 0, barWidth, 32)));
+    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBarR1_x, 0, barWidth, 32)));
 
     // Left side
-    earBar(Rect(0, 0, barWidth, earBar0_len)).copyTo  (m_face(cv::Rect(earBar0_x, FACE_HEIGHT - earBar0_y - earBar0_len, barWidth, earBar0_len)));
-    earBar(Rect(0, 0, barWidth, earBar1_len)).copyTo  (m_face(cv::Rect(earBar1_x, FACE_HEIGHT - earBar1_y - earBar1_len, barWidth, earBar1_len)));
+    m_earBar(Rect(0, 0, barWidth, earBar0_len)).copyTo  (m_face(cv::Rect(earBar0_x, FACE_HEIGHT - earBar0_y - earBar0_len, barWidth, earBar0_len)));
+    m_earBar(Rect(0, 0, barWidth, earBar1_len)).copyTo  (m_face(cv::Rect(earBar1_x, FACE_HEIGHT - earBar1_y - earBar1_len, barWidth, earBar1_len)));
 
     // Right side
-    earBar(Rect(0, 0, barWidth, earBar0_len)).copyTo  (m_face(cv::Rect(earBarR0_x, FACE_HEIGHT - earBar0_y - earBar0_len, barWidth, earBar0_len)));
-    earBar(Rect(0, 0, barWidth, earBar1_len)).copyTo  (m_face(cv::Rect(earBarR1_x, FACE_HEIGHT - earBar1_y - earBar1_len, barWidth, earBar1_len)));
+    m_earBar(Rect(0, 0, barWidth, earBar0_len)).copyTo  (m_face(cv::Rect(earBarR0_x, FACE_HEIGHT - earBar0_y - earBar0_len, barWidth, earBar0_len)));
+    m_earBar(Rect(0, 0, barWidth, earBar1_len)).copyTo  (m_face(cv::Rect(earBarR1_x, FACE_HEIGHT - earBar1_y - earBar1_len, barWidth, earBar1_len)));
 
     return true;
 }
@@ -114,4 +116,9 @@ bool EarsThread::updateBars(float percentage)
 void EarsThread::threadRelease()
 {
     m_audioRecPort.close();
+}
+
+void EarsThread::reset()
+{
+    updateBars(0.5);
 }

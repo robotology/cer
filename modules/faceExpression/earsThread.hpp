@@ -29,18 +29,22 @@
 class EarsThread : public yarp::os::PeriodicThread
 {
 public:
-    EarsThread(yarp::os::ResourceFinder& _rf, double _period, cv::Mat& _image, std::mutex& _mutex);
+    EarsThread(yarp::os::ResourceFinder& _rf, std::string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex);
 
     yarp::os::ResourceFinder& m_rf;
     yarp::os::BufferedPort<yarp::dev::audioRecorderStatus > m_audioRecPort;
-    std::mutex& m_mutex;
-    std::string m_imagePath;
-    cv::Mat& m_face;
+    std::mutex&             m_mutex;
+    std::string             m_imagePath;
+    cv::Mat&                m_face;
+    std::string             m_moduleName;
 
-    cv::Mat                 earBar;
-    cv::Mat                 blackBar;
+    cv::Mat                 m_earBar;
+    cv::Mat                 m_blackBar;
 
-    cv::Scalar              barColor;   // Color of bar as loaded from file
+    cv::Scalar              m_barColor = cv::Scalar(0, 255, 0);
+
+    bool m_doBars = false;
+    bool m_audioIsRecording = false;
 
     // Offset values for placing stuff and size
     int barWidth = 1;
@@ -66,10 +70,7 @@ public:
 
     void activateBars (bool activate);
     bool updateBars(float percentage);
-
-private:
-    bool m_doBars=true;
-    bool m_audioIsRecording=false;
+    void reset();
 };
 
 #endif

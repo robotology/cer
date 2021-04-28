@@ -20,11 +20,12 @@ using namespace std;
 using namespace yarp::os;
 using namespace yarp::math;
 
-MouthThread::MouthThread(ResourceFinder& _rf, double _period, cv::Mat& _image, std::mutex& _mutex) :
+MouthThread::MouthThread(ResourceFinder& _rf, string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex) :
     PeriodicThread(_period),
     m_face(_image),
     m_mutex(_mutex),
-    m_rf(_rf)
+    m_rf(_rf),
+    m_moduleName(_moduleName)
 {
 }
 
@@ -38,13 +39,17 @@ void MouthThread::activateTalk(bool activate)
 
 bool MouthThread::threadInit()
 {
-    m_audioPlayPort.open("/mouth:i");
+    if (m_audioPlayPort.open("/"+m_moduleName+"/mouthAudioData:i")==false)
+    {
+        yError() << "Cannot open port";
+        return false;
+    }
 
-    blackMouth.create(3, 16, CV_8UC3);
-    blackMouth.setTo(Scalar(0, 0, 0));
+    m_blackMouth.create(3, 16, CV_8UC3);
+    m_blackMouth.setTo(Scalar(0, 0, 0));
 
-    defaultPlainMouth.create(3, 16, CV_8UC3);
-    blackMouth.setTo(Scalar(0, 0, 0));
+    m_defaultPlainMouth.create(3, 16, CV_8UC3);
+    m_defaultPlainMouth.setTo(Scalar(0, 0, 0));
 
     return true;
 }
@@ -53,7 +58,7 @@ void MouthThread::run()
 {
     lock_guard<mutex> lg(m_mutex);
 
-    //get the satus
+    //get the status
     yarp::dev::audioPlayerStatus* Pstatus = m_audioPlayPort.read(false);
     if (Pstatus)
     {
@@ -67,21 +72,21 @@ void MouthThread::run()
     }
     else
     {
-        defaultPlainMouth(Rect(0, 0, mouth_w, mouth_h)).copyTo(m_face(cv::Rect(FACE_WIDTH / 2 - mouth_w / 2, FACE_HEIGHT - mouth_h, mouth_w, mouth_h)));
+        reset();
     }
 }
 
 void MouthThread::updateTalk()
 {
     //clear the mouth area
-    blackMouth(Rect(0, 0, mouth_w, mouth_h)).copyTo(m_face(cv::Rect(FACE_WIDTH/2- mouth_w /2, FACE_HEIGHT - mouth_h, mouth_w, mouth_h)));
+    m_blackMouth(Rect(0, 0, m_mouth_w, m_mouth_h)).copyTo(m_face(cv::Rect(FACE_WIDTH/2- m_mouth_w /2, FACE_HEIGHT - m_mouth_h, m_mouth_w, m_mouth_h)));
 
     //draw the mouth
     int pixels = FACE_HEIGHT >> 1;
     int y = FACE_HEIGHT - 2;
     for (int x = (FACE_WIDTH - pixels) >> 1; x < (FACE_WIDTH + pixels) >> 1; x++)
     {
-        int y_ = y + round(Rand::scalar(-1, 1));
+        int y_ = y + int(round(Rand::scalar(-1, 1)));
         m_face.at<cv::Vec3b>(y_, x)[0] = 0;
         m_face.at<cv::Vec3b>(y_, x)[1] = 255;
         m_face.at<cv::Vec3b>(y_, x)[2] = 0;
@@ -91,4 +96,9 @@ void MouthThread::updateTalk()
 void MouthThread::threadRelease()
 {
     m_audioPlayPort.close();
+}
+
+void MouthThread::reset()
+{
+    m_defaultPlainMouth(Rect(0, 0, m_mouth_w, m_mouth_h)).copyTo(m_face(cv::Rect(FACE_WIDTH / 2 - m_mouth_w / 2, FACE_HEIGHT - m_mouth_h, m_mouth_w, m_mouth_h)));
 }

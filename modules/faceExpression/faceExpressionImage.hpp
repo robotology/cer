@@ -1,19 +1,15 @@
+#ifndef FACE_EXPRESSION_IMAGE_HPP
+#define FACE_EXPRESSION_IMAGE_HPP
+
 #include <mutex>
 #include <string>
 #include <iostream>
 
-#include <opencv2/core/version.hpp>
-#include <opencv2/core/mat.hpp>
-
-#include <yarp/sig/Image.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/PeriodicThread.h>
-#include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
-#include <yarp/dev/audioRecorderStatus.h>
-#include <yarp/dev/audioPlayerStatus.h>
 #include "drawingThread.hpp"
 #include "earsThread.hpp"
 #include "mouthThread.hpp"
@@ -49,3 +45,4 @@ public:
     bool   updateModule();
 };
 
+#endif
