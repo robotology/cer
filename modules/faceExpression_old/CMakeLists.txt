@@ -4,11 +4,11 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
 
-project(faceExpressionImage)
+project(faceExpressionImage_old)
 
-option(ENABLE_faceExpressionImage "Compile blinking module for face display" false)
+option(ENABLE_faceExpressionImage_old "Compile blinking module for face display" false)
 
-if(ENABLE_faceExpressionImage)
+if(ENABLE_faceExpressionImage_old)
 
     ## Use opencv
     find_package(OpenCV)
@@ -18,8 +18,8 @@ if(ENABLE_faceExpressionImage)
     endif(NOT OpenCV_FOUND)
 
 
-    file(GLOB folder_source *.cpp)
-    file(GLOB folder_header *.hpp)
+    file(GLOB folder_source main.cpp faceExpressionImage.cpp)
+    file(GLOB folder_header faceExpressionImage.hpp)
 
     source_group("Source Files" FILES ${folder_source})
     source_group("Header Files" FILES ${folder_header})
@@ -34,4 +34,4 @@ if(ENABLE_faceExpressionImage)
 
     install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
-endif(ENABLE_faceExpressionImage)
+endif(ENABLE_faceExpressionImage_old)

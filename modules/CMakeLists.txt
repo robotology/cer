@@ -16,3 +16,5 @@ add_subdirectory(tripodJoystickControl)
 add_subdirectory(robotJoystickControl)
 add_subdirectory(textimage)
 add_subdirectory(faceExpression)
+
+add_subdirectory(faceExpression_old)
