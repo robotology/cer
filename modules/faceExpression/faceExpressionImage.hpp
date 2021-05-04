@@ -37,12 +37,24 @@ private:
 
 public:
     FaceExpressionImageModule();
-    bool configure(yarp::os::ResourceFinder &rf);
-    bool respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply);
-    bool close();
-    bool interruptModule();
-    double getPeriod();
-    bool   updateModule();
+    bool configure(yarp::os::ResourceFinder &rf) override;
+    bool respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply) override;
+    bool close() override;
+    bool interruptModule() override;
+    double getPeriod() override;
+    bool   updateModule() override;
+
+private:
+    bool respondString(const yarp::os::Bottle& command, yarp::os::Bottle& reply);
+    bool respondVocab(const yarp::os::Bottle& command, yarp::os::Bottle& reply);
+
+private:
+    bool start_blinking(bool val);
+    bool start_talking(bool val);
+    bool start_listening(bool val);
+    bool reset_default();
+    bool black();
+
 };
 
 #endif

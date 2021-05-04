@@ -19,7 +19,7 @@ using namespace yarp::math;
 EarsThread::EarsThread(ResourceFinder& _rf, string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex) :
     PeriodicThread(_period),
     m_face(_image),
-    m_mutex(_mutex),
+    m_drawing_mutex(_mutex),
     m_rf(_rf),
     m_moduleName(_moduleName)
 {
@@ -29,28 +29,32 @@ void EarsThread::afterStart(bool s) { }
 
 void EarsThread::activateBars(bool activate)
 {
-    lock_guard<mutex> lg(m_mutex);
+    lock_guard<recursive_mutex> lg(m_methods_mutex);
     m_doBars = activate;
 }
 
 bool EarsThread::threadInit()
 {
     // Check for optional params
-    earBar0_x = m_rf.check("earBar0_x", Value(1), "horizontal offset from left border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
-    earBar0_y = m_rf.check("earBar0_y", Value(6), "vertical offset from bottom border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    earBarL0_x = m_rf.check("earBar0_x", Value(1), "horizontal offset from left border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    earBarR0_x = FACE_WIDTH - 1 - earBarL0_x;
+
+    earBarL0_y = m_rf.check("earBar0_y", Value(6), "vertical offset from bottom border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    earBarR0_y = earBarL0_y;
+
     earBar0_minLen = m_rf.check("earBar0_minLen", Value(3), "minimum length  of outer ear bar").asInt();
     earBar0_maxLen = m_rf.check("earBar0_maxLen", Value(18), "maximum length  of outer ear bar").asInt();
     earBar0_len = m_rf.check("earBar0_len", Value(10), "starting length of outer ear bar").asInt();
 
-    earBar1_x = m_rf.check("earBar1_x", Value(3), "horizontal offset from left border of inner ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
-    earBar1_y = m_rf.check("earBar1_y", Value(6), "vertical offset from bottom border of inner ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    earBarL1_x = m_rf.check("earBar1_x", Value(3), "horizontal offset from left border of inner ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    earBarR1_x = FACE_WIDTH - 1 - earBarL1_x;
+
+    earBarL1_y = m_rf.check("earBar1_y", Value(6), "vertical offset from bottom border of inner ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    earBarR1_y = earBarL1_y;
+
     earBar1_minLen = m_rf.check("earBar1_minLen", Value(4), "minimum length  of inner ear bar").asInt();
     earBar1_maxLen = m_rf.check("earBar1_maxLen", Value(19), "maximum length  of inner ear bar").asInt();
     earBar1_len = m_rf.check("earBar1_len", Value(11), "starting length of inner ear bar").asInt();
-
-    earBarR0_x = FACE_WIDTH - 1 - earBar0_x;
-    earBarR1_x = FACE_WIDTH - 1 - earBar1_x;
-
 
     if (m_audioRecPort.open("/"+ m_moduleName+"/earsAudioData:i")==false)
     {
@@ -60,16 +64,25 @@ bool EarsThread::threadInit()
 
     // Create a Mat for maximum bar size
     m_earBar.create(earBar1_maxLen, barWidth, CV_8UC3);
-    m_earBar.setTo(m_barColor);
+    m_earBar.setTo(m_earsDefaultColor);
 
     m_blackBar.create(32, barWidth, CV_8UC3);
     m_blackBar.setTo(Scalar(0, 0, 0));
 
+    this->resetToDefault();
     return true;
 }
 
 void EarsThread::run()
 {
+    lock_guard<mutex> lg(recursive_mutex);
+
+    if (m_drawEnable == false)
+    {
+        clearWithBlack();
+        return;
+    }
+
     float percentage = 0.5;
 
     yarp::dev::audioRecorderStatus* Rstatus = m_audioRecPort.read(false);
@@ -85,30 +98,31 @@ void EarsThread::run()
     }
     else
     {
-        reset();
+        updateBars(0.5);
     }
+
 }
 
 bool EarsThread::updateBars(float percentage)
 {
-    lock_guard<mutex> lg(m_mutex);
+    lock_guard<mutex> faceguard(m_drawing_mutex);
 
     earBar0_len = earBar0_minLen + (earBar0_maxLen - earBar0_minLen) *  percentage;
     earBar1_len = earBar1_minLen + (earBar1_maxLen - earBar1_minLen) *  percentage;
 
     // Reset bars to black
-    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBar0_x,  0, barWidth, 32)));
-    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBar1_x,  0, barWidth, 32)));
+    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBarL0_x,  0, barWidth, 32)));
+    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBarL1_x,  0, barWidth, 32)));
     m_blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBarR0_x, 0, barWidth, 32)));
     m_blackBar(Rect(0, 0, barWidth, 32)).copyTo  (m_face(cv::Rect(earBarR1_x, 0, barWidth, 32)));
 
     // Left side
-    m_earBar(Rect(0, 0, barWidth, earBar0_len)).copyTo  (m_face(cv::Rect(earBar0_x, FACE_HEIGHT - earBar0_y - earBar0_len, barWidth, earBar0_len)));
-    m_earBar(Rect(0, 0, barWidth, earBar1_len)).copyTo  (m_face(cv::Rect(earBar1_x, FACE_HEIGHT - earBar1_y - earBar1_len, barWidth, earBar1_len)));
+    m_earBar(Rect(0, 0, barWidth, earBar0_len)).copyTo  (m_face(cv::Rect(earBarL0_x, FACE_HEIGHT - earBarL0_y - earBar0_len, barWidth, earBar0_len)));
+    m_earBar(Rect(0, 0, barWidth, earBar1_len)).copyTo  (m_face(cv::Rect(earBarL1_x, FACE_HEIGHT - earBarL1_y - earBar1_len, barWidth, earBar1_len)));
 
     // Right side
-    m_earBar(Rect(0, 0, barWidth, earBar0_len)).copyTo  (m_face(cv::Rect(earBarR0_x, FACE_HEIGHT - earBar0_y - earBar0_len, barWidth, earBar0_len)));
-    m_earBar(Rect(0, 0, barWidth, earBar1_len)).copyTo  (m_face(cv::Rect(earBarR1_x, FACE_HEIGHT - earBar1_y - earBar1_len, barWidth, earBar1_len)));
+    m_earBar(Rect(0, 0, barWidth, earBar0_len)).copyTo  (m_face(cv::Rect(earBarR0_x, FACE_HEIGHT - earBarR0_y - earBar0_len, barWidth, earBar0_len)));
+    m_earBar(Rect(0, 0, barWidth, earBar1_len)).copyTo  (m_face(cv::Rect(earBarR1_x, FACE_HEIGHT - earBarR1_y - earBar1_len, barWidth, earBar1_len)));
 
     return true;
 }
@@ -118,7 +132,41 @@ void EarsThread::threadRelease()
     m_audioRecPort.close();
 }
 
-void EarsThread::reset()
+void EarsThread::resetToDefault()
 {
+    lock_guard<mutex> lg(recursive_mutex);
+    m_doBars = false;
+    m_audioIsRecording = false;
+    m_earBar.setTo(m_earsDefaultColor);
     updateBars(0.5);
+}
+
+void EarsThread::setColor(float vr, float vg, float vb)
+{
+    lock_guard<mutex> lg(recursive_mutex);
+    m_earsCurrentColor = Scalar(vr, vg, vb);
+    m_earBar.setTo(m_earsCurrentColor);
+}
+
+void EarsThread::clearWithBlack()
+{
+    lock_guard<mutex> lg(recursive_mutex);
+    lock_guard<mutex> faceguard(m_drawing_mutex);
+    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo(m_face(cv::Rect(earBarL0_x, 0, barWidth, 32)));
+    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo(m_face(cv::Rect(earBarL1_x, 0, barWidth, 32)));
+    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo(m_face(cv::Rect(earBarR0_x, 0, barWidth, 32)));
+    m_blackBar(Rect(0, 0, barWidth, 32)).copyTo(m_face(cv::Rect(earBarR1_x, 0, barWidth, 32)));
+}
+
+void EarsThread::enableDrawing(bool val)
+{
+    if (val)
+    {
+        m_drawEnable = true;
+    }
+    else
+    {
+        m_drawEnable=false;
+        clearWithBlack();
+    }
 }

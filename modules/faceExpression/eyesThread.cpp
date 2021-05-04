@@ -13,8 +13,6 @@
 
 
 #define BLINK_STEP_NUM  10
-#define FACE_WIDTH      80
-#define FACE_HEIGHT     32
 
 using namespace cv;
 using namespace std;
@@ -24,7 +22,7 @@ using namespace yarp::math;
 EyesThread::EyesThread(ResourceFinder& _rf, std::string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex) :
     PeriodicThread(_period),
     m_face(_image),
-    m_mutex(_mutex),
+    m_drawing_mutex(_mutex),
     m_rf(_rf),
     m_moduleName(_moduleName)
 {
@@ -59,7 +57,7 @@ void EyesThread::afterStart(bool s) { }
 
 void EyesThread::activateBlink(bool activate)
 {
-    lock_guard<mutex> lg(m_mutex);
+    lock_guard<mutex> lg(recursive_mutex);
     m_doBlink = activate;
 }
 
@@ -101,27 +99,35 @@ bool EyesThread::threadInit()
     }
 
     // Reset image to black
+    faceBlack.create(FACE_HEIGHT, FACE_WIDTH, CV_8UC3);
+    faceBlack.setTo(cv::Scalar(0, 0, 0));
+
     faceRest.create(FACE_HEIGHT, FACE_WIDTH, CV_8UC3);
     faceRest.setTo(cv::Scalar(0,0,0));
 
     // Copy eyes
     ((Mat)blinkEye[indexes[0]]).copyTo(faceRest(cv::Rect(leftEye_x,  leftEye_y,  eyeWidth, eyeHeight)));
     ((Mat)blinkEye[indexes[0]]).copyTo(faceRest(cv::Rect(rightEye_x, rightEye_y, eyeWidth, eyeHeight)));
-
     // Add nose
     noseBar.copyTo(faceRest(cv::Rect(noseBar0_x, noseBar0_y, noseBar.cols, noseBar.rows)));
 
-    faceRest.copyTo(m_face);
-
-    m_last_blink = yarp::os::Time::now();
+    this->resetToDefault();
     return true;
 }
 
 void EyesThread::run()
 {
-    if (m_doBlink==false)
+    lock_guard<mutex> lg(recursive_mutex);
+
+    if (m_drawEnable == false)
     {
-        reset();
+        clearWithBlack();
+        return;
+    }
+
+    if (m_doBlink ==false)
+    {
+        updateBlink(0);
         return;
     }
 
@@ -178,7 +184,8 @@ void EyesThread::run()
 
 bool EyesThread::updateBlink(int index)
 {
-    lock_guard<mutex> lg(m_mutex);
+    lock_guard<mutex> faceguard(m_drawing_mutex);
+
     // Copy eyes
     ((Mat)blinkEye[indexes[index]]).copyTo(m_face(cv::Rect(leftEye_x,  leftEye_y,  eyeWidth, eyeHeight)));
     ((Mat)blinkEye[indexes[index]]).copyTo(m_face(cv::Rect(rightEye_x, rightEye_y, eyeWidth, eyeHeight)));
@@ -189,14 +196,35 @@ bool EyesThread::updateBlink(int index)
     return true;
 }
 
-void EyesThread::reset()
+void EyesThread::resetToDefault(bool _blink)
 {
-    lock_guard<mutex> lg(m_mutex);
-    ((Mat)blinkEye[indexes[0]]).copyTo(faceRest(cv::Rect(leftEye_x, leftEye_y, eyeWidth, eyeHeight)));
-    ((Mat)blinkEye[indexes[0]]).copyTo(faceRest(cv::Rect(rightEye_x, rightEye_y, eyeWidth, eyeHeight)));
-    noseBar.copyTo(faceRest(cv::Rect(noseBar0_x, noseBar0_y, noseBar.cols, noseBar.rows)));
+    lock_guard<mutex> lg(recursive_mutex);
+    lock_guard<mutex> faceguard(m_drawing_mutex);
+    m_doBlink=_blink;
+    m_last_blink = yarp::os::Time::now();
+    faceRest.copyTo(m_face);
 }
 
 void EyesThread::threadRelease()
 {
+}
+
+void EyesThread::clearWithBlack()
+{
+    lock_guard<mutex> lg(recursive_mutex);
+    lock_guard<mutex> faceguard(m_drawing_mutex);
+    faceBlack.copyTo(m_face(cv::Rect(0, 0, FACE_WIDTH, FACE_HEIGHT)));
+}
+
+void EyesThread::enableDrawing(bool val)
+{
+    if (val)
+    {
+        m_drawEnable = true;
+    }
+    else
+    {
+        m_drawEnable = false;
+        clearWithBlack();
+    }
 }

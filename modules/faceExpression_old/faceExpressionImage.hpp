@@ -102,11 +102,11 @@ private:
 
 public:
     FaceExpressionImageModule();
-    bool configure(yarp::os::ResourceFinder &rf);
-    bool respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply);
-    bool close();
-    bool interruptModule();
-    double getPeriod();
-    bool   updateModule();
+    bool configure(yarp::os::ResourceFinder &rf) override;
+    bool respond(const yarp::os::Bottle& command, yarp::os::Bottle& reply) override;
+    bool close() override;
+    bool interruptModule() override;
+    double getPeriod() override;
+    bool   updateModule() override;
 };
 

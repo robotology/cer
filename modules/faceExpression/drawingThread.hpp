@@ -32,12 +32,14 @@ class DrawingThread : public yarp::os::PeriodicThread
 public:
     DrawingThread(yarp::os::ResourceFinder& _rf, std::string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex);
 
+private:
     yarp::os::ResourceFinder& m_rf;
     yarp::os::BufferedPort<yarp::sig::ImageOf<yarp::sig::PixelRgb>> m_imageOutPort;
     std::mutex&             m_mutex;
     cv::Mat& m_image;
     std::string m_moduleName;
 
+public:
     bool threadInit()  override;
     void threadRelease()  override;
     void afterStart(bool s)  override;

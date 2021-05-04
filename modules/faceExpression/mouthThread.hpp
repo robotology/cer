@@ -31,11 +31,13 @@ class MouthThread : public yarp::os::PeriodicThread
 public:
     MouthThread(yarp::os::ResourceFinder& _rf, std::string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex);
 
+private:
     yarp::os::ResourceFinder& m_rf;
     yarp::os::BufferedPort<yarp::dev::audioPlayerStatus > m_audioPlayPort;
-    std::mutex& m_mutex;
-    std::string m_imagePath;
-    std::string m_moduleName;
+    std::mutex&             m_drawing_mutex;
+    std::recursive_mutex    m_methods_mutex;
+    std::string             m_imagePath;
+    std::string             m_moduleName;
 
     cv::Mat&                m_face;
     cv::Mat                 m_defaultPlainMouth;
@@ -46,15 +48,25 @@ public:
 
     bool                    m_doTalk = false;
     bool                    m_audioIsPlaying = false;
+    bool                    m_drawEnable = true;
 
+    cv::Scalar              m_mouthDefaultColor = cv::Scalar(0, 128, 0);
+    cv::Scalar              m_mouthCurrentColor = cv::Scalar(0, 128, 0);
+
+    void updateTalk();
+    void clearWithBlack();
+
+public:
     bool threadInit()  override;
     void threadRelease()  override;
     void afterStart(bool s)  override;
     void run() override;
 
-    void activateTalk (bool activate);
-    void updateTalk();
-    void reset();
+    void activateTalk(bool activate);
+    void resetToDefault();
+    void enableDrawing(bool activate);
+    void setColor(float vr, float vg, float vb);
+
 };
 
 #endif

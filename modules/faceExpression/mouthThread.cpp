@@ -23,7 +23,7 @@ using namespace yarp::math;
 MouthThread::MouthThread(ResourceFinder& _rf, string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex) :
     PeriodicThread(_period),
     m_face(_image),
-    m_mutex(_mutex),
+    m_drawing_mutex(_mutex),
     m_rf(_rf),
     m_moduleName(_moduleName)
 {
@@ -33,7 +33,7 @@ void MouthThread::afterStart(bool s) { }
 
 void MouthThread::activateTalk(bool activate)
 {
-    lock_guard<mutex> lg(m_mutex);
+    lock_guard<recursive_mutex> lg(m_methods_mutex);
     m_doTalk = activate;
 }
 
@@ -51,12 +51,14 @@ bool MouthThread::threadInit()
     m_defaultPlainMouth.create(3, 16, CV_8UC3);
     m_defaultPlainMouth.setTo(Scalar(0, 0, 0));
 
+    resetToDefault();
+
     return true;
 }
 
 void MouthThread::run()
 {
-    lock_guard<mutex> lg(m_mutex);
+    lock_guard<recursive_mutex> lg(m_methods_mutex);
 
     //get the status
     yarp::dev::audioPlayerStatus* Pstatus = m_audioPlayPort.read(false);
@@ -70,14 +72,18 @@ void MouthThread::run()
     {
         updateTalk();
     }
-    else
-    {
-        reset();
-    }
 }
 
 void MouthThread::updateTalk()
 {
+    lock_guard<mutex> faceguard(m_drawing_mutex);
+
+    if (m_drawEnable == false)
+    {
+        clearWithBlack();
+        return;
+    }
+
     //clear the mouth area
     m_blackMouth(Rect(0, 0, m_mouth_w, m_mouth_h)).copyTo(m_face(cv::Rect(FACE_WIDTH/2- m_mouth_w /2, FACE_HEIGHT - m_mouth_h, m_mouth_w, m_mouth_h)));
 
@@ -87,9 +93,9 @@ void MouthThread::updateTalk()
     for (int x = (FACE_WIDTH - pixels) >> 1; x < (FACE_WIDTH + pixels) >> 1; x++)
     {
         int y_ = y + int(round(Rand::scalar(-1, 1)));
-        m_face.at<cv::Vec3b>(y_, x)[0] = 0;
-        m_face.at<cv::Vec3b>(y_, x)[1] = 255;
-        m_face.at<cv::Vec3b>(y_, x)[2] = 0;
+        m_face.at<cv::Vec3b>(y_, x)[0] = m_mouthCurrentColor[0];
+        m_face.at<cv::Vec3b>(y_, x)[1] = m_mouthCurrentColor[1];
+        m_face.at<cv::Vec3b>(y_, x)[2] = m_mouthCurrentColor[2];
     }
 }
 
@@ -98,7 +104,38 @@ void MouthThread::threadRelease()
     m_audioPlayPort.close();
 }
 
-void MouthThread::reset()
+void MouthThread::resetToDefault()
 {
+    lock_guard<recursive_mutex> lg(m_methods_mutex);
+    lock_guard<mutex> faceguard(m_drawing_mutex);
+    m_mouthCurrentColor = m_mouthDefaultColor;
+    m_defaultPlainMouth.setTo(Scalar(0, 0, 0));
     m_defaultPlainMouth(Rect(0, 0, m_mouth_w, m_mouth_h)).copyTo(m_face(cv::Rect(FACE_WIDTH / 2 - m_mouth_w / 2, FACE_HEIGHT - m_mouth_h, m_mouth_w, m_mouth_h)));
+}
+
+void MouthThread::setColor(float vr, float vg, float vb)
+{
+    lock_guard<recursive_mutex> lg(m_methods_mutex);
+    m_mouthCurrentColor = Scalar(vr, vg, vb);
+    m_defaultPlainMouth.setTo(m_mouthCurrentColor);
+}
+
+void MouthThread::clearWithBlack()
+{
+    lock_guard<recursive_mutex> lg(m_methods_mutex);
+    lock_guard<mutex> faceguard(m_drawing_mutex);
+    m_blackMouth(Rect(0, 0, m_mouth_w, m_mouth_h)).copyTo(m_face(cv::Rect(FACE_WIDTH / 2 - m_mouth_w / 2, FACE_HEIGHT - m_mouth_h, m_mouth_w, m_mouth_h)));
+}
+
+void MouthThread::enableDrawing(bool val)
+{
+    if (val)
+    {
+        m_drawEnable = true;
+    }
+    else
+    {
+        m_drawEnable = false;
+        clearWithBlack();
+    }
 }

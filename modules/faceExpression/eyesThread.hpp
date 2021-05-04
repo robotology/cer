@@ -31,11 +31,13 @@ class EyesThread : public yarp::os::PeriodicThread
 public:
     EyesThread(yarp::os::ResourceFinder& _rf, std::string _moduleName, double _period, cv::Mat& _image, std::mutex& _mutex);
 
+private:
     yarp::os::ResourceFinder& m_rf;
-    std::mutex& m_mutex;
-    std::string m_imagePath;
+    std::mutex&             m_drawing_mutex;
+    std::recursive_mutex    m_methods_mutex;
+    std::string             m_imagePath;
     cv::Mat&                m_face;
-    std::string m_moduleName;
+    std::string             m_moduleName;
 
     cv::Mat                 faceRest;
     cv::Mat                 faceBlack;
@@ -45,7 +47,9 @@ public:
     std::vector<cv::Mat>    blinkEye;
 
     double                  m_last_blink = 0;
-    cv::Scalar              barColor;
+
+    cv::Scalar              noseDefaultColor = cv::Scalar(0, 128, 0);
+    cv::Scalar              noseCurrentColor = cv::Scalar(0, 128, 0);
 
     // Offset values for placing stuff and size
     int eyeWidth=21;
@@ -63,21 +67,24 @@ public:
     int noseBar0_y=16;
     int noseBar0_maxLen8;
 
+public:
     bool threadInit()  override;
     void threadRelease()  override;
     void afterStart(bool s)  override;
     void run() override;
 
     void activateBlink(bool activate);
-    bool updateBlink(int index);
-    void reset();
-
-    bool m_doBlink;
+    void enableDrawing(bool activate);
+    void resetToDefault(bool _blink=true);
 
 private:
+    bool m_doBlink = false;
+    bool m_drawEnable = true;
     int index=0;
     int indexes[11];
     float delays[11];
+    bool updateBlink(int index);
+    void clearWithBlack();
 };
 
 #endif
