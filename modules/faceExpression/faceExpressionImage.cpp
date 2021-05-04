@@ -179,12 +179,12 @@ bool FaceExpressionImageModule::start_blinking(bool val)
 
 bool FaceExpressionImageModule::start_talking(bool val)
 {
-    if (m_thread_ears)
+    if (m_thread_mouth)
     {
-        m_thread_ears->activateBars(val);
+        m_thread_mouth->activateTalk(val);
         if (val == false)
         {
-            m_thread_ears->resetToDefault();
+            m_thread_mouth->resetToDefault();
         }
     }
     return true;
@@ -192,12 +192,12 @@ bool FaceExpressionImageModule::start_talking(bool val)
 
 bool FaceExpressionImageModule::start_listening(bool val)
 {
-    if (m_thread_mouth)
+    if (m_thread_ears)
     {
-        m_thread_mouth->activateTalk(val);
+        m_thread_ears->activateBars(val);
         if (val == false)
         {
-            m_thread_mouth->resetToDefault();
+            m_thread_ears->resetToDefault();
         }
     }
     return true;
