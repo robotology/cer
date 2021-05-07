@@ -109,19 +109,32 @@ typedef struct auxdisp_regs {
 class ImagePort : public yarp::os::BufferedPort<yarp::sig::FlexImage>
 {
 private:
+    int whichport;
     int _fd;
     std::mutex &mtx;
     using BufferedPort<yarp::sig::FlexImage>::onRead;
+    double* lastReceived;
 
 public:
-    ImagePort(std::mutex &_mtx) : mtx(_mtx) { _fd=0; };
+    ImagePort(int _whichport, double* _rectimebuf, std::mutex &_mtx) : mtx(_mtx)
+    {
+       lastReceived= _rectimebuf;
+       whichport = _whichport;
+        _fd=0;
+    };
 
     bool init(int fd)   { _fd = fd;  return true;}
 
     virtual void onRead(yarp::sig::FlexImage& img)
     {
+        if (whichport==1 && yarp::os::Time::now()-lastReceived[0]<1.0)
+        {
+            yDebug() <<  "port" << whichport << "low priority image was skipped";
+            return;
+        } 
+              
         // process data in b
-        yDebug() <<  "Got a new image of size: w " << img.width() << " h " << img.height() << " bytesize " <<img.getRawImageSize();
+        yDebug() <<  "Got a new image on port" << whichport << "with size: w " << img.width() << " h " << img.height() << " bytesize " <<img.getRawImageSize();
 
         if( (img.width() != IMAGE_WIDTH) || (img.height() != IMAGE_HEIGHT) || img.getPixelCode() != VOCAB_PIXEL_RGB)
         mtx.lock();
@@ -131,8 +144,11 @@ public:
                 yError() << "Failed setting image to display";
         }
         else
+        {
             yError() << "Display not available or initted";
+        }
         mtx.unlock();
+        lastReceived[whichport]=yarp::os::Time::now();
     }
 };
 
@@ -159,7 +175,9 @@ public:
 private:
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
     yarp::os::Port          rpcPort;
-    ImagePort               imagePort;      // receive images to be displayed
+    double                  lastReceived[10];
+    ImagePort               imagePort1;      // receive images to be displayed
+    ImagePort               imagePort2;
 
     std::string             rootPath;
     std::string             deviceFileName;

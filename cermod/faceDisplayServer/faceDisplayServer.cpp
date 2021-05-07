@@ -33,7 +33,8 @@ using namespace std;
 // Constructor used when there is only one output port
 FaceDisplayServer::FaceDisplayServer(): sensorId("low-res display"),
                                         selfTest(0),
-                                        imagePort(mtx),
+                                        imagePort1(0,lastReceived,mtx),
+                                        imagePort2(1,lastReceived,mtx),
                                         face(IMAGE_HEIGHT, IMAGE_WIDTH, CV_8UC3, cv::Scalar(0,0,0)),
                                         faceExpression(FACE_EXPR),
                                         moveUp(0),
@@ -72,13 +73,14 @@ std::string FaceDisplayServer::getId()
 bool FaceDisplayServer::open(yarp::os::Searchable &config)
 {
     Property params;
-    std::string   rpcPortName, imagePortName;
+    std::string   rpcPortName, imagePortName1, imagePortName2;
 
     params.fromString(config.toString().c_str());
     yTrace() << "FaceDisplayServer params are: " << config.toString();
 
     rpcPortName   = config.check("name", yarp::os::Value("/robot/faceDisplay/rpc"), "Name of the port receiving input commands").toString();
-    imagePortName = config.check("name", yarp::os::Value("/robot/faceDisplay/image:i"), "Name of the port receiving images").toString();
+    imagePortName1 = config.check("name", yarp::os::Value("/robot/faceDisplay/image:i"), "Name of the port receiving images").toString();
+    imagePortName2 = config.check("name2", yarp::os::Value("/robot/faceDisplay/image2:i"), "Name of the port receiving images").toString();
 
     deviceFileName = config.check("display", yarp::os::Value("/dev/auxdisp"), "Device file to use in the system, i.e. '/dev/auxdisp'").toString();
     rootPath = config.check("path", yarp::os::Value("/home/r1-user/AUXDISP"), "Where images are located").toString();
@@ -89,10 +91,16 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
         return false;
     }
 
-    imagePort.useCallback();                    // input images will go to onRead() callback
-    if(!imagePort.open(imagePortName))
+    imagePort1.useCallback();                    // input images will go to onRead() callback
+    if(!imagePort1.open(imagePortName1))
     {
-        yError() << "Failed to open port " << imagePortName.c_str();
+        yError() << "Failed to open port " << imagePortName1.c_str();
+        return false;
+    }
+    imagePort2.useCallback();                    // input images will go to onRead() callback
+    if(!imagePort2.open(imagePortName2))
+    {
+        yError() << "Failed to open port " << imagePortName2.c_str();
         return false;
     }
 
@@ -150,7 +158,8 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
     if(-1 == ::write(fd, black.data, black.total()*3) )
         yError() << "Failed setting image to display";
     mtx.unlock();
-    imagePort.init(fd);
+    imagePort1.init(fd);
+    imagePort2.init(fd);
 
     // Load all required pieces of image
     bool ok = true;
