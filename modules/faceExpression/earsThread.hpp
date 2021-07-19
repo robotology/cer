@@ -15,8 +15,8 @@
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
-#include <yarp/dev/audioRecorderStatus.h>
-#include <yarp/dev/audioPlayerStatus.h>
+#include <yarp/dev/AudioRecorderStatus.h>
+#include <yarp/dev/AudioPlayerStatus.h>
 
 #define VOCAB_AUDIO_START       yarp::os::createVocab('a','s','t','a')
 #define VOCAB_AUDIO_STOP        yarp::os::createVocab('a','s','t','o')
@@ -33,7 +33,7 @@ public:
 
 private:
     yarp::os::ResourceFinder& m_rf;
-    yarp::os::BufferedPort<yarp::dev::audioRecorderStatus > m_audioRecPort;
+    yarp::os::BufferedPort<yarp::dev::AudioRecorderStatus > m_audioRecPort;
     std::mutex&             m_drawing_mutex;
     std::recursive_mutex    m_methods_mutex;
     std::string             m_imagePath;

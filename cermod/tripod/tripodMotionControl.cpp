@@ -441,9 +441,9 @@ tripodMotionControl::tripodMotionControl() :
 //     ImplementPidControl(this),
 //     ImplementVelocityControl(this),
     ImplementEncodersTimed(this),
-    ImplementPositionControl2(this),
-    ImplementVelocityControl2(this),
-    ImplementControlMode2(this),
+    ImplementPositionControl(this),
+    ImplementVelocityControl(this),
+    ImplementControlMode(this),
     ImplementMotorEncoders(this),
     ImplementControlLimits(this),
     ImplementPositionDirect(this),
@@ -537,12 +537,12 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
     ImplementControlCalibration::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementEncodersTimed::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementMotorEncoders::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
-    ImplementPositionControl2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+    ImplementPositionControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
 //     ImplementPidControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
-    ImplementControlMode2::initialize(_njoints, _axisMap);
+    ImplementControlMode::initialize(_njoints, _axisMap);
 //     ImplementVelocityControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementAmplifierControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
-    ImplementVelocityControl2::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
+    ImplementVelocityControl::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
 //
     ImplementControlLimits::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
     ImplementPositionDirect::initialize(_njoints, _axisMap, _angleToEncoder, NULL);
@@ -878,12 +878,12 @@ bool tripodMotionControl::close()
 {
     yTrace();
 
-    ImplementControlMode2::uninitialize();
+    ImplementControlMode::uninitialize();
     ImplementEncodersTimed::uninitialize();
     ImplementMotorEncoders::uninitialize();
-    ImplementPositionControl2::uninitialize();
+    ImplementPositionControl::uninitialize();
 //     ImplementVelocityControl::uninitialize();
-    ImplementVelocityControl2::uninitialize();
+    ImplementVelocityControl::uninitialize();
 //     ImplementPidControl::uninitialize();
     ImplementAmplifierControl::uninitialize();
     ImplementControlCalibration::uninitialize();
