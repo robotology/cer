@@ -36,25 +36,25 @@ void EarsThread::activateBars(bool activate)
 bool EarsThread::threadInit()
 {
     // Check for optional params
-    earBarL0_x = m_rf.check("earBar0_x", Value(1), "horizontal offset from left border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    earBarL0_x = m_rf.check("earBar0_x", Value(1), "horizontal offset from left border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt32();
     earBarR0_x = FACE_WIDTH - 1 - earBarL0_x;
 
-    earBarL0_y = m_rf.check("earBar0_y", Value(6), "vertical offset from bottom border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    earBarL0_y = m_rf.check("earBar0_y", Value(6), "vertical offset from bottom border of outer ear bar, in pixels from upper left corner of the image, starting from 0").asInt32();
     earBarR0_y = earBarL0_y;
 
-    earBar0_minLen = m_rf.check("earBar0_minLen", Value(3), "minimum length  of outer ear bar").asInt();
-    earBar0_maxLen = m_rf.check("earBar0_maxLen", Value(18), "maximum length  of outer ear bar").asInt();
-    earBar0_len = m_rf.check("earBar0_len", Value(10), "starting length of outer ear bar").asInt();
+    earBar0_minLen = m_rf.check("earBar0_minLen", Value(3), "minimum length  of outer ear bar").asInt32();
+    earBar0_maxLen = m_rf.check("earBar0_maxLen", Value(18), "maximum length  of outer ear bar").asInt32();
+    earBar0_len = m_rf.check("earBar0_len", Value(10), "starting length of outer ear bar").asInt32();
 
-    earBarL1_x = m_rf.check("earBar1_x", Value(3), "horizontal offset from left border of inner ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    earBarL1_x = m_rf.check("earBar1_x", Value(3), "horizontal offset from left border of inner ear bar, in pixels from upper left corner of the image, starting from 0").asInt32();
     earBarR1_x = FACE_WIDTH - 1 - earBarL1_x;
 
-    earBarL1_y = m_rf.check("earBar1_y", Value(6), "vertical offset from bottom border of inner ear bar, in pixels from upper left corner of the image, starting from 0").asInt();
+    earBarL1_y = m_rf.check("earBar1_y", Value(6), "vertical offset from bottom border of inner ear bar, in pixels from upper left corner of the image, starting from 0").asInt32();
     earBarR1_y = earBarL1_y;
 
-    earBar1_minLen = m_rf.check("earBar1_minLen", Value(4), "minimum length  of inner ear bar").asInt();
-    earBar1_maxLen = m_rf.check("earBar1_maxLen", Value(19), "maximum length  of inner ear bar").asInt();
-    earBar1_len = m_rf.check("earBar1_len", Value(11), "starting length of inner ear bar").asInt();
+    earBar1_minLen = m_rf.check("earBar1_minLen", Value(4), "minimum length  of inner ear bar").asInt32();
+    earBar1_maxLen = m_rf.check("earBar1_maxLen", Value(19), "maximum length  of inner ear bar").asInt32();
+    earBar1_len = m_rf.check("earBar1_len", Value(11), "starting length of inner ear bar").asInt32();
 
     if (m_audioRecPort.open("/"+ m_moduleName+"/earsAudioData:i")==false)
     {

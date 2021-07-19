@@ -87,7 +87,7 @@ bool R1faceMic::open(yarp::os::Searchable &params)
     if(params.check("audioDevice") && params.find("audioDevice").isString())
         deviceFile = params.find("audioDevice").asString();
 
-    shift = params.check("shift", yarp::os::Value(6)).asInt();
+    shift = params.check("shift", yarp::os::Value(6)).asInt32();
 
     bool singleChannel = params.check("channel");
     if (singleChannel)

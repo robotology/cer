@@ -21,12 +21,12 @@ void HandThread::printState()
 
 bool HandThread::openControlBoards(yarp::os::Searchable& rf)
 {
-    gain            = rf.check("gain",     Value(1)).asDouble();
+    gain            = rf.check("gain",     Value(1)).asFloat64();
     wrist_heave     = 0.02;
 
     if (rf.check("wrist-heave"))
     {
-        wrist_heave = rf.find("wrist-heave").asDouble();
+        wrist_heave = rf.find("wrist-heave").asFloat64();
         mode        = "full_pose+no_torso_heave";
     }
     else
@@ -99,10 +99,10 @@ void HandThread::stopReaching()
     robotTargetPort.write();
 
     Bottle cmd, reply;
-    cmd.addVocab(Vocab::encode("stop"));
+    cmd.addVocab32(Vocab32::encode("stop"));
     if (robotCmdPort.write(cmd, reply))
     {
-        if (reply.get(0).asVocab() != Vocab::encode("ack"))
+        if (reply.get(0).asVocab32() != Vocab32::encode("ack"))
         {
             yError("Something went wrong while stopping");
         }
@@ -133,11 +133,11 @@ void HandThread::goToPose(const Vector &xd, const Vector &od)
 
     Bottle& btorso_heave = list.addList();
     btorso_heave.addString("torso_heave");
-    btorso_heave.addDouble(0.0);
+    btorso_heave.addFloat64(0.0);
 
     Bottle& blower_arm_heave = list.addList();
     blower_arm_heave.addString("lower_arm_heave");
-    blower_arm_heave.addDouble(wrist_heave);
+    blower_arm_heave.addFloat64(wrist_heave);
 
     Property& prop = robotTargetPort.prepare();
     prop.clear();
@@ -219,12 +219,12 @@ void HandThread::updateGazebo(const Vector& xd, const Vector& od)
         b.clear();
         b.addString("setPose");
         b.addString("frame22");
-        b.addDouble(xd[0]);
-        b.addDouble(xd[1]);
-        b.addDouble(xd[2]);
-        b.addDouble(rpy[0]);
-        b.addDouble(rpy[1]);
-        b.addDouble(rpy[2]);
+        b.addFloat64(xd[0]);
+        b.addFloat64(xd[1]);
+        b.addFloat64(xd[2]);
+        b.addFloat64(rpy[0]);
+        b.addFloat64(rpy[1]);
+        b.addFloat64(rpy[2]);
         b.addString("frame11::link");
         gazeboPort.write();
     }

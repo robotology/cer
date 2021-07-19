@@ -80,13 +80,13 @@ public:
     void setOptions(const Property &options)
     {
         if (options.check("Ts"))
-            setPeriod(options.find("Ts").asDouble());
+            setPeriod(options.find("Ts").asFloat64());
 
         if (options.check("f"))
-            f=options.find("f").asDouble();
+            f=options.find("f").asFloat64();
 
         if (options.check("R"))
-            R=options.find("R").asDouble();
+            R=options.find("R").asFloat64();
     }
 
     /****************************************************************/
@@ -123,10 +123,10 @@ public:
     {        
         string arm_type=rf.check("arm-type",Value("left")).asString();
         string mode=rf.check("mode",Value("full_pose+no_torso_no_heave+forward_diff")).asString();
-        solverTs=rf.check("solverTs",Value(0.01)).asDouble();
-        double targetTs=rf.check("targetTs",Value(0.05)).asDouble();
-        double f=rf.check("f",Value(0.1)).asDouble();
-        double R=rf.check("R",Value(0.1)).asDouble();
+        solverTs=rf.check("solverTs",Value(0.01)).asFloat64();
+        double targetTs=rf.check("targetTs",Value(0.05)).asFloat64();
+        double f=rf.check("f",Value(0.1)).asFloat64();
+        double R=rf.check("R",Value(0.1)).asFloat64();
         
         Property options;
         options.put("Ts",targetTs);

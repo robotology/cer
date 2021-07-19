@@ -61,10 +61,10 @@ int main(int argc, char *argv[])
     // command-line options
     string arm_type=rf.check("arm-type",Value("left")).asString();
     string grasp_type=rf.check("grasp-type",Value("top")).asString();
-    double table_height=rf.check("table-height",Value(0.7)).asDouble();
-    double external_weight=rf.check("external-weight",Value(2.0)).asDouble();
-    double floor_z=rf.check("floor-z",Value(-0.16)).asDouble();
-    double step=rf.check("step",Value(0.05)).asDouble();
+    double table_height=rf.check("table-height",Value(0.7)).asFloat64();
+    double external_weight=rf.check("external-weight",Value(2.0)).asFloat64();
+    double floor_z=rf.check("floor-z",Value(-0.16)).asFloat64();
+    double step=rf.check("step",Value(0.05)).asFloat64();
 
     // define solver and its parameters
     ArmParameters armp(arm_type);

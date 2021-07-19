@@ -83,9 +83,9 @@ bool MainModule::updateModule()
         yarp::os::Time::delay(0.100);
         status = status_idle;
         yarp::os::Bottle b;
-        b.addVocab(VOCAB_SET);
-        b.addVocab(VOCAB_FACE);
-        b.addVocab(VOCAB_FACE_HAPPY);
+        b.addVocab32(VOCAB_SET);
+        b.addVocab32(VOCAB_FACE);
+        b.addVocab32(VOCAB_FACE_HAPPY);
         cmdPort.write(b);
     }
     else if (status == status_running)
@@ -174,10 +174,10 @@ bool MainModule::respond(const Bottle& command, Bottle& reply)
 {
     if (command.get(0).asString()=="set_speed")
     {
-        scroll_speed = command.get(1).asDouble();
+        scroll_speed = command.get(1).asFloat64();
     }
 
-    reply.addVocab(Vocab::encode("ack"));
+    reply.addVocab32(Vocab32::encode("ack"));
 
     return true;
 }
@@ -194,7 +194,7 @@ bool MainModule::configure(yarp::os::ResourceFinder &rf)
 
     if (rf.check("scroll_speed"))
     {
-        scroll_speed = rf.find("scroll_speed").asDouble();
+        scroll_speed = rf.find("scroll_speed").asFloat64();
     }
 
     if (rf.check("renderer"))

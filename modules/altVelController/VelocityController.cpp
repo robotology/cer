@@ -867,17 +867,17 @@ void R1ControlModule::sendCOM(const std::string& name, int R, int G, int B, cer:
     botR.clear();
     botR.addString("object_with_label");
     botR.addString(name); botR.addString(name);
-    botR.addDouble(size);
-    botR.addDouble(0.0);
-    botR.addDouble(0.0);
-    botR.addDouble(P.x*1000.0);
-    botR.addDouble(P.y*1000.0);
-    botR.addDouble(P.z*1000.0);
+    botR.addFloat64(size);
+    botR.addFloat64(0.0);
+    botR.addFloat64(0.0);
+    botR.addFloat64(P.x*1000.0);
+    botR.addFloat64(P.y*1000.0);
+    botR.addFloat64(P.z*1000.0);
 
-    botR.addDouble(0.0); botR.addDouble(0.0); botR.addDouble(0.0);
+    botR.addFloat64(0.0); botR.addFloat64(0.0); botR.addFloat64(0.0);
     
-    botR.addInt(R); botR.addInt(G); botR.addInt(B);
-    botR.addDouble(alpha);
+    botR.addInt32(R); botR.addInt32(G); botR.addInt32(B);
+    botR.addFloat64(alpha);
     //botR.addString("WORLD");
     portObjects.writeStrict();
 }
@@ -887,19 +887,19 @@ void R1ControlModule::sendTarget(const char* name, int R, int G, int B, double x
     yarp::os::Bottle& botR=portObjects.prepare();
     botR.clear();
     botR.addString("object"); botR.addString(name);
-    botR.addDouble(size);
-    botR.addDouble(0.0);
-    botR.addDouble(0.0);
-    botR.addDouble(x*1000.0);
-    botR.addDouble(y*1000.0);
-    botR.addDouble(z*1000.0);
+    botR.addFloat64(size);
+    botR.addFloat64(0.0);
+    botR.addFloat64(0.0);
+    botR.addFloat64(x*1000.0);
+    botR.addFloat64(y*1000.0);
+    botR.addFloat64(z*1000.0);
 
-    botR.addDouble(rx); 
-    botR.addDouble(ry); 
-    botR.addDouble(rz);
+    botR.addFloat64(rx); 
+    botR.addFloat64(ry); 
+    botR.addFloat64(rz);
 
-    botR.addInt(R); botR.addInt(G); botR.addInt(B);
-    botR.addDouble(alpha);
+    botR.addInt32(R); botR.addInt32(G); botR.addInt32(B);
+    botR.addFloat64(alpha);
     //botR.addString("WORLD");
     portObjects.writeStrict();
 }
@@ -909,19 +909,19 @@ void R1ControlModule::sendCover(const std::string& name, double x, double y, dou
     yarp::os::Bottle& botR = portObjects.prepare();
     botR.clear();
     botR.addString("object"); botR.addString(name);
-    botR.addDouble(size*1000.0);
-    botR.addDouble(0.0);
-    botR.addDouble(0.0);
-    botR.addDouble(x*1000.0);
-    botR.addDouble(y*1000.0);
-    botR.addDouble(z*1000.0);
+    botR.addFloat64(size*1000.0);
+    botR.addFloat64(0.0);
+    botR.addFloat64(0.0);
+    botR.addFloat64(x*1000.0);
+    botR.addFloat64(y*1000.0);
+    botR.addFloat64(z*1000.0);
 
-    botR.addDouble(360.0);
-    botR.addDouble(360.0);
-    botR.addDouble(360.0);
+    botR.addFloat64(360.0);
+    botR.addFloat64(360.0);
+    botR.addFloat64(360.0);
 
-    botR.addInt(255); botR.addInt(255); botR.addInt(255);
-    botR.addDouble(1.0);
+    botR.addInt32(255); botR.addInt32(255); botR.addInt32(255);
+    botR.addFloat64(1.0);
     //botR.addString("WORLD");
     portObjects.writeStrict();
 }

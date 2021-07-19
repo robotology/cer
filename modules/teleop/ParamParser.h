@@ -34,13 +34,13 @@ public:
         err_msgs     [TYPE_VOCAB ] = "a vocab";
         isFunctionMap[TYPE_STRING] = &yarp::os::Value::isString;
         isFunctionMap[TYPE_BOOL  ] = &yarp::os::Value::isBool;
-        isFunctionMap[TYPE_DOUBLE] = &yarp::os::Value::isDouble;
+        isFunctionMap[TYPE_DOUBLE] = &yarp::os::Value::isFloat64;
         isFunctionMap[TYPE_BLOB  ] = &yarp::os::Value::isBlob;
-        isFunctionMap[TYPE_INT   ] = &yarp::os::Value::isInt;
+        isFunctionMap[TYPE_INT   ] = &yarp::os::Value::isInt32;
         isFunctionMap[TYPE_INT64 ] = &yarp::os::Value::isInt64;
         isFunctionMap[TYPE_LIST  ] = &yarp::os::Value::isList;
         isFunctionMap[TYPE_LEAF  ] = &yarp::os::Value::isLeaf;
-        isFunctionMap[TYPE_VOCAB ] = &yarp::os::Value::isVocab;
+        isFunctionMap[TYPE_VOCAB ] = &yarp::os::Value::isVocab32;
 
     }
 

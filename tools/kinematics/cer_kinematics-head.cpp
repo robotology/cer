@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
     }
 
     string type=rf.check("type",Value("gaze")).asString();
-    int verbosity=rf.check("verbosity",Value(0)).asInt();
+    int verbosity=rf.check("verbosity",Value(0)).asInt32();
 
     if (avFrames.find(type)==avFrames.end())
     {
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     {
         size_t len=std::min(xd.length(),(size_t)b->size());
         for (size_t i=0; i<len; i++)
-            xd[i]=b->get(i).asDouble();
+            xd[i]=b->get(i).asFloat64();
     }
 
     Vector q0(6,0.0);
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     {
         size_t len=std::min(q0.length(),(size_t)b->size());
         for (size_t i=0; i<len; i++)
-            q0[i]=b->get(i).asDouble();
+            q0[i]=b->get(i).asFloat64();
     }
 
     HeadParameters headp(type);

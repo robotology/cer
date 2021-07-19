@@ -131,12 +131,12 @@ bool FaceDisplayServer::open(yarp::os::Searchable &config)
 
     if (config.check("selfTest"))
     {
-        selfTest = config.check("selfTest", yarp::os::Value(1), "Run one of the selt tests from (1 to 3)").asInt();
+        selfTest = config.check("selfTest", yarp::os::Value(1), "Run one of the selt tests from (1 to 3)").asInt32();
         yWarning() << "Device working in selfTest " << selfTest << " mode.";
     }
 
     // used in selfTestmode 2 for now, maybe useful also for automatic transitions later on ... ???
-    steps = config.check("steps", yarp::os::Value(30), "Number of transition between start and end").asInt();
+    steps = config.check("steps", yarp::os::Value(30), "Number of transition between start and end").asInt32();
 
     if(steps <=0)
         yError() << "Number of steps must be a positive integer";
@@ -661,7 +661,7 @@ void FaceDisplayServer::run()
         }
         else
         {
-            if(!command.get(0).isVocab())
+            if(!command.get(0).isVocab32())
             {
                 yError() << "Received malformed command:" << command.toString();
                 yError() << "First value must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
@@ -669,9 +669,9 @@ void FaceDisplayServer::run()
                 continue;
             }
 
-            action = command.get(0).asVocab();
-            type   = command.get(1).asVocab();
-            param  = command.get(2).asVocab();
+            action = command.get(0).asVocab32();
+            type   = command.get(1).asVocab32();
+            param  = command.get(2).asVocab32();
         }
 
         switch(action)

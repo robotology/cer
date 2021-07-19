@@ -149,25 +149,25 @@ bool GazeboTripodMotionControl::init_kinematics()
     if (!extractGroup(tripod_description, xtmp, "Radius","The radius ([m])", 1))
         return false;
     else
-        radius = xtmp.get(1).asDouble();
+        radius = xtmp.get(1).asFloat64();
 
     // max limit
         if (!extractGroup(tripod_description, xtmp, "Max_el","The minimum elongation ([m]).", 1))
         return false;
     else
-        lMax = xtmp.get(1).asDouble();
+        lMax = xtmp.get(1).asFloat64();
 
     // min limit
         if (!extractGroup(tripod_description, xtmp, "Min_el","The maximum permitted bending angle ([deg]).", 1))
         return false;
     else
-        lMin = xtmp.get(1).asDouble();
+        lMin = xtmp.get(1).asFloat64();
 
     // alpha max
         if (!extractGroup(tripod_description, xtmp, "Max_alpha","The maximum permitted bending angle ([deg])", 1))
         return false;
     else
-        alpha = xtmp.get(1).asDouble();
+        alpha = xtmp.get(1).asFloat64();
 
     // This particular device has weird limits for joints. This is not scalable unless we duplicate some parameter in config file.
     if(m_numberOfJoints == 3)
@@ -194,7 +194,7 @@ bool GazeboTripodMotionControl::init_kinematics()
         for(int r=0; r<4; r++)
             for(int c=0; c<4; c++)
             {
-                _baseTransformation[r][c] = xtmp.get(idx).asDouble();
+                _baseTransformation[r][c] = xtmp.get(idx).asFloat64();
                 idx++;
             }
     }
@@ -600,16 +600,16 @@ void GazeboTripodMotionControl::setPIDsForGroup(std::string pidGroupName,
 
             gazebo::common::PID pidValue;
             if (pidTerms & PIDFeedbackTermProportionalTerm)
-                pidValue.SetPGain(pid.get(1).asDouble());
+                pidValue.SetPGain(pid.get(1).asFloat64());
             if (pidTerms & PIDFeedbackTermDerivativeTerm)
-                pidValue.SetDGain(pid.get(2).asDouble());
+                pidValue.SetDGain(pid.get(2).asFloat64());
             if (pidTerms & PIDFeedbackTermIntegrativeTerm)
-                pidValue.SetIGain(pid.get(3).asDouble());
+                pidValue.SetIGain(pid.get(3).asFloat64());
 
-            pidValue.SetIMax(pid.get(4).asDouble());
-            pidValue.SetIMin(-pid.get(4).asDouble());
-            pidValue.SetCmdMax(pid.get(5).asDouble());
-            pidValue.SetCmdMin(-pid.get(5).asDouble());
+            pidValue.SetIMax(pid.get(4).asFloat64());
+            pidValue.SetIMin(-pid.get(4).asFloat64());
+            pidValue.SetCmdMax(pid.get(5).asFloat64());
+            pidValue.SetCmdMin(-pid.get(5).asFloat64());
 
 
             pids.push_back(pidValue);
@@ -639,7 +639,7 @@ void GazeboTripodMotionControl::setMinMaxImpedance()
         yarp::os::Bottle& min_stiff_bot = kin_chain_bot.findGroup("min_stiffness");
         if(min_stiff_bot.size()-1 == m_numberOfJoints) {
             for(unsigned int i = 0; i < m_numberOfJoints; ++i)
-                m_minStiffness[i] = min_stiff_bot.get(i+1).asDouble();
+                m_minStiffness[i] = min_stiff_bot.get(i+1).asFloat64();
         } else
             std::cout<<"Invalid number of params"<<std::endl;
     } else
@@ -650,7 +650,7 @@ void GazeboTripodMotionControl::setMinMaxImpedance()
         yarp::os::Bottle& max_stiff_bot = kin_chain_bot.findGroup("max_stiffness");
         if (max_stiff_bot.size()-1 == m_numberOfJoints) {
             for (unsigned int i = 0; i < m_numberOfJoints; ++i)
-                m_maxStiffness[i] = max_stiff_bot.get(i+1).asDouble();
+                m_maxStiffness[i] = max_stiff_bot.get(i+1).asFloat64();
         } else
             std::cout<<"Invalid number of params"<<std::endl;
     }
@@ -662,7 +662,7 @@ void GazeboTripodMotionControl::setMinMaxImpedance()
         yarp::os::Bottle& min_damping_bot = kin_chain_bot.findGroup("min_damping");
         if(min_damping_bot.size()-1 == m_numberOfJoints) {
             for(unsigned int i = 0; i < m_numberOfJoints; ++i)
-                m_minDamping[i] = min_damping_bot.get(i+1).asDouble();
+                m_minDamping[i] = min_damping_bot.get(i+1).asFloat64();
         } else
             std::cout<<"Invalid number of params"<<std::endl;
     } else
@@ -673,7 +673,7 @@ void GazeboTripodMotionControl::setMinMaxImpedance()
         yarp::os::Bottle& max_damping_bot = kin_chain_bot.findGroup("max_damping");
         if (max_damping_bot.size() - 1 == m_numberOfJoints) {
             for(unsigned int i = 0; i < m_numberOfJoints; ++i)
-                m_maxDamping[i] = max_damping_bot.get(i+1).asDouble();
+                m_maxDamping[i] = max_damping_bot.get(i+1).asFloat64();
         } else
             std::cout<<"Invalid number of params"<<std::endl;
     } else

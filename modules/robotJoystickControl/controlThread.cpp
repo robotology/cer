@@ -358,11 +358,11 @@ void ControlThread::option1(double* axis)
     {
         Bottle& b = robotCmdPort_base.prepare();
         b.clear();
-        b.addInt(3);
-        b.addDouble(val5); //x_lin_speed
-        b.addDouble(0.0); //y_lin_speed
-        b.addDouble(val3); //ang_speed
-        b.addDouble(100.0); //gain
+        b.addInt32(3);
+        b.addFloat64(val5); //x_lin_speed
+        b.addFloat64(0.0); //y_lin_speed
+        b.addFloat64(val3); //ang_speed
+        b.addFloat64(100.0); //gain
         robotCmdPort_base.write();
     }
 }
@@ -378,13 +378,13 @@ void ControlThread::getCartesianArmPositions(bool blocking)
         initial_rpy_left.resize(3);
         current_xyz_left.resize(3);
         current_rpy_left.resize(3);
-        current_xyz_left[0] = initial_xyz_left[0] = sl->get(0).asDouble();
-        current_xyz_left[1] = initial_xyz_left[1] = sl->get(1).asDouble();
-        current_xyz_left[2] = initial_xyz_left[2] = sl->get(2).asDouble();
+        current_xyz_left[0] = initial_xyz_left[0] = sl->get(0).asFloat64();
+        current_xyz_left[1] = initial_xyz_left[1] = sl->get(1).asFloat64();
+        current_xyz_left[2] = initial_xyz_left[2] = sl->get(2).asFloat64();
         Vector vi(4), vo(3);
-        vi[0] = sl->get(3).asDouble();
-        vi[1] = sl->get(4).asDouble();
-        vi[2] = sl->get(5).asDouble();
+        vi[0] = sl->get(3).asFloat64();
+        vi[1] = sl->get(4).asFloat64();
+        vi[2] = sl->get(5).asFloat64();
         vi[3] = 0;
 #if 1
         double norm = sqrt((vi[0] * vi[0]) + (vi[1] * vi[1]) + (vi[2] * vi[2]));
@@ -407,13 +407,13 @@ void ControlThread::getCartesianArmPositions(bool blocking)
         initial_rpy_right.resize(3);
         current_xyz_right.resize(3);
         current_rpy_right.resize(3);
-        current_xyz_right[0] = initial_xyz_right[0] = sr->get(0).asDouble();
-        current_xyz_right[1] = initial_xyz_right[1] = sr->get(1).asDouble();
-        current_xyz_right[2] = initial_xyz_right[2] = sr->get(2).asDouble();
+        current_xyz_right[0] = initial_xyz_right[0] = sr->get(0).asFloat64();
+        current_xyz_right[1] = initial_xyz_right[1] = sr->get(1).asFloat64();
+        current_xyz_right[2] = initial_xyz_right[2] = sr->get(2).asFloat64();
         Vector vi(4), vo(3);
-        vi[0] = sr->get(3).asDouble();
-        vi[1] = sr->get(4).asDouble();
-        vi[2] = sr->get(5).asDouble();
+        vi[0] = sr->get(3).asFloat64();
+        vi[1] = sr->get(4).asFloat64();
+        vi[2] = sr->get(5).asFloat64();
 #if 1
         double norm = sqrt((vi[0] * vi[0]) + (vi[1] * vi[1]) + (vi[2] * vi[2]));
         vi[0] = vi[0] / norm;
@@ -482,7 +482,7 @@ void ControlThread::run()
     {
         for (int j = 0; j < AXIS_NUM; j++)
         {
-            axis[j] = b->get(j).asDouble();
+            axis[j] = b->get(j).asFloat64();
         }
 
         if (LEFT_AND_RIGHT_BUTTONS_PUSHED) { lb++; lo = 0; ro = 0; no = 0; }
@@ -853,9 +853,9 @@ ctrl_options(options)
 
     motors_enabled = false;
 
-    torso_max_elong = rf.check("max_torso_elong", Value(0.2)).asDouble();
-    torso_min_elong = rf.check("min_torso_elong", Value(0.0)).asDouble();
-    torso_max_alpha = rf.check("max_torso_alpha", Value(15)).asDouble();
+    torso_max_elong = rf.check("max_torso_elong", Value(0.2)).asFloat64();
+    torso_min_elong = rf.check("min_torso_elong", Value(0.0)).asFloat64();
+    torso_max_alpha = rf.check("max_torso_alpha", Value(15)).asFloat64();
 
     if (rf.check("no_motors"))
     {

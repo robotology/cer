@@ -58,9 +58,9 @@ void ControlThread::run()
     Bottle *b = this->port_joystick_control.read(false);
     if (b)
     {
-        double val0 = b->get(joystick_channel_0).asDouble(); 
-        double val1 = b->get(joystick_channel_1).asDouble();
-        double val2 = b->get(joystick_channel_2).asDouble(); //elong
+        double val0 = b->get(joystick_channel_0).asFloat64(); 
+        double val1 = b->get(joystick_channel_1).asFloat64();
+        double val2 = b->get(joystick_channel_2).asFloat64(); //elong
         double vels[3];
         vels[0] = 0.0;
         vels[1] = 0.0;
@@ -230,15 +230,15 @@ ctrl_options(options)
     localName = ctrl_options.find("local").asString();
     motors_enabled = true;
 
-    max_elong = rf.check("max_elong", Value(0.2)).asDouble();
-    min_elong = rf.check("min_elong", Value(0.0)).asDouble();
-    max_alpha = rf.check("max_alpha", Value(15)).asDouble();
-    joystick_channel_0 = rf.check("joystick_channel_0", Value(8)).asInt();
-    joystick_channel_1 = rf.check("joystick_channel_1", Value(7)).asInt();
-    joystick_channel_2 = rf.check("joystick_channel_2", Value(5)).asInt();
-    gain_0 = rf.check("gain_0", Value(0.0001)).asDouble();
-    gain_1 = rf.check("gain_1", Value(0.0001)).asDouble();
-    gain_2 = rf.check("gain_2", Value(0.0002)).asDouble();
+    max_elong = rf.check("max_elong", Value(0.2)).asFloat64();
+    min_elong = rf.check("min_elong", Value(0.0)).asFloat64();
+    max_alpha = rf.check("max_alpha", Value(15)).asFloat64();
+    joystick_channel_0 = rf.check("joystick_channel_0", Value(8)).asInt32();
+    joystick_channel_1 = rf.check("joystick_channel_1", Value(7)).asInt32();
+    joystick_channel_2 = rf.check("joystick_channel_2", Value(5)).asInt32();
+    gain_0 = rf.check("gain_0", Value(0.0001)).asFloat64();
+    gain_1 = rf.check("gain_1", Value(0.0001)).asFloat64();
+    gain_2 = rf.check("gain_2", Value(0.0002)).asFloat64();
 
     if (rf.check("no_motors"))
     {

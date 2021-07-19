@@ -67,7 +67,7 @@ bool FaceExpressionImageModule::respondString(const Bottle& command, Bottle& rep
 
     if (cmd == "help")
     {
-        reply.addVocab(Vocab::encode("many"));
+        reply.addVocab32(Vocab32::encode("many"));
         reply.addString("start_ears 0/1");
         reply.addString("start_mouth 0/1");
         reply.addString("start_blinking 0/1");
@@ -84,21 +84,21 @@ bool FaceExpressionImageModule::respondString(const Bottle& command, Bottle& rep
     {
         bool value = command.get(1).asBool();
         start_listening(value);
-        reply.addVocab(yarp::os::Vocab::encode("ok"));
+        reply.addVocab32(yarp::os::Vocab32::encode("ok"));
         return true;
     }
     else if (cmd == "start_mouth")
     {
         bool value = command.get(1).asBool();
         start_talking(value);
-        reply.addVocab(yarp::os::Vocab::encode("ok"));
+        reply.addVocab32(yarp::os::Vocab32::encode("ok"));
         return true;
     }
     else if (cmd == "start_blinking")
     {
         bool value = command.get(1).asBool();
         start_blinking(value);
-        reply.addVocab(yarp::os::Vocab::encode("ok"));
+        reply.addVocab32(yarp::os::Vocab32::encode("ok"));
         return true;
     }
     else if (cmd == "enable_draw_ears")
@@ -108,7 +108,7 @@ bool FaceExpressionImageModule::respondString(const Bottle& command, Bottle& rep
         {
             m_thread_ears->enableDrawing(value);
         }
-        reply.addVocab(yarp::os::Vocab::encode("ok"));
+        reply.addVocab32(yarp::os::Vocab32::encode("ok"));
         return true;
     }
     else if (cmd == "enable_draw_mouth")
@@ -118,7 +118,7 @@ bool FaceExpressionImageModule::respondString(const Bottle& command, Bottle& rep
         {
             m_thread_mouth->enableDrawing(value);
         }
-        reply.addVocab(yarp::os::Vocab::encode("ok"));
+        reply.addVocab32(yarp::os::Vocab32::encode("ok"));
         return true;
     }
     else if (cmd == "enable_draw_eyes")
@@ -128,19 +128,19 @@ bool FaceExpressionImageModule::respondString(const Bottle& command, Bottle& rep
         {
             m_thread_eyes->enableDrawing(value);
         }
-        reply.addVocab(yarp::os::Vocab::encode("ok"));
+        reply.addVocab32(yarp::os::Vocab32::encode("ok"));
         return true;
     }
     else if (cmd == "reset_to_default")
     {
         reset_default();
-        reply.addVocab(yarp::os::Vocab::encode("ok"));
+        reply.addVocab32(yarp::os::Vocab32::encode("ok"));
         return true;
     }
     else if (cmd == "black_screen")
     {
         black();
-        reply.addVocab(yarp::os::Vocab::encode("ok"));
+        reply.addVocab32(yarp::os::Vocab32::encode("ok"));
         return true;
     }
     else if (cmd == "color_ears")
@@ -149,7 +149,7 @@ bool FaceExpressionImageModule::respondString(const Bottle& command, Bottle& rep
         float vg= command.get(2).asFloat32();
         float vb= command.get(3).asFloat32();
         if (m_thread_ears) m_thread_ears->setColor(vr,vg,vb);
-        reply.addVocab(yarp::os::Vocab::encode("ok"));
+        reply.addVocab32(yarp::os::Vocab32::encode("ok"));
         return true;
     }
     else if (cmd == "color_mouth")
@@ -158,7 +158,7 @@ bool FaceExpressionImageModule::respondString(const Bottle& command, Bottle& rep
         float vg = command.get(2).asFloat32();
         float vb = command.get(3).asFloat32();
         if (m_thread_mouth) m_thread_mouth->setColor(vr, vg, vb);
-        reply.addVocab(yarp::os::Vocab::encode("ok"));
+        reply.addVocab32(yarp::os::Vocab32::encode("ok"));
         return true;
     }
     return false;
@@ -227,7 +227,7 @@ bool FaceExpressionImageModule::black()
 
 bool FaceExpressionImageModule::respondVocab(const Bottle& command, Bottle& reply)
 {
-    int cmd = command.get(0).asVocab();
+    int cmd = command.get(0).asVocab32();
 
     yTrace() << "Received command " << command.toString();
     switch (cmd)
@@ -281,7 +281,7 @@ bool FaceExpressionImageModule::respondVocab(const Bottle& command, Bottle& repl
     break;
     }
     reply.clear();
-    reply.addVocab(yarp::os::Vocab::encode("ok"));
+    reply.addVocab32(yarp::os::Vocab32::encode("ok"));
     return true;
 }
 
@@ -291,7 +291,7 @@ bool FaceExpressionImageModule::respond(const Bottle& command, Bottle& reply)
     {
         return respondString(command,reply);
     }
-    else if (command.get(0).isVocab())
+    else if (command.get(0).isVocab32())
     {
         return respondVocab(command, reply);
     }

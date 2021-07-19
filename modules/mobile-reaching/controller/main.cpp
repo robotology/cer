@@ -251,15 +251,15 @@ public:
     {
         string robot=rf.check("robot",Value("cer")).asString();
         string arm_type=rf.check("arm-type",Value("left")).asString();
-        verbosity=rf.check("verbosity",Value(0)).asInt();
-        stop_threshold_revolute=rf.check("stop-threshold-revolute",Value(2.0)).asDouble();
-        stop_threshold_prismatic=rf.check("stop-threshold-prismatic",Value(0.002)).asDouble();
+        verbosity=rf.check("verbosity",Value(0)).asInt32();
+        stop_threshold_revolute=rf.check("stop-threshold-revolute",Value(2.0)).asFloat64();
+        stop_threshold_prismatic=rf.check("stop-threshold-prismatic",Value(0.002)).asFloat64();
         string map_server=rf.check("map-server",Value("/mapServer")).asString();
         string loc_server=rf.check("loc-server",Value("/localizationServer")).asString();
         string nav_server=rf.check("nav-server",Value("/navigationServer")).asString();
         mapName=rf.check("map-name",Value("testMap")).asString();
-        double T=rf.check("T",Value(2.0)).asDouble();
-        Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
+        double T=rf.check("T",Value(2.0)).asFloat64();
+        Ts=rf.check("Ts",Value(MIN_TS)).asFloat64();
         Ts=std::max(Ts,MIN_TS);
 
         Property option;
@@ -507,9 +507,9 @@ public:
                     Map2DLocation p;
                     iloc->getCurrentPosition(p);
 
-                    bd.x=payLoadJoints->get(0).asDouble();
-                    bd.y=payLoadJoints->get(1).asDouble();
-                    bd.theta=payLoadJoints->get(2).asDouble();
+                    bd.x=payLoadJoints->get(0).asFloat64();
+                    bd.y=payLoadJoints->get(1).asFloat64();
+                    bd.theta=payLoadJoints->get(2).asFloat64();
                     bd.map_id=p.map_id;
 
                     NavigationStatusEnum navStatus;
@@ -524,13 +524,13 @@ public:
                     }
 
                     for (size_t i=0; i<qd.length(); i++)
-                        qd[i]=payLoadJoints->get(3+i).asDouble();
+                        qd[i]=payLoadJoints->get(3+i).asFloat64();
 
                     if (xd.length()==0)
                         xd.resize((size_t)payLoadPose->size());
 
                     for (size_t i=0; i<xd.length(); i++)
-                        xd[i]=payLoadPose->get(i).asDouble();
+                        xd[i]=payLoadPose->get(i).asFloat64();
 
                     target=reply.tail();
 
@@ -581,10 +581,10 @@ public:
         Bottle *robotPose=request.find("q").asList();
         Vector tu(4,0.0);
         tu[2]=1.0;
-        tu[3]=M_PI/180.0*robotPose->get(2).asDouble();
+        tu[3]=M_PI/180.0*robotPose->get(2).asFloat64();
         Matrix baseTransform=axis2dcm(tu);
-        baseTransform[0][3]=robotPose->get(0).asDouble();
-        baseTransform[1][3]=robotPose->get(1).asDouble();
+        baseTransform[0][3]=robotPose->get(0).asFloat64();
+        baseTransform[1][3]=robotPose->get(1).asFloat64();
 
         if (!request.check("domain") && iloc && imap)
         {
@@ -626,8 +626,8 @@ public:
                     if (verbosity>0)
                         yDebug() << "\t" << area.points[i].x << area.points[i].y;
                     area.points.size();
-                    coord.addDouble(area.points[i].x);
-                    coord.addDouble(area.points[i].y);
+                    coord.addFloat64(area.points[i].x);
+                    coord.addFloat64(area.points[i].y);
                 }
             }
             request.put("domain",b.get(0));
@@ -644,7 +644,7 @@ public:
                     {
                         yError("wrong target list format!");
                         reply.clear();
-                        reply.addVocab(Vocab::encode("nack"));
+                        reply.addVocab32(Vocab32::encode("nack"));
                         return false;
                     }
 
@@ -652,19 +652,19 @@ public:
                     {
                         yError("wrong target size, must be 7!");
                         reply.clear();
-                        reply.addVocab(Vocab::encode("nack"));
+                        reply.addVocab32(Vocab32::encode("nack"));
                         return false;
                     }
 
                     Vector xd(3);
-                    xd[0]=target->get(0).asDouble();
-                    xd[1]=target->get(1).asDouble();
-                    xd[2]=target->get(2).asDouble();
+                    xd[0]=target->get(0).asFloat64();
+                    xd[1]=target->get(1).asFloat64();
+                    xd[2]=target->get(2).asFloat64();
                     Vector ud(4);
-                    ud[0]=target->get(3).asDouble();
-                    ud[1]=target->get(4).asDouble();
-                    ud[2]=target->get(5).asDouble();
-                    ud[3]=target->get(6).asDouble();
+                    ud[0]=target->get(3).asFloat64();
+                    ud[1]=target->get(4).asFloat64();
+                    ud[2]=target->get(5).asFloat64();
+                    ud[3]=target->get(6).asFloat64();
 
                     Matrix Hd=axis2dcm(ud);
                     Hd.setSubcol(xd,0,3);
@@ -673,13 +673,13 @@ public:
                     Vector x=Hd.subcol(0, 3, 3);
                     Vector u=dcm2axis(Hd);
                     target->clear();
-                    target->addDouble(x[0]);
-                    target->addDouble(x[1]);
-                    target->addDouble(x[2]);
-                    target->addDouble(u[0]);
-                    target->addDouble(u[1]);
-                    target->addDouble(u[2]);
-                    target->addDouble(u[3]);
+                    target->addFloat64(x[0]);
+                    target->addFloat64(x[1]);
+                    target->addFloat64(x[2]);
+                    target->addFloat64(u[0]);
+                    target->addFloat64(u[1]);
+                    target->addFloat64(u[2]);
+                    target->addFloat64(u[3]);
                     if (verbosity>0)
                     {
                         yDebug() << "Target transformed from local:";
@@ -707,7 +707,7 @@ public:
                 {
                     yError("wrong margin size, must be 6!");
                     reply.clear();
-                    reply.addVocab(Vocab::encode("nack"));
+                    reply.addVocab32(Vocab32::encode("nack"));
                     return false;
                 }
 
@@ -715,8 +715,8 @@ public:
                 Vector marginO(3);
                 for(size_t i=0 ; i<3 ; i++)
                 {
-                    marginP[i]=margins->get(i).asDouble();
-                    marginO[i]=margins->get(i+3).asDouble();
+                    marginP[i]=margins->get(i).asFloat64();
+                    marginO[i]=margins->get(i+3).asFloat64();
                 }
 
                 if (Bottle *targetList=request.find("target").asList())
@@ -725,14 +725,14 @@ public:
                     {
                         Bottle *target=targetList->get(i).asList();
                         Vector xd(3);
-                        xd[0]=target->get(0).asDouble();
-                        xd[1]=target->get(1).asDouble();
-                        xd[2]=target->get(2).asDouble();
+                        xd[0]=target->get(0).asFloat64();
+                        xd[1]=target->get(1).asFloat64();
+                        xd[2]=target->get(2).asFloat64();
                         Vector ud(4);
-                        ud[0]=target->get(3).asDouble();
-                        ud[1]=target->get(4).asDouble();
-                        ud[2]=target->get(5).asDouble();
-                        ud[3]=target->get(6).asDouble();
+                        ud[0]=target->get(3).asFloat64();
+                        ud[1]=target->get(4).asFloat64();
+                        ud[2]=target->get(5).asFloat64();
+                        ud[3]=target->get(6).asFloat64();
 
                         Matrix Hd=axis2dcm(ud);
                         Matrix Rd=Hd.submatrix(0,2,0,2);
@@ -806,8 +806,8 @@ public:
             if (verbosity>0)
                 yInfo("Received reply from solver: %s",reply.toString().c_str());
 
-            bool success=(reply.get(0).asVocab()==Vocab::encode("ack"));
-            if (success || (reply.get(0).asVocab()==Vocab::encode("nack")))
+            bool success=(reply.get(0).asVocab32()==Vocab32::encode("ack"));
+            if (success || (reply.get(0).asVocab32()==Vocab32::encode("nack")))
             {
                 reply=reply.tail();
 
@@ -825,14 +825,14 @@ public:
                             if (verbosity>0)
                             {
                                 yDebug() << "Final base pose transformed from global:";
-                                yDebug() << "\t" << replyPose->get(0).asDouble() << replyPose->get(1).asDouble() << replyPose->get(2).asDouble();
+                                yDebug() << "\t" << replyPose->get(0).asFloat64() << replyPose->get(1).asFloat64() << replyPose->get(2).asFloat64();
                             }
                             Vector new_tu(4,0.0);
                             new_tu[2]=1.0;
-                            new_tu[3]=M_PI/180.0*replyPose->get(2).asDouble();
+                            new_tu[3]=M_PI/180.0*replyPose->get(2).asFloat64();
                             Matrix newBaseTransform=axis2dcm(new_tu);
-                            newBaseTransform[0][3]=replyPose->get(0).asDouble();
-                            newBaseTransform[1][3]=replyPose->get(1).asDouble();
+                            newBaseTransform[0][3]=replyPose->get(0).asFloat64();
+                            newBaseTransform[1][3]=replyPose->get(1).asFloat64();
                             newBaseTransform=SE3inv(baseTransform)*newBaseTransform;
                             replyPose->get(0)=Value(newBaseTransform[0][3]);
                             replyPose->get(1)=Value(newBaseTransform[1][3]);
@@ -842,7 +842,7 @@ public:
                             if (verbosity>0)
                             {
                                 yDebug() << "                              to local:";
-                                yDebug() << "\t" << replyPose->get(0).asDouble() << replyPose->get(1).asDouble() << replyPose->get(2).asDouble();
+                                yDebug() << "\t" << replyPose->get(0).asFloat64() << replyPose->get(1).asFloat64() << replyPose->get(2).asFloat64();
                             }
                         }
                     }
@@ -862,7 +862,7 @@ public:
                             {
                                 yError("wrong target list format!");
                                 reply.clear();
-                                reply.addVocab(Vocab::encode("nack"));
+                                reply.addVocab32(Vocab32::encode("nack"));
                                 return false;
                             }
 
@@ -870,19 +870,19 @@ public:
                             {
                                 yError("wrong target size!");
                                 reply.clear();
-                                reply.addVocab(Vocab::encode("nack"));
+                                reply.addVocab32(Vocab32::encode("nack"));
                                 return false;
                             }
 
                             Vector xd(3);
-                            xd[0]=target->get(0).asDouble();
-                            xd[1]=target->get(1).asDouble();
-                            xd[2]=target->get(2).asDouble();
+                            xd[0]=target->get(0).asFloat64();
+                            xd[1]=target->get(1).asFloat64();
+                            xd[2]=target->get(2).asFloat64();
                             Vector ud(4);
-                            ud[0]=target->get(3).asDouble();
-                            ud[1]=target->get(4).asDouble();
-                            ud[2]=target->get(5).asDouble();
-                            ud[3]=target->get(6).asDouble();
+                            ud[0]=target->get(3).asFloat64();
+                            ud[1]=target->get(4).asFloat64();
+                            ud[2]=target->get(5).asFloat64();
+                            ud[3]=target->get(6).asFloat64();
 
                             Matrix Hd=axis2dcm(ud);
                             Hd.setSubcol(xd,0,3);
@@ -891,13 +891,13 @@ public:
                             Vector x=Hd.subcol(0, 3, 3);
                             Vector u=dcm2axis(Hd);
                             target->clear();
-                            target->addDouble(x[0]);
-                            target->addDouble(x[1]);
-                            target->addDouble(x[2]);
-                            target->addDouble(u[0]);
-                            target->addDouble(u[1]);
-                            target->addDouble(u[2]);
-                            target->addDouble(u[3]);
+                            target->addFloat64(x[0]);
+                            target->addFloat64(x[1]);
+                            target->addFloat64(x[2]);
+                            target->addFloat64(u[0]);
+                            target->addFloat64(u[1]);
+                            target->addFloat64(u[2]);
+                            target->addFloat64(u[3]);
                             if (verbosity>0)
                             {
                                 yDebug() << "Target transformed from global:";
@@ -983,31 +983,31 @@ public:
     /****************************************************************/
     bool respond(const Bottle &cmd, Bottle &reply)
     {
-        int cmd_0=cmd.get(0).asVocab();
+        int cmd_0=cmd.get(0).asVocab32();
         if (cmd.size()==3)
         {
-            if (cmd_0==Vocab::encode("set"))
+            if (cmd_0==Vocab32::encode("set"))
             {
                 string cmd_1=cmd.get(1).asString();
                 if (cmd_1=="T")
                 {
                     lock_guard<mutex> lg(mtx);
-                    gen->setT(cmd.get(2).asDouble());
-                    reply.addVocab(Vocab::encode("ack"));
+                    gen->setT(cmd.get(2).asFloat64());
+                    reply.addVocab32(Vocab32::encode("ack"));
                 }
                 else if (cmd_1=="Ts")
                 {
                     lock_guard<mutex> lg(mtx);
-                    Ts=cmd.get(2).asDouble();
+                    Ts=cmd.get(2).asFloat64();
                     Ts=std::max(Ts,MIN_TS);
                     gen->setTs(Ts);
-                    reply.addVocab(Vocab::encode("ack"));
+                    reply.addVocab32(Vocab32::encode("ack"));
                 }
                 else if (cmd_1=="verbosity")
                 {
                     lock_guard<mutex> lg(mtx);
-                    verbosity=cmd.get(2).asInt();
-                    reply.addVocab(Vocab::encode("ack"));
+                    verbosity=cmd.get(2).asInt32();
+                    reply.addVocab32(Vocab32::encode("ack"));
                 }
                 else if (cmd_1=="mode")
                 {
@@ -1015,76 +1015,76 @@ public:
                     Property p=prepareSolverOptions("mode",mode);
 
                     if (go(p))
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                 }
                 else if (cmd_1=="torso_heave")
                 {
-                    Value torso_heave(cmd.get(2).asDouble());
+                    Value torso_heave(cmd.get(2).asFloat64());
                     Property p=prepareSolverOptions("torso_heave",torso_heave);
 
                     if (go(p))
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                 }
                 else if (cmd_1=="lower_arm_heave")
                 {
-                    Value lower_arm_heave(cmd.get(2).asDouble());
+                    Value lower_arm_heave(cmd.get(2).asFloat64());
                     Property p=prepareSolverOptions("lower_arm_heave",lower_arm_heave);
 
                     if (go(p))
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                 }
                 else if (cmd_1=="tol")
                 {
-                    Value tol(cmd.get(2).asDouble());
+                    Value tol(cmd.get(2).asFloat64());
                     Property p=prepareSolverOptions("tol",tol);
 
                     if (go(p))
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                 }
                 else if (cmd_1=="constr_tol")
                 {
-                    Value constr_tol(cmd.get(2).asDouble());
+                    Value constr_tol(cmd.get(2).asFloat64());
                     Property p=prepareSolverOptions("constr_tol",constr_tol);
 
                     if (go(p))
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                 }
             }
         }
         else if (cmd.size()==2)
         {
-            if (cmd_0==Vocab::encode("get"))
+            if (cmd_0==Vocab32::encode("get"))
             {
                 string cmd_1=cmd.get(1).asString();
                 if (cmd_1=="done")
                 {
                     lock_guard<mutex> lg(mtx);
-                    reply.addVocab(Vocab::encode("ack"));
-                    reply.addInt(controlling?0:1);
+                    reply.addVocab32(Vocab32::encode("ack"));
+                    reply.addInt32(controlling?0:1);
                 }
                 else if (cmd_1=="target")
                 {
                     lock_guard<mutex> lg(mtx);
-                    reply.addVocab(Vocab::encode("ack"));
+                    reply.addVocab32(Vocab32::encode("ack"));
                     reply.addList()=target;
                 }
                 else if (cmd_1=="T")
                 {
                     lock_guard<mutex> lg(mtx);
-                    reply.addVocab(Vocab::encode("ack"));
-                    reply.addDouble(gen->getT());
+                    reply.addVocab32(Vocab32::encode("ack"));
+                    reply.addFloat64(gen->getT());
                 }
                 else if (cmd_1=="Ts")
                 {
                     lock_guard<mutex> lg(mtx);
-                    reply.addVocab(Vocab::encode("ack"));
-                    reply.addDouble(Ts);
+                    reply.addVocab32(Vocab32::encode("ack"));
+                    reply.addFloat64(Ts);
                 }
                 else if (cmd_1=="verbosity")
                 {
                     lock_guard<mutex> lg(mtx);
-                    reply.addVocab(Vocab::encode("ack"));
-                    reply.addInt(verbosity);
+                    reply.addVocab32(Vocab32::encode("ack"));
+                    reply.addInt32(verbosity);
                 }
                 else if (cmd_1=="mode")
                 {
@@ -1093,7 +1093,7 @@ public:
                     if (solverPort.write(req,rep))
                     {
                         Value mode=parseSolverOptions(rep,"mode");
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                         reply.add(mode);
                     }
                 }
@@ -1104,7 +1104,7 @@ public:
                     if (solverPort.write(req,rep))
                     {
                         Value torso_heave=parseSolverOptions(rep,"torso_heave");
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                         reply.add(torso_heave);
                     }
                 }
@@ -1115,7 +1115,7 @@ public:
                     if (solverPort.write(req,rep))
                     {
                         Value lower_arm_heave=parseSolverOptions(rep,"lower_arm_heave");
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                         reply.add(lower_arm_heave);
                     }
                 }
@@ -1126,7 +1126,7 @@ public:
                     if (solverPort.write(req,rep))
                     {
                         Value tol=parseSolverOptions(rep,"tol");
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                         reply.add(tol);
                     }
                 }
@@ -1137,21 +1137,21 @@ public:
                     if (solverPort.write(req,rep))
                     {
                         Value constr_tol=parseSolverOptions(rep,"constr_tol");
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                         reply.add(constr_tol);
                     }
                 }
             }
-            else if (cmd_0==Vocab::encode("go"))
+            else if (cmd_0==Vocab32::encode("go"))
             {
                 if (Bottle *b=cmd.get(1).asList())
                 {
                     Property p(b->toString().c_str());
                     if (go(p))
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                 }
             }
-            else if (cmd_0==Vocab::encode("ask"))
+            else if (cmd_0==Vocab32::encode("ask"))
             {
                 if (Bottle *b=cmd.get(1).asList())
                 {
@@ -1159,17 +1159,17 @@ public:
                     Bottle payLoad;
                     if (ask(p,payLoad,false))
                     {
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                         reply.append(payLoad);
                     }
                     else if (payLoad.size()>0)
                     {
-                        reply.addVocab(Vocab::encode("nack"));
+                        reply.addVocab32(Vocab32::encode("nack"));
                         reply.append(payLoad);
                     }
                 }
             }
-            else if (cmd_0==Vocab::encode("askLocal"))
+            else if (cmd_0==Vocab32::encode("askLocal"))
             {
                 if (Bottle *b=cmd.get(1).asList())
                 {
@@ -1177,26 +1177,26 @@ public:
                     Bottle payLoad;
                     if (ask(p,payLoad,true))
                     {
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                         reply.append(payLoad);
                     }
                     else if (payLoad.size()>0)
                     {
-                        reply.addVocab(Vocab::encode("nack"));
+                        reply.addVocab32(Vocab32::encode("nack"));
                         reply.append(payLoad);
                     }
                 }
             }
         }
-        else if (cmd_0==Vocab::encode("stop"))
+        else if (cmd_0==Vocab32::encode("stop"))
         {
             lock_guard<mutex> lg(mtx);
             stopControl();
-            reply.addVocab(Vocab::encode("ack"));
+            reply.addVocab32(Vocab32::encode("ack"));
         }
 
         if (reply.size()==0)
-            reply.addVocab(Vocab::encode("nack")); 
+            reply.addVocab32(Vocab32::encode("nack")); 
         
         return true;
     }

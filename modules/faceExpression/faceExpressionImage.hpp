@@ -15,13 +15,13 @@
 #include "mouthThread.hpp"
 #include "eyesThread.hpp"
 
-#define VOCAB_AUDIO_START       yarp::os::createVocab('a','s','t','a')
-#define VOCAB_AUDIO_STOP        yarp::os::createVocab('a','s','t','o')
-#define VOCAB_TALK_START        yarp::os::createVocab('t','s','t','a')
-#define VOCAB_TALK_STOP         yarp::os::createVocab('t','s','t','o')
-#define VOCAB_BLINK             yarp::os::createVocab('b','l','i','n')
-#define VOCAB_RESET             yarp::os::createVocab('r','s','t')
-#define VOCAB_BLACK_RESET       yarp::os::createVocab('b','l','c','k')
+#define VOCAB_AUDIO_START       yarp::os::createVocab32('a','s','t','a')
+#define VOCAB_AUDIO_STOP        yarp::os::createVocab32('a','s','t','o')
+#define VOCAB_TALK_START        yarp::os::createVocab32('t','s','t','a')
+#define VOCAB_TALK_STOP         yarp::os::createVocab32('t','s','t','o')
+#define VOCAB_BLINK             yarp::os::createVocab32('b','l','i','n')
+#define VOCAB_RESET             yarp::os::createVocab32('r','s','t')
+#define VOCAB_BLACK_RESET       yarp::os::createVocab32('b','l','c','k')
 
 class FaceExpressionImageModule: public yarp::os::RFModule
 {

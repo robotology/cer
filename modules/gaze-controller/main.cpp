@@ -119,10 +119,10 @@ class Controller : public RFModule
                     group.check("cx") && group.check("cy"))
                 {
                     Matrix K=eye(3,4);
-                    K(0,0)=group.find("fx").asDouble();
-                    K(1,1)=group.find("fy").asDouble();
-                    K(0,2)=group.find("cx").asDouble();
-                    K(1,2)=group.find("cy").asDouble();
+                    K(0,0)=group.find("fx").asFloat64();
+                    K(1,1)=group.find("fy").asFloat64();
+                    K(0,2)=group.find("cx").asFloat64();
+                    K(1,2)=group.find("cy").asFloat64();
                     
                     yInfo("%s",K.toString(3,3).c_str());
                     intrinsics[camera]=pinv(K.transposed()).transposed(); 
@@ -296,7 +296,7 @@ class Controller : public RFModule
                 bool doPrint=false;
                 if (pitchLim->size()>0)
                 {
-                    double val=pitchLim->get(0).asDouble();
+                    double val=pitchLim->get(0).asFloat64();
                     val=std::min(std::max(val,pitchPhy[0]),pitchPhy[1]);
                     chain[1+i].setMin(CTRL_DEG2RAD*val);
                     doPrint=true;
@@ -304,7 +304,7 @@ class Controller : public RFModule
 
                 if (pitchLim->size()>1)
                 {
-                    double val=pitchLim->get(1).asDouble();
+                    double val=pitchLim->get(1).asFloat64();
                     val=std::min(std::max(val,pitchPhy[0]),pitchPhy[1]);
                     chain[1+i].setMax(CTRL_DEG2RAD*val);
                     doPrint=true;
@@ -322,7 +322,7 @@ class Controller : public RFModule
                 bool doPrint=false;
                 if (yawLim->size()>0)
                 {
-                    double val=yawLim->get(0).asDouble();
+                    double val=yawLim->get(0).asFloat64();
                     val=std::min(std::max(val,yawPhy[0]),yawPhy[1]);
                     chain[1+i].setMin(CTRL_DEG2RAD*val);
                     doPrint=true;
@@ -330,7 +330,7 @@ class Controller : public RFModule
 
                 if (yawLim->size()>1)
                 {
-                    double val=yawLim->get(1).asDouble();
+                    double val=yawLim->get(1).asFloat64();
                     val=std::min(std::max(val,yawPhy[0]),yawPhy[1]);
                     chain[1+i].setMax(CTRL_DEG2RAD*val);
                     doPrint=true;
@@ -395,10 +395,10 @@ public:
     {
         string robot=rf.check("robot",Value("cer")).asString();
         bool get_bounds=(rf.check("get-bounds",Value("on")).asString()=="on");
-        verbosity=rf.check("verbosity",Value(0)).asInt();
-        stop_threshold=rf.check("stop-threshold",Value(2.0)).asDouble();
-        double T=rf.check("T",Value(1.0)).asDouble();
-        Ts=rf.check("Ts",Value(MIN_TS)).asDouble();
+        verbosity=rf.check("verbosity",Value(0)).asInt32();
+        stop_threshold=rf.check("stop-threshold",Value(2.0)).asFloat64();
+        double T=rf.check("T",Value(1.0)).asFloat64();
+        Ts=rf.check("Ts",Value(MIN_TS)).asFloat64();
         Ts=std::max(Ts,MIN_TS);
 
         Bottle *pitchLim=NULL; Bottle *yawLim=NULL;
@@ -568,9 +568,9 @@ public:
         {
             if (target_location->size()>=3)
             {
-                xd[0]=target_location->get(0).asDouble();
-                xd[1]=target_location->get(1).asDouble();
-                xd[2]=target_location->get(2).asDouble();
+                xd[0]=target_location->get(0).asFloat64();
+                xd[1]=target_location->get(1).asFloat64();
+                xd[2]=target_location->get(2).asFloat64();
 
                 q=getEncoders();
                 doControl=true;
@@ -583,10 +583,10 @@ public:
             if (target_location->size()>=2)
             {
                 Vector azi(4,0.0); azi[2]=1.0;
-                azi[3]=CTRL_DEG2RAD*target_location->get(0).asDouble();
+                azi[3]=CTRL_DEG2RAD*target_location->get(0).asFloat64();
 
                 Vector ele(4,0.0); ele[1]=-1.0;
-                ele[3]=CTRL_DEG2RAD*target_location->get(1).asDouble();
+                ele[3]=CTRL_DEG2RAD*target_location->get(1).asFloat64();
 
                 Matrix Hee;
                 Vector q0(6,0.0);
@@ -619,10 +619,10 @@ public:
                 {
                     Vector p(3,1.0);
                     if (target_location->size()>=3)
-                        p[2]=target_location->get(2).asDouble();
+                        p[2]=target_location->get(2).asFloat64();
 
-                    p[0]=p[2]*target_location->get(0).asDouble(); 
-                    p[1]=p[2]*target_location->get(1).asDouble();
+                    p[0]=p[2]*target_location->get(0).asFloat64(); 
+                    p[1]=p[2]*target_location->get(1).asFloat64();
 
                     Matrix Hee;
                     q=getEncoders();
@@ -714,33 +714,33 @@ public:
     /****************************************************************/
     bool respond(const Bottle &cmd, Bottle &reply)
     {
-        int cmd_0=cmd.get(0).asVocab();
+        int cmd_0=cmd.get(0).asVocab32();
         if (cmd.size()==3)
         {
-            if (cmd_0==Vocab::encode("set"))
+            if (cmd_0==Vocab32::encode("set"))
             {
                 string cmd_1=cmd.get(1).asString();
                 if (cmd_1=="T")
                 {
                     lock_guard<mutex> lg(mtx);
-                    gen->setT(cmd.get(2).asDouble());
-                    reply.addVocab(Vocab::encode("ack"));
+                    gen->setT(cmd.get(2).asFloat64());
+                    reply.addVocab32(Vocab32::encode("ack"));
                 }
                 else if (cmd_1=="Ts")
                 {
                     lock_guard<mutex> lg(mtx);
-                    Ts=cmd.get(2).asDouble();
+                    Ts=cmd.get(2).asFloat64();
                     Ts=std::max(Ts,MIN_TS);
                     gen->setTs(Ts);
-                    reply.addVocab(Vocab::encode("ack"));
+                    reply.addVocab32(Vocab32::encode("ack"));
                 }
                 else if (cmd_1=="verbosity")
                 {
                     lock_guard<mutex> lg(mtx);
-                    verbosity=cmd.get(2).asInt();
+                    verbosity=cmd.get(2).asInt32();
                     for (auto &s:solver)
                         s.second.setVerbosity(verbosity);
-                    reply.addVocab(Vocab::encode("ack"));
+                    reply.addVocab32(Vocab32::encode("ack"));
                 }
                 else if (cmd_1=="joints-limits::pitch")
                 {
@@ -748,7 +748,7 @@ public:
                     {
                         lock_guard<mutex> lg(mtx);
                         applyCustomJointsBounds(pitchLim,NULL);
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                     }
                 }
                 else if (cmd_1=="joints-limits::yaw")
@@ -757,46 +757,46 @@ public:
                     {
                         lock_guard<mutex> lg(mtx);
                         applyCustomJointsBounds(NULL,yawLim);
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                     }
                 }
             }
         }
         else if (cmd.size()==2)
         {
-            if (cmd_0==Vocab::encode("get"))
+            if (cmd_0==Vocab32::encode("get"))
             {
                 string cmd_1=cmd.get(1).asString();
                 if (cmd_1=="done")
                 {
                     lock_guard<mutex> lg(mtx);
-                    reply.addVocab(Vocab::encode("ack"));
-                    reply.addInt(controlling?0:1);
+                    reply.addVocab32(Vocab32::encode("ack"));
+                    reply.addInt32(controlling?0:1);
                 }
                 else if (cmd_1=="T")
                 {
                     lock_guard<mutex> lg(mtx);
-                    reply.addVocab(Vocab::encode("ack"));
-                    reply.addDouble(gen->getT());
+                    reply.addVocab32(Vocab32::encode("ack"));
+                    reply.addFloat64(gen->getT());
                 }
                 else if (cmd_1=="Ts")
                 {
                     lock_guard<mutex> lg(mtx);
-                    reply.addVocab(Vocab::encode("ack"));
-                    reply.addDouble(Ts);
+                    reply.addVocab32(Vocab32::encode("ack"));
+                    reply.addFloat64(Ts);
                 }
                 else if (cmd_1=="verbosity")
                 {
                     lock_guard<mutex> lg(mtx);
-                    reply.addVocab(Vocab::encode("ack"));
-                    reply.addInt(verbosity);
+                    reply.addVocab32(Vocab32::encode("ack"));
+                    reply.addInt32(verbosity);
                 }
                 else if (cmd_1=="joints-limits::pitch")
                 {
                     lock_guard<mutex> lg(mtx);
                     Vector pitchLim,yawLim;
                     getJointsBounds(pitchLim,yawLim);
-                    reply.addVocab(Vocab::encode("ack"));                    
+                    reply.addVocab32(Vocab32::encode("ack"));                    
                     reply.addList().read(pitchLim);
                 }
                 else if (cmd_1=="joints-limits::yaw")
@@ -804,29 +804,29 @@ public:
                     lock_guard<mutex> lg(mtx);
                     Vector pitchLim,yawLim;
                     getJointsBounds(pitchLim,yawLim);
-                    reply.addVocab(Vocab::encode("ack"));                    
+                    reply.addVocab32(Vocab32::encode("ack"));                    
                     reply.addList().read(yawLim);
                 }
             }
-            else if (cmd_0==Vocab::encode("look"))
+            else if (cmd_0==Vocab32::encode("look"))
             {
                 if (Bottle *b=cmd.get(1).asList())
                 {
                     Property p(b->toString().c_str());
                     if (look(p))
-                        reply.addVocab(Vocab::encode("ack"));
+                        reply.addVocab32(Vocab32::encode("ack"));
                 }
             }
         }
-        else if (cmd_0==Vocab::encode("stop"))
+        else if (cmd_0==Vocab32::encode("stop"))
         {
             lock_guard<mutex> lg(mtx);
             stopControl();
-            reply.addVocab(Vocab::encode("ack"));
+            reply.addVocab32(Vocab32::encode("ack"));
         }
 
         if (reply.size()==0)
-            reply.addVocab(Vocab::encode("nack")); 
+            reply.addVocab32(Vocab32::encode("nack")); 
         
         return true;
     }

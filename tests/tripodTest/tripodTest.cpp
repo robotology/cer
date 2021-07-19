@@ -69,8 +69,8 @@ bool TripodTest::setup(yarp::os::Property& property)
     // read param from config file
     std::string portPrefix("/tripodTest");
     std::string robotName = property.check("robotName", yarp::os::Value("cer")).asString();
-    double pos_tolerance = property.check("posTolerance", yarp::os::Value(DEFAULT_POS_THRESHOLD)).asDouble();
-    double vel_tolerance = property.check("velTolerance", yarp::os::Value(DEFAULT_VEL_THRESHOLD)).asDouble();
+    double pos_tolerance = property.check("posTolerance", yarp::os::Value(DEFAULT_POS_THRESHOLD)).asFloat64();
+    double vel_tolerance = property.check("velTolerance", yarp::os::Value(DEFAULT_VEL_THRESHOLD)).asFloat64();
     mutualPosTolerance = pos_tolerance;
 
     // initialize device

@@ -54,7 +54,7 @@ public:
     virtual bool configure(ResourceFinder &rf)
     {
         //set the thread rate
-        int rate = rf.check("rate",Value(10)).asInt();
+        int rate = rf.check("rate",Value(10)).asInt32();
         yInfo("baseCtrl thread rate: %d ms.",rate);
 
         //start the control thread

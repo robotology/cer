@@ -236,8 +236,8 @@ public:
             hands[HandThread::left_hand]  = &left;
             hands[HandThread::right_hand] = &right;
 
-            left.targetRadius = rf.find("left_radius").asDouble();
-            right.targetRadius = rf.find("right_radius").asDouble();
+            left.targetRadius = rf.find("left_radius").asFloat64();
+            right.targetRadius = rf.find("right_radius").asFloat64();
 
             if(!left.openControlBoards(rf)  ||
                !right.openControlBoards(rf))

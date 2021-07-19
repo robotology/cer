@@ -127,7 +127,7 @@ bool ControlThread::threadInit()
     }
 
     m_real_value = -1;
-    m_real_value = (float)(m_rf.find("real_value").asDouble());
+    m_real_value = (float)(m_rf.find("real_value").asFloat64());
     m_depth_width = iRGBD->getDepthWidth();
     m_depth_height = iRGBD->getDepthHeight();
 

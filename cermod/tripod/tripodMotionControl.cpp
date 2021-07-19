@@ -510,7 +510,7 @@ bool tripodMotionControl::open(yarp::os::Searchable &config)
         return false;
     }
     else
-       _njoints = general.find("Joints").asInt();
+       _njoints = general.find("Joints").asInt32();
 
     if(!alloc(_njoints))
     {
@@ -643,16 +643,16 @@ bool tripodMotionControl::parsePositionPidsGroup(Bottle& pidsGroup, Pid myPid[])
 {
     int j=0;
     Bottle xtmp;
-    if (!extractGroup(pidsGroup, xtmp, "kp", "Pid kp parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].kp = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "kd", "Pid kd parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].kd = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "ki", "Pid kp parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].ki = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "maxInt", "Pid maxInt parameter", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].max_int = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "maxPwm", "Pid maxPwm parameter", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].max_output = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "shift", "Pid shift parameter", _njoints))     return false; for (j=0; j<_njoints; j++) myPid[j].scale = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "ko", "Pid ko parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].offset = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "stictionUp", "Pid stictionUp", _njoints))     return false; for (j=0; j<_njoints; j++) myPid[j].stiction_up_val = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "stictionDwn", "Pid stictionDwn", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].stiction_down_val = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "kff", "Pid kff parameter", _njoints))         return false; for (j=0; j<_njoints; j++) myPid[j].kff = xtmp.get(j+1).asDouble();
+    if (!extractGroup(pidsGroup, xtmp, "kp", "Pid kp parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].kp = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "kd", "Pid kd parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].kd = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "ki", "Pid kp parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].ki = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "maxInt", "Pid maxInt parameter", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].max_int = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "maxPwm", "Pid maxPwm parameter", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].max_output = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "shift", "Pid shift parameter", _njoints))     return false; for (j=0; j<_njoints; j++) myPid[j].scale = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "ko", "Pid ko parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].offset = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "stictionUp", "Pid stictionUp", _njoints))     return false; for (j=0; j<_njoints; j++) myPid[j].stiction_up_val = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "stictionDwn", "Pid stictionDwn", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].stiction_down_val = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "kff", "Pid kff parameter", _njoints))         return false; for (j=0; j<_njoints; j++) myPid[j].kff = xtmp.get(j+1).asFloat64();
 
     //conversion from metric to machine units (if applicable)
     if (_positionControlUnits==P_METRIC_UNITS)
@@ -679,7 +679,7 @@ bool tripodMotionControl::parsePositionPidsGroup(Bottle& pidsGroup, Pid myPid[])
         }
 
         fprintf(stderr,  "embObjMotionControl using LIMITED PWM!! \n");
-        for (j=0; j<_njoints; j++) myPid[j].max_output = xtmp.get(j+1).asDouble();
+        for (j=0; j<_njoints; j++) myPid[j].max_output = xtmp.get(j+1).asFloat64();
     }
 
     return true;
@@ -689,19 +689,19 @@ bool tripodMotionControl::parseTorquePidsGroup(Bottle& pidsGroup, Pid myPid[], d
 {
     int j=0;
     Bottle xtmp;
-    if (!extractGroup(pidsGroup, xtmp, "kp", "Pid kp parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].kp = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "kd", "Pid kd parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].kd = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "ki", "Pid kp parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].ki = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "maxInt", "Pid maxInt parameter", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].max_int = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "maxPwm", "Pid maxPwm parameter", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].max_output = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "shift", "Pid shift parameter", _njoints))     return false; for (j=0; j<_njoints; j++) myPid[j].scale = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "ko", "Pid ko parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].offset = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "stictionUp", "Pid stictionUp", _njoints))     return false; for (j=0; j<_njoints; j++) myPid[j].stiction_up_val = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "stictionDwn", "Pid stictionDwn", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].stiction_down_val = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "kff",   "Pid kff parameter", _njoints))       return false; for (j=0; j<_njoints; j++) myPid[j].kff  = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "kbemf", "kbemf parameter", _njoints))         return false; for (j=0; j<_njoints; j++) kbemf[j]      = xtmp.get(j+1).asDouble();
-    if (!extractGroup(pidsGroup, xtmp, "ktau", "ktau parameter", _njoints))           return false; for (j=0; j<_njoints; j++) ktau[j]       = xtmp.get(j+1).asDouble(); 
-    if (!extractGroup(pidsGroup, xtmp, "filterType", "filterType param", _njoints))   return false; for (j=0; j<_njoints; j++) filterType[j] = xtmp.get(j+1).asInt();
+    if (!extractGroup(pidsGroup, xtmp, "kp", "Pid kp parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].kp = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "kd", "Pid kd parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].kd = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "ki", "Pid kp parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].ki = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "maxInt", "Pid maxInt parameter", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].max_int = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "maxPwm", "Pid maxPwm parameter", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].max_output = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "shift", "Pid shift parameter", _njoints))     return false; for (j=0; j<_njoints; j++) myPid[j].scale = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "ko", "Pid ko parameter", _njoints))           return false; for (j=0; j<_njoints; j++) myPid[j].offset = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "stictionUp", "Pid stictionUp", _njoints))     return false; for (j=0; j<_njoints; j++) myPid[j].stiction_up_val = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "stictionDwn", "Pid stictionDwn", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].stiction_down_val = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "kff",   "Pid kff parameter", _njoints))       return false; for (j=0; j<_njoints; j++) myPid[j].kff  = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "kbemf", "kbemf parameter", _njoints))         return false; for (j=0; j<_njoints; j++) kbemf[j]      = xtmp.get(j+1).asFloat64();
+    if (!extractGroup(pidsGroup, xtmp, "ktau", "ktau parameter", _njoints))           return false; for (j=0; j<_njoints; j++) ktau[j]       = xtmp.get(j+1).asFloat64(); 
+    if (!extractGroup(pidsGroup, xtmp, "filterType", "filterType param", _njoints))   return false; for (j=0; j<_njoints; j++) filterType[j] = xtmp.get(j+1).asInt32();
  
 
     //optional PWM limit
@@ -714,7 +714,7 @@ bool tripodMotionControl::parseTorquePidsGroup(Bottle& pidsGroup, Pid myPid[], d
         }
 
         fprintf(stderr,  "tripodMotionControl using LIMITED PWM!! \n");
-        for (j=0; j<_njoints; j++) myPid[j].max_output = xtmp.get(j+1).asDouble();
+        for (j=0; j<_njoints; j++) myPid[j].max_output = xtmp.get(j+1).asFloat64();
     }
 
     return true;
@@ -761,7 +761,7 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
 
     for (i = 1; i < xtmp.size(); i++)
     {
-        tmp_A2E = xtmp.get(i).asDouble();
+        tmp_A2E = xtmp.get(i).asFloat64();
         if (tmp_A2E<0)
         {
             yWarning("Encoder parameter should be positive!");
@@ -790,7 +790,7 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
     if (!extractGroup(tripod_description, xtmp, "Radius","The radius ([m])", 1))
         return false;
     else
-        radius = xtmp.get(1).asDouble();
+        radius = xtmp.get(1).asFloat64();
 
     mRadius = radius;
 
@@ -798,19 +798,19 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
         if (!extractGroup(tripod_description, xtmp, "Max_el","The minimum elongation ([m]).", 1))
         return false;
     else
-        lMax = xtmp.get(1).asDouble();
+        lMax = xtmp.get(1).asFloat64();
 
     // min limit
         if (!extractGroup(tripod_description, xtmp, "Min_el","The maximum permitted bending angle ([deg]).", 1))
         return false;
     else
-        lMin = xtmp.get(1).asDouble();
+        lMin = xtmp.get(1).asFloat64();
 
     // alpha max
         if (!extractGroup(tripod_description, xtmp, "Max_alpha","The maximum permitted bending angle ([deg])", 1))
         return false;
     else
-        alpha = xtmp.get(1).asDouble();
+        alpha = xtmp.get(1).asFloat64();
 
     // This particular device has weird limits for joints. This is not scalable unless we duplicate some parameter in config file.
     if(_njoints >= 3)
@@ -844,7 +844,7 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
         for(int r=0; r<4; r++)
             for(int c=0; c<4; c++)
             {
-                _baseTransformation[r][c] = xtmp.get(idx).asDouble();
+                _baseTransformation[r][c] = xtmp.get(idx).asFloat64();
                 idx++;
             }
     }
@@ -862,7 +862,7 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
     if (!extractGroup(limits_group, xtmp, "JntVelocityMax","The maximum velocity for the joint ([deg/s or m/s])", 1))
         return false;
     else
-        _velLimitsMax = xtmp.get(1).asDouble();
+        _velLimitsMax = xtmp.get(1).asFloat64();
 
     return true;
 }
@@ -2126,7 +2126,7 @@ bool tripodMotionControl::getRemoteVariableRaw(std::string key, yarp::os::Bottle
     val.clear();
     //if (key == "encoders")
     //{
-    //    Bottle& r = val.addList(); for (int i = 0; i < _njoints; i++) { r.addDouble(_measureConverter->posA2E(1.0, i)); }
+    //    Bottle& r = val.addList(); for (int i = 0; i < _njoints; i++) { r.addFloat64(_measureConverter->posA2E(1.0, i)); }
     //    return true;
     //}
     yWarning("getRemoteVariable(): Unknown variable %s", key.c_str());

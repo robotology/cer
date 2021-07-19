@@ -62,9 +62,9 @@ public:
         string robot=rf.check("robot",Value("cer")).asString();
         string part=rf.check("part",Value("left_upper_arm")).asString();
         type=rf.check("type",Value("stairs")).asString();
-        joint=rf.check("joint",Value(0)).asInt();
-        Ts=rf.check("Ts",Value(0.01)).asDouble();
-        T=rf.check("T",Value(4.0)).asDouble();
+        joint=rf.check("joint",Value(0)).asInt32();
+        Ts=rf.check("Ts",Value(0.01)).asFloat64();
+        T=rf.check("T",Value(4.0)).asFloat64();
 
         Property option;
         option.put("device","remote_controlboard");

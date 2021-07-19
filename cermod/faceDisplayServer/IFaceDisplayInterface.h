@@ -11,17 +11,17 @@
 #include <yarp/sig/Image.h>
 
 // VOCABS
-#define VOCAB_SET           yarp::os::createVocab('s','e','t')
-#define VOCAB_GET           yarp::os::createVocab('g','e','t')
+#define VOCAB_SET           yarp::os::createVocab32('s','e','t')
+#define VOCAB_GET           yarp::os::createVocab32('g','e','t')
 
-#define VOCAB_FACE          yarp::os::createVocab('f','a','c','e')
-#define VOCAB_FILE          yarp::os::createVocab('f','i','l','e')
-#define VOCAB_MOVE          yarp::os::createVocab('m','o','v','e')
-#define VOCAB_IMAGE         yarp::os::createVocab('i','m','g')
+#define VOCAB_FACE          yarp::os::createVocab32('f','a','c','e')
+#define VOCAB_FILE          yarp::os::createVocab32('f','i','l','e')
+#define VOCAB_MOVE          yarp::os::createVocab32('m','o','v','e')
+#define VOCAB_IMAGE         yarp::os::createVocab32('i','m','g')
 
-#define VOCAB_FACE_HAPPY    yarp::os::createVocab('h','a','p')
-#define VOCAB_FACE_SAD      yarp::os::createVocab('s','a','d')
-#define VOCAB_FACE_WARNING  yarp::os::createVocab('w','a','r','n')
+#define VOCAB_FACE_HAPPY    yarp::os::createVocab32('h','a','p')
+#define VOCAB_FACE_SAD      yarp::os::createVocab32('s','a','d')
+#define VOCAB_FACE_WARNING  yarp::os::createVocab32('w','a','r','n')
 
 namespace cer {
     namespace dev {

@@ -34,12 +34,12 @@ yarp::os::Things& Oculus2Cer::update(yarp::os::Things& thing)
     yarp::os::Bottle* bt = thing.cast_as<yarp::os::Bottle>();
     yAssert(bt);
 
-    double pitch = bt->get(0).asDouble();
-    double yaw   = bt->get(2).asDouble();
+    double pitch = bt->get(0).asFloat64();
+    double yaw   = bt->get(2).asFloat64();
 
     this->bottle.clear();
-    this->bottle.addDouble(-pitch);
-    this->bottle.addDouble(yaw);
+    this->bottle.addFloat64(-pitch);
+    this->bottle.addFloat64(yaw);
 
     return this->things;
 }

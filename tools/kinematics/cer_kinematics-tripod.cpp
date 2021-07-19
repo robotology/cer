@@ -53,7 +53,7 @@ public:
         solver.setParameters(TripodParameters(0.09,0.0,0.2,30.0,R));
 
         rho.resize(3,0.0);
-        solver.setVerbosity(rf.check("verbosity",Value(1)).asInt());
+        solver.setVerbosity(rf.check("verbosity",Value(1)).asInt32());
         gen=new minJerkTrajGen(rho,getPeriod(),2.0);
 
         iPort.open("/solver:i");
@@ -91,11 +91,11 @@ public:
             }
 
             Vector ud(4);
-            double zd=ibData->get(0).asDouble();
-            ud[0]=ibData->get(1).asDouble();
-            ud[1]=ibData->get(2).asDouble();
-            ud[2]=ibData->get(3).asDouble();
-            ud[3]=ibData->get(4).asDouble();
+            double zd=ibData->get(0).asFloat64();
+            ud[0]=ibData->get(1).asFloat64();
+            ud[1]=ibData->get(2).asFloat64();
+            ud[2]=ibData->get(3).asFloat64();
+            ud[3]=ibData->get(4).asFloat64();
             solver.setInitialGuess(rho);
             solver.ikin(zd,ud,rho);
 
