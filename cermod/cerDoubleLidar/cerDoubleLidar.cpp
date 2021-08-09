@@ -31,6 +31,8 @@ using namespace yarp::sig;
 using namespace yarp::dev;
 using namespace cer::dev;
 
+YARP_LOG_COMPONENT(CER_DOUBLE_LIDAR, "cer.devices.cerDoubleLidar")
+
 bool cerDoubleLidar::LaserCfg_t::loadConfig(yarp::os::Searchable& config)
 {
     std::string key;
@@ -44,11 +46,11 @@ bool cerDoubleLidar::LaserCfg_t::loadConfig(yarp::os::Searchable& config)
     }
     
     yarp::os::Searchable& l_config = config.findGroup(key);
-    if (l_config.check("pose")==false) {yError() << "cerDoubleLidar: missing pose"; return false; }
+    if (l_config.check("pose")==false) {yCError(CER_DOUBLE_LIDAR) << "missing pose"; return false; }
     Bottle & b_pose = l_config.findGroup("pose");
     if(b_pose.size()!= 5)
     {
-        yError() << "cerDoubleLidar: wrong size of pose ("<<b_pose.size()<<"). It should be <x y x theta>";
+        yCError(CER_DOUBLE_LIDAR) << "wrong size of pose ("<<b_pose.size()<<"). It should be <x y x theta>";
         return false; 
     }
     pose.x = b_pose.get(1).asFloat64();
@@ -57,11 +59,11 @@ bool cerDoubleLidar::LaserCfg_t::loadConfig(yarp::os::Searchable& config)
     pose.theta = b_pose.get(4).asFloat64();
 
 
-    if (l_config.check("file")==false) {yError() << "cerDoubleLidar: missing file"; return false; }
+    if (l_config.check("file")==false) {yCError(CER_DOUBLE_LIDAR) << "missing file"; return false; }
     Bottle & b_filename = l_config.findGroup("file");
     fileCfgName = b_filename.get(1).asString();
 
-    if (l_config.check("sensorName")==false) {yError() << "cerDoubleLidar: missing sensorName"; return false; }
+    if (l_config.check("sensorName")==false) {yCError(CER_DOUBLE_LIDAR) << "missing sensorName"; return false; }
     Bottle & b_sensorName = l_config.findGroup("sensorName");
     sensorName = b_sensorName.get(1).asString();
 
@@ -87,53 +89,53 @@ bool cerDoubleLidar::getLasersInterfaces(void)
 {
     if(m_driver_laserFront == nullptr)
     {
-        yError() << "cerDoubleLidar: cannot find laserFront device";
+        yCError(CER_DOUBLE_LIDAR) << "cannot find laserFront device";
         return false;
     }
     else
     {
-        yInfo() << "****cerDoubleLidar: laserFront device found. OK";
+        yCInfo(CER_DOUBLE_LIDAR) << "laserFront device found. OK";
     }
 
     if(m_driver_laserBack == nullptr)
     {
-        yError() << "cerDoubleLidar: cannot find laserBack device";
+        yCError(CER_DOUBLE_LIDAR) << "cannot find laserBack device";
         return false;
     }
     else
     {
-        yInfo() << "****cerDoubleLidar: laserBack device found. OK";
+        yCInfo(CER_DOUBLE_LIDAR) << "laserBack device found. OK";
     }
 
     if(!m_driver_laserFront->view(m_ILaserFrontData))
     {
-        yError() << "cerDoubleLidar: cannot get interface of laser front";
+        yCError(CER_DOUBLE_LIDAR) << "cannot get interface of laser front";
         return false;
     }
     else
     {
-        yInfo() << "****cerDoubleLidar: get interface of laser front. OK";
+        yCInfo(CER_DOUBLE_LIDAR) << "get interface of laser front. OK";
     }
 
     if (!m_driver_laserFront->view(m_ILaserFrontStamp))
     {
-        yError() << "cerDoubleLidar: cannot get IPreciselyTimed of laser front";
+        yCError(CER_DOUBLE_LIDAR) << "cannot get IPreciselyTimed of laser front";
         return false;
     }
 
     if(!m_driver_laserBack->view(m_ILaserBackData))
     {
-        yError() << "cerDoubleLidar: cannot get interface of laser Back";
+        yCError(CER_DOUBLE_LIDAR) << "cannot get interface of laser Back";
         return false;
     }
     else
     {
-        yInfo() << "****cerDoubleLidar: get interface of laser Back. OK";
+        yCInfo(CER_DOUBLE_LIDAR) << "get interface of laser Back. OK";
     }
 
     if (!m_driver_laserBack->view(m_ILaserBackStamp))
     {
-        yError() << "cerDoubleLidar: cannot get IPreciselyTimed of laser back";
+        yCError(CER_DOUBLE_LIDAR) << "cannot get IPreciselyTimed of laser back";
         return false;
     }
 
@@ -144,7 +146,7 @@ bool cerDoubleLidar::attachAll(const PolyDriverList &p)
 {
     if(p.size()!=2)
     {
-        yError() << "cerDoubleLidar attach with wrong num of drivers";
+        yCError(CER_DOUBLE_LIDAR) << "attach with wrong num of drivers";
         return false;
     }
 
@@ -156,7 +158,7 @@ bool cerDoubleLidar::attachAll(const PolyDriverList &p)
             m_driver_laserBack = p[i]->poly;
         else
         {
-             yError() << "cerDoubleLidar::attach: the driver called" << p[i]->key << "not belong to my configuration";
+             yCError(CER_DOUBLE_LIDAR) << "attach: the driver called" << p[i]->key << "not belong to my configuration";
              return false;
         }
     }
@@ -185,14 +187,14 @@ bool cerDoubleLidar::createLasersDevices(void)
     Property laserF_prop;
     if(!laserF_prop.fromConfigFile(rf.findFileByName(m_lFrontCfg.fileCfgName)))
     {
-        yError() << "cerDoubleLidar: cannot load file " << m_lFrontCfg.fileCfgName;
+        yCError(CER_DOUBLE_LIDAR) << "cannot load file " << m_lFrontCfg.fileCfgName;
         return false;
     }
 
     m_driver_laserFront = new PolyDriver(laserF_prop);
     if(m_driver_laserFront == nullptr)
     {
-        yError() << "cerDoubleLidar: cannot cannot create device for laser front";
+        yCError(CER_DOUBLE_LIDAR) << "cannot create device for laser front";
         return false;
     }
 
@@ -200,30 +202,30 @@ bool cerDoubleLidar::createLasersDevices(void)
     Property laserB_prop;
     if(!laserB_prop.fromConfigFile(rf.findFileByName(m_lBackCfg.fileCfgName)))
     {
-        yError() << "cerDoubleLidar: cannot load file " << m_lBackCfg.fileCfgName;
+        yCError(CER_DOUBLE_LIDAR) << "cannot load file " << m_lBackCfg.fileCfgName;
         return false;
     }
 
     m_driver_laserBack = new PolyDriver(laserB_prop);
     if(m_driver_laserBack == nullptr)
     {
-        yError() << "cerDoubleLidar: cannot cannot create device for laser back";
+        yCError(CER_DOUBLE_LIDAR) << "cannot create device for laser back";
         return false;
     }
 
     if(!m_driver_laserFront->open(laserF_prop))
     {
-        yError() << "cerDoubleLidar: cannot open laser Front";
+        yCError(CER_DOUBLE_LIDAR) << "cannot open laser Front";
         return false;
     }
-    yError() << "cerDoubleLidar: cannot opened laser Front! OK";
+    yCError(CER_DOUBLE_LIDAR) << "cannot opened laser Front! OK";
 
     if(!m_driver_laserBack->open(laserB_prop))
     {
-        yError() << "cerDoubleLidar: cannot open laser Back";
+        yCError(CER_DOUBLE_LIDAR) << "cannot open laser Back";
         return false;
     }
-    yError() << "cerDoubleLidar:  opened laser Back! OK";
+    yCError(CER_DOUBLE_LIDAR) << "opened laser Back! OK";
 
     if(!getLasersInterfaces())
         return false;
@@ -235,26 +237,26 @@ bool cerDoubleLidar::createLasersDevices(void)
 bool cerDoubleLidar::open(yarp::os::Searchable& config)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
-    yDebug() << "cerDoubleLidar::open()";
+    yDebug() << "open()";
     
      //parse all the parameters related to the linear/angular range of the sensor
      yDebug() << config.toString();
     if (this->parseConfiguration(config) == false)
     {
-        yError() << "cerDoubleLidar: error parsing parameters";
+        yCError(CER_DOUBLE_LIDAR) << "error parsing parameters";
         return false;
     }
     
     if(!m_lFrontCfg.loadConfig(config))
     {
-        yError() << "cerDoubleLidar: m_lFrontCfg.loadConfig() failed";
+        yCError(CER_DOUBLE_LIDAR) << "m_lFrontCfg.loadConfig() failed";
         return false;
     }
     yDebug() << "x:" << m_lFrontCfg.pose.x << "y:" << m_lFrontCfg.pose.y << "z:" << m_lFrontCfg.pose.z << "t:" << m_lFrontCfg.pose.theta << m_lFrontCfg.sensorName;
 
     if(!m_lBackCfg.loadConfig(config))
     {
-        yError() << "cerDoubleLidar: m_lBackCfg.loadConfig() failed";
+        yCError(CER_DOUBLE_LIDAR) << "m_lBackCfg.loadConfig() failed";
         return false;
     }
     yDebug() << "x:" << m_lBackCfg.pose.x << "y:" << m_lBackCfg.pose.y << "z:" << m_lBackCfg.pose.z << "t:" << m_lBackCfg.pose.theta << m_lBackCfg.sensorName;
@@ -262,7 +264,7 @@ bool cerDoubleLidar::open(yarp::os::Searchable& config)
     //currently if z values differs, than return error
     if(m_lFrontCfg.pose.z != m_lBackCfg.pose.z)
     {
-        yWarning() << "cerDoubleLidar: poses of laser front and back have different z values";
+        yCWarning(CER_DOUBLE_LIDAR) << "poses of laser front and back have different z values";
     }
 
     if (config.check("subdevice"))
@@ -312,20 +314,20 @@ bool cerDoubleLidar::verifyLasersConfigurations(void)
     {
         if(!m_ILaserFrontData->getScanLimits(min_angle[0], max_angle[0]))
         {
-            yError() << "cerDoubleLidar: error in getScanLimits for front laser";
+            yCError(CER_DOUBLE_LIDAR) << "error in getScanLimits for front laser";
             return false;
         }
 
         if(!m_ILaserBackData->getScanLimits(min_angle[1], max_angle[1]))
         {
-            yError() << "cerDoubleLidar: error in getScanLimits for back laser";
+            yCError(CER_DOUBLE_LIDAR) << "error in getScanLimits for back laser";
             return false;
         }
 
         /*
         if( (min_angle[0] != min_angle[1]) || (max_angle[0] != max_angle[1]) )
         {
-            yError() << "cerDoubleLidar: front and back laser differ in getScanLimits";
+            yCError(CER_DOUBLE_LIDAR) << "front and back laser differ in getScanLimits";
             return false;
         }*/
     }
@@ -333,40 +335,40 @@ bool cerDoubleLidar::verifyLasersConfigurations(void)
     {
         if(!m_ILaserFrontData->getDistanceRange(min_dist[0], max_dist[0]))
         {
-            yError() << "cerDoubleLidar: error in getDistanceRange for front laser";
+            yCError(CER_DOUBLE_LIDAR) << "error in getDistanceRange for front laser";
             return false;
         }
 
         if(!m_ILaserBackData->getDistanceRange(min_dist[1], max_dist[1]))
         {
-            yError() << "cerDoubleLidar: error in getDistanceRange for back laser";
+            yCError(CER_DOUBLE_LIDAR) << "error in getDistanceRange for back laser";
             return false;
         }
 
         /*
         if( (min_dist[0] != min_dist[1]) || (max_dist[0] != max_dist[1]) )
         {
-            yError() << "cerDoubleLidar: front and back laser differ in getDistanceRange";
+            yCError(CER_DOUBLE_LIDAR) << "front and back laser differ in getDistanceRange";
             return false;
         }*/
    }
 
     if(!m_ILaserFrontData->getHorizontalResolution(resolution[0]))
     {
-        yError() << "cerDoubleLidar: error getting resolution for front laser";
+        yCError(CER_DOUBLE_LIDAR) << "error getting resolution for front laser";
         return false;
     }
 
     if(!m_ILaserBackData->getHorizontalResolution(resolution[1]))
     {
-        yError() << "cerDoubleLidar: error getting resolution for back laser";
+        yCError(CER_DOUBLE_LIDAR) << "error getting resolution for back laser";
         return false;
     }
 
     if(m_resolution != resolution[0] ||
        m_resolution != resolution[1])
     {
-        yError() << "cerDoubleLidar: front laser, back laser and user configuration are different!" << m_resolution << resolution[0] << resolution[1];
+        yCError(CER_DOUBLE_LIDAR) << "front laser, back laser and user configuration are different!" << m_resolution << resolution[0] << resolution[1];
         return false;
     }
 
@@ -570,7 +572,7 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
 
 bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
 {
-    yError() << "cerDoubleLidar: getLaserMeasurement not yet implemented";
+    yCError(CER_DOUBLE_LIDAR) << "getLaserMeasurement not yet implemented";
     return false;
 }
 
