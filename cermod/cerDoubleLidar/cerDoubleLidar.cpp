@@ -59,17 +59,13 @@ bool cerDoubleLidar::LaserCfg_t::loadConfig(yarp::os::Searchable& config)
     pose.theta = b_pose.get(4).asFloat64();
 
 
-    if (l_config.check("file")==false) {yCError(CER_DOUBLE_LIDAR) << "missing file"; return false; }
-    Bottle & b_filename = l_config.findGroup("file");
-    fileCfgName = b_filename.get(1).asString();
-
     if (l_config.check("sensorName")==false) {yCError(CER_DOUBLE_LIDAR) << "missing sensorName"; return false; }
     Bottle & b_sensorName = l_config.findGroup("sensorName");
     sensorName = b_sensorName.get(1).asString();
 
 
     //DEBUG
-    yDebug() << key << "x:" << pose.x << "y:" << pose.y << "z:" << pose.z << "t:" << pose.theta << fileCfgName << sensorName;
+    yDebug() << key << "x:" << pose.x << "y:" << pose.y << "z:" << pose.z << "t:" << pose.theta << sensorName;
 
     return true;
 
@@ -78,7 +74,6 @@ bool cerDoubleLidar::LaserCfg_t::loadConfig(yarp::os::Searchable& config)
 
 cerDoubleLidar::cerDoubleLidar():
     m_inited(false),
-    m_onSimulator(true),
     m_lFrontCfg(LaserCfg_t::Laser::front),
     m_lBackCfg(LaserCfg_t::Laser::back)
 {;}
@@ -146,7 +141,7 @@ bool cerDoubleLidar::attachAll(const PolyDriverList &p)
 {
     if(p.size()!=2)
     {
-        yCError(CER_DOUBLE_LIDAR) << "attach with wrong num of drivers";
+        yCError(CER_DOUBLE_LIDAR) << "attach with wrong number of drivers";
         return false;
     }
 
@@ -176,61 +171,6 @@ bool cerDoubleLidar::attachAll(const PolyDriverList &p)
 bool cerDoubleLidar::detachAll(void)
 {
     m_inited=false;
-    return true;
-}
-
-
-bool cerDoubleLidar::createLasersDevices(void)
-{
-    ResourceFinder rf;
-
-    Property laserF_prop;
-    if(!laserF_prop.fromConfigFile(rf.findFileByName(m_lFrontCfg.fileCfgName)))
-    {
-        yCError(CER_DOUBLE_LIDAR) << "cannot load file " << m_lFrontCfg.fileCfgName;
-        return false;
-    }
-
-    m_driver_laserFront = new PolyDriver(laserF_prop);
-    if(m_driver_laserFront == nullptr)
-    {
-        yCError(CER_DOUBLE_LIDAR) << "cannot create device for laser front";
-        return false;
-    }
-
-
-    Property laserB_prop;
-    if(!laserB_prop.fromConfigFile(rf.findFileByName(m_lBackCfg.fileCfgName)))
-    {
-        yCError(CER_DOUBLE_LIDAR) << "cannot load file " << m_lBackCfg.fileCfgName;
-        return false;
-    }
-
-    m_driver_laserBack = new PolyDriver(laserB_prop);
-    if(m_driver_laserBack == nullptr)
-    {
-        yCError(CER_DOUBLE_LIDAR) << "cannot create device for laser back";
-        return false;
-    }
-
-    if(!m_driver_laserFront->open(laserF_prop))
-    {
-        yCError(CER_DOUBLE_LIDAR) << "cannot open laser Front";
-        return false;
-    }
-    yCError(CER_DOUBLE_LIDAR) << "cannot opened laser Front! OK";
-
-    if(!m_driver_laserBack->open(laserB_prop))
-    {
-        yCError(CER_DOUBLE_LIDAR) << "cannot open laser Back";
-        return false;
-    }
-    yCError(CER_DOUBLE_LIDAR) << "opened laser Back! OK";
-
-    if(!getLasersInterfaces())
-        return false;
-
-    m_inited=true;
     return true;
 }
 
@@ -267,26 +207,12 @@ bool cerDoubleLidar::open(yarp::os::Searchable& config)
         yCWarning(CER_DOUBLE_LIDAR) << "poses of laser front and back have different z values";
     }
 
-    if (config.check("subdevice"))
-        m_onSimulator=false;
-    else
-        m_onSimulator=true; //than I need that gazebo calls my attach function
-
-    bool ret = true;
-    //If I'm on robot I need to create the device of both lasers, while I'm onSimulator I need to wait the attach of gazebo.
-    if(false==m_onSimulator)
-    {
-        ret = createLasersDevices();
-    }
-    return ret;
+    return true;
 }
 
 bool cerDoubleLidar::close()
 {
     m_inited=false;
-    //if I'm on simulator I did not create subdevice
-    if(m_onSimulator)
-        return true;
 
     if(nullptr!=m_driver_laserFront)
     {
@@ -481,7 +407,7 @@ void cerDoubleLidar::calculate(int sensNum, double distance, double x_off, doubl
     }
     else
     {
-        //if we receivned a valid value, process it and put it in the right slot
+        //if we received a valid value, process it and put it in the right slot
         double angle_input = (sensNum*m_resolution);
         double angle_rad = angle_input*DEG2RAD;
 
@@ -510,7 +436,7 @@ void cerDoubleLidar::calculate(int sensNum, double distance, double x_off, doubl
         //compute the distance
         double newdistance = std::sqrt((Bx*Bx)+(By*By));
         
-        //assigniment
+        //assignment
         m_laser_data[newSensNum] = newdistance;
     }
 

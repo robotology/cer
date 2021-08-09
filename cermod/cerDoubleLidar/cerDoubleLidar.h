@@ -4,8 +4,8 @@
  * CopyPolicy: Released under the terms of the LGPLv2.1 or any later version, see LGPL.TXT or LGPL3.TXT
  */
 
-#ifndef DOUBLELASERDEVICE_HH
-#define DOUBLELASERDEVICE_HH
+#ifndef CER_DOUBLE_LIDAR_H
+#define CER_DOUBLE_LIDAR_H
 
 #include <yarp/os/Property.h>
 #include <yarp/dev/Drivers.h>
@@ -48,7 +48,6 @@ class cer::dev::cerDoubleLidar :
        enum Laser{front=0, back=1};
        Laser laser;
        LaserPose_t pose;
-       std::string fileCfgName;
        std::string sensorName;
        std::string typeOfDevice; //currently not used
        LaserCfg_t(Laser l){laser=l;}
@@ -89,8 +88,7 @@ private:
     void calculate(int sensNum, double distance, double x_off, double y_off, double t_off);
     bool verifyLasersConfigurations(void);
     bool getLasersInterfaces(void);
-    bool createLasersDevices(void);
-    
+
     yarp::dev::PolyDriver * m_driver_laserFront = nullptr;
     yarp::dev::IRangefinder2D* m_ILaserFrontData = nullptr;
     yarp::dev::IPreciselyTimed* m_ILaserFrontStamp = nullptr;
@@ -102,10 +100,9 @@ private:
     yarp::os::Stamp m_backStamp;
 
     bool m_inited;
-    bool m_onSimulator; //if true the device looks for front and back laser devices in gazebo, else creates them
 
     LaserCfg_t m_lFrontCfg;
     LaserCfg_t m_lBackCfg;
 };
 
-#endif //GAZEBOYARP_CONTROLBOARDDRIVER_HH
+#endif //CER_DOUBLE_LIDAR_H
