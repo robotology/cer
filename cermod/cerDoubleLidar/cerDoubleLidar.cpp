@@ -468,8 +468,8 @@ void cerDoubleLidar::calculate(int sensNum, double distance, double x_off, doubl
         //if we received an infinity, put it in the right slot
         double angle = (sensNum*m_resolution) + t_off *RAD2DEG;
         int newSensNum= (double)(angle /m_resolution);
-        if (newSensNum >= 720) newSensNum-= 720;
-        if (newSensNum < 0)   newSensNum+= 720;
+        if (newSensNum >= (int)m_sensorsNum) newSensNum-= (int) m_sensorsNum;
+        if (newSensNum < 0)    newSensNum+= (int)m_sensorsNum;
         
         //assignment on empty slots
         if (std::isnan(m_laser_data[newSensNum]))
@@ -504,8 +504,8 @@ void cerDoubleLidar::calculate(int sensNum, double distance, double x_off, doubl
 
         //compute the new slot
         int newSensNum= (double)(beta2/m_resolution);
-        if (newSensNum >= 720) newSensNum-= 720;
-        if (newSensNum < 0)   newSensNum+= 720;
+        if (newSensNum >= (int)m_sensorsNum) newSensNum-= (int)m_sensorsNum;
+        if (newSensNum < 0)   newSensNum+=(int) m_sensorsNum;
 
         //compute the distance
         double newdistance = std::sqrt((Bx*Bx)+(By*By));
