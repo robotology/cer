@@ -165,11 +165,18 @@ bool cerDoubleLidar::attachAll(const PolyDriverList &p)
     if(!verifyLasersConfigurations())
         return false;
 
+    m_inited = true;
     return true;
 }
 
 bool cerDoubleLidar::detachAll(void)
 {
+    m_driver_laserFront = nullptr;
+    m_driver_laserBack = nullptr;
+    m_ILaserFrontData = nullptr;
+    m_ILaserBackData = nullptr;
+    m_ILaserFrontStamp = nullptr;
+    m_ILaserBackStamp = nullptr;
     m_inited=false;
     return true;
 }
@@ -212,22 +219,7 @@ bool cerDoubleLidar::open(yarp::os::Searchable& config)
 
 bool cerDoubleLidar::close()
 {
-    m_inited=false;
-
-    if(nullptr!=m_driver_laserFront)
-    {
-        m_driver_laserFront->close();
-        delete m_driver_laserFront;
-        m_driver_laserFront=nullptr;
-    }
-
-    if(nullptr!=m_driver_laserBack)
-    {
-        m_driver_laserBack->close();
-        delete m_driver_laserBack;
-        m_driver_laserBack=nullptr;
-    }
-
+    detachAll();
     return true;
 }
 
@@ -297,8 +289,6 @@ bool cerDoubleLidar::verifyLasersConfigurations(void)
         yCError(CER_DOUBLE_LIDAR) << "front laser, back laser and user configuration are different!" << m_resolution << resolution[0] << resolution[1];
         return false;
     }
-
-    m_inited = true;
 
     return true;
 
