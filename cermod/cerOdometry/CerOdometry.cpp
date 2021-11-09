@@ -20,8 +20,10 @@
 #include <yarp/math/Rand.h>
 #include <iostream>
 
+using namespace cer::dev;
+
 namespace {
-YARP_LOG_COMPONENT(CERODOM, "yarp.device.CerOdometry")
+YARP_LOG_COMPONENT(CERODOM, "cer.devices.CerOdometry")
 }
 
 CerOdometry::CerOdometry():

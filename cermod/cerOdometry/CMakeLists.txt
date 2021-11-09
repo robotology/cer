@@ -1,51 +1,25 @@
-#
 # Copyright (C) 2021 IIT Istituto Italiano di Tecnologia
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
-#
+
 yarp_prepare_plugin(cerOdometry
-        CATEGORY device
-        TYPE CerOdometry
-        INCLUDE CerOdometry.h
-        DEPENDS "TARGET YARP::YARP_math"
-        DEFAULT ON
-        )
+                    CATEGORY device
+                    TYPE cer::dev::CerOdometry
+                    INCLUDE CerOdometry.h
+                    DEPENDS "TARGET YARP::YARP_math"
+                    DEFAULT ON)
 
-if(NOT SKIP_cerOdometry)
-    yarp_add_plugin(cerOdometry)
-#    include_directories(${ICUB_INCLUDE_DIRS})
+if(ENABLE_cermod_cerOdometry)
 
-    target_sources(cerOdometry
-            PRIVATE
-            CerOdometry.h
-            CerOdometry.cpp
-            )
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-    target_link_libraries(cerOdometry
-            PRIVATE
-            YARP::YARP_os
-            YARP::YARP_sig
-            YARP::YARP_dev
-            YARP::YARP_math
-            ctrlLib
-            )
-    list(APPEND YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS
-            YARP_os
-            YARP_sig
-            YARP_dev
-            YARP_math
-            ctrlLib
-            )
+    yarp_add_plugin(cerOdometry CerOdometry.h CerOdometry.cpp)
+    add_definitions(-D_USE_MATH_DEFINES)
+    target_link_libraries(cerOdometry ${YARP_LIBRARIES} ctrlLib)
+    yarp_install(TARGETS cerOdometry
+                 EXPORT YARP_${YARP_PLUGIN_MASTER}
+                 COMPONENT Runtime
+                 LIBRARY DESTINATION ${CER_DYNAMIC_PLUGINS_INSTALL_DIR}
+                 ARCHIVE DESTINATION ${CER_STATIC_PLUGINS_INSTALL_DIR}
+                 YARP_INI DESTINATION ${CER_PLUGIN_MANIFESTS_INSTALL_DIR})
 
-    yarp_install(
-            TARGETS cerOdometry
-            EXPORT YARP_${YARP_PLUGIN_MASTER}
-            COMPONENT ${YARP_PLUGIN_MASTER}
-            LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
-            ARCHIVE DESTINATION ${YARP_STATIC_PLUGINS_INSTALL_DIR}
-            YARP_INI DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR}
-    )
-
-    set(YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS ${YARP_${YARP_PLUGIN_MASTER}_PRIVATE_DEPS} PARENT_SCOPE)
-
-    set_property(TARGET cerOdometry PROPERTY FOLDER "Plugins/Device")
-endif()
+endif(ENABLE_cermod_cerOdometry)

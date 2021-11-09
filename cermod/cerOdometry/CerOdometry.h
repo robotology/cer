@@ -81,7 +81,13 @@ constexpr double default_period = 0.02;
  * \endcode
  */
 
-class CerOdometry :
+namespace cer {
+    namespace dev {
+        class CerOdometry;
+    }
+}
+
+class cer::dev::CerOdometry :
         public yarp::os::PeriodicThread,
         public yarp::dev::DeviceDriver,
         public yarp::dev::WrapperSingle,
