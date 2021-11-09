@@ -116,7 +116,7 @@ bool CerOdometry::open(yarp::os::Searchable& config)
     geom_L = config.find("geom_l").asFloat64();
 
     yarp::os::PeriodicThread::setPeriod(m_period);
-    return yarp::os::PeriodicThread::start();
+    return true;
 }
 
 void CerOdometry::compute()
@@ -225,10 +225,16 @@ bool CerOdometry::attach(yarp::dev::PolyDriver *driver) {
         yCError(CERODOM) << "failed to get correct number of axes";
         return false;
     }
-    return true;
+
+    bool b = yarp::os::PeriodicThread::start();
+    return b;
 }
 
 bool CerOdometry::detach() {
+    if (PeriodicThread::isRunning())
+    {
+        PeriodicThread::stop();
+    }
     ienc = nullptr;
     return true;
 }
