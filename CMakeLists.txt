@@ -63,7 +63,6 @@ add_subdirectory(libraries/robot_self_collision)
 
 add_subdirectory(app)
 add_subdirectory(cermod)
-add_subdirectory(gazeboYarpPlugin)
 add_subdirectory(modules)
 add_subdirectory(tools)
 
