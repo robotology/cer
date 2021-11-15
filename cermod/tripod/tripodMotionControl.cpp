@@ -738,7 +738,10 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
 
     Bottle general = config.findGroup("GENERAL");
     if(!general.check("HW2user") )
+    {
         _directionHW2User = false;
+         yInfo() << "Direction is User To HW";
+    }
     else
     {
         yInfo() << "Direction is HW to User";
@@ -815,12 +818,24 @@ bool tripodMotionControl::fromConfig(yarp::os::Searchable &config)
     // This particular device has weird limits for joints. This is not scalable unless we duplicate some parameter in config file.
     if(_njoints >= 3)
     {
-        _limitsMax[0] = lMax;
-        _limitsMin[0] = lMin;
-        _limitsMax[1] =  alpha;
-        _limitsMin[1] = -alpha;
-        _limitsMax[2] =  alpha;
-        _limitsMin[2] = -alpha;
+         if (_directionHW2User)
+         {
+            _limitsMax[0] = lMax;
+            _limitsMin[0] = lMin;
+            _limitsMax[1] = lMax;
+            _limitsMin[1] = lMin;
+            _limitsMax[2] = lMax;
+            _limitsMin[2] = lMin;
+        }
+        else
+        {
+            _limitsMax[0] = lMax;
+            _limitsMin[0] = lMin;
+            _limitsMax[1] =  alpha;
+            _limitsMin[1] = -alpha;
+            _limitsMax[2] =  alpha;
+            _limitsMin[2] = -alpha;
+        }
     }
 
     if(_njoints < 3)
@@ -908,11 +923,17 @@ bool tripodMotionControl::getJointType(int axis, yarp::dev::JointTypeEnum& type)
     if (axis < 0 || axis >= _njoints)
         return false;
 
-    if(axis == 0)
-        type = yarp::dev::VOCAB_JOINTTYPE_PRISMATIC;
-
+    if (_directionHW2User==false)
+    {
+        if(axis == 0)
+            type = yarp::dev::VOCAB_JOINTTYPE_PRISMATIC;
+        else
+            type = yarp::dev::VOCAB_JOINTTYPE_REVOLUTE;
+    }
     else
-        type = yarp::dev::VOCAB_JOINTTYPE_REVOLUTE;
+    {
+        type = yarp::dev::VOCAB_JOINTTYPE_PRISMATIC;
+    }
 
     return true;
 }
@@ -1162,7 +1183,8 @@ bool tripodMotionControl::positionMoveRaw(int j, double ref)
         {
             yError() << "Requested position is not reachable";
         }
-        yTrace() << "new Ref: [0]" << _robotRef_positions[0] << " [1]" << _robotRef_positions[1] << "[2]" << _robotRef_positions[2];
+        //yDebug() << "new Ref: [0]" << _robotRef_positions[0] << " [1]" << _robotRef_positions[1] << "[2]" << _robotRef_positions[2];
+        //yDebug() << "user Ref: [0]" << _userRef_positions[0] << " [1]" << _userRef_positions[1] << "[2]" << _userRef_positions[2];
     }
     else
     {
@@ -1683,6 +1705,8 @@ bool tripodMotionControl::getEncoderTimedRaw(int j, double *value, double *stamp
 
 bool tripodMotionControl::getNumberOfMotorEncodersRaw(int* num)
 {
+    if (_device.iMotEnc==nullptr) return false;
+        
     *num=_njoints;  // TODO probably not true
     return true;
 }
@@ -1719,11 +1743,15 @@ bool tripodMotionControl::resetMotorEncodersRaw()
 
 bool tripodMotionControl::getMotorEncoderRaw(int m, double *value)
 {
+    if (_device.iMotEnc==nullptr) return false;
+        
     return _device.iMotEnc->getMotorEncoder(m, value);
 }
 
 bool tripodMotionControl::getMotorEncodersRaw(double *encs)
 {
+    if (_device.iMotEnc==nullptr) return false;
+    
     bool ret = true;
     for(int j=0; j<_njoints; j++)
         ret &= _device.iMotEnc->getMotorEncoder(j, &encs[j]);
@@ -1752,6 +1780,8 @@ bool tripodMotionControl::getMotorEncoderAccelerationsRaw(double *accs)
 
 bool tripodMotionControl::getMotorEncodersTimedRaw(double *encs, double *stamps)
 {
+    if (_device.iMotEnc==nullptr) return false;
+        
     bool ret = true;
     for(int j=0; j<_njoints; j++)
         ret &= _device.iMotEnc->getMotorEncoderTimed(j, &encs[j], &stamps[j]);
@@ -1760,6 +1790,8 @@ bool tripodMotionControl::getMotorEncodersTimedRaw(double *encs, double *stamps)
 
 bool tripodMotionControl::getMotorEncoderTimedRaw(int m, double *encs, double *stamp)
 {
+    if (_device.iMotEnc==nullptr) return false;
+        
     return _device.iMotEnc->getMotorEncoderTimed(m, encs, stamp);
 }
 ///////////////////////// END Motor Encoder Interface
