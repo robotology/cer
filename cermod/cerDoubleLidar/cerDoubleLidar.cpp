@@ -112,12 +112,6 @@ bool cerDoubleLidar::getLasersInterfaces(void)
         yCInfo(CER_DOUBLE_LIDAR) << "get interface of laser front. OK";
     }
 
-    if (!m_driver_laserFront->view(m_ILaserFrontStamp))
-    {
-        yCError(CER_DOUBLE_LIDAR) << "cannot get IPreciselyTimed of laser front";
-        return false;
-    }
-
     if(!m_driver_laserBack->view(m_ILaserBackData))
     {
         yCError(CER_DOUBLE_LIDAR) << "cannot get interface of laser Back";
@@ -126,12 +120,6 @@ bool cerDoubleLidar::getLasersInterfaces(void)
     else
     {
         yCInfo(CER_DOUBLE_LIDAR) << "get interface of laser Back. OK";
-    }
-
-    if (!m_driver_laserBack->view(m_ILaserBackStamp))
-    {
-        yCError(CER_DOUBLE_LIDAR) << "cannot get IPreciselyTimed of laser back";
-        return false;
     }
 
     return true;
@@ -175,8 +163,6 @@ bool cerDoubleLidar::detachAll(void)
     m_driver_laserBack = nullptr;
     m_ILaserFrontData = nullptr;
     m_ILaserBackData = nullptr;
-    m_ILaserFrontStamp = nullptr;
-    m_ILaserBackStamp = nullptr;
     m_inited=false;
     return true;
 }
@@ -432,7 +418,7 @@ void cerDoubleLidar::calculate(int sensNum, double distance, double x_off, doubl
 
 }
 
-bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
+bool cerDoubleLidar::getRawData(yarp::sig::Vector &out, double* timestamp)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
 
@@ -442,26 +428,26 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
     }
     yarp::sig::Vector dataFront;
     yarp::sig::Vector dataBack;
-    
+    double            timestampFront=0;
+    double            timestampBack=0;
+
     for(size_t i=0; i<m_sensorsNum; i++)
     {
          m_laser_data[i] = std::nan("");
     }
     
-    if(!m_ILaserFrontData->getRawData(dataFront))
+    if(!m_ILaserFrontData->getRawData(dataFront, &timestampFront))
     {
         out = m_laser_data;
         return false;
     }
-    m_frontStamp = m_ILaserFrontStamp->getLastInputStamp();
 
-    if(!m_ILaserBackData->getRawData(dataBack))
+    if(!m_ILaserBackData->getRawData(dataBack, &timestampBack))
     {
         out = m_laser_data;
         return false;
     }
-    m_backStamp = m_ILaserBackStamp->getLastInputStamp();
-    
+
     for(size_t i=0; i<m_sensorsNum; i++)
     {
      //   yDebug() << i << m_sensorsNum;
@@ -479,16 +465,24 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out)
     
     //For now, I am using the front lidar timestamp as the timestamp for the doubleLidar.
     //I think that it does not worth to compute the mean value. It can be eventually improved in the future.
-    m_timestamp = m_frontStamp;
+    m_timestamp.update(timestampFront);
+    if (timestamp!=nullptr)
+    {
+        *timestamp = m_timestamp.getTime();
+    }
 
     // applyLimitsOnLaserData();
     out = m_laser_data;
     return true;
 }
 
-bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data)
+bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data, double* timestamp)
 {
     yCError(CER_DOUBLE_LIDAR) << "getLaserMeasurement not yet implemented";
+    if (timestamp != nullptr)
+    {
+        *timestamp = m_timestamp.getTime();
+    }
     return false;
 }
 

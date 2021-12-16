@@ -72,8 +72,8 @@ public:
     bool detachAll() override;
     
     //IRangefinder2D interface
-    virtual bool getRawData(yarp::sig::Vector &data) override;
-    virtual bool getLaserMeasurement(std::vector<yarp::dev::LaserMeasurementData> &data) override;
+    virtual bool getRawData          (yarp::sig::Vector& data, double* timestamp = nullptr) override;
+    virtual bool getLaserMeasurement (std::vector<yarp::dev::LaserMeasurementData>& data, double* timestamp = nullptr) override;
     virtual bool setDistanceRange    (double min, double max) override;
     virtual bool setScanLimits        (double min, double max) override;
     virtual bool setHorizontalResolution      (double step) override;
@@ -91,13 +91,9 @@ private:
 
     yarp::dev::PolyDriver * m_driver_laserFront = nullptr;
     yarp::dev::IRangefinder2D* m_ILaserFrontData = nullptr;
-    yarp::dev::IPreciselyTimed* m_ILaserFrontStamp = nullptr;
-    yarp::os::Stamp m_frontStamp;
 
     yarp::dev::PolyDriver * m_driver_laserBack = nullptr;
     yarp::dev::IRangefinder2D* m_ILaserBackData = nullptr;
-    yarp::dev::IPreciselyTimed * m_ILaserBackStamp = nullptr;
-    yarp::os::Stamp m_backStamp;
 
     bool m_inited;
 
