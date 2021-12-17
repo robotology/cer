@@ -45,12 +45,12 @@ class cer::dev::cerDoubleLidar :
     class LaserCfg_t
     {
        public:
-       enum Laser{front=0, back=1};
-       Laser laser;
+       enum LaserId {front=0, back=1};
+       LaserId laser_id;
        LaserPose_t pose;
        std::string sensorName;
        std::string typeOfDevice; //currently not used
-       LaserCfg_t(Laser l){laser=l;}
+       LaserCfg_t(LaserId l){ laser_id =l;}
        bool loadConfig(yarp::os::Searchable& config);
     };
 

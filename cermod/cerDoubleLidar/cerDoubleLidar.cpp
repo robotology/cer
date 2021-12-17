@@ -36,7 +36,7 @@ YARP_LOG_COMPONENT(CER_DOUBLE_LIDAR, "cer.devices.cerDoubleLidar")
 bool cerDoubleLidar::LaserCfg_t::loadConfig(yarp::os::Searchable& config)
 {
     std::string key;
-    if(laser==front)
+    if(laser_id ==front)
     {
         key="LASERFRONT-CFG";
     }
@@ -74,8 +74,8 @@ bool cerDoubleLidar::LaserCfg_t::loadConfig(yarp::os::Searchable& config)
 
 cerDoubleLidar::cerDoubleLidar():
     m_inited(false),
-    m_lFrontCfg(LaserCfg_t::Laser::front),
-    m_lBackCfg(LaserCfg_t::Laser::back)
+    m_lFrontCfg(LaserCfg_t::LaserId::front),
+    m_lBackCfg(LaserCfg_t::LaserId::back)
 {;}
 
 cerDoubleLidar::~cerDoubleLidar() {}
@@ -439,14 +439,17 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out, double* timestamp)
     if(!m_ILaserFrontData->getRawData(dataFront, &timestampFront))
     {
         out = m_laser_data;
+        m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_GENERAL_ERROR;
         return false;
     }
 
     if(!m_ILaserBackData->getRawData(dataBack, &timestampBack))
     {
         out = m_laser_data;
+        m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_GENERAL_ERROR;
         return false;
     }
+    m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_OK_IN_USE;
 
     for(size_t i=0; i<m_sensorsNum; i++)
     {
@@ -455,7 +458,6 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out, double* timestamp)
         if(dataFront[i]!=0.0)
         {
             calculate(i, dataFront[i], m_lFrontCfg.pose.x, m_lFrontCfg.pose.y, m_lFrontCfg.pose.theta);
-
         }
         if(dataBack[i]!=0.0)
         {
