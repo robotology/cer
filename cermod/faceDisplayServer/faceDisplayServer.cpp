@@ -621,8 +621,8 @@ void FaceDisplayServer::run()
                         else
                         {
                             yError() << "Received malformed command:" << command.toString();
-                            yError() << "Value following vocab 'FACE' must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
-                                    ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
+                            yError() << "Value following vocab 'FACE' must be a supported vocab (" << yarp::os::Vocab32::decode(VOCAB_FACE_HAPPY) <<  \
+                                    ", " << yarp::os::Vocab32::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab32::decode(VOCAB_FACE_WARNING) << ")";
                                     continue;
                         }
                     }
@@ -636,8 +636,8 @@ void FaceDisplayServer::run()
                     else
                     {
                         yError() << "Received malformed command:" << command.toString();
-                        yError() << "First value must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
-                            ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+                        yError() << "First value must be a supported vocab (" << yarp::os::Vocab32::decode(VOCAB_FACE) <<  \
+                            ", " << yarp::os::Vocab32::decode(VOCAB_FILE) << ")";
                             continue;
                     }
                 }
@@ -653,8 +653,8 @@ void FaceDisplayServer::run()
                 else
                 {
                     yError() << "Received malformed command:" << command.toString();
-                    yError() << "First value must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
-                        ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+                    yError() << "First value must be a supported vocab (" << yarp::os::Vocab32::decode(VOCAB_FACE) <<  \
+                        ", " << yarp::os::Vocab32::decode(VOCAB_FILE) << ")";
                         continue;
                 }
             }
@@ -664,8 +664,8 @@ void FaceDisplayServer::run()
             if(!command.get(0).isVocab32())
             {
                 yError() << "Received malformed command:" << command.toString();
-                yError() << "First value must be a supported vocab (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
-                    ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+                yError() << "First value must be a supported vocab (" << yarp::os::Vocab32::decode(VOCAB_FACE) <<  \
+                    ", " << yarp::os::Vocab32::decode(VOCAB_FILE) << ")";
                 continue;
             }
 
@@ -717,8 +717,8 @@ void FaceDisplayServer::run()
                             default:
                             {
                                 yError() << "Received malformed command:" << command.toString();
-                                yError() << "Unsupported face expression. Supported values are (" << yarp::os::Vocab::decode(VOCAB_FACE_HAPPY) <<  \
-                                    ", " << yarp::os::Vocab::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab::decode(VOCAB_FACE_WARNING) << ")";
+                                yError() << "Unsupported face expression. Supported values are (" << yarp::os::Vocab32::decode(VOCAB_FACE_HAPPY) <<  \
+                                    ", " << yarp::os::Vocab32::decode(VOCAB_FACE_SAD) << ", " << yarp::os::Vocab32::decode(VOCAB_FACE_WARNING) << ")";
                                     continue;
                             }
                         }
@@ -742,8 +742,8 @@ void FaceDisplayServer::run()
                     default:
                     {
                         yError() << "Received malformed SET command:" << command.toString();
-                        yError() << "Unsupported command. Supported commands are (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
-                            ", " << yarp::os::Vocab::decode(VOCAB_IMAGE) << ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+                        yError() << "Unsupported command. Supported commands are (" << yarp::os::Vocab32::decode(VOCAB_FACE) <<  \
+                            ", " << yarp::os::Vocab32::decode(VOCAB_IMAGE) << ", " << yarp::os::Vocab32::decode(VOCAB_FILE) << ")";
                             continue;
                     }
                 }
@@ -776,8 +776,8 @@ void FaceDisplayServer::run()
                     default:
                     {
                         yError() << "Received malformed GET command:" << command.toString();
-                        yError() << "Unsupported command. Supported commands are (" << yarp::os::Vocab::decode(VOCAB_FACE) <<  \
-                            ", " << yarp::os::Vocab::decode(VOCAB_IMAGE) << ", " << yarp::os::Vocab::decode(VOCAB_FILE) << ")";
+                        yError() << "Unsupported command. Supported commands are (" << yarp::os::Vocab32::decode(VOCAB_FACE) <<  \
+                            ", " << yarp::os::Vocab32::decode(VOCAB_IMAGE) << ", " << yarp::os::Vocab32::decode(VOCAB_FILE) << ")";
                             continue;
                     }
                 }
@@ -787,8 +787,8 @@ void FaceDisplayServer::run()
             default:
             {
                 yError() << "Received malformed command:" << command.toString();
-                yError() << "Unsupported command. Supported commands are (" << yarp::os::Vocab::decode(VOCAB_SET) <<  \
-                    ", " << yarp::os::Vocab::decode(VOCAB_GET) << ")";
+                yError() << "Unsupported command. Supported commands are (" << yarp::os::Vocab32::decode(VOCAB_SET) <<  \
+                    ", " << yarp::os::Vocab32::decode(VOCAB_GET) << ")";
                     continue;
             }
         }

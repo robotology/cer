@@ -119,7 +119,7 @@ bool cer::dev::FaceDisplayClient::close()
 
 bool FaceDisplayClient::setFaceExpression(int faceId)
 {
-    yTrace() << "\n\tset face" << yarp::os::Vocab::decode(faceId);
+    yTrace() << "\n\tset face" << yarp::os::Vocab32::decode(faceId);
     Bottle cmd;
     cmd.addVocab32(VOCAB_SET);
     cmd.addVocab32(VOCAB_FACE);
