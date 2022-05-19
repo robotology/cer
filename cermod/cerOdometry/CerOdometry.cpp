@@ -244,7 +244,6 @@ bool CerOdometry::threadInit() {
 }
 
 void CerOdometry::threadRelease() {
-    detach();
 }
 
 void CerOdometry::run() {
