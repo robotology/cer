@@ -49,7 +49,7 @@ bool CerOdometry::close()
     return true;
 }
 
-bool CerOdometry::getOdometry(yarp::dev::OdometryData& odom)
+bool CerOdometry::getOdometry(yarp::dev::OdometryData& odom, double* timestamp)
 {
     std::lock_guard lock(m_odometry_mutex);
     odom.odom_x = m_odometryData.odom_x;
@@ -61,14 +61,18 @@ bool CerOdometry::getOdometry(yarp::dev::OdometryData& odom)
     odom.odom_vel_x  = m_odometryData.odom_vel_x;
     odom.odom_vel_y = m_odometryData.odom_vel_y;
     odom.odom_vel_theta = m_odometryData.odom_vel_theta;
+    if (timestamp != nullptr)
+    {
+        *timestamp = m_time_encoders;
+    }
     return true;
 }
 
 bool CerOdometry::resetOdometry()
 {
-    if (ienc) {
-        ienc->getEncoder(0, &encL_offset);
-        ienc->getEncoder(1, &encR_offset);
+    if (ienct) {
+        ienct->getEncoder(0, &encL_offset);
+        ienct->getEncoder(1, &encR_offset);
     }
     m_odometryData.odom_x=0;
     m_odometryData.odom_y=0;
@@ -122,14 +126,14 @@ bool CerOdometry::open(yarp::os::Searchable& config)
 void CerOdometry::compute()
 {
     std::lock_guard lock(m_odometry_mutex);
-    if (ienc) {
+    if (ienct) {
         //read the encoders (deg)
-        ienc->getEncoder(0, &encL);
-        ienc->getEncoder(1, &encR);
+        ienct->getEncoderTimed(0, &encL, &m_time_encoders);
+        ienct->getEncoderTimed(1, &encR, &m_time_encoders);
 
         //read the speeds (deg/s)
-        ienc->getEncoderSpeed(0, &velL);
-        ienc->getEncoderSpeed(1, &velR);
+        ienct->getEncoderSpeed(0, &velL);
+        ienct->getEncoderSpeed(1, &velR);
 
         //remove the offset and convert in radians
         enc[0] = (encL - encL_offset) * 0.0174532925;
@@ -189,7 +193,7 @@ void CerOdometry::compute()
         m_odometryData.odom_vel_theta = m_odometryData.base_vel_theta;
 
         //the integration step
-        double period = el.time - last_time;
+        double period = el.time - m_last_time;
         m_odometryData.odom_x = m_odometryData.odom_x + (m_odometryData.odom_vel_x * period);
         m_odometryData.odom_y = m_odometryData.odom_y + (m_odometryData.odom_vel_y * period);
 
@@ -203,7 +207,7 @@ void CerOdometry::compute()
         m_odometryData.odom_vel_theta *= RAD2DEG;
         traveled_angle *= RAD2DEG;
 
-        last_time = yarp::os::Time::now();
+        m_last_time = yarp::os::Time::now();
     } else {
         yCError(CERODOM) << "iencoder interface not valid";
     }
@@ -215,12 +219,12 @@ bool CerOdometry::attach(yarp::dev::PolyDriver *driver) {
         yCError(CERODOM) << "not valid poly driver";
         return false;
     }
-    if(!driver->view(ienc)){
+    if(!driver->view(ienct)){
         yCError(CERODOM) << "iencoder device has not been viewed";
         return false;
     }
     int axesNumber;
-    ienc->getAxes(&axesNumber);
+    ienct->getAxes(&axesNumber);
     if(axesNumber != 2){
         yCError(CERODOM) << "failed to get correct number of axes";
         return false;
@@ -235,7 +239,7 @@ bool CerOdometry::detach() {
     {
         PeriodicThread::stop();
     }
-    ienc = nullptr;
+    ienct = nullptr;
     return true;
 }
 
