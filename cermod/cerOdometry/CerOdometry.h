@@ -22,7 +22,7 @@
 #include <yarp/dev/IOdometry2D.h>
 #include <iCub/ctrl/adaptWinPolyEstimator.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/IEncoders.h>
+#include <yarp/dev/IEncodersTimed.h>
 #include <yarp/dev/WrapperSingle.h>
 
 constexpr double default_period = 0.02;
@@ -102,7 +102,7 @@ public:
     bool close() override;
 
     // IOdometry2D
-    bool   getOdometry(yarp::dev::OdometryData& odom) override;
+    bool   getOdometry(yarp::dev::OdometryData& odom, double* timestamp = nullptr) override;
     bool   resetOdometry() override;
 
     // auxiliar
@@ -126,7 +126,7 @@ private:
     double m_period{0.01};
 
     std::mutex m_odometry_mutex;
-    double last_time;
+    double m_last_time;
 
     //encoder variables
     double              encL_offset{0.0};
@@ -134,6 +134,7 @@ private:
 
     double              encL{0.0};
     double              encR{0.0};
+    double              m_time_encoders;
 
     //measured motor velocity
     double              velL{0.0};
@@ -154,7 +155,7 @@ private:
     double              traveled_angle{0.0};
 
     //motor control interfaces
-    yarp::dev::IEncoders                       *ienc{nullptr};
+    yarp::dev::IEncodersTimed              *ienct{nullptr};
 
 };
 #endif //NAVIGATION_CERODOMETRY_H
