@@ -22,7 +22,6 @@
 #include <yarp/os/LogStream.h>
 
 #include <yarp/sig/Image.h>
-#include <yarp/dev/Wrapper.h>
 #include <yarp/dev/PolyDriver.h>
 
 namespace cer{

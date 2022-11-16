@@ -26,7 +26,7 @@
 #include <yarp/os/Time.h>
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/Wrapper.h>
+#include <yarp/dev/IMultipleWrapper.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/dev/ControlBoardInterfacesImpl.h>
 
