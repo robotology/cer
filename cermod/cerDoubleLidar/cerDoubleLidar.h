@@ -15,7 +15,7 @@
 #include <yarp/os/Time.h>
 #include <yarp/os/Stamp.h>
 #include <yarp/dev/Lidar2DDeviceBase.h>
-#include <yarp/dev/Wrapper.h>
+#include <yarp/dev/IMultipleWrapper.h>
 
 #include <string>
 #include <functional>
