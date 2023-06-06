@@ -1,0 +1,26 @@
+<application>
+<name>pointHandTransform_R1_SIM</name>
+
+<dependencies>
+</dependencies>
+
+<module>
+   <name>pointHandTransform</name>
+   <parameters>--context pointHandTransform --from pointHandTransform_R1_SIM.ini</parameters>
+   <environment></environment>
+   <node>console</node>
+</module>
+
+<module>
+   <name>yarpview</name>
+   <parameters>--name /view/cameraView:i --out /view/cameraClick:o </parameters>
+   <node>console</node>
+</module>
+
+<connection>
+  <from>/view/cameraClick:o</from>
+  <to>/pointHandTransform/clicked_point:i</to>
+  <protocol>tcp</protocol>
+</connection>
+
+</application>
