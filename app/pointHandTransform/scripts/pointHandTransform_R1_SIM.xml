@@ -1,26 +1,39 @@
 <application>
-<name>pointHandTransform_R1_SIM</name>
+   <name>pointHandTransform_R1_SIM</name>
 
-<dependencies>
-</dependencies>
+   <dependencies>
+   </dependencies>
 
-<module>
-   <name>pointHandTransform</name>
-   <parameters>--context pointHandTransform --from pointHandTransform_R1_SIM.ini</parameters>
-   <environment></environment>
-   <node>console</node>
-</module>
+   <module>
+      <name>ros2</name>
+      <parameters>launch robot_state_publisher.launch.py use_sim_time:=true</parameters>
+      <workdir>/home/user1/tour-guide-robot/app/navigation2/launch/</workdir>
+      <node>console</node>
+   </module>
 
-<module>
-   <name>yarpview</name>
-   <parameters>--name /view/cameraView:i --out /view/cameraClick:o </parameters>
-   <node>console</node>
-</module>
+   <module>
+      <name>pointHandTransform</name>
+      <parameters>--context pointHandTransform --from pointHandTransform_R1_SIM.ini</parameters>
+      <environment></environment>
+      <node>console</node>
+   </module>
 
-<connection>
-  <from>/view/cameraClick:o</from>
-  <to>/pointHandTransform/clicked_point:i</to>
-  <protocol>tcp</protocol>
-</connection>
+   <module>
+      <name>yarpview</name>
+      <parameters>--name /view/cameraView:i --out /view/cameraClick:o </parameters>
+      <node>console</node>
+   </module>
+
+   <connection>
+      <from>/SIM_CER_ROBOT/depthCamera/rgbImage:o</from>
+      <to>/view/cameraView:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/view/cameraClick:o</from>
+      <to>/pointHandTransform/clicked_point:i</to>
+      <protocol>tcp</protocol>
+   </connection>
 
 </application>

@@ -25,7 +25,7 @@
 #include <cmath>
 #include <list>
 
-YARP_LOG_COMPONENT(POINT_HAND_TRANSFORM_THREAD, "navigation.pointHandTransform.PointHandTransformThread")
+YARP_LOG_COMPONENT(POINT_HAND_TRANSFORM_THREAD, "cer.pointHandTransform.PointHandTransformThread")
 bool print{true};
 
 
@@ -237,6 +237,7 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
         yarp::sig::Vector v2 = m_transform_mtrx*tempPoint;
         
         yarp::os::Bottle&  toSend = m_targetOutPort.prepare();
+        toSend.clear();
         toSend.addString("target");
         yarp::os::Bottle& tempList = toSend.addList();
         tempList.addFloat32(v2[0]);

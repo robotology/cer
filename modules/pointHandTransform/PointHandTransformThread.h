@@ -48,13 +48,8 @@
 #define RGBDRemoteImagePort   "/SIM_CER_ROBOT/depthCamera/rgbImage:o"
 #define RGBDRemoteDepthPort   "/SIM_CER_ROBOT/depthCamera/depthImage:o"
 #define RGBDRemoteRpcPort     "/SIM_CER_ROBOT/depthCamera/rpc:i"
-#define RGBDImageCarrier      "tcp" //"unix_stream"
-#define RGBDDepthCarrier      "tcp" //"unix_stream"
-// TF CLIENT
-#define DEVICE      "transformClient"
-#define LOCAL       "/laserFromDepth/tfClient"
-#define REMOTE      "/transformServer"
-
+#define RGBDImageCarrier      "mjpeg"
+#define RGBDDepthCarrier      "fast_tcp"
 
 
 class PointHandTransformThread : public yarp::os::PeriodicThread, public yarp::os::TypedReaderCallback<yarp::os::Bottle>
