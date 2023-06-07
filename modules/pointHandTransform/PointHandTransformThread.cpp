@@ -39,6 +39,10 @@ PointHandTransformThread::PointHandTransformThread(double _period, yarp::os::Res
     m_base_frame_id = "/base_frame";
     m_camera_frame_id = "/depth_camera_frame";
     m_targetOutPortName = "/pointHandTransform/target:o";
+    m_pose_param = "xyz_pose";
+    m_solver_config_param = "no_heave";
+    m_torso_heave_param = 0.0;
+    m_arm_heave_param = 0.2;
 }
 
 bool PointHandTransformThread::threadInit()
@@ -152,7 +156,6 @@ bool PointHandTransformThread::threadInit()
         return false;
     }
 
-
     //get parameters data from the camera
     m_depth_width = m_iRgbd->getRgbWidth();
     m_depth_height = m_iRgbd->getRgbHeight();
@@ -168,6 +171,21 @@ bool PointHandTransformThread::threadInit()
         return false;
     }
 
+    // --------- Kinematic solver config ---------- //
+    bool okSolverConfig = m_rf.check("KIN_SOLVER_CONFIG");
+    if(okSolverConfig)
+    {
+        yarp::os::Searchable& solver_config = m_rf.findGroup("KIN_SOLVER_CONFIG");
+        if (solver_config.check("pose")) {m_pose_param = solver_config.find("pose").asString();}
+        if (solver_config.check("configuration")) {m_solver_config_param = solver_config.find("configuration").asString();}
+        if (solver_config.check("torso_heave")) {m_torso_heave_param = solver_config.find("torso_heave").asFloat32();}
+        if (solver_config.check("lower_arm_heave")) {m_arm_heave_param = solver_config.find("lower_arm_heave").asFloat32();}
+        if (solver_config.check("ee_quaternion1") && solver_config.check("ee_quaternion2") && solver_config.check("ee_quaternion3") && solver_config.check("ee_quaternion4"))
+            {m_ee_quaternion_param = {solver_config.find("ee_quaternion1").asFloat32(),
+             m_ee_quaternion_param[1] = solver_config.find("ee_quaternion2").asFloat32(),
+             m_ee_quaternion_param[2] = solver_config.find("ee_quaternion3").asFloat32(),
+             m_ee_quaternion_param[3] = solver_config.find("ee_quaternion4").asFloat32()};}
+    }
 
 #ifdef HANDTRANSFORM_DEBUG
     yCDebug(POINT_HAND_TRANSFORM_THREAD, "... done!\n");
@@ -238,12 +256,34 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
         
         yarp::os::Bottle&  toSend = m_targetOutPort.prepare();
         toSend.clear();
-        toSend.addString("target");
+        toSend.addString("askRequest");
+
+        yarp::os::Bottle& parameterList = toSend.addList();
+        parameterList.addString("parameters");
+        yarp::os::Bottle& modeList = parameterList.addList();
+        modeList.addString("mode");
+        modeList.addString(m_pose_param + "+" + m_solver_config_param + "+forward_diff");
+        yarp::os::Bottle& torsoHeaveList = parameterList.addList();
+        torsoHeaveList.addString("torso_heave");
+        torsoHeaveList.addFloat32(m_torso_heave_param);
+        yarp::os::Bottle& armHeaveList = parameterList.addList();
+        armHeaveList.addString("lower_arm_heave");
+        armHeaveList.addFloat32(m_arm_heave_param);
+
         yarp::os::Bottle& tempList = toSend.addList();
-        tempList.addFloat32(v2[0]);
-        tempList.addFloat32(v2[1]);
-        tempList.addFloat32(v2[2]);
+        tempList.addString("target");
+        yarp::os::Bottle& targetList = tempList.addList();
+        targetList.addFloat32(v2[0]);
+        targetList.addFloat32(v2[1]);
+        targetList.addFloat32(v2[2]);
+        targetList.addFloat32(m_ee_quaternion_param[0]);
+        targetList.addFloat32(m_ee_quaternion_param[1]);
+        targetList.addFloat32(m_ee_quaternion_param[2]);
+        targetList.addFloat32(m_ee_quaternion_param[3]);
+
         m_targetOutPort.write();
+
+        yCInfo(POINT_HAND_TRANSFORM_THREAD,"Sent to solver: %s",toSend.toString().c_str());
     }
     else{
         yCError(POINT_HAND_TRANSFORM_THREAD,"The input bottle has the wrong number of elements");

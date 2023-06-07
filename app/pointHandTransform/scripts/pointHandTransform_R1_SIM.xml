@@ -56,7 +56,7 @@
 
    <connection>
       <from>/pointHandTransform/target:o</from>
-      <to>/cer_reaching-solver/target:i</to>
+      <to>/cer_reaching-controller/right/target:i</to>
       <protocol>tcp</protocol>
    </connection>
 

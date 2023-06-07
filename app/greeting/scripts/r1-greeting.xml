@@ -40,14 +40,14 @@
     <module>
       <name>./r1_greeting.sh</name>
       <parameters>cer say_hi</parameters>
-      <workdir>/home/user1/robotology/app/greeting/</workdir>
+      <workdir>/home/user1/robotology/cer/app/greeting/</workdir>
       <node>console</node>
    </module>
     
     <module>
       <name>./r1_greeting.sh</name>
       <parameters>cer queen_betty</parameters>
-      <workdir>/home/user1/robotology/app/greeting/</workdir>
+      <workdir>/home/user1/robotology/cer/app/greeting/</workdir>
       <node>console</node>
    </module>
 

@@ -71,6 +71,13 @@ protected:
     yarp::sig::FlexImage         m_rgbImage;
     yarp::sig::ImageOf<float>    m_depth_image;
     yarp::sig::IntrinsicParams   m_intrinsics;
+    
+    //Kinematic Solver Parameters
+    std::string                  m_pose_param;
+    std::string                  m_solver_config_param;
+    double                       m_torso_heave_param;
+    double                       m_arm_heave_param;
+    std::vector<double>          m_ee_quaternion_param {0,0,0,1};
 
     //Ports
     std::string                                m_targetOutPortName;
