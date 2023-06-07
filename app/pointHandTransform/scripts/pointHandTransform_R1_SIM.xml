@@ -23,6 +23,18 @@
       <parameters>--name /view/cameraView:i --out /view/cameraClick:o </parameters>
       <node>console</node>
    </module>
+   
+   <module>
+      <name>cer_reaching-solver</name>
+      <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1</parameters>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>cer_reaching-controller</name>
+      <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1 --T 1.0</parameters>
+      <node>console</node>
+   </module>
 
    <connection>
       <from>/SIM_CER_ROBOT/depthCamera/rgbImage:o</from>
@@ -33,6 +45,18 @@
    <connection>
       <from>/view/cameraClick:o</from>
       <to>/pointHandTransform/clicked_point:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/cer_reaching-controller/right/solver:rpc</from>
+      <to>/cer_reaching-solver/right/rpc</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/pointHandTransform/target:o</from>
+      <to>/cer_reaching-solver/target:i</to>
       <protocol>tcp</protocol>
    </connection>
 
