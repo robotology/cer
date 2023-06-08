@@ -40,9 +40,9 @@ PointHandTransformThread::PointHandTransformThread(double _period, yarp::os::Res
     m_camera_frame_id = "/depth_camera_frame";
     m_targetOutPortName = "/pointHandTransform/target:o";
     m_pose_param = "xyz_pose";
-    m_solver_config_param = "no_heave";
+    m_solver_config_param = "no_torso_no_heave";
     m_torso_heave_param = 0.0;
-    m_arm_heave_param = 0.2;
+    m_arm_heave_param = 0.02;
 }
 
 bool PointHandTransformThread::threadInit()

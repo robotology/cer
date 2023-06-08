@@ -1,0 +1,63 @@
+<application>
+   <name>pointHandTransform_R1</name>
+
+   <dependencies>
+   </dependencies>
+
+   <module>
+      <name>ros2</name>
+      <parameters>launch robot_state_publisher.launch.py use_sim_time:=true</parameters>
+      <workdir>/home/user1/tour-guide-robot/app/navigation2/launch/</workdir>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>pointHandTransform</name>
+      <parameters>--context pointHandTransform --from pointHandTransform_R1.ini</parameters>
+      <environment></environment>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>yarpview</name>
+      <parameters>--name /view/cameraView:i --out /view/cameraClick:o </parameters>
+      <node>console</node>
+   </module>
+   
+   <module>
+      <name>cer_reaching-solver</name>
+      <parameters>--robot cer --arm-type right --verbosity 1</parameters>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>cer_reaching-controller</name>
+      <parameters>--robot cer --arm-type right --verbosity 1 --T 1.0</parameters>
+      <node>console</node>
+   </module>
+
+   <connection>
+      <from>/cer/depthCamera/rgbImage:o</from>
+      <to>/view/cameraView:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/view/cameraClick:o</from>
+      <to>/pointHandTransform/clicked_point:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/cer_reaching-controller/right/solver:rpc</from>
+      <to>/cer_reaching-solver/right/rpc</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/pointHandTransform/target:o</from>
+      <to>/cer_reaching-controller/right/target:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+</application>

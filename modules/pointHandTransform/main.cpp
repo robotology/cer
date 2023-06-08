@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 
     yarp::os::ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultConfigFile("pointHandTransform_sim.ini");             //overridden by --from parameter
+    rf.setDefaultConfigFile("pointHandTransform_R1_SIM.ini");             //overridden by --from parameter
     rf.setDefaultContext("pointHandTransform");                        //overridden by --context parameter
     rf.configure(argc,argv);
     PointHandTransform point;
