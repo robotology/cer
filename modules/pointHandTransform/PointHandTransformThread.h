@@ -58,15 +58,19 @@ protected:
     //Devices related attributes
     yarp::dev::PolyDriver            m_rgbdPoly;
     yarp::dev::IRGBDSensor*          m_iRgbd{nullptr};
-    yarp::dev::PolyDriver            m_tcPoly;
-    yarp::dev::IFrameTransform*      m_iTc{nullptr};
+    yarp::dev::PolyDriver            m_tcPolyCamera;
+    yarp::dev::PolyDriver            m_tcPolyShoulder;
+    yarp::dev::IFrameTransform*      m_iTcCamera{nullptr};
+    yarp::dev::IFrameTransform*      m_iTcShoulder{nullptr};
 
     //Computation related attributes
     int    m_depth_width;
     int    m_depth_height;  
     std::string                  m_base_frame_id;
     std::string                  m_camera_frame_id;
-    yarp::sig::Matrix            m_transform_mtrx;
+    std::string                  m_shoulder_frame_id;
+    yarp::sig::Matrix            m_transform_mtrx_camera;
+    yarp::sig::Matrix            m_transform_mtrx_shoulder;
     yarp::os::Property           m_propIntrinsics;
     yarp::sig::FlexImage         m_rgbImage;
     yarp::sig::ImageOf<float>    m_depth_image;
@@ -85,6 +89,7 @@ protected:
 
     //Others
     yarp::os::ResourceFinder &m_rf;
+    double      m_reach_radius;
 
 public:
     //Contructor and distructor

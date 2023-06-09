@@ -38,11 +38,13 @@ PointHandTransformThread::PointHandTransformThread(double _period, yarp::os::Res
     m_depth_height = 0;
     m_base_frame_id = "/base_frame";
     m_camera_frame_id = "/depth_camera_frame";
+    m_shoulder_frame_id = "";
     m_targetOutPortName = "/pointHandTransform/target:o";
     m_pose_param = "xyz_pose";
     m_solver_config_param = "no_torso_no_heave";
     m_torso_heave_param = 0.0;
     m_arm_heave_param = 0.02;
+    m_reach_radius = 0.6;
 }
 
 bool PointHandTransformThread::threadInit()
@@ -143,14 +145,27 @@ bool PointHandTransformThread::threadInit()
             return false;
         }
     }
-    m_tcPoly.open(tcProp);
-    if(!m_tcPoly.isValid())
+    m_tcPolyCamera.open(tcProp);
+    if(!m_tcPolyCamera.isValid())
     {
         yCError(POINT_HAND_TRANSFORM_THREAD,"Error opening PolyDriver check parameters");
         return false;
     }
-    m_tcPoly.view(m_iTc);
-    if(!m_iTc)
+    m_tcPolyCamera.view(m_iTcCamera);
+    if(!m_iTcCamera)
+    {
+        yCError(POINT_HAND_TRANSFORM_THREAD,"Error opening iFrameTransform interface. Device not available");
+        return false;
+    }
+
+    m_tcPolyShoulder.open(tcProp);
+    if(!m_tcPolyShoulder.isValid())
+    {
+        yCError(POINT_HAND_TRANSFORM_THREAD,"Error opening PolyDriver check parameters");
+        return false;
+    }
+    m_tcPolyShoulder.view(m_iTcShoulder);
+    if(!m_iTcShoulder)
     {
         yCError(POINT_HAND_TRANSFORM_THREAD,"Error opening iFrameTransform interface. Device not available");
         return false;
@@ -185,6 +200,19 @@ bool PointHandTransformThread::threadInit()
              m_ee_quaternion_param[1] = solver_config.find("ee_quaternion2").asFloat32(),
              m_ee_quaternion_param[2] = solver_config.find("ee_quaternion3").asFloat32(),
              m_ee_quaternion_param[3] = solver_config.find("ee_quaternion4").asFloat32()};}
+    }
+
+    // --------- Reachability radius ---------- //
+    bool okRadius = m_rf.check("REACH_RADIUS");
+    if(!okRadius)
+    {
+        yCWarning(POINT_HAND_TRANSFORM_THREAD,"REACH_RADIUS section missing in ini file Using default values");
+    }
+    else {
+        yarp::os::Searchable &radius_config = m_rf.findGroup("REACH_RADIUS");
+        if (radius_config.check("r")) {
+            m_reach_radius = radius_config.find("r").asFloat32();
+        }
     }
 
 #ifdef HANDTRANSFORM_DEBUG
@@ -227,12 +255,18 @@ void PointHandTransformThread::run()
         return;
     }
 
-    //we compute the transformation matrix from the camera to the base reference frame
-
-    bool frame_exists = m_iTc->getTransform(m_camera_frame_id, m_base_frame_id, m_transform_mtrx);
-    if (!frame_exists)
+    // compute the transformation matrix from the camera to the base reference frame
+    bool base_frame_exists = m_iTcCamera->getTransform(m_camera_frame_id, m_base_frame_id, m_transform_mtrx_camera);
+    if (!base_frame_exists)
     {
-        yCWarning(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix");
+        yCWarning(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix (camera-base)");
+    }
+
+    // compute the transformation matrix from the shoulder to the base reference frame
+    bool shoulder_frame_exists = m_iTcShoulder->getTransform(m_shoulder_frame_id, m_base_frame_id, m_transform_mtrx_shoulder);
+    if (!shoulder_frame_exists)
+    {
+        yCWarning(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix (shoulder-base)");
     }
   
 
@@ -246,14 +280,28 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
 
     if(b.size() == 2)
     {
+        //transforming the clicked point to the target end-effector position
         double u = b.get(0).asFloat32();
         double v = b.get(1).asFloat32();
         yarp::sig::Vector tempPoint(4,1.0);
         tempPoint[0] = (u - m_intrinsics.principalPointX) / m_intrinsics.focalLengthX * m_depth_image.pixel(u, v);
         tempPoint[1] = (v - m_intrinsics.principalPointY) / m_intrinsics.focalLengthY * m_depth_image.pixel(u, v);
         tempPoint[2] = m_depth_image.pixel(u, v);
-        yarp::sig::Vector v2 = m_transform_mtrx*tempPoint;
-        
+        yarp::sig::Vector v2 = m_transform_mtrx_camera*tempPoint; //clicked point in point cloud coordinates wrt base frame
+
+        yarp::sig::Vector tempShoulderOrig {0.0, 0.0, 0.0, 1.0};
+        yarp::sig::Vector vSC = m_transform_mtrx_shoulder*tempShoulderOrig; //Reachability sphere center
+
+        double a_eq { 1 + pow(v2[1],2.0)/pow(v2[0],2.0) + pow(v2[2],2.0)/pow(v2[0],2.0) };
+        double b_eq { -2*vSC[0] - 2*vSC[1]*v2[1]/v2[0] - 2*vSC[2]*v2[2]/v2[0] };
+        double c_eq { pow(vSC[0],2.0) + pow(vSC[1],2.0) + pow(vSC[2],2.0) - pow(m_reach_radius,2.0)};
+
+        yarp::sig::Vector v3;
+        v3[0] = (-b_eq+sqrt(pow(b_eq,2.0)-4*a_eq*c_eq))/(2*a_eq);
+        v3[1] = v3[0]*v2[1]/v2[0];
+        v3[2] = v3[0]*v2[2]/v2[0];
+
+        //preparing output
         yarp::os::Bottle&  toSend = m_targetOutPort.prepare();
         toSend.clear();
         toSend.addString("askRequest");
@@ -273,9 +321,9 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
         yarp::os::Bottle& tempList = toSend.addList();
         tempList.addString("target");
         yarp::os::Bottle& targetList = tempList.addList();
-        targetList.addFloat32(v2[0]);
-        targetList.addFloat32(v2[1]);
-        targetList.addFloat32(v2[2]);
+        targetList.addFloat32(v3[0]);
+        targetList.addFloat32(v3[1]);
+        targetList.addFloat32(v3[2]);
         targetList.addFloat32(m_ee_quaternion_param[0]);
         targetList.addFloat32(m_ee_quaternion_param[1]);
         targetList.addFloat32(m_ee_quaternion_param[2]);
@@ -301,8 +349,11 @@ void PointHandTransformThread::threadRelease()
     if(m_rgbdPoly.isValid())
         m_rgbdPoly.close();
 
-    if(m_tcPoly.isValid())
-        m_tcPoly.close();
+    if(m_tcPolyCamera.isValid())
+        m_tcPolyCamera.close();
+
+    if(m_tcPolyShoulder.isValid())
+        m_tcPolyShoulder.close();
     
     if(!m_targetOutPort.isClosed()){
         m_targetOutPort.close();
