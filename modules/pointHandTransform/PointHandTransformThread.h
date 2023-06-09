@@ -58,10 +58,8 @@ protected:
     //Devices related attributes
     yarp::dev::PolyDriver            m_rgbdPoly;
     yarp::dev::IRGBDSensor*          m_iRgbd{nullptr};
-    yarp::dev::PolyDriver            m_tcPolyCamera;
-    yarp::dev::PolyDriver            m_tcPolyShoulder;
-    yarp::dev::IFrameTransform*      m_iTcCamera{nullptr};
-    yarp::dev::IFrameTransform*      m_iTcShoulder{nullptr};
+    yarp::dev::PolyDriver            m_tcPoly;
+    yarp::dev::IFrameTransform*      m_iTc{nullptr};
 
     //Computation related attributes
     int    m_depth_width;

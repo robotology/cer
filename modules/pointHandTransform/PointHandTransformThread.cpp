@@ -38,7 +38,7 @@ PointHandTransformThread::PointHandTransformThread(double _period, yarp::os::Res
     m_depth_height = 0;
     m_base_frame_id = "/base_frame";
     m_camera_frame_id = "/depth_camera_frame";
-    m_shoulder_frame_id = "";
+    m_shoulder_frame_id = "r_shoulder_link";
     m_targetOutPortName = "/pointHandTransform/target:o";
     m_pose_param = "xyz_pose";
     m_solver_config_param = "no_torso_no_heave";
@@ -63,6 +63,7 @@ bool PointHandTransformThread::threadInit()
         yarp::os::Searchable& frame_config = m_rf.findGroup("FRAME_CONFIG");
         if (frame_config.check("base_frame_id")) {m_base_frame_id = frame_config.find("base_frame_id").asString();}
         if (frame_config.check("camera_frame_id")) {m_camera_frame_id = frame_config.find("camera_frame_id").asString();}
+        if (frame_config.check("shoulder_frame_id")) {m_shoulder_frame_id = frame_config.find("shoulder_frame_id").asString();}
     }
 
     // --------- RGBDSensor config --------- //
@@ -145,31 +146,19 @@ bool PointHandTransformThread::threadInit()
             return false;
         }
     }
-    m_tcPolyCamera.open(tcProp);
-    if(!m_tcPolyCamera.isValid())
+    m_tcPoly.open(tcProp);
+    if(!m_tcPoly.isValid())
     {
         yCError(POINT_HAND_TRANSFORM_THREAD,"Error opening PolyDriver check parameters");
         return false;
     }
-    m_tcPolyCamera.view(m_iTcCamera);
-    if(!m_iTcCamera)
+    m_tcPoly.view(m_iTc);
+    if(!m_iTc)
     {
         yCError(POINT_HAND_TRANSFORM_THREAD,"Error opening iFrameTransform interface. Device not available");
         return false;
     }
 
-    m_tcPolyShoulder.open(tcProp);
-    if(!m_tcPolyShoulder.isValid())
-    {
-        yCError(POINT_HAND_TRANSFORM_THREAD,"Error opening PolyDriver check parameters");
-        return false;
-    }
-    m_tcPolyShoulder.view(m_iTcShoulder);
-    if(!m_iTcShoulder)
-    {
-        yCError(POINT_HAND_TRANSFORM_THREAD,"Error opening iFrameTransform interface. Device not available");
-        return false;
-    }
 
     //get parameters data from the camera
     m_depth_width = m_iRgbd->getRgbWidth();
@@ -256,14 +245,14 @@ void PointHandTransformThread::run()
     }
 
     // compute the transformation matrix from the camera to the base reference frame
-    bool base_frame_exists = m_iTcCamera->getTransform(m_camera_frame_id, m_base_frame_id, m_transform_mtrx_camera);
+    bool base_frame_exists = m_iTc->getTransform(m_camera_frame_id, m_base_frame_id, m_transform_mtrx_camera);
     if (!base_frame_exists)
     {
         yCWarning(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix (camera-base)");
     }
 
     // compute the transformation matrix from the shoulder to the base reference frame
-    bool shoulder_frame_exists = m_iTcShoulder->getTransform(m_shoulder_frame_id, m_base_frame_id, m_transform_mtrx_shoulder);
+    bool shoulder_frame_exists = m_iTc->getTransform(m_shoulder_frame_id, m_base_frame_id, m_transform_mtrx_shoulder);
     if (!shoulder_frame_exists)
     {
         yCWarning(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix (shoulder-base)");
@@ -349,11 +338,8 @@ void PointHandTransformThread::threadRelease()
     if(m_rgbdPoly.isValid())
         m_rgbdPoly.close();
 
-    if(m_tcPolyCamera.isValid())
-        m_tcPolyCamera.close();
-
-    if(m_tcPolyShoulder.isValid())
-        m_tcPolyShoulder.close();
+    if(m_tcPoly.isValid())
+        m_tcPoly.close();
     
     if(!m_targetOutPort.isClosed()){
         m_targetOutPort.close();
