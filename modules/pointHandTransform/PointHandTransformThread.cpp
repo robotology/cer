@@ -261,6 +261,26 @@ void PointHandTransformThread::run()
 
 }
 
+yarp::sig::Vector& PointHandTransformThread::reachablePoint(const yarp::sig::Vector& v0 , const yarp::sig::Vector& v1 , const yarp::sig::Vector& vSC, yarp::sig::Vector& vreach )
+{
+    //retrieve the coordinates of the interception between the line passing from point v0 to point v1, and a sphere with center in vSC
+
+    double exp1 = (v1[1]-v0[1])/(v1[0]-v0[0]);
+    double exp2 = (v1[2]-v0[2])/(v1[0]-v0[0]);
+    double exp3 = v0[1] - exp1*v0[0];
+    double exp4 = v0[2] - exp2*v0[0];
+
+    double a_eq { 1 + pow(exp1, 2.0) + pow(exp2, 2.0) };
+    double b_eq { -2*vSC[0] + 2*exp1*exp3 + 2*exp2*exp4 - 2*exp1*vSC[1] - 2*exp2*vSC[2] };
+    double c_eq { pow(vSC[0],2.0) + pow(vSC[1],2.0) + pow(vSC[2],2.0) + pow(exp3,2.0) + pow(exp4,2.0) - 2*vSC[1]*exp3 - 2*vSC[2]*exp4 - pow(m_reach_radius,2.0) };
+
+    vreach[0] = (-b_eq+sqrt(pow(b_eq,2.0)-4*a_eq*c_eq))/(2*a_eq);
+    vreach[1] = vreach[0]*exp1 + exp3;
+    vreach[2] = vreach[0]*exp2 + exp4;
+
+    yCInfo(POINT_HAND_TRANSFORM_THREAD, "Reachable point defined");
+    return vreach;
+}
 
 void PointHandTransformThread::onRead(yarp::os::Bottle &b)
 {
@@ -276,20 +296,16 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
         tempPoint[0] = (u - m_intrinsics.principalPointX) / m_intrinsics.focalLengthX * m_depth_image.pixel(u, v);
         tempPoint[1] = (v - m_intrinsics.principalPointY) / m_intrinsics.focalLengthY * m_depth_image.pixel(u, v);
         tempPoint[2] = m_depth_image.pixel(u, v);
-        yarp::sig::Vector v2 = m_transform_mtrx_camera*tempPoint; //clicked point in point cloud coordinates wrt base frame
+        yarp::sig::Vector v1 = m_transform_mtrx_camera*tempPoint; //clicked point in point cloud coordinates wrt base frame
 
-        yarp::sig::Vector tempShoulderOrig {0.0, 0.0, 0.0, 1.0};
-        yarp::sig::Vector vSC = m_transform_mtrx_shoulder*tempShoulderOrig; //Reachability sphere center
+        yarp::sig::Vector tempOrig {0.0, 0.0, 0.0, 1.0};
+        yarp::sig::Vector v0 = m_transform_mtrx_camera*tempOrig; //camera origin wrt to base frame 
+        yarp::sig::Vector vSC = m_transform_mtrx_shoulder*tempOrig; //Reachability sphere center wrt base frame
 
-        double a_eq { 1 + pow(v2[1],2.0)/pow(v2[0],2.0) + pow(v2[2],2.0)/pow(v2[0],2.0) };
-        double b_eq { -2*vSC[0] - 2*vSC[1]*v2[1]/v2[0] - 2*vSC[2]*v2[2]/v2[0] };
-        double c_eq { pow(vSC[0],2.0) + pow(vSC[1],2.0) + pow(vSC[2],2.0) - pow(m_reach_radius,2.0)};
-
-        yarp::sig::Vector v3;
-        v3[0] = (-b_eq+sqrt(pow(b_eq,2.0)-4*a_eq*c_eq))/(2*a_eq);
-        v3[1] = v3[0]*v2[1]/v2[0];
-        v3[2] = v3[0]*v2[2]/v2[0];
-
+        yarp::sig::Vector v3 {0.0, 0.0, 0.0};
+        yCInfo(POINT_HAND_TRANSFORM_THREAD, "beginning calculation");
+        v3 = reachablePoint(v0, v1, vSC, v3);
+        
         //preparing output
         yarp::os::Bottle&  toSend = m_targetOutPort.prepare();
         toSend.clear();
