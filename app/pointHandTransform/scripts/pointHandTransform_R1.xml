@@ -4,12 +4,10 @@
    <dependencies>
    </dependencies>
 
-   <module>
-      <name>ros2</name>
-      <parameters>launch robot_state_publisher.launch.py use_sim_time:=true</parameters>
-      <workdir>/home/user1/tour-guide-robot/app/navigation2/launch/</workdir>
-      <node>console</node>
-   </module>
+   <application>
+      <name>Navigation_ROS_R1SN003</name>
+      <prefix></prefix>
+   </application>
 
    <module>
       <name>pointHandTransform</name>
@@ -37,7 +35,7 @@
    </module>
 
    <connection>
-      <from>/cer/depthCamera/rgbImage:o</from>
+      <from>/cer/realsense_repeater/rgbImage:o</from>
       <to>/view/cameraView:i</to>
       <protocol>tcp</protocol>
    </connection>
