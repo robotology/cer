@@ -46,6 +46,7 @@ PointHandTransformThread::PointHandTransformThread(double _period, yarp::os::Res
     m_torso_heave_param = 0.0;
     m_arm_heave_param = 0.02;
     m_reach_radius = 0.6;
+    m_gaze_target_type = "cartesian";
 }
 
 bool PointHandTransformThread::threadInit()
@@ -212,6 +213,19 @@ bool PointHandTransformThread::threadInit()
         }
     }
 
+    // --------- Gaze Controller Config ---------- //
+    bool okGazeCtrl = m_rf.check("GAZE_CONFIG");
+    if(!okGazeCtrl)
+    {
+        yCWarning(POINT_HAND_TRANSFORM_THREAD,"GAZE_CONFIG section missing in ini file Using default values");
+    }
+    else {
+        yarp::os::Searchable &gaze_config = m_rf.findGroup("GAZE_CONFIG");
+        if (gaze_config.check("target_type")) {
+            m_gaze_target_type = gaze_config.find("r").asString();
+        }
+    }
+
 #ifdef HANDTRANSFORM_DEBUG
     yCDebug(POINT_HAND_TRANSFORM_THREAD, "... done!\n");
 #endif
@@ -265,7 +279,6 @@ void PointHandTransformThread::run()
     {
         yCWarning(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix (shoulder-base)");
     }
-  
 
 }
 
@@ -309,8 +322,8 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
         yarp::sig::Vector tempOrig {0.0, 0.0, 0.0, 1.0};
         yarp::sig::Vector v0 = m_transform_mtrx_shoulder*tempOrig; //shoulder frame origin wrt to base frame 
 
-        yarp::sig::Vector v3 {0.0, 0.0, 0.0};
-        v3 = reachablePoint(v0, v1, v0, v3);
+        yarp::sig::Vector vTarget {0.0, 0.0, 0.0};
+        vTarget = reachablePoint(v0, v1, v0, vTarget);
     
         //ee target output
         yarp::os::Bottle&  toSend = m_targetOutPort.prepare();
@@ -332,9 +345,9 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
         yarp::os::Bottle& tempList = toSend.addList();
         tempList.addString("target");
         yarp::os::Bottle& targetList = tempList.addList();
-        targetList.addFloat32(v3[0]);
-        targetList.addFloat32(v3[1]);
-        targetList.addFloat32(v3[2]);
+        targetList.addFloat32(vTarget[0]);
+        targetList.addFloat32(vTarget[1]);
+        targetList.addFloat32(vTarget[2]);
         targetList.addFloat32(m_ee_quaternion_param[0]);
         targetList.addFloat32(m_ee_quaternion_param[1]);
         targetList.addFloat32(m_ee_quaternion_param[2]);
@@ -342,17 +355,49 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
 
         //gaze target output
         yarp::os::Bottle&  toSend1 = m_gazeTargetOutPort.prepare();
-        yarp::os::Bottle& controlFrameList = toSend1.addList();
-        controlFrameList.addString("control-frame");
-        controlFrameList.addString("depth");
-        yarp::os::Bottle& targetTypeList = toSend1.addList();
-        targetTypeList.addString("target-type");
-        targetTypeList.addString("image");
-        yarp::os::Bottle& targetLocationList = toSend1.addList();
-        targetLocationList.addString("target-location");
-        yarp::os::Bottle& targetList1 = targetLocationList.addList();
-        targetList1.addFloat32(u);
-        targetList1.addFloat32(v);
+        toSend1.clear();
+        if (m_gaze_target_type == "image")
+        {
+            yarp::os::Bottle& controlFrameList = toSend1.addList();
+            controlFrameList.addString("control-frame");
+            controlFrameList.addString("depth");
+            yarp::os::Bottle& targetTypeList = toSend1.addList();
+            targetTypeList.addString("target-type");
+            targetTypeList.addString(m_gaze_target_type);
+            yarp::os::Bottle& targetLocationList = toSend1.addList();
+            targetLocationList.addString("target-location");
+            yarp::os::Bottle& targetList1 = targetLocationList.addList();
+            targetList1.addFloat32(u);
+            targetList1.addFloat32(v);
+        }
+        else if (m_gaze_target_type == "cartesian")
+        {
+            yarp::os::Bottle& controlFrameList = toSend1.addList();
+            controlFrameList.addString("control-frame");
+            controlFrameList.addString("gaze");
+            yarp::os::Bottle& targetTypeList = toSend1.addList();
+            targetTypeList.addString("target-type");
+            targetTypeList.addString(m_gaze_target_type);
+            yarp::os::Bottle& targetLocationList = toSend1.addList();
+            targetLocationList.addString("target-location");
+
+            yarp::sig::Matrix transform_mtrx_gaze;
+            bool gaze_frame_exists = m_iTc->getTransform(m_camera_frame_id, "gaze", transform_mtrx_gaze);
+            if (!gaze_frame_exists)
+            {
+                yCError(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix (camera-gaze)");
+            }
+            yarp::sig::Vector vGaze = transform_mtrx_gaze*tempPoint; //clicked point wrt gaze frame
+
+            yarp::os::Bottle& targetList1 = targetLocationList.addList();
+            targetList1.addFloat32(vGaze[0]);
+            targetList1.addFloat32(vGaze[1]);
+            targetList1.addFloat32(vGaze[2]);
+        }
+        else 
+        {
+            yCWarning(POINT_HAND_TRANSFORM_THREAD,"Invalid or no Gaze Target Type defined. Gaze Controller not able to move head");
+        }
 
         m_gazeTargetOutPort.write();
         m_targetOutPort.write();

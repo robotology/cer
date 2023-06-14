@@ -88,8 +88,9 @@ protected:
     yarp::os::BufferedPort<yarp::os::Bottle>   m_gazeTargetOutPort;
 
     //Others
-    yarp::os::ResourceFinder &m_rf;
-    double      m_reach_radius;
+    yarp::os::ResourceFinder    &m_rf;
+    double                      m_reach_radius;
+    std::string                 m_gaze_target_type;
 
 public:
     //Contructor and distructor
