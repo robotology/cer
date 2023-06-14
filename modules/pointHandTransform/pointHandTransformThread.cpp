@@ -20,7 +20,7 @@
 
 #define _USE_MATH_DEFINES
 
-#include "PointHandTransformThread.h"
+#include "pointHandTransformThread.h"
 #include <chrono>
 #include <cmath>
 #include <list>
@@ -36,10 +36,11 @@ PointHandTransformThread::PointHandTransformThread(double _period, yarp::os::Res
 {
     m_depth_width = 0;
     m_depth_height = 0;
-    m_base_frame_id = "/base_frame";
-    m_camera_frame_id = "/depth_camera_frame";
+    m_base_frame_id = "base_link";
+    m_camera_frame_id = "depth_center";
     m_shoulder_frame_id = "r_shoulder_link";
     m_targetOutPortName = "/pointHandTransform/target:o";
+    m_gazeTargetOutPortName = "/pointHandTransform/gazeTarget:o";
     m_pose_param = "xyz_pose";
     m_solver_config_param = "no_torso_no_heave";
     m_torso_heave_param = 0.0;
@@ -55,6 +56,7 @@ bool PointHandTransformThread::threadInit()
 
     // --------- Generic config --------- //
     if (m_rf.check("target_point_port")) {m_targetOutPortName = m_rf.find("target_point_port").asString();}
+    if (m_rf.check("gaze_target_point_port")) {m_gazeTargetOutPortName = m_rf.find("gaze_target_point_port").asString();}
     
     // --------- Frame config -------- //
     bool okFrameConfig = m_rf.check("FRAME_CONFIG");
@@ -170,8 +172,14 @@ bool PointHandTransformThread::threadInit()
     yCInfo(POINT_HAND_TRANSFORM_THREAD) << "Depth Intrinsics:" << m_propIntrinsics.toString();
     m_intrinsics.fromProperty(m_propIntrinsics);
 
+    //open target ports
     if(!m_targetOutPort.open(m_targetOutPortName)){
         yCError(POINT_HAND_TRANSFORM_THREAD) << "Cannot open targetOut port with name" << m_targetOutPortName;
+        return false;
+    }
+
+     if(!m_gazeTargetOutPort.open(m_gazeTargetOutPortName)){
+        yCError(POINT_HAND_TRANSFORM_THREAD) << "Cannot open gazeTargetOut port with name" << m_gazeTargetOutPortName;
         return false;
     }
 
@@ -299,14 +307,12 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
         yarp::sig::Vector v1 = m_transform_mtrx_camera*tempPoint; //clicked point in point cloud coordinates wrt base frame
 
         yarp::sig::Vector tempOrig {0.0, 0.0, 0.0, 1.0};
-        yarp::sig::Vector v0 = m_transform_mtrx_camera*tempOrig; //camera origin wrt to base frame 
-        yarp::sig::Vector vSC = m_transform_mtrx_shoulder*tempOrig; //Reachability sphere center wrt base frame
+        yarp::sig::Vector v0 = m_transform_mtrx_shoulder*tempOrig; //shoulder frame origin wrt to base frame 
 
         yarp::sig::Vector v3 {0.0, 0.0, 0.0};
-        yCInfo(POINT_HAND_TRANSFORM_THREAD, "beginning calculation");
-        v3 = reachablePoint(v0, v1, vSC, v3);
-        
-        //preparing output
+        v3 = reachablePoint(v0, v1, v0, v3);
+    
+        //ee target output
         yarp::os::Bottle&  toSend = m_targetOutPort.prepare();
         toSend.clear();
         toSend.addString("askRequest");
@@ -334,6 +340,21 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
         targetList.addFloat32(m_ee_quaternion_param[2]);
         targetList.addFloat32(m_ee_quaternion_param[3]);
 
+        //gaze target output
+        yarp::os::Bottle&  toSend1 = m_gazeTargetOutPort.prepare();
+        yarp::os::Bottle& controlFrameList = toSend1.addList();
+        controlFrameList.addString("control-frame");
+        controlFrameList.addString("depth");
+        yarp::os::Bottle& targetTypeList = toSend1.addList();
+        targetTypeList.addString("target-type");
+        targetTypeList.addString("image");
+        yarp::os::Bottle& targetLocationList = toSend1.addList();
+        targetLocationList.addString("target-location");
+        yarp::os::Bottle& targetList1 = targetLocationList.addList();
+        targetList1.addFloat32(u);
+        targetList1.addFloat32(v);
+
+        m_gazeTargetOutPort.write();
         m_targetOutPort.write();
 
         yCInfo(POINT_HAND_TRANSFORM_THREAD,"Sent to solver: %s",toSend.toString().c_str());
@@ -359,6 +380,10 @@ void PointHandTransformThread::threadRelease()
     
     if(!m_targetOutPort.isClosed()){
         m_targetOutPort.close();
+    }
+    
+    if(!m_gazeTargetOutPort.isClosed()){
+        m_gazeTargetOutPort.close();
     }
 
     yCInfo(POINT_HAND_TRANSFORM_THREAD, "Thread released");

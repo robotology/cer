@@ -3,7 +3,12 @@
 
    <dependencies>
    </dependencies>
+   
+   <!--              -->
+   <!--   MODULES    -->
+   <!--              -->
 
+   <!-- ROS2 Publisher -->
    <module>
       <name>ros2</name>
       <parameters>launch robot_state_publisher.launch.py use_sim_time:=true</parameters>
@@ -11,6 +16,14 @@
       <node>console</node>
    </module>
 
+   <!-- Gaze controller -->
+   <module>
+      <name>cer_gaze-controller</name>
+      <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+      <node>console</node>
+   </module>
+
+   <!-- EE Target definition -->
    <module>
       <name>pointHandTransform</name>
       <parameters>--context pointHandTransform --from pointHandTransform_R1_SIM.ini</parameters>
@@ -36,6 +49,9 @@
       <node>console</node>
    </module>
 
+   <!--               -->
+   <!--  CONNECTIONS  -->
+   <!--               -->
    <connection>
       <from>/SIM_CER_ROBOT/depthCamera/rgbImage:o</from>
       <to>/view/cameraView:i</to>
@@ -58,6 +74,12 @@
       <from>/pointHandTransform/target:o</from>
       <to>/cer_reaching-controller/right/target:i</to>
       <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/pointHandTransform/gazeTarget:o</from>
+      <to>/cer_gaze-controller/target:i</to>
+      <protocol>fast_tcp</protocol>
    </connection>
 
 </application>

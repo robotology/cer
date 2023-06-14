@@ -31,7 +31,7 @@
 #include <yarp/dev/ControlBoardInterfaces.h>
 
 #include <math.h>
-#include "PointHandTransformThread.h"
+#include "pointHandTransformThread.h"
 
 
 class PointHandTransform : public yarp::os::RFModule

@@ -4,11 +4,72 @@
    <dependencies>
    </dependencies>
 
-   <application>
-      <name>Navigation_ROS2_R1SN003</name>
-      <prefix></prefix>
-   </application>
+   <!--              -->
+   <!--   MODULES    -->
+   <!--              -->
 
+   <!-- Robot initialization -->
+   <module>
+      <name>yarprobotinterface</name>
+      <parameters></parameters>
+      <workdir>/home/user1/robotology/robots-configuration/R1SN003/</workdir>
+      <node>r1-base</node>
+   </module>
+
+   <module>
+      <name>yarprobotinterface</name>
+      <parameters>--context navigation2 --from realsense2_remote.ini</parameters>
+      <node>r1-torso</node>
+   </module>
+
+   <module>
+      <name>yarprobotinterface</name>
+      <parameters>--context navigation2 --from pointCloudCreator.ini</parameters>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>yarprobotinterface</name>
+      <parameters>--context navigation2 --from lidar_compressed.ini</parameters>
+      <node>console</node>
+   </module>
+
+   <!-- ROS2 Publisher -->
+   <module>
+      <name>ros2</name>
+      <parameters>launch robot_state_publisher.launch.py</parameters>
+      <workdir>/home/user1/tour-guide-robot/app/navigation2/launch/</workdir>
+      <node>r1-base</node>
+   </module>
+
+   <module>
+      <name>ros2</name>
+      <parameters>run tf2_ros static_transform_publisher 0 0 0.05 0 0 0 1 depth_center extra_camera_tf</parameters>
+      <node>r1-base</node>
+   </module>
+
+   <module>
+      <name>baseControl2</name>
+      <parameters>--context baseControl2 --from baseCtrl_cer_ros2.ini --skip_robot_interface_check</parameters>
+      <node>r1-base</node>
+   </module>
+
+   <!-- Navigation position -->
+   <module>
+      <name>./set_navigation_position.sh</name>
+      <parameters></parameters>
+      <workdir>/home/user1/tour-guide-robot/app/navigation2/scripts/</workdir>
+      <node>console</node>
+   </module>
+
+   <!-- Gaze controller -->
+   <module>
+      <name>cer_gaze-controller</name>
+      <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_320x240.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+      <node>r1-base</node>
+   </module>
+
+   <!-- EE Target definition -->
    <module>
       <name>pointHandTransform</name>
       <parameters>--context pointHandTransform --from pointHandTransform_R1.ini</parameters>
@@ -34,6 +95,9 @@
       <node>console</node>
    </module>
 
+   <!--               -->
+   <!--  CONNECTIONS  -->
+   <!--               -->
    <connection>
       <from>/cer/realsense_repeater/rgbImage:o</from>
       <to>/view/cameraView:i</to>
@@ -56,6 +120,12 @@
       <from>/pointHandTransform/target:o</from>
       <to>/cer_reaching-controller/right/target:i</to>
       <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/pointHandTransform/gazeTarget:o</from>
+      <to>/cer_gaze-controller/target:i</to>
+      <protocol>fast_tcp</protocol>
    </connection>
 
 </application>

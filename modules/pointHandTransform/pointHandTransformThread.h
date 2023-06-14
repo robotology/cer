@@ -83,7 +83,9 @@ protected:
 
     //Ports
     std::string                                m_targetOutPortName;
+    std::string                                m_gazeTargetOutPortName;
     yarp::os::BufferedPort<yarp::os::Bottle>   m_targetOutPort;
+    yarp::os::BufferedPort<yarp::os::Bottle>   m_gazeTargetOutPort;
 
     //Others
     yarp::os::ResourceFinder &m_rf;
