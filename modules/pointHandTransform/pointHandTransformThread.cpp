@@ -222,7 +222,7 @@ bool PointHandTransformThread::threadInit()
     else {
         yarp::os::Searchable &gaze_config = m_rf.findGroup("GAZE_CONFIG");
         if (gaze_config.check("target_type")) {
-            m_gaze_target_type = gaze_config.find("r").asString();
+            m_gaze_target_type = gaze_config.find("target_type").asString();
         }
     }
 
