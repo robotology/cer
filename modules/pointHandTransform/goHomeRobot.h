@@ -32,9 +32,15 @@ class GoHomeRobot : public yarp::os::TypedReaderCallback<yarp::os::Bottle>
 private:
     //Polydriver
     yarp::dev::PolyDriver           m_drivers[3];
-    yarp::dev::IRemoteCalibrator*   m_iremcal[3];
-    yarp::dev::IControlMode*        m_ictrlmode[3];
-    yarp::dev::IPositionControl*    m_iposctrl[3];
+    yarp::dev::IRemoteCalibrator*   m_iremcal[3];       //to command HomingWholePart to arms and head
+    yarp::dev::IControlMode*        m_ictrlmode[3];     //to set the Position control mode
+    yarp::dev::IPositionControl*    m_iposctrl[3];      //to retrieve the number of joints of each part
+
+    //Ports
+    std::string                                m_armsOutPortName;
+    std::string                                m_headOutPortName;
+    yarp::os::BufferedPort<yarp::os::Bottle>   m_armsOutPort;
+    yarp::os::BufferedPort<yarp::os::Bottle>   m_headOutPort;
 
 public:
     //Constructor/Distructor

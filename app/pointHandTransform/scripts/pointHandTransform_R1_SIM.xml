@@ -43,6 +43,12 @@
       <node>console</node>
    </module>
 
+   <module>
+      <name>cer_reaching-controller</name>
+      <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1 --T 1.0</parameters>
+      <node>console</node>
+   </module>
+
    <!-- Go Home Command -->
    <module>
       <name>./goHome.sh</name>
