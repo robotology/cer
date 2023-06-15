@@ -97,12 +97,30 @@ bool GoHomeRobot::configure(yarp::os::ResourceFinder &rf)
         }
     }
 
-    m_drivers[0].view(m_iRemCal[0]);
-    m_drivers[1].view(m_iRemCal[1]);
-    m_drivers[2].view(m_iRemCal[2]);
-    if(!m_iRemCal[0] || !m_iRemCal[1] || !m_iRemCal[2])
+    m_drivers[0].view(m_iremcal[0]);
+    m_drivers[1].view(m_iremcal[1]);
+    m_drivers[2].view(m_iremcal[2]);
+    if(!m_iremcal[0] || !m_iremcal[1] || !m_iremcal[2])
     {
         yCError(GO_HOME_ROBOT,"Error opening iRemoteCalibrator interfaces. Devices not available");
+        return false;
+    }
+
+    m_drivers[0].view(m_iposctrl[0]);
+    m_drivers[1].view(m_iposctrl[1]);
+    m_drivers[2].view(m_iposctrl[2]);
+    if(!m_iposctrl[0] || !m_iposctrl[1] || !m_iposctrl[2])
+    {
+        yCError(GO_HOME_ROBOT,"Error opening iPositionControl interfaces. Devices not available");
+        return false;
+    }
+
+    m_drivers[0].view(m_ictrlmode[0]);
+    m_drivers[1].view(m_ictrlmode[1]);
+    m_drivers[2].view(m_ictrlmode[2]);
+    if(!m_ictrlmode[0] || !m_ictrlmode[1] || !m_ictrlmode[2])
+    {
+        yCError(GO_HOME_ROBOT,"Error opening iControlMode interfaces. Devices not available");
         return false;
     }
 
@@ -111,22 +129,38 @@ bool GoHomeRobot::configure(yarp::os::ResourceFinder &rf)
 
 void GoHomeRobot::onRead(yarp::os::Bottle &b)
 {
-    //add a check if the robot is already moving
+    //FIX: add a check if the robot is already moving
     backToHome();
 }
 
 void GoHomeRobot::backToHome()
 {
-    bool okRightArm = m_iRemCal[0]->homingWholePart();
-    bool okLeftArm = m_iRemCal[1]->homingWholePart();
-    bool okHead = m_iRemCal[2]->homingWholePart();
+    // ------ set all the parts to Position control mode ------ //
+
+    int NUMBER_OF_JOINTS;
+    //  right arm
+    m_iposctrl[0]->getAxes(&NUMBER_OF_JOINTS);
+    for (int i_joint=0; i_joint < NUMBER_OF_JOINTS; i_joint++){ m_ictrlmode[0]->setControlMode(i_joint, VOCAB_CM_POSITION); }
+    //  left arm
+    m_iposctrl[1]->getAxes(&NUMBER_OF_JOINTS);
+    for (int i_joint=0; i_joint < NUMBER_OF_JOINTS; i_joint++){ m_ictrlmode[1]->setControlMode(i_joint, VOCAB_CM_POSITION); }
+    //  head
+    m_iposctrl[2]->getAxes(&NUMBER_OF_JOINTS);
+    for (int i_joint=0; i_joint < NUMBER_OF_JOINTS; i_joint++){ m_ictrlmode[2]->setControlMode(i_joint, VOCAB_CM_POSITION); }
+    
+    
+    // ------ go home command  ------ //
+    
+    bool okRightArm = m_iremcal[0]->homingWholePart();
+    bool okLeftArm = m_iremcal[1]->homingWholePart();
+    bool okHead = m_iremcal[2]->homingWholePart();
     if (!okRightArm || !okLeftArm || !okHead ) 
     {
-        // providing better feedback to user by verifying if the calibrator device was set or not
+        // providing better feedback to user by verifying if the calibrator device was set or not. (SIM_CER_ROBOT does not have a calibrator!)
         if (!okRightArm)  
         {
             bool isCalib = false;
-            m_iRemCal[0]->isCalibratorDevicePresent(&isCalib);
+            m_iremcal[0]->isCalibratorDevicePresent(&isCalib);
             if (!isCalib)
             { yCError(GO_HOME_ROBOT, "Error with part: right_arm. No calibrator device was configured to perform this action, please verify that the wrapper config file for the part has the 'Calibrator' keyword in the attach phase"); }
             else
@@ -135,7 +169,7 @@ void GoHomeRobot::backToHome()
         if (!okRightArm)  
         {
             bool isCalib = false;
-            m_iRemCal[1]->isCalibratorDevicePresent(&isCalib);
+            m_iremcal[1]->isCalibratorDevicePresent(&isCalib);
             if (!isCalib)
             { yCError(GO_HOME_ROBOT, "Error with part: left_arm. No calibrator device was configured to perform this action, please verify that the wrapper config file for the part has the 'Calibrator' keyword in the attach phase"); }
             else
@@ -144,7 +178,7 @@ void GoHomeRobot::backToHome()
         if (!okRightArm) 
         {
             bool isCalib = false;
-            m_iRemCal[2]->isCalibratorDevicePresent(&isCalib);
+            m_iremcal[2]->isCalibratorDevicePresent(&isCalib);
             if (!isCalib)
             { yCError(GO_HOME_ROBOT, "Error with part: head. No calibrator device was configured to perform this action, please verify that the wrapper config file for the part has the 'Calibrator' keyword in the attach phase"); }
             else

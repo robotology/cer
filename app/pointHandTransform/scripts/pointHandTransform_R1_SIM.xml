@@ -43,11 +43,14 @@
       <node>console</node>
    </module>
 
+   <!-- Go Home Command -->
    <module>
-      <name>cer_reaching-controller</name>
-      <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1 --T 1.0</parameters>
+      <name>./goHome.sh</name>
+      <parameters></parameters>
+      <workdir>/home/user1/robotology/cer/app/pointHandTransform/scripts/</workdir>
       <node>console</node>
    </module>
+
 
    <!--               -->
    <!--  CONNECTIONS  -->

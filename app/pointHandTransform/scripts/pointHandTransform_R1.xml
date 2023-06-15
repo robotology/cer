@@ -54,14 +54,6 @@
       <node>r1-base</node>
    </module>
 
-   <!-- Navigation position -->
-   <module>
-      <name>./set_navigation_position.sh</name>
-      <parameters></parameters>
-      <workdir>/home/user1/tour-guide-robot/app/navigation2/scripts/</workdir>
-      <node>console</node>
-   </module>
-
    <!-- Gaze controller -->
    <module>
       <name>cer_gaze-controller</name>
@@ -92,6 +84,22 @@
    <module>
       <name>cer_reaching-controller</name>
       <parameters>--robot cer --arm-type right --verbosity 1 --T 1.0</parameters>
+      <node>console</node>
+   </module>
+
+   <!-- Set Navigation position -->
+   <module>
+      <name>./set_navigation_position.sh</name>
+      <parameters></parameters>
+      <workdir>/home/user1/tour-guide-robot/app/navigation2/scripts/</workdir>
+      <node>console</node>
+   </module>
+
+   <!-- Go Home Command -->
+   <module>
+      <name>./goHome.sh</name>
+      <parameters></parameters>
+      <workdir>/home/user1/robotology/cer/app/pointHandTransform/scripts/</workdir>
       <node>console</node>
    </module>
 

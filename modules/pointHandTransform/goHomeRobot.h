@@ -32,7 +32,9 @@ class GoHomeRobot : public yarp::os::TypedReaderCallback<yarp::os::Bottle>
 private:
     //Polydriver
     yarp::dev::PolyDriver           m_drivers[3];
-    yarp::dev::IRemoteCalibrator*   m_iRemCal[3];
+    yarp::dev::IRemoteCalibrator*   m_iremcal[3];
+    yarp::dev::IControlMode*        m_ictrlmode[3];
+    yarp::dev::IPositionControl*    m_iposctrl[3];
 
 public:
     //Constructor/Distructor
