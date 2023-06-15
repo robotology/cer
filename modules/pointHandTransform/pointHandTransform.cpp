@@ -37,7 +37,8 @@ bool PointHandTransform::configure(yarp::os::ResourceFinder &rf)
     yarp::dev::PolyDriver tempPoly;
     yarp::dev::IRGBDSensor* tempIRGBD{nullptr};
     yarp::os::Property rgbdProp;
-    // Prepare default prop object
+
+    //defaults
     rgbdProp.put("device", RGBDClient);
     rgbdProp.put("localImagePort", RGBDLocalImagePort);
     rgbdProp.put("localDepthPort", RGBDLocalDepthPort);
@@ -82,10 +83,10 @@ bool PointHandTransform::configure(yarp::os::ResourceFinder &rf)
     int imgHeight = tempIRGBD->getRgbHeight();
     int imgWidth = tempIRGBD->getRgbWidth();
 
-    tempPoly.close(); // Temporary polydriver closed
+    tempPoly.close(); 
 
     
-    // Thread initialization
+    // --------- Thread initialization --------- //
     m_innerThread = new PointHandTransformThread(threadPeriod,rf);
     bool threadOk = m_innerThread->start();
     if (!threadOk){
@@ -102,6 +103,25 @@ bool PointHandTransform::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
+    // --------- goHome poly config --------- //
+    m_goHomeRobot = new GoHomeRobot();
+    bool okHome{m_goHomeRobot->configure(rf)};
+    if(!okHome)
+    {
+        yCError(POINT_HAND_TRANSFORM,"GoHomeRobot configuration failed");
+        return false;
+    }
+
+    std::string homeName = "/pointHandTransform/go_home:i";
+    if(rf.check("go_home_port")){homeName = rf.find("go_home_port").asString();}
+    m_goHomePort.useCallback(*m_goHomeRobot);
+    bool ret1 = m_goHomePort.open(homeName);
+    if (!ret1)
+    {
+        yCError(POINT_HAND_TRANSFORM, "Unable to open module ports");
+        return false;
+    }
+
     return true;
 }
 
@@ -110,8 +130,10 @@ bool PointHandTransform::close()
     m_innerThread->stop();
     delete m_innerThread;
     m_innerThread =NULL;
-
     m_pointInputPort.close();
+
+    m_goHomeRobot->close();
+    m_goHomePort.close();
 
     return true;
 }

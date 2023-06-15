@@ -102,7 +102,7 @@ public:
     virtual bool threadInit() override;
     virtual void threadRelease() override;
 
-    //Port callback
+    //Port inherited from TypedReaderCallback
     using TypedReaderCallback<yarp::os::Bottle>::onRead;
     void onRead(yarp::os::Bottle& b) override;
 

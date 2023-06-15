@@ -16,47 +16,37 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef POINT_HAND_TRANFORM_H
-#define POINT_HAND_TRANFORM_H
+#ifndef GO_HOME_ROBOT_H
+#define GO_HOME_ROBOT_H
 
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/Network.h>
-#include <yarp/os/RFModule.h>
 #include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/IRGBDSensor.h>
-#include <yarp/dev/IFrameTransform.h>
 #include <yarp/os/Time.h>
 #include <yarp/os/Port.h>
+#include <yarp/os/RFModule.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 
-#include <math.h>
-#include "pointHandTransformThread.h"
-#include "goHomeRobot.h"
-
-
-class PointHandTransform : public yarp::os::RFModule
+class GoHomeRobot : public yarp::os::TypedReaderCallback<yarp::os::Bottle>
 {
-protected:
-    
-    //Ports
-    yarp::os::BufferedPort<yarp::os::Bottle> m_pointInputPort;
-    yarp::os::BufferedPort<yarp::os::Bottle> m_goHomePort;
-
-    //Callback thread
-    PointHandTransformThread*      m_innerThread;
-    
-    //Callback
-    GoHomeRobot*                   m_goHomeRobot;
-    
-    double                         m_period;
+private:
+    //Polydriver
+    yarp::dev::PolyDriver           m_drivers[3];
+    yarp::dev::IRemoteCalibrator*   m_iRemCal[3];
 
 public:
-    PointHandTransform();
-    virtual bool configure(yarp::os::ResourceFinder &rf);
-    virtual bool close();
-    virtual double getPeriod();
-    virtual bool updateModule();
+    //Constructor/Distructor
+    GoHomeRobot(){}
+    ~GoHomeRobot(){}
+
+    //Internal methods
+    bool configure(yarp::os::ResourceFinder &rf);
+    void backToHome();
+    void close();
+
+    //Port inherited from TypedReaderCallback
+    using TypedReaderCallback<yarp::os::Bottle>::onRead;
+    void onRead(yarp::os::Bottle& b) override;
 };
 
-#endif
+#endif //GO_HOME_ROBOT_H

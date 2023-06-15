@@ -19,7 +19,7 @@
    <!-- Gaze controller -->
    <module>
       <name>cer_gaze-controller</name>
-      <parameters>--cameras::context cameraCalibration --cameras::file cerSimEyes_320x240.ini --robot SIM_CER_ROBOT --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+      <parameters>--cameras::context cameraCalibration --cameras::file cerSimEyes_640x480.ini --robot SIM_CER_ROBOT --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
       <node>console</node>
    </module>
 
@@ -27,13 +27,6 @@
    <module>
       <name>pointHandTransform</name>
       <parameters>--context pointHandTransform --from pointHandTransform_R1_SIM.ini</parameters>
-      <environment></environment>
-      <node>console</node>
-   </module>
-
-   <module>
-      <name>pointHandTransform</name>
-      <parameters>--context pointHandTransform --from pointHandTransform_R1_SIM_gazeImage.ini</parameters>
       <environment></environment>
       <node>console</node>
    </module>

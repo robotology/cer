@@ -46,7 +46,7 @@ PointHandTransformThread::PointHandTransformThread(double _period, yarp::os::Res
     m_torso_heave_param = 0.0;
     m_arm_heave_param = 0.02;
     m_reach_radius = 0.6;
-    m_gaze_target_type = "cartesian";
+    m_gaze_target_type = "image";
 }
 
 bool PointHandTransformThread::threadInit()
@@ -370,7 +370,7 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
             targetList1.addFloat32(u);
             targetList1.addFloat32(v);
         }
-        else if (m_gaze_target_type == "cartesian")
+        else if (m_gaze_target_type == "cartesian") // TO BE FIXED !!
         {
             yarp::os::Bottle& controlFrameList = toSend1.addList();
             controlFrameList.addString("control-frame");
