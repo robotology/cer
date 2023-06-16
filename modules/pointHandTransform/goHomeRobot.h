@@ -44,6 +44,7 @@ public:
     //Internal methods
     bool configure(yarp::os::ResourceFinder &rf);
     void backToHome();
+    void backToHomePart(const std::string& part);
     void close();
 
     //Port inherited from TypedReaderCallback

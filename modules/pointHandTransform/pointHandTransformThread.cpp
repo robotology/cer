@@ -38,9 +38,12 @@ PointHandTransformThread::PointHandTransformThread(double _period, yarp::os::Res
     m_depth_height = 0;
     m_base_frame_id = "base_link";
     m_camera_frame_id = "depth_center";
-    m_shoulder_frame_id = "r_shoulder_link";
-    m_targetOutPortName = "/pointHandTransform/target:o";
+    m_r_shoulder_frame_id = "r_shoulder_link";
+    m_l_shoulder_frame_id = "l_shoulder_link";
+    m_r_targetOutPortName = "/pointHandTransform/r_target:o";
+    m_l_targetOutPortName = "/pointHandTransform/l_target:o";
     m_gazeTargetOutPortName = "/pointHandTransform/gazeTarget:o";
+    m_getArmHomePortName = "/pointHandTransform/get_arm_home:o";
     m_pose_param = "xyz_pose";
     m_solver_config_param = "no_torso_no_heave";
     m_torso_heave_param = 0.0;
@@ -56,8 +59,10 @@ bool PointHandTransformThread::threadInit()
 #endif
 
     // --------- Generic config --------- //
-    if (m_rf.check("target_point_port")) {m_targetOutPortName = m_rf.find("target_point_port").asString();}
+    if (m_rf.check("r_target_point_port")) {m_r_targetOutPortName = m_rf.find("r_target_point_port").asString();}
+    if (m_rf.check("l_target_point_port")) {m_l_targetOutPortName = m_rf.find("l_target_point_port").asString();}
     if (m_rf.check("gaze_target_point_port")) {m_gazeTargetOutPortName = m_rf.find("gaze_target_point_port").asString();}
+    if (m_rf.check("get_arm_home_port")) {m_getArmHomePortName = m_rf.find("get_arm_home_port").asString();}
     
     // --------- Frame config -------- //
     bool okFrameConfig = m_rf.check("FRAME_CONFIG");
@@ -66,7 +71,9 @@ bool PointHandTransformThread::threadInit()
         yarp::os::Searchable& frame_config = m_rf.findGroup("FRAME_CONFIG");
         if (frame_config.check("base_frame_id")) {m_base_frame_id = frame_config.find("base_frame_id").asString();}
         if (frame_config.check("camera_frame_id")) {m_camera_frame_id = frame_config.find("camera_frame_id").asString();}
-        if (frame_config.check("shoulder_frame_id")) {m_shoulder_frame_id = frame_config.find("shoulder_frame_id").asString();}
+        if (frame_config.check("r_shoulder_frame_id")) {m_r_shoulder_frame_id = frame_config.find("r_shoulder_frame_id").asString();}
+        if (frame_config.check("l_shoulder_frame_id")) {m_l_shoulder_frame_id = frame_config.find("l_shoulder_frame_id").asString();}
+        if (frame_config.check("torso_frame_id")) {m_torso_frame_id = frame_config.find("torso_frame_id").asString();}
     }
 
     // --------- RGBDSensor config --------- //
@@ -174,13 +181,23 @@ bool PointHandTransformThread::threadInit()
     m_intrinsics.fromProperty(m_propIntrinsics);
 
     //open target ports
-    if(!m_targetOutPort.open(m_targetOutPortName)){
-        yCError(POINT_HAND_TRANSFORM_THREAD) << "Cannot open targetOut port with name" << m_targetOutPortName;
+    if(!m_r_targetOutPort.open(m_r_targetOutPortName)){
+        yCError(POINT_HAND_TRANSFORM_THREAD) << "Cannot open r_targetOut port with name" << m_r_targetOutPortName;
         return false;
     }
 
-     if(!m_gazeTargetOutPort.open(m_gazeTargetOutPortName)){
+    if(!m_l_targetOutPort.open(m_l_targetOutPortName)){
+        yCError(POINT_HAND_TRANSFORM_THREAD) << "Cannot open l_targetOut port with name" << m_l_targetOutPortName;
+        return false;
+    }
+
+    if(!m_gazeTargetOutPort.open(m_gazeTargetOutPortName)){
         yCError(POINT_HAND_TRANSFORM_THREAD) << "Cannot open gazeTargetOut port with name" << m_gazeTargetOutPortName;
+        return false;
+    }
+
+    if(!m_getArmHomePort.open(m_getArmHomePortName)){
+        yCError(POINT_HAND_TRANSFORM_THREAD) << "Cannot open gazeTargetOut port with name" << m_getArmHomePortName;
         return false;
     }
 
@@ -273,11 +290,18 @@ void PointHandTransformThread::run()
         yCWarning(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix (camera-base)");
     }
 
-    // compute the transformation matrix from the shoulder to the base reference frame
-    bool shoulder_frame_exists = m_iTc->getTransform(m_shoulder_frame_id, m_base_frame_id, m_transform_mtrx_shoulder);
-    if (!shoulder_frame_exists)
+    // compute the transformation matrix from the right shoulder to the base reference frame
+    bool r_shoulder_frame_exists = m_iTc->getTransform(m_r_shoulder_frame_id, m_base_frame_id, m_r_transform_mtrx_shoulder);
+    if (!r_shoulder_frame_exists)
     {
-        yCWarning(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix (shoulder-base)");
+        yCWarning(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix (r_shoulder-base)");
+    }
+
+    // compute the transformation matrix from the left shoulder to the base reference frame
+    bool l_shoulder_frame_exists = m_iTc->getTransform(m_l_shoulder_frame_id, m_base_frame_id, m_l_transform_mtrx_shoulder);
+    if (!l_shoulder_frame_exists)
+    {
+        yCWarning(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix (l_shoulder-base)");
     }
 
 }
@@ -310,6 +334,7 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
 
     if(b.size() == 2)
     {
+
         //transforming the clicked point to the target end-effector position
         double u = b.get(0).asFloat32();
         double v = b.get(1).asFloat32();
@@ -317,16 +342,44 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
         tempPoint[0] = (u - m_intrinsics.principalPointX) / m_intrinsics.focalLengthX * m_depth_image.pixel(u, v);
         tempPoint[1] = (v - m_intrinsics.principalPointY) / m_intrinsics.focalLengthY * m_depth_image.pixel(u, v);
         tempPoint[2] = m_depth_image.pixel(u, v);
+        
+        //decide whether to use the right or left arm depending on the position of the point wrt to the torso
+        yarp::sig::Matrix transform_mtrx_torso;
+        bool torso_frame_exists = m_iTc->getTransform(m_camera_frame_id, m_torso_frame_id, transform_mtrx_torso);
+        if (!torso_frame_exists)
+        {
+            yCError(POINT_HAND_TRANSFORM_THREAD, "Unable to found m matrix (camera-torso)");
+        }
+        yarp::sig::Vector vTorso = transform_mtrx_torso*tempPoint; //clicked point in point cloud coordinates wrt torso frame
+        
+        std::string armUsed;
+        yarp::sig::Matrix* matrixShoulderUsed;
+        yarp::os::BufferedPort<yarp::os::Bottle>* targetPortUsed;
+        if(vTorso[1]>0) 
+        {
+            armUsed = "left-arm";
+            matrixShoulderUsed = &m_l_transform_mtrx_shoulder;
+            targetPortUsed = &m_l_targetOutPort;
+        }
+        else 
+        {
+            armUsed = "right-arm";
+            matrixShoulderUsed = &m_r_transform_mtrx_shoulder;
+            targetPortUsed = &m_r_targetOutPort;
+        }
+
+        
+
         yarp::sig::Vector v1 = m_transform_mtrx_camera*tempPoint; //clicked point in point cloud coordinates wrt base frame
 
         yarp::sig::Vector tempOrig {0.0, 0.0, 0.0, 1.0};
-        yarp::sig::Vector v0 = m_transform_mtrx_shoulder*tempOrig; //shoulder frame origin wrt to base frame 
+        yarp::sig::Vector v0 = (*matrixShoulderUsed)*tempOrig; //shoulder frame origin wrt to base frame 
 
         yarp::sig::Vector vTarget {0.0, 0.0, 0.0};
         vTarget = reachablePoint(v0, v1, v0, vTarget);
     
         //ee target output
-        yarp::os::Bottle&  toSend = m_targetOutPort.prepare();
+        yarp::os::Bottle&  toSend = (*targetPortUsed).prepare();
         toSend.clear();
         toSend.addString("askRequest");
 
@@ -399,10 +452,24 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
             yCWarning(POINT_HAND_TRANSFORM_THREAD,"Invalid or no Gaze Target Type defined. Gaze Controller not able to move head");
         }
 
-        m_gazeTargetOutPort.write();
-        m_targetOutPort.write();
+        //output to goHome part
+        yarp::os::Bottle&  toSend2 = m_getArmHomePort.prepare();
+        toSend2.clear();
+        yarp::os::Bottle& getArmHomeList = toSend2.addList();
+        getArmHomeList.addString("goHome");
+        if      (armUsed == "left")  {getArmHomeList.addString("right-arm"); }
+        else if (armUsed == "right") {getArmHomeList.addString("left-arm");  }
+        else {yCError(POINT_HAND_TRANSFORM_THREAD,"Neither the left nor the right arm is used"); }
+        
+        // ----- write ports ----- //
+        m_getArmHomePort.write();
+        yCInfo(POINT_HAND_TRANSFORM_THREAD,"Sent home other arm");
 
-        yCInfo(POINT_HAND_TRANSFORM_THREAD,"Sent to solver: %s",toSend.toString().c_str());
+        m_gazeTargetOutPort.write();
+        (*targetPortUsed).write();
+        yCInfo(POINT_HAND_TRANSFORM_THREAD,"Sent to arm: %s. Sent to gaze: %s",toSend.toString().c_str(),toSend1.toString().c_str());
+
+        
     }
     else{
         yCError(POINT_HAND_TRANSFORM_THREAD,"The input bottle has the wrong number of elements");
@@ -423,12 +490,20 @@ void PointHandTransformThread::threadRelease()
     if(m_tcPoly.isValid())
         m_tcPoly.close();
     
-    if(!m_targetOutPort.isClosed()){
-        m_targetOutPort.close();
+    if(!m_r_targetOutPort.isClosed()){
+        m_r_targetOutPort.close();
+    }
+    
+    if(!m_l_targetOutPort.isClosed()){
+        m_l_targetOutPort.close();
     }
     
     if(!m_gazeTargetOutPort.isClosed()){
         m_gazeTargetOutPort.close();
+    }
+    
+    if(!m_getArmHomePort.isClosed()){
+        m_getArmHomePort.close();
     }
 
     yCInfo(POINT_HAND_TRANSFORM_THREAD, "Thread released");

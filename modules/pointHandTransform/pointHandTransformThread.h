@@ -66,9 +66,12 @@ protected:
     int    m_depth_height;  
     std::string                  m_base_frame_id;
     std::string                  m_camera_frame_id;
-    std::string                  m_shoulder_frame_id;
+    std::string                  m_r_shoulder_frame_id;
+    std::string                  m_l_shoulder_frame_id;
+    std::string                  m_torso_frame_id;
     yarp::sig::Matrix            m_transform_mtrx_camera;
-    yarp::sig::Matrix            m_transform_mtrx_shoulder;
+    yarp::sig::Matrix            m_r_transform_mtrx_shoulder;
+    yarp::sig::Matrix            m_l_transform_mtrx_shoulder;
     yarp::os::Property           m_propIntrinsics;
     yarp::sig::FlexImage         m_rgbImage;
     yarp::sig::ImageOf<float>    m_depth_image;
@@ -82,10 +85,14 @@ protected:
     std::vector<double>          m_ee_quaternion_param {0,0,0,1};
 
     //Ports
-    std::string                                m_targetOutPortName;
+    std::string                                m_r_targetOutPortName;
+    std::string                                m_l_targetOutPortName;
     std::string                                m_gazeTargetOutPortName;
-    yarp::os::BufferedPort<yarp::os::Bottle>   m_targetOutPort;
+    std::string                                m_getArmHomePortName;
+    yarp::os::BufferedPort<yarp::os::Bottle>   m_r_targetOutPort;
+    yarp::os::BufferedPort<yarp::os::Bottle>   m_l_targetOutPort;
     yarp::os::BufferedPort<yarp::os::Bottle>   m_gazeTargetOutPort;
+    yarp::os::BufferedPort<yarp::os::Bottle>   m_getArmHomePort;
 
     //Others
     yarp::os::ResourceFinder    &m_rf;

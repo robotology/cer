@@ -86,6 +86,18 @@
       <parameters>--robot cer --arm-type right --verbosity 1 --T 1.0</parameters>
       <node>console</node>
    </module>
+   
+   <module>
+      <name>cer_reaching-solver</name>
+      <parameters>--robot cer --arm-type left --verbosity 1</parameters>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>cer_reaching-controller</name>
+      <parameters>--robot cer --arm-type left --verbosity 1 --T 1.0</parameters>
+      <node>console</node>
+   </module>
 
    <!-- Set Navigation position -->
    <module>
@@ -132,8 +144,20 @@
    </connection>
 
    <connection>
-      <from>/pointHandTransform/target:o</from>
+      <from>/cer_reaching-controller/left/solver:rpc</from>
+      <to>/cer_reaching-solver/left/rpc</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/pointHandTransform/r_target:o</from>
       <to>/cer_reaching-controller/right/target:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/pointHandTransform/l_target:o</from>
+      <to>/cer_reaching-controller/left/target:i</to>
       <protocol>tcp</protocol>
    </connection>
 
