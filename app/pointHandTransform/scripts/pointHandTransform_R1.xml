@@ -106,6 +106,13 @@
    <!--               -->
    <!--  CONNECTIONS  -->
    <!--               -->
+
+   <connection>
+      <from>/joystickCtrl:o</from>
+      <to>/baseControl/input/joystick:i</to>
+      <protocol>tcp+recv.portmonitor+type.dll+file.joy2vel</protocol>
+   </connection>
+
    <connection>
       <from>/cer/realsense_repeater/rgbImage:o</from>
       <to>/view/cameraView:i</to>

@@ -39,3 +39,6 @@ build*/
 
 # Backup files
 *~
+
+# vscode folders
+.vscode*/
