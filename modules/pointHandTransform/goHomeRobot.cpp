@@ -126,7 +126,14 @@ bool GoHomeRobot::configure(yarp::os::ResourceFinder &rf)
 
 
     // ----------- Port config ----------- //
-    if(okGoHome)
+    if(!okGoHome)
+    {
+        yCError(GO_HOME_ROBOT,"GO_HOME_CLIENT section missing in ini file. Using default values.");
+
+        m_armsOutPortName = "/pointHandTransform/stopArms:o";
+        m_headOutPortName = "/pointHandTransform/stopHead:o";
+    }
+    else
     {
         yarp::os::Searchable& goHome_config = rf.findGroup("GO_HOME_CLIENT");
         if (rf.check("arms_out_port")) {m_armsOutPortName = goHome_config.find("arms_out_port").asString();}
@@ -138,11 +145,13 @@ bool GoHomeRobot::configure(yarp::os::ResourceFinder &rf)
         yCError(GO_HOME_ROBOT) << "Cannot open armsOutOut port with name" << m_armsOutPortName;
         return false;
     }
+ 
 
      if(!m_headOutPort.open(m_headOutPortName)){
         yCError(GO_HOME_ROBOT) << "Cannot open headOutOut port with name" << m_headOutPortName;
         return false;
     }
+    
 
     return true;
 }
