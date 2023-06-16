@@ -136,4 +136,16 @@
       <protocol>fast_tcp</protocol>
    </connection>
 
+   <connection>
+      <from>/pointHandTransform/stopArms:o</from>
+      <to>/cer_reaching-controller/right/target:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/pointHandTransform/stopHead:o</from>
+      <to>/cer_gaze-controller/target:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
+
 </application>
