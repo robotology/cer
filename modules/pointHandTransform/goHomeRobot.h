@@ -36,12 +36,6 @@ private:
     yarp::dev::IControlMode*        m_ictrlmode[3];     //to set the Position control mode
     yarp::dev::IPositionControl*    m_iposctrl[3];      //to retrieve the number of joints of each part
 
-    //Ports
-    std::string                                m_armsOutPortName;
-    std::string                                m_headOutPortName;
-    yarp::os::BufferedPort<yarp::os::Bottle>   m_armsOutPort;
-    yarp::os::BufferedPort<yarp::os::Bottle>   m_headOutPort;
-
 public:
     //Constructor/Distructor
     GoHomeRobot(){}

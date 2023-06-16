@@ -124,50 +124,12 @@ bool GoHomeRobot::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
-
-    // ----------- Port config ----------- //
-    if(!okGoHome)
-    {
-        yCError(GO_HOME_ROBOT,"GO_HOME_CLIENT section missing in ini file. Using default values.");
-
-        m_armsOutPortName = "/pointHandTransform/stopArms:o";
-        m_headOutPortName = "/pointHandTransform/stopHead:o";
-    }
-    else
-    {
-        yarp::os::Searchable& goHome_config = rf.findGroup("GO_HOME_CLIENT");
-        if (rf.check("arms_out_port")) {m_armsOutPortName = goHome_config.find("arms_out_port").asString();}
-        if (rf.check("head_out_port")) {m_headOutPortName = goHome_config.find("head_out_port").asString();}
-    }
-
-    //open target ports
-    if(!m_armsOutPort.open(m_armsOutPortName)){
-        yCError(GO_HOME_ROBOT) << "Cannot open armsOutOut port with name" << m_armsOutPortName;
-        return false;
-    }
- 
-
-     if(!m_headOutPort.open(m_headOutPortName)){
-        yCError(GO_HOME_ROBOT) << "Cannot open headOutOut port with name" << m_headOutPortName;
-        return false;
-    }
-    
-
     return true;
 }
 
 void GoHomeRobot::onRead(yarp::os::Bottle &b)
 {
-    // ---- stop the actual controllers for arms and head ----- //
-    yarp::os::Bottle&  toSend = m_armsOutPort.prepare();
-    toSend.clear();
-    toSend.addString("(stop)");
-    m_armsOutPort.write();
-
-    yarp::os::Bottle&  toSend1 = m_headOutPort.prepare();
-    toSend1.clear();
-    toSend1.addString("(stop)");
-    m_headOutPort.write();
+    // TO ADD: CHECK IF THE ROBOT IS MOVING 
 
     backToHome();
 
