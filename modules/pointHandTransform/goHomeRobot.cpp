@@ -132,16 +132,17 @@ void GoHomeRobot::onRead(yarp::os::Bottle &b)
     // TO ADD: CHECK IF THE ROBOT IS MOVING 
     yCInfo(GO_HOME_ROBOT,"Received: %s",b.toString().c_str());
 
-    if(b.size() == 1)       //expected ("goHome")
+    if(b.size() == 1)       //expected "goHome"
     {
         backToHome();
     }
-    else if(b.size() > 1)  //expected ("goHome <partName1> <partName2> ... <partNameN>")
-    {
-        if (b.check("right-arm") || b.check("right_arm")){backToHomePart( static_cast<std::string>("right-arm") );}
-        else if (b.check("left-arm") || b.check("left_arm")){backToHomePart( static_cast<std::string>("left-arm") );}
-        else if (b.check("head")){backToHomePart( static_cast<std::string>("head") );}
-        else 
+    else if(b.size() > 1)  //expected "goHome" ("<partName1>" "<partName2>" ... "<partNameN>")
+    {   
+        bool nameOk {false};
+        if (b.check("right-arm") || b.check("right_arm")){backToHomePart( static_cast<std::string>("right-arm") ); nameOk = true;}
+        if (b.check("left-arm") || b.check("left_arm")){backToHomePart( static_cast<std::string>("left-arm") ); nameOk = true;}
+        if (b.check("head")){backToHomePart( static_cast<std::string>("head") ); nameOk = true;}
+        if (!nameOk) 
         {
             yCError(GO_HOME_ROBOT, "Incorrect part name sent to goHome command");
         }

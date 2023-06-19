@@ -456,8 +456,9 @@ void PointHandTransformThread::onRead(yarp::os::Bottle &b)
         yarp::os::Bottle&  toSend2 = m_getArmHomePort.prepare();
         toSend2.clear();
         toSend2.addString("goHome");
-        if      (armUsed == "left-arm")  {toSend2.addString("right-arm"); }
-        else if (armUsed == "right-arm") {toSend2.addString("left-arm");  }
+        yarp::os::Bottle& getArmHomeList = toSend2.addList();
+        if      (armUsed == "left-arm")  {getArmHomeList.addString("right-arm"); }
+        else if (armUsed == "right-arm") {getArmHomeList.addString("left-arm");  }
         else {yCError(POINT_HAND_TRANSFORM_THREAD,"Neither the left nor the right arm is used"); }
         
         // ----- write ports ----- //
