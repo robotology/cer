@@ -20,7 +20,7 @@
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
 
-#include "pointHandTransform.h"
+#include "handPointing.h"
 
 int main(int argc, char *argv[])
 {
@@ -33,10 +33,10 @@ int main(int argc, char *argv[])
 
     yarp::os::ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultConfigFile("pointHandTransform_R1_SIM.ini");             //overridden by --from parameter
-    rf.setDefaultContext("pointHandTransform");                        //overridden by --context parameter
+    rf.setDefaultConfigFile("handPointing_R1_SIM.ini");             //overridden by --from parameter
+    rf.setDefaultContext("handPointing");                           //overridden by --context parameter
     rf.configure(argc,argv);
-    PointHandTransform point;
+    HandPointing point;
 
     return point.runModule(rf);
 }

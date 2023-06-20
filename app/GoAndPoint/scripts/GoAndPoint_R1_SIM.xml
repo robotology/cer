@@ -14,8 +14,5 @@
         <parameters>--context navigation2 --from navigator2D_nwc.ini</parameters>
         <node>console</node>
     </module>
-
-   <connection>
-   </connection>
       
 </application>

@@ -1,2 +1,2 @@
 #!/bin/bash
-echo "goHome" | yarp write ... /pointHandTransform/go_home:i
+echo "goHome" | yarp write ... /handPointing/go_home:i
