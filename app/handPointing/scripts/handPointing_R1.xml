@@ -1,5 +1,5 @@
 <application>
-   <name>pointHandTransform_R1</name>
+   <name>R1_handPointing</name>
 
    <dependencies>
    </dependencies>
@@ -63,8 +63,8 @@
 
    <!-- EE Target definition -->
    <module>
-      <name>pointHandTransform</name>
-      <parameters>--context pointHandTransform --from pointHandTransform_R1.ini</parameters>
+      <name>handPointing</name>
+      <parameters>--context handPointing --from handPointing_R1.ini</parameters>
       <environment></environment>
       <node>console</node>
    </module>
@@ -111,7 +111,7 @@
    <module>
       <name>./goHome.sh</name>
       <parameters></parameters>
-      <workdir>/home/user1/robotology/cer/app/pointHandTransform/scripts/</workdir>
+      <workdir>/home/user1/robotology/cer/app/handPointing/scripts/</workdir>
       <node>console</node>
    </module>
 
@@ -133,7 +133,7 @@
 
    <connection>
       <from>/view/cameraClick:o</from>
-      <to>/pointHandTransform/clicked_point:i</to>
+      <to>/handPointing/clicked_point:i</to>
       <protocol>tcp</protocol>
    </connection>
 
@@ -150,19 +150,19 @@
    </connection>
 
    <connection>
-      <from>/pointHandTransform/r_target:o</from>
+      <from>/handPointing/r_target:o</from>
       <to>/cer_reaching-controller/right/target:i</to>
       <protocol>tcp</protocol>
    </connection>
 
    <connection>
-      <from>/pointHandTransform/l_target:o</from>
+      <from>/handPointing/l_target:o</from>
       <to>/cer_reaching-controller/left/target:i</to>
       <protocol>tcp</protocol>
    </connection>
 
    <connection>
-      <from>/pointHandTransform/gazeTarget:o</from>
+      <from>/handPointing/gazeTarget:o</from>
       <to>/cer_gaze-controller/target:i</to>
       <protocol>fast_tcp</protocol>
    </connection>

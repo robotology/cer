@@ -17,16 +17,16 @@
  */
 
 
-#include "pointHandTransform.h"
+#include "handPointing.h"
 
-YARP_LOG_COMPONENT(POINT_HAND_TRANSFORM, "cer.pointHandTransform")
+YARP_LOG_COMPONENT(HAND_POINTING, "cer.handPointing")
 
-PointHandTransform::PointHandTransform() :
+HandPointing::HandPointing() :
     m_period(1.0)
 {
 }
 
-bool PointHandTransform::configure(yarp::os::ResourceFinder &rf)
+bool HandPointing::configure(yarp::os::ResourceFinder &rf)
 {
     if(rf.check("period")){m_period = rf.find("period").asFloat32();}
 
@@ -51,7 +51,7 @@ bool PointHandTransform::configure(yarp::os::ResourceFinder &rf)
     bool okRgbdRf = rf.check("RGBD_SENSOR_CLIENT");
     if(!okRgbdRf)
     {
-        yCWarning(POINT_HAND_TRANSFORM,"RGBD_SENSOR_CLIENT section missing in ini file. Using default values");
+        yCWarning(HAND_POINTING,"RGBD_SENSOR_CLIENT section missing in ini file. Using default values");
     }
     else
     {
@@ -69,13 +69,13 @@ bool PointHandTransform::configure(yarp::os::ResourceFinder &rf)
     tempPoly.open(rgbdProp);
     if(!tempPoly.isValid())
     {
-        yCError(POINT_HAND_TRANSFORM,"Error opening PolyDriver check parameters");
+        yCError(HAND_POINTING,"Error opening PolyDriver check parameters");
         return false;
     }
     tempPoly.view(tempIRGBD);
     if(!tempIRGBD)
     {
-        yCError(POINT_HAND_TRANSFORM,"Error opening iRGBD interface. Device not available");
+        yCError(HAND_POINTING,"Error opening iRGBD interface. Device not available");
         return false;
     }
     double horizFOV, verFOV;
@@ -87,19 +87,19 @@ bool PointHandTransform::configure(yarp::os::ResourceFinder &rf)
 
     
     // --------- Thread initialization --------- //
-    m_innerThread = new PointHandTransformThread(threadPeriod,rf);
+    m_innerThread = new HandPointingThread(threadPeriod,rf);
     bool threadOk = m_innerThread->start();
     if (!threadOk){
         return false;
     }
 
-    std::string posName = "/pointHandTransform/clicked_point:i";
+    std::string posName = "/handPointing/clicked_point:i";
     if(rf.check("clicked_point_port")){posName = rf.find("clicked_point_port").asString();}
     m_pointInputPort.useCallback(*m_innerThread);
     bool ret = m_pointInputPort.open(posName);
     if (!ret)
     {
-        yCError(POINT_HAND_TRANSFORM, "Unable to open module ports");
+        yCError(HAND_POINTING, "Unable to open module ports");
         return false;
     }
 
@@ -108,24 +108,24 @@ bool PointHandTransform::configure(yarp::os::ResourceFinder &rf)
     bool okHome{m_goHomeRobot->configure(rf)};
     if(!okHome)
     {
-        yCError(POINT_HAND_TRANSFORM,"GoHomeRobot configuration failed");
+        yCError(HAND_POINTING,"GoHomeRobot configuration failed");
         return false;
     }
 
-    std::string homeName = "/pointHandTransform/go_home:i";
+    std::string homeName = "/handPointing/go_home:i";
     if(rf.check("go_home_port")){homeName = rf.find("go_home_port").asString();}
     m_goHomePort.useCallback(*m_goHomeRobot);
     bool ret1 = m_goHomePort.open(homeName);
     if (!ret1)
     {
-        yCError(POINT_HAND_TRANSFORM, "Unable to open module ports");
+        yCError(HAND_POINTING, "Unable to open module ports");
         return false;
     }
 
     return true;
 }
 
-bool PointHandTransform::close()
+bool HandPointing::close()
 {
     m_innerThread->stop();
     delete m_innerThread;
@@ -138,12 +138,12 @@ bool PointHandTransform::close()
     return true;
 }
 
-double PointHandTransform::getPeriod()
+double HandPointing::getPeriod()
 {
     return m_period;
 }
 
-bool PointHandTransform::updateModule()
+bool HandPointing::updateModule()
 {
     if (isStopping())
     {

@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef POINT_HAND_TRANSFORM_THREAD_H
-#define POINT_HAND_TRANSFORM_THREAD_H
+#ifndef HAND_POINTING_THREAD_H
+#define HAND_POINTING_THREAD_H
 
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/Log.h>
@@ -52,7 +52,7 @@
 #define RGBDDepthCarrier      "fast_tcp"
 
 
-class PointHandTransformThread : public yarp::os::PeriodicThread, public yarp::os::TypedReaderCallback<yarp::os::Bottle>
+class HandPointingThread : public yarp::os::PeriodicThread, public yarp::os::TypedReaderCallback<yarp::os::Bottle>
 {
 protected:
     //Devices related attributes
@@ -101,8 +101,8 @@ protected:
 
 public:
     //Contructor and distructor
-    PointHandTransformThread(double _period, yarp::os::ResourceFinder &rf);
-    ~PointHandTransformThread() = default;
+    HandPointingThread(double _period, yarp::os::ResourceFinder &rf);
+    ~HandPointingThread() = default;
 
     //methods inherited from PeriodicThread
     virtual void run() override;

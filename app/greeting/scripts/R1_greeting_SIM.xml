@@ -1,5 +1,5 @@
 <application>
-    <name>r1-sim-greeting</name>
+    <name>R1_greeting_SIM</name>
 
     <module>
         <name>ctpService</name>

@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef POINT_HAND_TRANFORM_H
-#define POINT_HAND_TRANFORM_H
+#ifndef HAND_POINTING_H
+#define HAND_POINTING_H
 
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
@@ -31,11 +31,11 @@
 #include <yarp/dev/ControlBoardInterfaces.h>
 
 #include <math.h>
-#include "pointHandTransformThread.h"
+#include "handPointingThread.h"
 #include "goHomeRobot.h"
 
 
-class PointHandTransform : public yarp::os::RFModule
+class HandPointing : public yarp::os::RFModule
 {
 protected:
     
@@ -44,7 +44,7 @@ protected:
     yarp::os::BufferedPort<yarp::os::Bottle> m_goHomePort;
 
     //Callback thread
-    PointHandTransformThread*      m_innerThread;
+    HandPointingThread*      m_innerThread;
     
     //Callback
     GoHomeRobot*                   m_goHomeRobot;
@@ -52,7 +52,7 @@ protected:
     double                         m_period;
 
 public:
-    PointHandTransform();
+    HandPointing();
     virtual bool configure(yarp::os::ResourceFinder &rf);
     virtual bool close();
     virtual double getPeriod();

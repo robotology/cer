@@ -34,7 +34,7 @@ bool GoHomeRobot::configure(yarp::os::ResourceFinder &rf)
 
         // defaults
         goHomeProp.put("device","remote_controlboard");
-        goHomeProp.put("local","/pointHandTransform/goHomeRArm");
+        goHomeProp.put("local","/handPointing/goHomeRArm");
         goHomeProp.put("remote","/cer/right_arm");
         if (!m_drivers[0].open(goHomeProp))
         {
@@ -44,7 +44,7 @@ bool GoHomeRobot::configure(yarp::os::ResourceFinder &rf)
         }
         goHomeProp.clear();
         goHomeProp.put("device","remote_controlboard");
-        goHomeProp.put("local","/pointHandTransform/goHomeLArm");
+        goHomeProp.put("local","/handPointing/goHomeLArm");
         goHomeProp.put("remote","/cer/left_arm");
         if (!m_drivers[1].open(goHomeProp))
         {
@@ -54,7 +54,7 @@ bool GoHomeRobot::configure(yarp::os::ResourceFinder &rf)
         }
         goHomeProp.clear();
         goHomeProp.put("device","remote_controlboard");
-        goHomeProp.put("local","/pointHandTransform/goHomeHead");
+        goHomeProp.put("local","/handPointing/goHomeHead");
         goHomeProp.put("remote","/cer/head");
         if (!m_drivers[2].open(goHomeProp))
         {
