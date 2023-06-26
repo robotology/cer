@@ -167,4 +167,10 @@
       <protocol>fast_tcp</protocol>
    </connection>
 
+   <connection>
+      <from>/handPointing/get_arm_home:o</from>
+      <to>/handPointing/go_home:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
+
 </application>
