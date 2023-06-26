@@ -54,7 +54,7 @@ HandPointingThread::HandPointingThread(double _period, yarp::os::ResourceFinder 
 
 bool HandPointingThread::threadInit()
 {
-#ifdef HANDTRANSFORM_DEBUG
+#ifdef HANDPOINT_DEBUG
     yCDebug(HAND_POINTING_THREAD, "thread initialising...\n");
 #endif
 
@@ -243,7 +243,7 @@ bool HandPointingThread::threadInit()
         }
     }
 
-#ifdef HANDTRANSFORM_DEBUG
+#ifdef HANDPOINT_DEBUG
     yCDebug(HAND_POINTING_THREAD, "... done!\n");
 #endif
 
@@ -480,7 +480,7 @@ void HandPointingThread::onRead(yarp::os::Bottle &b)
 
 void HandPointingThread::threadRelease()
 {
-#ifdef HANDTRANSFORM_DEBUG
+#ifdef HANDPOINT_DEBUG
     yCDebug(HAND_POINTING_THREAD, "Thread releasing...");
 #endif
 
@@ -508,7 +508,7 @@ void HandPointingThread::threadRelease()
 
     yCInfo(HAND_POINTING_THREAD, "Thread released");
 
-#ifdef HANDTRANSFORM_DEBUG
+#ifdef HANDPOINT_DEBUG
     yCDebug(HAND_POINTING_THREAD, "... done.");
 #endif
 
