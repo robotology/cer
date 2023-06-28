@@ -78,10 +78,6 @@ bool HandPointing::configure(yarp::os::ResourceFinder &rf)
         yCError(HAND_POINTING,"Error opening iRGBD interface. Device not available");
         return false;
     }
-    double horizFOV, verFOV;
-    tempIRGBD->getRgbFOV(horizFOV,verFOV);
-    int imgHeight = tempIRGBD->getRgbHeight();
-    int imgWidth = tempIRGBD->getRgbWidth();
 
     tempPoly.close(); 
 

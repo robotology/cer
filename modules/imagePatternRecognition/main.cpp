@@ -16,43 +16,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#ifndef GO_AND_POINT_H
-#define GO_AND_POINT_H
-
 #include <yarp/os/Log.h>
-#include <yarp/os/LogStream.h>
 #include <yarp/os/Network.h>
 #include <yarp/os/RFModule.h>
-#include <yarp/dev/PolyDriver.h>
-#include <yarp/dev/IRGBDSensor.h>
-#include <yarp/dev/IFrameTransform.h>
-#include <yarp/os/Time.h>
-#include <yarp/os/Port.h>
-#include <yarp/dev/ControlBoardInterfaces.h>
 
-#include <math.h>
-#include "goAndPointThread.h"
+#include "imagePatternRecognition.h"
 
-
-class GoAndPoint : public yarp::os::RFModule
+int main(int argc, char *argv[])
 {
-protected:
+    yarp::os::Network yarp;
+    if (!yarp.checkNetwork())
+    {
+        yError("check Yarp network.\n");
+        return -1;
+    }
+
+    yarp::os::ResourceFinder rf;
+    rf.setVerbose(true);
+    rf.setDefaultConfigFile("imagePatternRecognition_R1_SIM.ini");             //overridden by --from parameter
+    rf.setDefaultContext("imagePatternRecognition");                           //overridden by --context parameter
+    rf.configure(argc,argv);
+    ImagePatternRecognition ipr;
     
-    //Ports
-    yarp::os::BufferedPort<yarp::os::Bottle> m_inputPort;
 
-    //Callback thread
-    GoAndPointThread*           m_innerThread;
-       
-    double                      m_period;
-
-
-public:
-    GoAndPoint();
-    virtual bool configure(yarp::os::ResourceFinder &rf);
-    virtual bool close();
-    virtual double getPeriod();
-    virtual bool updateModule();
-};
-
-#endif
+    return ipr.runModule(rf);
+}

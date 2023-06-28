@@ -120,6 +120,16 @@ bool HandPointingThread::threadInit()
         return false;
     }
    
+    //get parameters data from the camera
+    m_depth_width = m_iRgbd->getRgbWidth();
+    m_depth_height = m_iRgbd->getRgbHeight();
+    bool propintr  = m_iRgbd->getDepthIntrinsicParam(m_propIntrinsics);
+    if(!propintr){
+        return false;
+    }
+    yCInfo(HAND_POINTING_THREAD) << "Depth Intrinsics:" << m_propIntrinsics.toString();
+    m_intrinsics.fromProperty(m_propIntrinsics);
+
 
     // --------- TransformClient config ---------- //
     yarp::os::Property tcProp;
@@ -168,17 +178,6 @@ bool HandPointingThread::threadInit()
         yCError(HAND_POINTING_THREAD,"Error opening iFrameTransform interface. Device not available");
         return false;
     }
-
-
-    //get parameters data from the camera
-    m_depth_width = m_iRgbd->getRgbWidth();
-    m_depth_height = m_iRgbd->getRgbHeight();
-    bool propintr  = m_iRgbd->getDepthIntrinsicParam(m_propIntrinsics);
-    if(!propintr){
-        return false;
-    }
-    yCInfo(HAND_POINTING_THREAD) << "Depth Intrinsics:" << m_propIntrinsics.toString();
-    m_intrinsics.fromProperty(m_propIntrinsics);
 
     //open target ports
     if(!m_r_targetOutPort.open(m_r_targetOutPortName)){
