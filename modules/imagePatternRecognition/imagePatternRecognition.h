@@ -33,9 +33,9 @@
 
 //Defaults RGBD sensor
 #define RGBDClient            "RGBDSensorClient"
-#define RGBDLocalImagePort    "imagePatternRecognition/clientRgbPort:i"
-#define RGBDLocalDepthPort    "imagePatternRecognition/clientDepthPort:i"
-#define RGBDLocalRpcPort      "imagePatternRecognition/clientRpcPort"
+#define RGBDLocalImagePort    "/imagePatternRecognition/clientRgbPort:i"
+#define RGBDLocalDepthPort    "/imagePatternRecognition/clientDepthPort:i"
+#define RGBDLocalRpcPort      "/imagePatternRecognition/clientRpcPort"
 #define RGBDRemoteImagePort   "/SIM_CER_ROBOT/depthCamera/rgbImage:o"
 #define RGBDRemoteDepthPort   "/SIM_CER_ROBOT/depthCamera/depthImage:o"
 #define RGBDRemoteRpcPort     "/SIM_CER_ROBOT/depthCamera/rpc:i"
@@ -57,12 +57,13 @@ class ImagePatternRecognition : public yarp::os::RFModule, public yarp::os::Type
     protected:
         yarp::dev::PolyDriver            m_rgbdPoly;
         yarp::dev::IRGBDSensor*          m_iRgbd{nullptr};
+        yarp::sig::FlexImage             m_rgbImage;
 
         //Ports
         yarp::os::BufferedPort<yarp::os::Bottle> m_inputPatternPort;  // input: string with the path to the pattern image
         yarp::os::BufferedPort<yarp::os::Bottle> m_OutPort;           // output: coordinates in the rgb camera frame of the point where the pattern matches the base image
         double    m_period;
-
+        int       m_matchingMethod;
 
     public:
         ImagePatternRecognition();

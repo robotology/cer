@@ -1,19 +1,21 @@
 #include <opencv2/opencv.hpp>
 #include <iostream>
 #include <stdio.h>
+#include <yarp/cv/Cv.h>
 
 #include "imagePatternRecognition.h"
 
 YARP_LOG_COMPONENT(IMAGE_PATTERN_RECOGNITION, "cer.imagePatternRecognition")
 
 ImagePatternRecognition::ImagePatternRecognition() :
-    m_period(1.0)
+    m_period(1.0), m_matchingMethod(CV_TM_SQDIFF_NORMED)
 {
 }
 
 bool ImagePatternRecognition::configure(yarp::os::ResourceFinder &rf)
 {
     if(rf.check("period")){m_period = rf.find("period").asFloat32();}
+    if(rf.check("matching_method")){m_matchingMethod = rf.find("matching_method").asInt8();}
 
     // --------- RGBDSensor config --------- //
     yarp::os::Property rgbdProp;
@@ -117,28 +119,39 @@ bool ImagePatternRecognition::close()
 void ImagePatternRecognition::onRead(yarp::os::Bottle& btl) 
 {
     
-    yCDebug(IMAGE_PATTERN_RECOGNITION,"Received:  %s",btl.toString().c_str());
+    yCInfo(IMAGE_PATTERN_RECOGNITION,"Received:  %s",btl.toString().c_str());
 
     /// Declare Variables
     cv::Mat img; cv::Mat templ; cv::Mat result;
+
+    // Load template from input string
     std::string str = btl.get(0).asString();
+    try { templ = cv::imread( str, 1 ); }
+    catch (...)
+    { 
+        yCError(IMAGE_PATTERN_RECOGNITION) << "Cannot load the template image. Check if the specified directory exists" ;
+        return;
+    }
 
-    yCDebug(IMAGE_PATTERN_RECOGNITION,"Loading images...");
-    /// Load image and template
-    img = cv::imread( "/home/rcolombo/Where_is_Waldo.jpg", 1 );
-    templ = cv::imread( "/home/rcolombo/Waldo.jpg", 1 );
 
-    yCDebug(IMAGE_PATTERN_RECOGNITION,"Images Loaded. Starting matching algorithm...");
-    cv::Point match { MatchImage( img, templ, result, 1 ) };
+    /// Load base image reading from RGBD camera
+    if (!m_iRgbd->getRgbImage(m_rgbImage))
+    {
+        yCDebug(IMAGE_PATTERN_RECOGNITION, "getRgbImage failed: unable to load the base image for pattern recognition");
+        return;
+    }
+    img = yarp::cv::toCvMat(m_rgbImage);
 
-    yCDebug(IMAGE_PATTERN_RECOGNITION,"Match! Sending Output...");
+    // Match the template to the image
+    cv::Point match { MatchImage( img, templ, result, m_matchingMethod ) };
+
     //output to goHome part
     yarp::os::Bottle&  toSend = m_OutPort.prepare();
     toSend.clear();
     toSend.addFloat32(match.x);
     toSend.addFloat32(match.y);
 
-    yCDebug(IMAGE_PATTERN_RECOGNITION,"Output to send: %s",toSend.toString().c_str());
+    yCDebug(IMAGE_PATTERN_RECOGNITION,"Match pixel-coordinates: %s",toSend.toString().c_str());
     m_OutPort.write();
 
 }

@@ -26,5 +26,5 @@ cv::Point ImagePatternRecognition::MatchImage( cv::Mat img, cv::Mat templ, cv::M
   else
     { matchLoc = maxLoc; }
 
-  return matchLoc;
+  return cv::Point( matchLoc.x + templ.cols/2 , matchLoc.y + templ.rows/2 );
 }
