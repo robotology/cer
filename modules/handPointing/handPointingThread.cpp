@@ -21,12 +21,8 @@
 #define _USE_MATH_DEFINES
 
 #include "handPointingThread.h"
-#include <chrono>
-#include <cmath>
-#include <list>
 
 YARP_LOG_COMPONENT(HAND_POINTING_THREAD, "cer.handPointing.HandPointingThread")
-bool print{true};
 
 
 HandPointingThread::HandPointingThread(double _period, yarp::os::ResourceFinder &rf):
@@ -371,11 +367,15 @@ void HandPointingThread::onRead(yarp::os::Bottle &b)
 
         yarp::sig::Vector v1 = m_transform_mtrx_camera*tempPoint; //clicked point in point cloud coordinates wrt base frame
 
-        yarp::sig::Vector tempOrig {0.0, 0.0, 0.0, 1.0};
-        yarp::sig::Vector v0 = (*matrixShoulderUsed)*tempOrig; //shoulder frame origin wrt to base frame 
-
         yarp::sig::Vector vTarget {0.0, 0.0, 0.0};
-        vTarget = reachablePoint(v0, v1, v0, vTarget);
+        if (m_reach_radius == 0.0)
+            vTarget = v1;
+        else
+        {
+            yarp::sig::Vector tempOrig {0.0, 0.0, 0.0, 1.0};
+            yarp::sig::Vector v0 = (*matrixShoulderUsed)*tempOrig; //shoulder frame origin wrt to base frame
+            vTarget = reachablePoint(v0, v1, v0, vTarget);
+        }
     
         //ee target output
         yarp::os::Bottle&  toSend = (*targetPortUsed).prepare();

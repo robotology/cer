@@ -99,7 +99,7 @@ bool HandPointing::configure(yarp::os::ResourceFinder &rf)
         return false;
     }
 
-    // --------- goHome poly config --------- //
+    // --------- goHome config --------- //
     m_goHomeRobot = new GoHomeRobot();
     bool okHome{m_goHomeRobot->configure(rf)};
     if(!okHome)

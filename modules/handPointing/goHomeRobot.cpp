@@ -139,9 +139,9 @@ void GoHomeRobot::onRead(yarp::os::Bottle &b)
     else if(b.size() > 1)  //expected "goHome" ("<partName1>" "<partName2>" ... "<partNameN>")
     {   
         bool nameOk {false};
-        if (b.check("right-arm") || b.check("right_arm")){backToHomePart( static_cast<std::string>("right-arm") ); nameOk = true;}
-        if (b.check("left-arm") || b.check("left_arm")){backToHomePart( static_cast<std::string>("left-arm") ); nameOk = true;}
-        if (b.check("head")){backToHomePart( static_cast<std::string>("head") ); nameOk = true;}
+        if (b.check("right-arm") || b.check("right_arm")){backToHomePart("right-arm"); nameOk = true;}
+        if (b.check("left-arm") || b.check("left_arm")){backToHomePart("left-arm"); nameOk = true;}
+        if (b.check("head")){backToHomePart("head"); nameOk = true;}
         if (!nameOk) 
         {
             yCError(GO_HOME_ROBOT, "Incorrect part name sent to goHome command");
@@ -152,9 +152,9 @@ void GoHomeRobot::onRead(yarp::os::Bottle &b)
 
 void GoHomeRobot::backToHome()
 {    
-    backToHomePart( static_cast<std::string>("right-arm") );
-    backToHomePart( static_cast<std::string>("left-arm") );
-    backToHomePart( static_cast<std::string>("head") );
+    backToHomePart("right-arm") ;
+    backToHomePart("left-arm");
+    backToHomePart("head");
 }
 
 void GoHomeRobot::backToHomePart(const std::string& part)
