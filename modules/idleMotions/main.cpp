@@ -208,7 +208,6 @@ void IdleMotions::setCtrlMode(const int part, int ctrlMode)
     int NUMBER_OF_JOINTS;
     m_iposctrl[part]->getAxes(&NUMBER_OF_JOINTS);
     for (int i_joint=0; i_joint < NUMBER_OF_JOINTS; i_joint++){ m_ictrlmode[part]->setControlMode(i_joint, ctrlMode); } 
-    yCDebug(IDLE_MOTIONS, "Part %d set in controlMode %d", part, ctrlMode);
 }
 
 
@@ -222,13 +221,12 @@ bool IdleMotions::respond(const Bottle &cmd, Bottle &reply)
     }
     
 
-    int motion_number = round(((float)rand() / (float)RAND_MAX) * m_number_of_possible_motions);
+    int motion_number = rand() % m_number_of_possible_motions;
     string motion_name = m_motions.at(motion_number);
     string command = m_script_name + " " + motion_name + " &";
     yCInfo(IDLE_MOTIONS, "Executing: %s", command.c_str() );
 
     int result = system(command.c_str());
-    yCDebug(IDLE_MOTIONS, "result: " + result);
 
     // for (int i = 0 ; i<=3 ; i++)
     // {
