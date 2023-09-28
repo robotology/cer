@@ -93,13 +93,12 @@ stretch_back() {
     echo "ctpq time 3.0 off 0 pos (9.0 -16.0)" | yarp rpc /ctpservice/head/rpc
     echo "ctpq time 3.0 off 0 pos (-20.0 35.2 -10.2 93.6 0.0)" | yarp rpc /ctpservice/right_arm/rpc
     echo "ctpq time 3.0 off 0 pos (21.8 12.0 -17.0 56.7 0.0)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep 5.0
+    sleep 3.0
     echo "ctpq time 3.0 off 0 pos (0.03 0.0 0.0 20.0)" | yarp rpc /ctpservice/torso/rpc
-    sleep 1.0
     echo "ctpq time 3.0 off 0 pos (9.0 16.0)" | yarp rpc /ctpservice/head/rpc
     echo "ctpq time 3.0 off 0 pos (-20.0 35.2 -10.2 93.6 0.0)" | yarp rpc /ctpservice/left_arm/rpc
     echo "ctpq time 3.0 off 0 pos (21.8 12.0 -17.0 56.7 0.0)" | yarp rpc /ctpservice/right_arm/rpc
-    sleep 5.0
+    sleep 3.0
     echo "ctpq time 3.0 off 0 pos (0.012 0.0 0.0 0.0)" | yarp rpc /ctpservice/torso/rpc
     go_home
 }
@@ -117,19 +116,19 @@ look_gripper() {
     echo "ctpq time 1 off 0 pos (85.0 60)" | yarp rpc /ctpservice/right_hand/rpc
     sleep 1.3
     echo "ctpq time 1 off 0 pos (25.0 25)" | yarp rpc /ctpservice/right_hand/rpc
-    sleep 3.0
+    sleep 2.0
     go_home
 }
 
 look_watch() {
     echo "ctpq time 2.5 off 0 pos (41.7 14.9 -40.6 74.6 -40.0)" | yarp rpc /ctpservice/left_arm/rpc
     echo "ctpq time 2.5 off 0 pos (20.0 5.0)" | yarp rpc /ctpservice/head/rpc
-    sleep 2.0
+    sleep 1.0
     echo "ctpq time 2.5 off 0 pos (41.7 14.9 -40.6 74.6 -54.5)" | yarp rpc /ctpservice/left_arm/rpc
-    sleep 5.0
+    sleep 3.0
     echo "ctpq time 2.5 off 0 pos (57.5 30 -40.8 85.0 -73.6)" | yarp rpc /ctpservice/left_arm/rpc
-    echo "ctpq time 2.5 off 0 pos (15.6 5.4)" | yarp rpc /ctpservice/head/rpc
-    sleep 2.5
+    echo "ctpq time 2.5 off 0 pos (15.6 5.6)" | yarp rpc /ctpservice/head/rpc
+    sleep 1.5
     go_home
 }
 
