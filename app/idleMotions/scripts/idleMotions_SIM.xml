@@ -2,6 +2,13 @@
     <name>idleMotions_SIM</name>
 
     <module>
+      <name>ros2</name>
+      <parameters>launch robot_state_publisher.launch.py use_sim_time:=true</parameters>
+      <workdir>/home/user1/tour-guide-robot/app/navigation2/launch/</workdir>
+      <node>console</node>
+   </module>
+   
+    <module>
         <name>ctpService</name>
         <parameters>--robot SIM_CER_ROBOT --part left_arm</parameters>
         <node>console</node>
