@@ -16,18 +16,6 @@
 
     <module>
         <name>ctpService</name>
-        <parameters>--robot SIM_CER_ROBOT --part left_hand</parameters>
-        <node>console</node>
-    </module>
-    
-    <module>
-        <name>ctpService</name>
-        <parameters>--robot SIM_CER_ROBOT --part right_hand</parameters>
-        <node>console</node>
-    </module>
-
-    <module>
-        <name>ctpService</name>
         <parameters>--robot SIM_CER_ROBOT --part right_arm</parameters>
         <node>console</node>
     </module>
@@ -45,8 +33,8 @@
     </module>
     
     <module>
-        <name>idleMotions</name>
-        <parameters>--context idleMotions --from idleMotions_SIM.ini</parameters>
+        <name>idleManager</name>
+        <parameters>--context idleManager --from idleManager_SIM.ini</parameters>
         <node>console</node>
    </module>
 

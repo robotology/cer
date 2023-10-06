@@ -18,12 +18,21 @@
 
 #include "idleMotions.h"
 
-string IdleMotions::move() 
+YARP_LOG_COMPONENT(IDLE_MOTIONS_MOTIONS, "r1_obr.idleManager.idleMotions.motions")
+
+string IdleMotions::move(int motion_number) 
 {
-    int randN = rand() % 6;
+    if (motion_number == -1)
+        motion_number = rand() % 6;
+    else if (motion_number > 5)
+    {
+        yCError(IDLE_MOTIONS_MOTIONS) << "Motion number out of bounds";
+        return "OutOfBounds";
+    }
+    
     string mot;
 
-    switch (randN) {
+    switch (motion_number) {
         case 0: stretch_right_arm();
                 mot = "stretch_right_arm";
                 break;

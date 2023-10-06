@@ -1,0 +1,28 @@
+<application>
+  <name>standing_demo</name>
+
+  <application>
+    <name>Navigation_ROS2_R1SN003</name>
+    <prefix></prefix>
+  </application>
+
+  <application>
+    <name>headSynchronizer</name>
+    <prefix></prefix>
+  </application>
+
+  <application>
+    <name>open_pose_stuff</name>
+    <prefix></prefix>
+  </application>
+
+  <module>
+    <name>idleManager</name>
+    <parameters>--context idleManager --from idleManager_setpos.ini</parameters>
+    <node>console</node>
+  </module>
+
+  <dependencies>
+  </dependencies>
+
+</application>

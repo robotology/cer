@@ -18,44 +18,40 @@
 
 #include "idleMotions.h"
 
-YARP_LOG_COMPONENT(IDLE_MOTIONS, "r1_obr.IdleMotions")
+YARP_LOG_COMPONENT(IDLE_MOTIONS, "r1_obr.idleManager.idleMotions")
 
-IdleMotions::IdleMotions() 
+
+IdleMotions::IdleMotions(ResourceFinder &_rf, double _period) :
+    PeriodicThread(_period),
+    m_rf(_rf)
 {
     m_robot = "cer";
-    m_period = 1.0;
     m_script_name = "/home/user1/robotology/cer/app/idleMotions/r1_idleMotions.sh";
-    m_rpc_port_name = "/idleMotions/rpc"; 
+    m_input_port_name = "/idleManager/idleMotions:i";
     m_use_ctpservice = true;
+    m_min_idle_time_s = 20;
+    m_port_to_gaze_controller="/eyeContactManager/control:o";
+    m_port_of_gaze_controller="/cer_gaze-controller/target:i";
 };
 
-bool IdleMotions::configure(ResourceFinder &rf)
+
+// --------------------------------------------------------------- //
+bool IdleMotions::threadInit()
 {
-    if(rf.check("robot")) {m_robot = rf.find("robot").asString();}
-    if(rf.check("period")) {m_period = rf.find("period").asFloat32();}
-    if(rf.check("rpc_port")) {m_rpc_port_name = rf.find("rpc_port").asString();}
+    if(m_rf.check("robot")) {m_robot = m_rf.find("robot").asString();}
+    if(m_rf.check("min_idle_time")) {m_min_idle_time_s = m_rf.find("min_idle_time").asInt32();}
+    if(m_rf.check("input_port")) {m_input_port_name = m_rf.find("input_port").asString();}
+
     
-    if(rf.check("use_ctpservice_or_setpos")) 
+    if(m_rf.check("use_ctpservice_or_setpos")) 
     {
-        m_use_ctpservice = !(rf.find("use_ctpservice_or_setpos").asString() != "ctpservice");
+        m_use_ctpservice = !(m_rf.find("use_ctpservice_or_setpos").asString() != "ctpservice");
     }
 
     if(m_use_ctpservice)
     {
-        Searchable& ctps_config = rf.findGroup("USE_CTPSERVICES");
-        if(rf.check("ctps_script_name")) {m_script_name = ctps_config.find("ctps_script_name").asString();}
-    }
-
-    //Open RPC Server Port
-    if (!m_rpc_port.open(m_rpc_port_name))
-    {
-        yCError(IDLE_MOTIONS, "open() error could not open rpc port %s, check network", m_rpc_port_name.c_str());
-        return false;
-    }
-    if (!attach(m_rpc_port))
-    {
-        yCError(IDLE_MOTIONS, "attach() error with rpc port %s", m_rpc_port_name.c_str());
-        return false;
+        Searchable& ctps_config = m_rf.findGroup("USE_CTPSERVICES");
+        if(m_rf.check("ctps_script_name")) {m_script_name = ctps_config.find("ctps_script_name").asString();}
     }
     
     // Polydriver config
@@ -67,7 +63,6 @@ bool IdleMotions::configure(ResourceFinder &rf)
     if (!m_drivers[0].open(prop))
     {
         yCError(IDLE_MOTIONS,"Unable to connect to %s",("/"+m_robot+"/right_arm").c_str());
-        close();
         return false;
     }
     prop.clear();
@@ -77,7 +72,6 @@ bool IdleMotions::configure(ResourceFinder &rf)
     if (!m_drivers[1].open(prop))
     {
         yCError(IDLE_MOTIONS,"Unable to connect to %s",("/"+m_robot+"/left_arm").c_str());
-        close();
         return false;
     }
     prop.clear();
@@ -87,7 +81,6 @@ bool IdleMotions::configure(ResourceFinder &rf)
     if (!m_drivers[2].open(prop))
     {
         yCError(IDLE_MOTIONS,"Unable to connect to %s",("/"+m_robot+"/head").c_str());
-        close();
         return false;
     }
     prop.clear();
@@ -97,7 +90,6 @@ bool IdleMotions::configure(ResourceFinder &rf)
     if (!m_drivers[3].open(prop))
     {
         yCError(IDLE_MOTIONS,"Unable to connect to %s",("/"+m_robot+"/torso").c_str());
-        close();
         return false;
     }
 
@@ -124,14 +116,14 @@ bool IdleMotions::configure(ResourceFinder &rf)
     if (m_use_ctpservice)
     {
         //Motions names definition
-        if(!rf.check("MOTIONS"))
+        if(!m_rf.check("MOTIONS"))
         {
             yCError(IDLE_MOTIONS,"MOTIONS section missing in ini file. Please list motions name in ini file.");
             return false;
         }
         else
         {
-            Searchable& config = rf.findGroup("MOTIONS");
+            Searchable& config = m_rf.findGroup("MOTIONS");
             int idx {0};
             while (true) 
             {
@@ -153,22 +145,30 @@ bool IdleMotions::configure(ResourceFinder &rf)
         }
     }
 
+    //Opening input Port
+    if (!m_input_port.open(m_input_port_name))
+    {
+        yCError(IDLE_MOTIONS, "Unable to open input port");
+        return false;
+    }
+    m_input_port.useCallback(*this);
+
+    Network::connect(m_port_to_gaze_controller,m_input_port_name); //listening to the commands for the gaze controller
+
+    m_last_movement = Time::now();
+
     return true;
 }
 
 
-bool IdleMotions::updateModule()
+// --------------------------------------------------------------- //
+void IdleMotions::onRead(Bottle &b)
 {
-    return true;
+    m_last_movement = Time::now();
 }
 
 
-double IdleMotions::getPeriod()
-{
-    return m_period;
-}
-
-
+// --------------------------------------------------------------- //
 void IdleMotions::setCtrlMode(const int part, int ctrlMode)
 {
     int NUMBER_OF_JOINTS;
@@ -177,10 +177,9 @@ void IdleMotions::setCtrlMode(const int part, int ctrlMode)
 }
 
 
-bool IdleMotions::respond(const Bottle &cmd, Bottle &reply)
-{    
-    reply.clear();
-    
+// --------------------------------------------------------------- //
+bool IdleMotions::doMotion(int motion_number)
+{      
     for (int i = 0 ; i<=3 ; i++)
     {
         setCtrlMode(i, VOCAB_CM_POSITION);
@@ -188,7 +187,8 @@ bool IdleMotions::respond(const Bottle &cmd, Bottle &reply)
     
     if(m_use_ctpservice)
     {
-        int motion_number = rand() % m_number_of_possible_motions;
+        if(motion_number == -1)
+            motion_number = rand() % m_number_of_possible_motions;
         string motion_name = m_motions.at(motion_number);
         string command = m_script_name + " " + motion_name + " &";
         yCInfo(IDLE_MOTIONS, "Executing: %s", command.c_str() );
@@ -196,31 +196,27 @@ bool IdleMotions::respond(const Bottle &cmd, Bottle &reply)
         int result = system(command.c_str());
 
         if(result != 0)
-        {
-            reply.addVocab32(Vocab32::encode("nack"));
             return false;
-        }
     }
     else
     {
-        string motion_name = move();
+        string motion_name = move(motion_number);
+        if (motion_name == "OutOfBounds")
+            return false;
+
         yCInfo(IDLE_MOTIONS, "Motion: %s", motion_name.c_str() );
     }
 
-    
     // for (int i = 0 ; i<=3 ; i++)
     // {
     //     setCtrlMode(i, VOCAB_CM_POSITION_DIRECT);
     // }
 
-    if (reply.size()==0)
-        reply.addVocab32(Vocab32::encode("ack")); 
-
     return true;
 }
 
-
-bool IdleMotions::close()
+// --------------------------------------------------------------- //
+void IdleMotions::threadRelease()
 {
     if(m_drivers[0].isValid())
     {
@@ -242,9 +238,26 @@ bool IdleMotions::close()
         m_drivers[3].close();
     }
 
-    if (m_rpc_port.asPort().isOpen())
-        m_rpc_port.close();
-
-    return true;
+    yCInfo(IDLE_MOTIONS, "Thread released");
 }
 
+
+// --------------------------------------------------------------- //
+void IdleMotions::run()
+{
+    int extra_idle_time_s = rand() % 10;
+    int period_s = m_min_idle_time_s + extra_idle_time_s;
+
+    if (!m_dont_move && Time::now()-m_last_movement >= period_s)
+    {
+        //Deactivating the control of the head via gaze-controller
+        Network::disconnect(m_port_to_gaze_controller,m_port_of_gaze_controller);
+
+        doMotion();
+
+        //Re-activating the control of the head via gaze-controller
+        Network::connect(m_port_to_gaze_controller,m_port_of_gaze_controller);
+
+        m_last_movement = Time::now();
+    }
+}

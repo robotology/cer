@@ -1,4 +1,4 @@
-set(appname idleMotions)
+set(appname idleManager)
 
 file(GLOB conf      ${CMAKE_CURRENT_SOURCE_DIR}/conf/*.ini)
 file(GLOB templates ${CMAKE_CURRENT_SOURCE_DIR}/scripts/*.template)

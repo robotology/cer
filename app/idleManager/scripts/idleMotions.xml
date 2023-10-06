@@ -41,6 +41,6 @@
         <name>idleMotions</name>
         <parameters>--context idleMotions --from idleMotions.ini</parameters>
         <node>console</node>
-   </module>
+    </module>
 
 </application>

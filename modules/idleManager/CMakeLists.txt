@@ -4,7 +4,7 @@
 # CopyPolicy: Released under the terms of the GNU GPL v2.0.
 #
 
-project(idleMotions)
+project(idleManager)
 
 file(GLOB folder_source *.cpp)
 file(GLOB folder_header *.h)
@@ -16,5 +16,5 @@ find_package(YARP REQUIRED COMPONENTS sig dev os math)
 include_directories(${ICUB_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
-set_property(TARGET idleMotions PROPERTY FOLDER "Modules")
+set_property(TARGET idleManager PROPERTY FOLDER "Modules")
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)

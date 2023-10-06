@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include "idleMotions.h"
+#include "idleManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -29,10 +29,10 @@ int main(int argc, char *argv[])
 
     yarp::os::ResourceFinder rf;
     rf.setVerbose(true);
-    rf.setDefaultConfigFile("idleMotions.ini");          //overridden by --from parameter
-    rf.setDefaultContext("idleMotions");                 //overridden by --context parameter
+    rf.setDefaultConfigFile("idleManager.ini");          //overridden by --from parameter
+    rf.setDefaultContext("idleManager");                 //overridden by --context parameter
     rf.configure(argc,argv);
-    IdleMotions mod;
+    IdleManager mod;
     
     return mod.runModule(rf);
 }
