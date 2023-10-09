@@ -1,5 +1,5 @@
 <application>
-    <name>idleMotions_SIM</name>
+    <name>standing_demo_SIM</name>
 
     <module>
       <name>ros2</name>

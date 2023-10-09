@@ -23,10 +23,11 @@ YARP_LOG_COMPONENT(IDLE_MOTIONS, "r1_obr.idleManager.idleMotions")
 
 IdleMotions::IdleMotions(ResourceFinder &_rf, double _period) :
     PeriodicThread(_period),
-    m_rf(_rf)
+    m_rf(_rf), 
+    m_dont_move(false)
 {
     m_robot = "cer";
-    m_script_name = "/home/user1/robotology/cer/app/idleMotions/r1_idleMotions.sh";
+    m_script_name = "/home/user1/robotology/cer/app/idleManager/scripts/r1_idleMotions.sh";
     m_input_port_name = "/idleManager/idleMotions:i";
     m_use_ctpservice = true;
     m_min_idle_time_s = 20;
@@ -51,7 +52,7 @@ bool IdleMotions::threadInit()
     if(m_use_ctpservice)
     {
         Searchable& ctps_config = m_rf.findGroup("USE_CTPSERVICES");
-        if(m_rf.check("ctps_script_name")) {m_script_name = ctps_config.find("ctps_script_name").asString();}
+        if(ctps_config.check("ctps_script_name")) {m_script_name = ctps_config.find("ctps_script_name").asString();}
     }
     
     // Polydriver config
