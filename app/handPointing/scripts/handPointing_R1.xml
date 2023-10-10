@@ -8,52 +8,6 @@
    <!--   MODULES    -->
    <!--              -->
 
-   <!-- Robot initialization -->
-   <module>
-      <name>yarprobotinterface</name>
-      <parameters></parameters>
-      <workdir>/home/user1/robotology/robots-configuration/R1SN003/</workdir>
-      <node>r1-base</node>
-   </module>
-
-   <module>
-      <name>yarprobotinterface</name>
-      <parameters>--context navigation2 --from realsense2_remote.ini</parameters>
-      <node>r1-torso</node>
-   </module>
-
-   <module>
-      <name>yarprobotinterface</name>
-      <parameters>--context navigation2 --from pointCloudCreator.ini</parameters>
-      <node>console</node>
-   </module>
-
-   <module>
-      <name>yarprobotinterface</name>
-      <parameters>--context navigation2 --from lidar_compressed.ini</parameters>
-      <node>console</node>
-   </module>
-
-   <!-- ROS2 Publisher -->
-   <module>
-      <name>ros2</name>
-      <parameters>launch robot_state_publisher.launch.py</parameters>
-      <workdir>/home/user1/tour-guide-robot/app/navigation2/launch/</workdir>
-      <node>r1-base</node>
-   </module>
-
-   <module>
-      <name>ros2</name>
-      <parameters>run tf2_ros static_transform_publisher 0 0 0.05 0 0 0 1 depth_center extra_camera_tf</parameters>
-      <node>r1-base</node>
-   </module>
-
-   <module>
-      <name>baseControl2</name>
-      <parameters>--context baseControl2 --from baseCtrl_cer_ros2.ini --skip_robot_interface_check</parameters>
-      <node>r1-base</node>
-   </module>
-
    <!-- Gaze controller -->
    <module>
       <name>cer_gaze-controller</name>
