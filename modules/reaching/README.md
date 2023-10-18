@@ -1,4 +1,4 @@
-# reaching usage
+# Reaching Usage
 
 ## Solver:
 
@@ -8,9 +8,7 @@
 - `--get-bounds <on|off>`: specify if joints bound are retrieved by asking to the robot (default: `on`).
 - `--verbosity <level>`: set the level of verbosity of the output of the solver (set level>=5 to enable derivative checker).
 
-
 ### RPC commands
-
 - `get`: get the list of parameters currently set.
 - `ask <parameters>`: asks the solver for a base position and joint configuration that enables reaching a specific targets:
   - on success returns [ack], followed by a list of robot configurations and a list of end effector poses found at the end of the optimization.
@@ -41,10 +39,9 @@
 - `<target>`= target that the robot is asked to reach with respect to the reference coordinate system of the base link. 
   - `<target>`= `(x1 y1 z1 u1 u2 u3 t)`: cartesian coordinates of the target followed by orientation in axis/angle representation, in case of a position+orientation target.
 
-## Controller: 
+## Controller
 
 ### Command-line parameters
-
 - `--robot <robotName>`: name of the robot, specify the prefix name of the robot ports (default: `cer`).
 - `--arm-type <left|right>`: which arm to use (default: `left`).
 - `--verbosity <level>`: set the level of verbosity of the output (default: 0).
@@ -54,20 +51,17 @@
 - `--Ts`: sample time for the joint control loop (default: `0.01`).
 
 ### RPC commands
-
 - `set <T|Ts|verbosity|mode|torso_heave|lower_arm_heave|tol|constr_tol> <value>`: set the value of one of the parameters.
 - `get <done|T|Ts|verbosity|mode|torso_heave|lower_arm_heave|tol|constr_tol>`: get the value of one of the parameters.
 - `ask (<parameters>)`: ask the controller for a base position and joint configurations that enable reaching specific targets defined in the map frame.
-- `go (<parameters>)`: ask the controller for a joint configurations that enable reaching specific targets defined in the base frame, then send the joint configuration to the joint controllers.  q
+- `go (<parameters>)`: ask the controller for a joint configurations that enable reaching specific targets defined in the base frame, then send the joint configuration to the joint controllers.
 - `stop`: stop the current control.
 
 ### RPC parameters
-
 - `<parameters>` mostly follows the same convention as the solver parameters: all the parameters are optional and will be filled by the module before forwarding the complete command to the solver module:
-  - `(q (<initial_joints>))`: if not specified, will be filled with the current state of the robot asking the joint controllers.
+- `(q (<initial_joints>))`: if not specified, will be filled with the current state of the robot asking the joint controllers.
 
 # Example
-
 - Command sent to the controller module by the user:
 
 `(parameters ((mode "full_pose+no_torso_no_heave+forward_diff") (torso_heave 0.0) (lower_arm_heave 0.02) (tol 0.0001) (constr_tol 1e-05))) (target (0.4 -0.4 0.7 0.7071068 0 0 0 0.7071068))`
@@ -75,5 +69,3 @@
 - Completed command sent by the controller module to the solver module:
 
 `ask (parameters ((mode "full_pose+no_torso_no_heave+forward_diff") (torso_heave 0.0) (lower_arm_heave 0.02) (tol 0.0001) (constr_tol 1e-05))) (target (0.4 -0.4 0.7 0.7071068 0 0 0 0.7071068)) (q (0.0 0.0 0.0 29.99 -21.23 16.91 45.45 93.98 73.29 0.0 0.022 0.026))`
-
- 
