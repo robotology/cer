@@ -311,7 +311,9 @@ yarp::sig::Vector& HandPointingThread::reachablePoint(const yarp::sig::Vector& v
     double exp4 = v0[2] - exp2*v0[0];
 
     double d = sqrt(pow((v1[0]-v0[0]),2.0) + pow((v1[1]-v0[1]),2.0) + pow((v1[2]-v0[2]),2.0)); //object distance from robot
-    double r = d > m_reach_radius ? m_reach_radius : d/2;
+    d = d>0.4 ? d : 0.4;
+    double r = d > m_reach_radius ? m_reach_radius : d;
+    
 
     double a_eq { 1 + pow(exp1, 2.0) + pow(exp2, 2.0) };
     double b_eq { -2*vSC[0] + 2*exp1*exp3 + 2*exp2*exp4 - 2*exp1*vSC[1] - 2*exp2*vSC[2] };
