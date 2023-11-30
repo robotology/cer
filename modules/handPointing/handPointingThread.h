@@ -115,6 +115,7 @@ public:
 
 private:
     yarp::sig::Vector& reachablePoint(const yarp::sig::Vector& v0 , const yarp::sig::Vector& v1 , const yarp::sig::Vector& vSC, yarp::sig::Vector& vreach );
+    double average_depth(int u,int v,int offset);
 };
 
 #endif

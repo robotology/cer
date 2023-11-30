@@ -339,9 +339,13 @@ void HandPointingThread::onRead(yarp::os::Bottle &b)
         double u = b.get(0).asFloat32();
         double v = b.get(1).asFloat32();
         yarp::sig::Vector tempPoint(4,1.0);
-        tempPoint[0] = (u - m_intrinsics.principalPointX) / m_intrinsics.focalLengthX * m_depth_image.pixel(u, v);
-        tempPoint[1] = (v - m_intrinsics.principalPointY) / m_intrinsics.focalLengthY * m_depth_image.pixel(u, v);
-        tempPoint[2] = m_depth_image.pixel(u, v);
+
+        // We are averaging the depth value in a 10x10 box around the centre
+        double av_pixel_value = average_depth(u,v,10);
+
+        tempPoint[0] = (u - m_intrinsics.principalPointX) / m_intrinsics.focalLengthX * av_pixel_value;
+        tempPoint[1] = (v - m_intrinsics.principalPointY) / m_intrinsics.focalLengthY * av_pixel_value;
+        tempPoint[2] = av_pixel_value;
         
         //decide whether to use the right or left arm depending on the position of the point wrt to the torso
         yarp::sig::Matrix transform_mtrx_torso;
@@ -517,4 +521,24 @@ void HandPointingThread::threadRelease()
 #endif
 
     return;
+}
+
+double HandPointingThread::average_depth(int u, int v, int max_offset)
+{
+    double av_pixel_value = 0;
+    int n_valid_pixels = 0;
+    for (int offset_u = -max_offset/2; offset_u <max_offset/2; offset_u++)
+    {
+        for (int offset_v = -max_offset/2; offset_v < max_offset/2; offset_v++)
+        {
+            auto pixel = m_depth_image.pixel(u+offset_u,v+offset_v);                 
+            if (pixel != 0)
+            {
+                n_valid_pixels += 1;
+                av_pixel_value = av_pixel_value*(n_valid_pixels-1)/n_valid_pixels + pixel/n_valid_pixels;
+            }
+        }
+    }
+
+    return av_pixel_value;
 }
