@@ -25,25 +25,25 @@
   <module>
     <name>ctpService</name>
     <parameters>--robot cer --part left_arm</parameters>
-    <node>console1</node>
+    <node>console</node>
   </module>
 
   <module>
     <name>ctpService</name>
     <parameters>--robot cer --part right_arm</parameters>
-    <node>console1</node>
+    <node>console</node>
   </module>
 
   <module>
     <name>ctpService</name>
     <parameters>--robot cer --part torso</parameters>
-    <node>console1</node>
+    <node>console</node>
   </module>
   
   <module>
     <name>ctpService</name>
     <parameters>--robot cer --part head</parameters>
-    <node>console1</node>
+    <node>console</node>
   </module>
 
   <module>
@@ -84,21 +84,15 @@
   </module>
 
   <module>
-    <name>./sourceLLMDevice.sh</name>
-    <workdir>/home/user1/r1-object-retrieval/app/r1Obr-orchestrator/scripts</workdir>
-    <node>console</node>
-  </module>
-
-  <module>
     <name>yarprobotinterface</name>
     <parameters>--config LLMDevice.xml</parameters>
-    <workdir>/home/user1/robotology/yarp-devices-llm/assets</workdir>
-    <node>console</node>
+    <workdir>/home/user/yarp-devices-llm/assets</workdir>
+    <node>console2</node>
   </module>
 
   <module>
     <name>LLMStream</name>
-    <node>/console</node>
+    <node>/console2</node>
   </module>
     
 

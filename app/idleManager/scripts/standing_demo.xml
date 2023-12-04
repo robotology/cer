@@ -38,13 +38,13 @@
   <module>
     <name>yarprobotinterface</name>
     <parameters>--context google --from googleSpeechToText.ini</parameters>
-    <node>console1</node>
+    <node>console</node>
   </module>
 
   <module>
     <name>yarprobotinterface</name>
     <parameters>--context google --from googleSynthesizer.ini</parameters>
-    <node>console1</node>
+    <node>console</node>
   </module>
 
   <module>
@@ -68,13 +68,13 @@
   <module>
     <name>yarprobotinterface</name>
     <parameters>--config LLMDevice.xml</parameters>
-    <workdir>/home/user1/robotology/yarp-devices-llm/assets</workdir>
-    <node>console</node>
+    <workdir>/home/user/yarp-devices-llm/assets</workdir>
+    <node>console2</node>
   </module>
 
   <module>
     <name>LLMStream</name>
-    <node>/console</node>
+    <node>console2</node>
   </module>
 
   <connection>
