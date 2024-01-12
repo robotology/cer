@@ -69,7 +69,7 @@ public:
 class Controller : public RFModule
 {
     PolyDriver        drivers[3];
-    std::vector<std::string> driversPartName; // Dirty way to overcome the removal of the getValue method from yarp::dev::PolyDriver class
+    std::array<std::string, 3> driversPartName; // Dirty way to overcome the removal of the getValue method from yarp::dev::PolyDriver class
     IEncodersTimed*   ienc[3];
     IControlMode*     imod;
     IPositionControl* ipos;
@@ -417,7 +417,7 @@ public:
             close();
             return false;
         }
-        driversPartName.push_back(option.find("remote").asString());
+        driversPartName[0] = option.find("remote").asString();
 
         option.clear();
         option.put("device","remote_controlboard");
@@ -429,7 +429,7 @@ public:
             close();
             return false;
         }
-        driversPartName.push_back(option.find("remote").asString());
+        driversPartName[1] = option.find("remote").asString();
 
         option.clear();
         option.put("device","remote_controlboard");
@@ -442,7 +442,7 @@ public:
             close();
             return false;
         }
-        driversPartName.push_back(option.find("remote").asString());
+        driversPartName[2] = option.find("remote").asString();
 
         drivers[0].view(ienc[0]);
         drivers[1].view(ienc[1]);

@@ -21,7 +21,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 find_package(YCM)
 find_package(YARP 3.7 REQUIRED COMPONENTS os sig dev math idl_tools)
 find_package(YARP_rosmsg)
-if(rosmsg_FOUND)
+if(YARP_rosmsg_FOUND)
     add_definitions(-DROS_MSG=1)
 endif()
 
