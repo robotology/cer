@@ -69,8 +69,7 @@ public:
 class Controller : public RFModule
 {
     PolyDriver        drivers[3];
-    Value             dev2part;  // Dirty way to overcome the removal of the getValue method from yarp::dev::PolyDriver class
-    Value             dev3part;  // Dirty way to overcome the removal of the getValue method from yarp::dev::PolyDriver class
+    std::vector<std::string> driversPartName; // Dirty way to overcome the removal of the getValue method from yarp::dev::PolyDriver class
     IEncodersTimed*   ienc[3];
     IControlMode*     imod;
     IPositionControl* ipos;
@@ -240,7 +239,7 @@ class Controller : public RFModule
             chain[0].setMax(CTRL_DEG2RAD*lim(3,1));
 
             yInfo("limits of %s part: heave=[%g,%g] [m], [pitch,roll]=[%g,%g] [deg], yaw=[%g,%g] [deg]",
-                  dev2part.asString().c_str(),p.torso.l_min,p.torso.l_max,-p.torso.alpha_max,p.torso.alpha_max,lim(3,0),lim(3,1));
+                  driversPartName[1].c_str(),p.torso.l_min,p.torso.l_max,-p.torso.alpha_max,p.torso.alpha_max,lim(3,0),lim(3,1));
 
             getBounds(drivers[2],lim);
 
@@ -250,7 +249,7 @@ class Controller : public RFModule
                 chain[1+i].setMax(CTRL_DEG2RAD*lim(i,1));
 
                 yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                      dev3part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                      driversPartName[2].c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
                       CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
@@ -310,7 +309,7 @@ class Controller : public RFModule
 
                 if (doPrint)
                     yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                          dev3part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                          driversPartName[2].c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
                           CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
@@ -336,7 +335,7 @@ class Controller : public RFModule
 
                 if (doPrint)
                     yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                          dev3part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                          driversPartName[2].c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
                           CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
@@ -418,7 +417,7 @@ public:
             close();
             return false;
         }
-        dev2part = option.find("remote");
+        driversPartName.push_back(option.find("remote").asString());
 
         option.clear();
         option.put("device","remote_controlboard");
@@ -430,6 +429,7 @@ public:
             close();
             return false;
         }
+        driversPartName.push_back(option.find("remote").asString());
 
         option.clear();
         option.put("device","remote_controlboard");
@@ -442,7 +442,7 @@ public:
             close();
             return false;
         }
-        dev3part = option.find("remote");
+        driversPartName.push_back(option.find("remote").asString());
 
         drivers[0].view(ienc[0]);
         drivers[1].view(ienc[1]);
