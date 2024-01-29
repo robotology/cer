@@ -20,7 +20,6 @@
 #include <yarp/dev/IJoypadController.h>
 #include "ParamParser.h"
 #include "handThread.h"
-#include <yarp/rosmsg/visualization_msgs/Marker.h>
 
 using namespace std;
 using namespace yarp::os;
@@ -338,7 +337,7 @@ public:
         else if (frameSource == VR_DEVICE)
         {
             for(int i = 0; i < HandThread::hand_count; ++i)
-            { 
+            {
                 string gripper = i ? "r_gripper" : "l_gripper";
                 double axis0, axis1;
                 bool reset = false;

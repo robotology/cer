@@ -26,13 +26,16 @@
 #include <iCub/ctrl/pids.h>
 #include <string>
 #include <math.h>
-#include <yarp/rosmsg/visualization_msgs/Marker.h>
-#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
 
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
+
+#ifdef ROS_MSG
+#include <yarp/rosmsg/visualization_msgs/Marker.h>
+#include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
 using namespace yarp::rosmsg;
+#endif
 
 #define MAX_LINEAR_VEL  0.4  // maximum linear  velocity (m/s)
 #define MAX_ANGULAR_VEL 24.0 // maximum angular velocity (deg/s)
@@ -64,9 +67,10 @@ protected:
     PolyDriver                *driver_torso_equiv;
     PolyDriver                *driver_left_hand;
     PolyDriver                *driver_right_hand;
-
+#ifdef ROS_MSG
     Publisher<visualization_msgs::MarkerArray> rosPublisherPort;
     Node *rosNode;
+#endif
 
     BufferedPort<Bottle>      port_joystick_control;
 
@@ -132,13 +136,15 @@ public:
     virtual void threadRelease();
     virtual void afterStart(bool s);
     virtual void run();
-    
+
 private:
     void goToPose(string arm_type, const yarp::sig::Vector &xd, const yarp::sig::Vector &od);
     void velMoveHandler(const bool b, std::vector<int> joints, double speed, IControlMode * imod, IVelocityControl* ivel);
     void reachingHandler(string arm_type, const bool b, const yarp::sig::Vector &pos, const yarp::sig::Vector &rpy);
     void saturate(double& v, double sat_lim);
+#ifdef ROS_MSG
     void updateRVIZ(const yarp::sig::Vector &xd, const yarp::sig::Vector &od);
+#endif
     void getCartesianArmPositions(bool blocking);
 
     void option1(double* axis);

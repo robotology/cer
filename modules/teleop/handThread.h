@@ -12,7 +12,10 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/os/Searchable.h>
 #include <yarp/os/Publisher.h>
+
+#ifdef ROS_MSG
 #include <yarp/rosmsg/visualization_msgs/MarkerArray.h>
+#endif
 
 class HandThread : public yarp::os::PeriodicThread
 {
@@ -99,7 +102,9 @@ private:
     typedef yarp::dev::IControlMode                              IControlMode;
     typedef yarp::dev::IEncoders                                 IEncoders;
     typedef yarp::dev::PolyDriver                                PolyDriver;
+#ifdef ROS_MSG
     typedef yarp::os::Publisher<yarp::rosmsg::visualization_msgs::MarkerArray>  MarkerArrayPort;
+#endif
     typedef std::vector<ctrlRange>                               vecCtrlRanges;
     typedef yarp::sig::Matrix                                    Matrix;
 
@@ -149,7 +154,9 @@ private:
     double             wrist_heave;
     std::string        mode;
     BottlePort         gazeboPort;
+#ifdef ROS_MSG
     MarkerArrayPort    rosPublisherPort;
+#endif
     CommandData        criticalSection;
     double             targetDistance;
     vecCtrlRanges      controlRanges;
@@ -160,7 +167,9 @@ private:
 
     //method
     void   printState();
+#ifdef ROS_MSG
     void   updateRVIZ(const Vector &xd, const Vector &od);
+#endif
     void   updateGazebo(const Vector& xd, const Vector& od);
     void   stopReaching();
     void   goToPose(const Vector &xd, const Vector &od);

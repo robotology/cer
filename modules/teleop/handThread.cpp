@@ -115,7 +115,7 @@ void HandThread::stopReaching()
 
 void HandThread::goToPose(const Vector &xd, const Vector &od)
 {
-    
+
     Vector payLoad;
     //payLoad.push_back(0.0); // uncontrolled torso-heave
     //payLoad.push_back(wrist_heave);
@@ -146,6 +146,7 @@ void HandThread::goToPose(const Vector &xd, const Vector &od)
     robotTargetPort.write();
 }
 
+#ifdef ROS_MSG
 void HandThread::updateRVIZ(const Vector &xd, const Vector &od)
 {
     Matrix   m;
@@ -208,6 +209,7 @@ void HandThread::updateRVIZ(const Vector &xd, const Vector &od)
 
     rosPublisherPort.write();
 }
+#endif
 
 /**********************************************************/
 void HandThread::updateGazebo(const Vector& xd, const Vector& od)
@@ -281,12 +283,12 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
 
             Target = x0 + (pos - pos0);
             //r      = getRad(cur_x[0], cur_x[1]);
-           
+
             if (getRad(Target[0], Target[1]) > 0.35)//|| getRad(Target[0], Target[1]) > getRad(x0[0], x0[1]))
             {
                 xd = Target;
             }
-            else 
+            else
             {
                 double t = atan2(Target[1], Target[0]);
                 xd = x0 = mVector(0.35 * cos(t), 0.37 * sin(t), cur_x[2]);
@@ -294,8 +296,8 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
                 pos0  = pose.getCol(3);
                 pos0.pop_back();
             }
-            
-            
+
+
             xd.push_back(1);
             H0(0,3)   = x0[0];
             H0(1,3)   = x0[1];
@@ -316,13 +318,13 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
                 xd.pop_back();
                 if (button2)
                 {
-                    
+
                     pose0.setCol(3, pose.getCol(3));
                     pos0 = pose.getCol(3);
                     pos0.pop_back();
                     xd = cur_x;
                     x0 = xd;
-                    
+
                     goToPose(cur_x, od);
                 }
                 else
@@ -333,7 +335,7 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
                     pose0.setCol(2, pose.getCol(2));
                     goToPose(xd, cur_o);
                 }
-                
+
             }
             else if (reachState)
             {
@@ -347,7 +349,9 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
             }
 
             updateGazebo(xd, od);
+#ifdef ROS_MSG
             updateRVIZ(xd, od);
+#endif
         }
     }
     else
@@ -364,7 +368,9 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
         {
             stopReaching();
             updateGazebo(cur_x, cur_o);
+#ifdef ROS_MSG
             updateRVIZ(cur_x, cur_o);
+#endif
         }
 
         handDraggingStatus = idle;
@@ -450,14 +456,14 @@ bool HandThread::threadInit()
     fixedPosition.resize(3, 0.0);
     fixedOrientation.resize(4, 0.0);
 
-
+#ifdef ROS_MSG
     if (!rosPublisherPort.topic("/cer_teleop_marker_" + hand))
     {
         yError("Unable to publish data on /cer_teleop_marker topic");
         yWarning("Check your yarp-ROS network configuration");
         return false;
     }
-
+#endif
     r = gazeboPort.open("/cer_teleop/gazebo_" + hand+":o");
     r &= robotTargetPort.open("/cer_teleop/target_" + hand + ":o");
     r &= robotStatePort.open("/cer_teleop/state_" + hand + ":i");
