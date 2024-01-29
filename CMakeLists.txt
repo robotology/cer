@@ -77,7 +77,7 @@ install_basic_package_files(${PROJECT_NAME} VARS_PREFIX ${VARS_PREFIX}
                                             VERSION ${${VARS_PREFIX}_VERSION}
                                             COMPATIBILITY AnyNewerVersion
                                             TARGETS_PROPERTY ${VARS_PREFIX}_TARGETS
-                                            DEPENDENCIES "YARP 3.3.0 REQUIRED COMPONENTS os sig dev math rosmsg idl_tools" "ICUB REQUIRED"
+                                            DEPENDENCIES "YARP 3.3.0 REQUIRED COMPONENTS os sig dev math idl_tools" "ICUB REQUIRED"
                                             NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
 include(AddUninstallTarget)
