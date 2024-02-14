@@ -19,15 +19,9 @@
 #ifndef IDLE_MOTIONS_H
 #define IDLE_MOTIONS_H
 
-#include <yarp/os/Network.h>
-#include <yarp/os/Log.h>
-#include <yarp/os/LogStream.h>
-#include <yarp/dev/PolyDriver.h>
-#include <yarp/os/Time.h>
-#include <yarp/os/Port.h>
-#include <yarp/os/RFModule.h>
+#include <yarp/os/all.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
-#include <yarp/os/PeriodicThread.h>
+#include <yarp/dev/PolyDriver.h>
 #include <map>
 #include <cmath>
 
@@ -52,12 +46,18 @@ private:
     int                 m_min_idle_time_s;
     double              m_last_movement = 0;
     bool                m_dont_move;
+    
+    bool                m_ar_active;
+    int                 m_ar_action_duration_s;
 
     string              m_port_to_gaze_controller;
     string              m_port_of_gaze_controller;
 
     BufferedPort<Bottle> m_input_port;
     string              m_input_port_name;
+
+    BufferedPort<Bottle> m_action_recognition_port;
+    string              m_action_recognition_port_name;
 
     ResourceFinder&     m_rf;
     
@@ -74,10 +74,10 @@ public:
     using TypedReaderCallback<Bottle>::onRead;
     void onRead(Bottle& b) override;
 
-    void setCtrlMode(const int part, int ctrlMode);
+    void setCtrlMode(int ctrlMode);
     bool doMotion(int motion_number = -1);
-    void dontMove(){m_dont_move=true;}
-    void nowYouCanMove(){m_dont_move=false;}
+    void dontMove();
+    void nowYouCanMove();
 
     string move(int motion_number = -1);
     void arms_home();
@@ -90,6 +90,8 @@ public:
     void stretch_back();
     void look_gripper();
     void look_watch();
+    void wave();
+    void handshake();
 
 };
 

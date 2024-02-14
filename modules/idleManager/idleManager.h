@@ -19,11 +19,7 @@
 #ifndef IDLE_MANAGER_H
 #define IDLE_MANAGER_H
 
-#include <yarp/os/Network.h>
-#include <yarp/os/Log.h>
-#include <yarp/os/LogStream.h>
-#include <yarp/os/Port.h>
-#include <yarp/os/RFModule.h>
+#include <yarp/os/all.h>
 #include "idleMotions.h"
 
 
@@ -36,10 +32,13 @@ private:
     double              m_period; 
 
     IdleMotions*        m_motions;
+    string              m_orchestrator_rpc_port_name;
 
     //Ports
     RpcServer           m_rpc_port;
     string              m_rpc_port_name;
+    RpcClient           m_idle_to_orchestrator_rpc_port;
+    string              m_idle_to_orchestrator_rpc_port_name;
     
 public:
     //Constructor/Distructor

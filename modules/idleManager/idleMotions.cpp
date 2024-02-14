@@ -24,7 +24,8 @@ YARP_LOG_COMPONENT(IDLE_MOTIONS, "r1_obr.idleManager.idleMotions")
 IdleMotions::IdleMotions(ResourceFinder &_rf, double _period) :
     PeriodicThread(_period),
     m_rf(_rf), 
-    m_dont_move(false)
+    m_dont_move(false),
+    m_ar_active(false)
 {
     m_robot = "cer";
     m_script_name = "/home/user1/robotology/cer/app/idleManager/scripts/r1_idleMotions.sh";
@@ -33,6 +34,7 @@ IdleMotions::IdleMotions(ResourceFinder &_rf, double _period) :
     m_min_idle_time_s = 20;
     m_port_to_gaze_controller="/eyeContactManager/control:o";
     m_port_of_gaze_controller="/cer_gaze-controller/target:i";
+    m_ar_action_duration_s = 8;
 };
 
 
@@ -156,6 +158,32 @@ bool IdleMotions::threadInit()
 
     Network::connect(m_port_to_gaze_controller,m_input_port_name); //listening to the commands for the gaze controller
 
+    if(!m_rf.check("ACTION_RECOGNITION")) //Not using action recognition if there is no ACTION_RECOGNITION section in ini file
+    {
+        yCWarning(IDLE_MOTIONS,"ACTION_RECOGNITION section missing in ini file. Not recognizing user gestures");   
+        m_ar_active = false;     
+    }
+    else
+    {
+        Searchable& cfg = m_rf.findGroup("ACTION_RECOGNITION");
+        if(cfg.check("action_recognition_port")) 
+            {m_action_recognition_port_name = cfg.find("action_recognition_port").asString();}
+        else
+            m_action_recognition_port_name = "/idleManager/idleMotions/action_recognition:i";  //Default
+
+         if(!m_action_recognition_port.open(m_action_recognition_port_name))
+        {
+            yCError(IDLE_MOTIONS) << "Cannot open port" << m_action_recognition_port_name; 
+            return false;
+        }
+        else
+            yCInfo(IDLE_MOTIONS) << "Opened port" << m_action_recognition_port_name;
+        
+        m_ar_active = true;
+
+    }
+
+
     m_last_movement = Time::now();
 
     return true;
@@ -170,21 +198,48 @@ void IdleMotions::onRead(Bottle &b)
 
 
 // --------------------------------------------------------------- //
-void IdleMotions::setCtrlMode(const int part, int ctrlMode)
+void IdleMotions::setCtrlMode(int ctrlMode)
 {
-    int NUMBER_OF_JOINTS;
-    m_iposctrl[part]->getAxes(&NUMBER_OF_JOINTS);
-    for (int i_joint=0; i_joint < NUMBER_OF_JOINTS; i_joint++){ m_ictrlmode[part]->setControlMode(i_joint, ctrlMode); } 
+    //need to stop the arm controllers so that the control mode of the arms can be set to Position
+    string right_arm_controller_port{"/cer_reaching-controller/right/rpc"};
+    string left_arm_controller_port{"/cer_reaching-controller/left/rpc"};
+    Bottle stop_command{"stop"}; 
+    if (Network::exists(right_arm_controller_port)) 
+    {
+        RpcClient tmpRightArmRPC;
+        tmpRightArmRPC.open("/idleManager/tmpRightArmRPC");
+        if (Network::connect(tmpRightArmRPC.getName(), right_arm_controller_port)) 
+        {
+            tmpRightArmRPC.write(stop_command);
+            Network::disconnect(tmpRightArmRPC.getName(), right_arm_controller_port);
+        } 
+        tmpRightArmRPC.close();
+    }
+    if (Network::exists(left_arm_controller_port)) 
+    {
+        RpcClient tmpLeftArmRPC;
+        tmpLeftArmRPC.open("/idleManager/tmpLeftArmRPC");
+        if (Network::connect(tmpLeftArmRPC.getName(), left_arm_controller_port)) 
+        {
+            tmpLeftArmRPC.write(stop_command);
+            Network::disconnect(tmpLeftArmRPC.getName(), left_arm_controller_port);
+        } 
+        tmpLeftArmRPC.close();
+    }
+    
+    for (int part = 0 ; part<=3 ; part++)
+    {
+        int NUMBER_OF_JOINTS;
+        m_iposctrl[part]->getAxes(&NUMBER_OF_JOINTS);
+        for (int i_joint=0; i_joint < NUMBER_OF_JOINTS; i_joint++){ m_ictrlmode[part]->setControlMode(i_joint, ctrlMode); } 
+    }
 }
 
 
 // --------------------------------------------------------------- //
 bool IdleMotions::doMotion(int motion_number)
 {      
-    for (int i = 0 ; i<=3 ; i++)
-    {
-        setCtrlMode(i, VOCAB_CM_POSITION);
-    }
+    setCtrlMode(VOCAB_CM_POSITION);
     
     if(m_use_ctpservice)
     {
@@ -208,13 +263,15 @@ bool IdleMotions::doMotion(int motion_number)
         yCInfo(IDLE_MOTIONS, "Motion: %s", motion_name.c_str() );
     }
 
-    // for (int i = 0 ; i<=3 ; i++)
-    // {
-    //     setCtrlMode(i, VOCAB_CM_POSITION_DIRECT);
-    // }
-
     return true;
 }
+
+
+// --------------------------------------------------------------- //
+void IdleMotions::dontMove(){m_dont_move=true;}
+
+// --------------------------------------------------------------- //
+void IdleMotions::nowYouCanMove(){m_dont_move=false;}
 
 // --------------------------------------------------------------- //
 void IdleMotions::threadRelease()
@@ -239,6 +296,12 @@ void IdleMotions::threadRelease()
         m_drivers[3].close();
     }
 
+    if (!m_input_port.isClosed())
+        m_input_port.close();
+
+    if (!m_action_recognition_port.isClosed())
+        m_action_recognition_port.close();  
+
     yCInfo(IDLE_MOTIONS, "Thread released");
 }
 
@@ -248,6 +311,54 @@ void IdleMotions::run()
 {
     int extra_idle_time_s = rand() % 10;
     int period_s = m_min_idle_time_s + extra_idle_time_s;
+
+    if (!m_dont_move && m_ar_active && Time::now()-m_last_movement >= m_ar_action_duration_s)
+    {
+        Bottle* last_read = m_action_recognition_port.lastRead();
+        Bottle* action_btl = m_action_recognition_port.read(false);
+        if (action_btl && action_btl != last_read)
+        {
+            yCInfo(IDLE_MOTIONS, "ar read: %s", action_btl->toString().c_str());
+            if (action_btl->toString() == "hello")
+            {
+                if (m_use_ctpservice)
+                {
+                    string cmd = m_script_name + " wave &";
+
+                    int result = system(cmd.c_str());
+                    if(result != 0)
+                        yCError(IDLE_MOTIONS, "Missing 'wave' motion in .sh file" );
+                }
+                else
+                {
+                    string motion_name = move(-99); //wave
+                    yCInfo(IDLE_MOTIONS, "Motion: %s", motion_name.c_str() );
+                }
+                
+                m_ar_action_duration_s = 8;
+                m_last_movement = Time::now();  
+            }
+            else if (action_btl->toString() == "handshake")
+            {
+                if (m_use_ctpservice)
+                {
+                    string cmd = m_script_name + " handshake &";
+
+                    int result = system(cmd.c_str());
+                    if(result != 0)
+                        yCError(IDLE_MOTIONS, "Missing 'handshake' motion in .sh file" );
+                }
+                else
+                {
+                    string motion_name = move(-100); //handshake
+                    yCInfo(IDLE_MOTIONS, "Motion: %s", motion_name.c_str() );
+                }
+                
+                m_ar_action_duration_s = 9;
+                m_last_movement = Time::now(); 
+            }
+        }
+    }
 
     if (!m_dont_move && Time::now()-m_last_movement >= period_s)
     {

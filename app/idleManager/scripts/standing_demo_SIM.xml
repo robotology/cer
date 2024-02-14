@@ -36,6 +36,12 @@
         <name>idleManager</name>
         <parameters>--context idleManager --from idleManager_SIM.ini</parameters>
         <node>console</node>
-   </module>
+    </module>
+
+    <connection>
+        <from>/perception/action_recognition:o</from>
+        <to>/idleManager/idleMotions/action_recognition:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
 
 </application>

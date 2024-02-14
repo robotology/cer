@@ -24,12 +24,16 @@ IdleManager::IdleManager()
 {
     m_period = 0.5;
     m_rpc_port_name = "/idleManager/rpc"; 
+    m_orchestrator_rpc_port_name = "/r1Obr-orchestrator/rpc";
+    m_idle_to_orchestrator_rpc_port_name = "/idleManager/orchestrator:rpc";
 }
 
 bool IdleManager::configure(ResourceFinder &rf)
 {
     if(rf.check("period")) {m_period = rf.find("period").asFloat32();}
     if(rf.check("rpc_port")) {m_rpc_port_name = rf.find("rpc_port").asString();}
+    if(rf.check("orchestrator_rpc_port")) {m_orchestrator_rpc_port_name = rf.find("orchestrator_rpc_port").asString();}
+    if(rf.check("idle_to_orchestrator_rpc_port")) {m_idle_to_orchestrator_rpc_port_name = rf.find("idle_to_orchestrator_rpc_port").asString();}
 
     // ---------Open RPC Server Port --------- //
     if (!m_rpc_port.open(m_rpc_port_name))
@@ -40,6 +44,13 @@ bool IdleManager::configure(ResourceFinder &rf)
     if (!attach(m_rpc_port))
     {
         yCError(IDLE_MANAGER, "attach() error with rpc port %s", m_rpc_port_name.c_str());
+        return false;
+    }
+
+    // --------- Open RPC port to orchestrator --------- //
+    if(!m_idle_to_orchestrator_rpc_port.open(m_idle_to_orchestrator_rpc_port_name))
+    {
+        yCError(IDLE_MANAGER, "Unable to open IdleManager RPC port to orchestrator");
         return false;
     }
 
@@ -60,6 +71,9 @@ bool IdleManager::close()
 {
     if (m_rpc_port.asPort().isOpen())
         m_rpc_port.close();
+    
+    if (m_idle_to_orchestrator_rpc_port.asPort().isOpen())
+        m_idle_to_orchestrator_rpc_port.close(); 
 
     return true;
 }
@@ -67,6 +81,27 @@ bool IdleManager::close()
 
 bool IdleManager::updateModule()
 {    
+    if (Network::exists(m_orchestrator_rpc_port_name)) 
+    {
+        if (!Network::isConnected(m_idle_to_orchestrator_rpc_port.getName(), m_orchestrator_rpc_port_name))
+        {
+            if (!Network::connect(m_idle_to_orchestrator_rpc_port.getName(), m_orchestrator_rpc_port_name)) 
+            {
+                m_motions->dontMove();
+                return true;
+            }
+        }
+
+        Bottle req{"status"}, rep;
+        m_idle_to_orchestrator_rpc_port.write(req,rep);
+        if (rep.get(0).asString() != "idle")
+            m_motions->dontMove();
+        else
+            m_motions->nowYouCanMove();
+            
+    }
+    
+    
     return true;
 }
 

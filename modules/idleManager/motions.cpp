@@ -51,6 +51,12 @@ string IdleMotions::move(int motion_number)
         case 5: look_watch();
                 mot = "look_watch";
                 break;
+        case -99: wave();
+                mot = "wave";
+                break;
+        case -100: handshake();
+                mot = "handshake";
+                break;
         }
     
     return mot;
@@ -155,3 +161,23 @@ void IdleMotions::look_watch()
     Time::delay(2.5);
     go_home();
 };
+
+void IdleMotions::wave()
+{
+    double right_arm[8] = {17.25, 48.0, 44.2, 94.5, 0.0, 0.0, 0.0, 0.0}; m_iposctrl[0]->positionMove(right_arm); //right arm
+    Time::delay(3.0);
+    double right_arm1[8] = {17.25, 40.0, 44.2, 81.9, 0.0, 0.0, 0.0, 0.0}; m_iposctrl[0]->positionMove(right_arm1); //right arm
+    Time::delay(2.0);
+    go_home();
+}
+
+void IdleMotions::handshake()
+{
+    double right_arm[8] = {40.0, 12.44, -2.0, 52.18, 0.0, 0.0, 0.0, 0.0}; m_iposctrl[0]->positionMove(right_arm); //right arm
+    Time::delay(3.0);
+    double right_arm1[8] = {42.5, 12.44, -2.0, 53.087, 0.0, 0.0, 0.0, 0.0}; m_iposctrl[0]->positionMove(right_arm1); //right arm
+    Time::delay(1.5);
+    double right_arm2[8] = {40.0, 12.44, -2.0, 52.18, 0.0, 0.0, 0.0, 0.0}; m_iposctrl[0]->positionMove(right_arm2); //right arm
+    Time::delay(3.0);
+    go_home();
+}
