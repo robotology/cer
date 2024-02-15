@@ -15,6 +15,9 @@ source_group("Header Files" FILES ${folder_header})
 find_package(YARP REQUIRED COMPONENTS sig dev os math)
 include_directories(${ICUB_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}
+  PRIVATE
+    ${YARP_LIBRARIES} 
+    r1OrchestratorRPC)  #<----- COSA DEVO FARE PERCHE' QUESTA VENGA LETTA?
 set_property(TARGET idleManager PROPERTY FOLDER "Modules")
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
