@@ -46,6 +46,7 @@ private:
     int                 m_min_idle_time_s;
     double              m_last_movement = 0;
     bool                m_dont_move;
+    bool                m_user_stop;
     
     bool                m_ar_active;
     int                 m_ar_action_duration_s;
@@ -78,6 +79,7 @@ public:
     bool doMotion(int motion_number = -1);
     void dontMove();
     void nowYouCanMove();
+    void setUserStop(bool b);
 
     string move(int motion_number = -1);
     void arms_home();

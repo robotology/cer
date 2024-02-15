@@ -24,7 +24,7 @@ IdleManager::IdleManager()
 {
     m_period = 0.5;
     m_rpc_port_name = "/idleManager/rpc"; 
-    m_r1Orchestrator_server_port_name = "/r1Orchestrator/thrift:s";
+    m_r1Orchestrator_server_port_name = "/r1Obr-orchestrator/thrift:s";
     m_r1Orchestrator_client_port_name = "/idleManager/r1Orchestrator/thrift:c";
 }
 
@@ -128,10 +128,12 @@ bool IdleManager::respond(const Bottle &request, Bottle &reply)
     else if (cmd=="dontMove")
     {
         m_motions->dontMove();
+        m_motions->setUserStop(true);
     }
     else if (cmd=="okMove")
     {
         m_motions->nowYouCanMove();
+        m_motions->setUserStop(false);
     }
     else if (cmd=="move")
     {

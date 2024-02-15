@@ -155,7 +155,7 @@ echo ""
 
 $1
 
-if [[ $# -eq 0 ]] ; then
+if [ $# -eq 0 ] ; then
     echo "No options were passed!"
     echo ""
     usage

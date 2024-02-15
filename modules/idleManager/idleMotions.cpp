@@ -25,6 +25,7 @@ IdleMotions::IdleMotions(ResourceFinder &_rf, double _period) :
     PeriodicThread(_period),
     m_rf(_rf), 
     m_dont_move(false),
+    m_user_stop(false),
     m_ar_active(false)
 {
     m_robot = "cer";
@@ -274,6 +275,9 @@ void IdleMotions::dontMove(){m_dont_move=true;}
 void IdleMotions::nowYouCanMove(){m_dont_move=false;}
 
 // --------------------------------------------------------------- //
+void IdleMotions::setUserStop(bool b){m_user_stop=b;}
+
+// --------------------------------------------------------------- //
 void IdleMotions::threadRelease()
 {
     if(m_drivers[0].isValid())
@@ -360,15 +364,17 @@ void IdleMotions::run()
         }
     }
 
-    if (!m_dont_move && Time::now()-m_last_movement >= period_s)
+    if (!m_dont_move && !m_user_stop && Time::now()-m_last_movement >= period_s)
     {
         //Deactivating the control of the head via gaze-controller
-        Network::disconnect(m_port_to_gaze_controller,m_port_of_gaze_controller);
+        if (Network::exists(m_port_of_gaze_controller)) 
+            Network::disconnect(m_port_to_gaze_controller,m_port_of_gaze_controller);
 
         doMotion();
 
         //Re-activating the control of the head via gaze-controller
-        Network::connect(m_port_to_gaze_controller,m_port_of_gaze_controller);
+        if (Network::exists(m_port_of_gaze_controller)) 
+            Network::connect(m_port_to_gaze_controller,m_port_of_gaze_controller);
 
         m_last_movement = Time::now();
     }
