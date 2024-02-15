@@ -18,5 +18,9 @@ add_subdirectory(textimage)
 add_subdirectory(faceExpression)
 add_subdirectory(handPointing)
 add_subdirectory(imagePatternRecognition)
-add_subdirectory(idleManager)
+
+if(DEFINED ENV{R1_OBR_BUILD_DIR})
+    add_subdirectory(idleManager)
+endif()
+
 add_subdirectory(gesticulate)
