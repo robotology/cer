@@ -378,4 +378,7 @@ void IdleMotions::run()
 
         m_last_movement = Time::now();
     }
+
+    if (m_dont_move || m_user_stop)
+        m_last_movement = Time::now(); //so that the time count restarts when the robot is allowed to move
 }

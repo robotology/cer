@@ -63,6 +63,8 @@ bool IdleManager::configure(ResourceFinder &rf)
         return false;
     }
 
+    m_last_idle_time = Time::now();
+
     return true;
 
 }
@@ -94,12 +96,16 @@ bool IdleManager::updateModule()
         }
 
         if (m_r1OrchestratorRPC.status() != "idle")
+        {
             m_motions->dontMove();
-        else
+            m_last_idle_time = Time::now();
+        }
+        else if (Time::now()-m_last_idle_time >= 15) //waiting 15 seconds after the orchestrator became 'idle'
+        {
             m_motions->nowYouCanMove();
+        }
             
     }
-    
     
     return true;
 }

@@ -31,6 +31,7 @@ class IdleManager : public RFModule
 {
 private:
     double              m_period; 
+    double              m_last_idle_time = 0;
 
     IdleMotions*        m_motions;
     r1OrchestratorRPC   m_r1OrchestratorRPC;
