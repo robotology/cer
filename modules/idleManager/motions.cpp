@@ -17,49 +17,54 @@
  */
 
 #include "idleMotions.h"
+#include <map>
 
 YARP_LOG_COMPONENT(IDLE_MOTIONS_MOTIONS, "r1_obr.idleManager.idleMotions.motions")
 
-string IdleMotions::move(int motion_number) 
+bool IdleMotions::move(string motion) 
 {
-    if (motion_number == -1)
-        motion_number = rand() % 6;
-    else if (motion_number > 5)
-    {
-        yCError(IDLE_MOTIONS_MOTIONS) << "Motion number out of bounds";
-        return "OutOfBounds";
-    }
+    map<string, int> motions_map { 
+                    {"stretch_right_arm", 0}, 
+                    {"stretch_left_arm", 1}, 
+                    {"stretch_shoulders", 2}, 
+                    {"stretch_back", 3}, 
+                    {"look_gripper", 4}, 
+                    {"look_watch", 5}, 
+                    {"wave", -99},
+                    {"handshake", -100} };
     
-    string mot;
+    int motion_number = 0;
+    if (motion == "rand")
+    {
+        motion_number = rand() % motions_map.size() - 2 ; //2 is the number of the negative ints in motions_map
+        for(auto &it : motions_map) 
+        { 
+            if(it.second == motion_number) { motion = it.first; } 
+        } 
+    }
+    else 
+    {
+        if(motions_map.find(motion)!=motions_map.end())
+        {
+            yCError(IDLE_MOTIONS_MOTIONS) << "Motion asked does not exist";
+            return false;
+        }
+
+        motion_number = motions_map.at(motion);
+    }
 
     switch (motion_number) {
-        case 0: stretch_right_arm();
-                mot = "stretch_right_arm";
-                break;
-        case 1: stretch_left_arm();
-                mot = "stretch_left_arm";
-                break;
-        case 2: stretch_shoulders();
-                mot = "stretch_shoulders";
-                break;
-        case 3: stretch_back();
-                mot = "stretch_back";
-                break;
-        case 4: look_gripper();
-                mot = "look_gripper";
-                break;
-        case 5: look_watch();
-                mot = "look_watch";
-                break;
-        case -99: wave();
-                mot = "wave";
-                break;
-        case -100: handshake();
-                mot = "handshake";
-                break;
-        }
+        case 0: stretch_right_arm(); break;
+        case 1: stretch_left_arm(); break;
+        case 2: stretch_shoulders(); break;
+        case 3: stretch_back(); break;
+        case 4: look_gripper(); break;
+        case 5: look_watch(); break;
+        case -99: wave(); break;
+        case -100: handshake(); break;
+        } //if something like a map of functions exists, it could be better
     
-    return mot;
+    return true;
 }
 
 
@@ -181,3 +186,6 @@ void IdleMotions::handshake()
     Time::delay(3.0);
     go_home();
 }
+
+void IdleMotions::hello() {wave();}
+void IdleMotions::shake() {handshake();}

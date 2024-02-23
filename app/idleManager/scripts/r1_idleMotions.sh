@@ -138,6 +138,9 @@ wave() {
     go_home
 }
 
+hello() {wave}
+
+
 handshake() {
     echo "ctpq time 1.5 off 0 pos (40.0 12.44 -2.0 52.18 0.0)" | yarp rpc /ctpservice/right_arm/rpc
     echo "ctpq time 1.5 off 0 pos (42.5 12.44 -2.0 53.087 0.0)" | yarp rpc /ctpservice/right_arm/rpc
@@ -145,6 +148,8 @@ handshake() {
     echo "ctpq time 2.0 off 0 pos (40.0 12.44 -2.0 52.18 0.0)" | yarp rpc /ctpservice/right_arm/rpc
     go_home
 }
+
+shake() {handshake}
 
 
 #######################################################################################

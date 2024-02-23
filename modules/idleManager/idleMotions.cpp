@@ -35,7 +35,7 @@ IdleMotions::IdleMotions(ResourceFinder &_rf, double _period) :
     m_min_idle_time_s = 20;
     m_port_to_gaze_controller="/eyeContactManager/control:o";
     m_port_of_gaze_controller="/cer_gaze-controller/target:i";
-    m_ar_action_duration_s = 8;
+    m_ar_action_duration_s = 9;
 };
 
 
@@ -238,15 +238,18 @@ void IdleMotions::setCtrlMode(int ctrlMode)
 
 
 // --------------------------------------------------------------- //
-bool IdleMotions::doMotion(int motion_number)
+bool IdleMotions::doMotion(string motion_name)
 {      
     setCtrlMode(VOCAB_CM_POSITION);
-    
+    int motion_number;
+
     if(m_use_ctpservice)
     {
-        if(motion_number == -1)
+        if(motion_name == "rand")
+        {
             motion_number = rand() % m_number_of_possible_motions;
-        string motion_name = m_motions.at(motion_number);
+            motion_name = m_motions.at(motion_number);
+        }
         string command = m_script_name + " " + motion_name + " &";
         yCInfo(IDLE_MOTIONS, "Executing: %s", command.c_str() );
 
@@ -257,8 +260,7 @@ bool IdleMotions::doMotion(int motion_number)
     }
     else
     {
-        string motion_name = move(motion_number);
-        if (motion_name == "OutOfBounds")
+        if (!move(motion_name))
             return false;
 
         yCInfo(IDLE_MOTIONS, "Motion: %s", motion_name.c_str() );
@@ -323,54 +325,36 @@ void IdleMotions::run()
         if (action_btl && action_btl != last_read)
         {
             yCInfo(IDLE_MOTIONS, "ar read: %s", action_btl->toString().c_str());
-            if (action_btl->toString() == "hello")
+            string motion_name = action_btl->toString();
+            
+            if (m_use_ctpservice)
             {
-                if (m_use_ctpservice)
-                {
-                    string cmd = m_script_name + " wave &";
+                string cmd = m_script_name + " " + motion_name + " &";
 
-                    int result = system(cmd.c_str());
-                    if(result != 0)
-                        yCError(IDLE_MOTIONS, "Missing 'wave' motion in .sh file" );
-                }
-                else
-                {
-                    string motion_name = move(-99); //wave
-                    yCInfo(IDLE_MOTIONS, "Motion: %s", motion_name.c_str() );
-                }
-                
-                m_ar_action_duration_s = 8;
-                m_last_movement = Time::now();  
+                int result = system(cmd.c_str());
+                if(result != 0)
+                    yCError(IDLE_MOTIONS, "Missing '%s' motion in .sh file", motion_name.c_str() );
+                else 
+                    yCInfo(IDLE_MOTIONS, "Executing: %s", motion_name.c_str());
             }
-            else if (action_btl->toString() == "handshake")
+            else
             {
-                if (m_use_ctpservice)
-                {
-                    string cmd = m_script_name + " handshake &";
-
-                    int result = system(cmd.c_str());
-                    if(result != 0)
-                        yCError(IDLE_MOTIONS, "Missing 'handshake' motion in .sh file" );
-                }
-                else
-                {
-                    string motion_name = move(-100); //handshake
-                    yCInfo(IDLE_MOTIONS, "Motion: %s", motion_name.c_str() );
-                }
-                
-                m_ar_action_duration_s = 9;
-                m_last_movement = Time::now(); 
+                if(!move(motion_name))    
+                    yCError(IDLE_MOTIONS, "Error doing motion: %s", motion_name.c_str() );
+                else 
+                    yCInfo(IDLE_MOTIONS, "Motion: %s", motion_name.c_str());
             }
+            
+            m_last_movement = Time::now();  
         }
     }
-
-    if (!m_dont_move && !m_user_stop && Time::now()-m_last_movement >= period_s)
+    else if (!m_dont_move && !m_user_stop && Time::now()-m_last_movement >= period_s)
     {
         //Deactivating the control of the head via gaze-controller
         if (Network::exists(m_port_of_gaze_controller)) 
             Network::disconnect(m_port_to_gaze_controller,m_port_of_gaze_controller);
 
-        doMotion();
+        doMotion("rand");
 
         //Re-activating the control of the head via gaze-controller
         if (Network::exists(m_port_of_gaze_controller)) 

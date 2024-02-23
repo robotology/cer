@@ -76,12 +76,12 @@ public:
     void onRead(Bottle& b) override;
 
     void setCtrlMode(int ctrlMode);
-    bool doMotion(int motion_number = -1);
+    bool doMotion(string motion = "rand");
     void dontMove();
     void nowYouCanMove();
     void setUserStop(bool b);
 
-    string move(int motion_number = -1);
+    bool move(string motion = "rand");
     void arms_home();
     void head_home();
     void torso_home();
@@ -94,6 +94,8 @@ public:
     void look_watch();
     void wave();
     void handshake();
+    void hello();
+    void shake();
 
 };
 

@@ -127,7 +127,7 @@ bool IdleManager::respond(const Bottle &request, Bottle &reply)
         reply.addVocab32("many");
         reply.addString("help : gets this list");
         reply.addString("move : executes a random motion");
-        reply.addString("move <int>: executes the motion defined");
+        reply.addString("move <string>: executes the motion defined");
         reply.addString("dontMove : the robot cannot execute motions autonomously");
         reply.addString("okMove : the robot can execute motions autonomously");
     }
@@ -143,9 +143,9 @@ bool IdleManager::respond(const Bottle &request, Bottle &reply)
     }
     else if (cmd=="move")
     {
-        int mot=-1;
+        string mot="rand";
         if(request.size()>1)
-            mot = request.get(1).asInt16();
+            mot = request.get(1).asString();
         
         if(!m_motions->doMotion(mot))
         {
