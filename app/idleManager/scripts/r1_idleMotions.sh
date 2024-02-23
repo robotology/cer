@@ -138,7 +138,9 @@ wave() {
     go_home
 }
 
-hello() {wave}
+hello() {
+    wave
+    }
 
 
 handshake() {
@@ -149,20 +151,30 @@ handshake() {
     go_home
 }
 
-shake() {handshake}
+shake() {
+    handshake
+    }
 
 
 #######################################################################################
 # "MAIN" FUNCTION:                                                                    #
 #######################################################################################
-echo "********************************************************************************"
-echo ""
-
-$1
 
 if [ $# -eq 0 ] ; then
     echo "No options were passed!"
     echo ""
     usage
+    exit 1
+fi
+
+echo "Asked to execute : $1"
+echo ""
+
+if [ "$(type -t $1)" == function ] ; then
+    echo "Executing motion '$1'"
+    $1
+    exit 0
+else
+    echo "The motion '$1' has not been defined"
     exit 1
 fi

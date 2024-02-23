@@ -35,7 +35,7 @@ IdleMotions::IdleMotions(ResourceFinder &_rf, double _period) :
     m_min_idle_time_s = 20;
     m_port_to_gaze_controller="/eyeContactManager/control:o";
     m_port_of_gaze_controller="/cer_gaze-controller/target:i";
-    m_ar_action_duration_s = 9;
+    m_ar_action_duration_s = 6;
 };
 
 
@@ -318,7 +318,7 @@ void IdleMotions::run()
     int extra_idle_time_s = rand() % 10;
     int period_s = m_min_idle_time_s + extra_idle_time_s;
 
-    if (!m_dont_move && m_ar_active && Time::now()-m_last_movement >= m_ar_action_duration_s)
+    if (!m_dont_move && !m_user_stop && m_ar_active && Time::now()-m_last_movement >= m_ar_action_duration_s)
     {
         Bottle* last_read = m_action_recognition_port.lastRead();
         Bottle* action_btl = m_action_recognition_port.read(false);
@@ -335,20 +335,25 @@ void IdleMotions::run()
                 if(result != 0)
                     yCError(IDLE_MOTIONS, "Missing '%s' motion in .sh file", motion_name.c_str() );
                 else 
+                {
                     yCInfo(IDLE_MOTIONS, "Executing: %s", motion_name.c_str());
+                    m_last_movement = Time::now();  
+                }
             }
             else
             {
                 if(!move(motion_name))    
-                    yCError(IDLE_MOTIONS, "Error doing motion: %s", motion_name.c_str() );
+                    yCError(IDLE_MOTIONS, "Error during motion: %s", motion_name.c_str() );
                 else 
+                {
                     yCInfo(IDLE_MOTIONS, "Motion: %s", motion_name.c_str());
-            }
-            
-            m_last_movement = Time::now();  
+                    m_last_movement = Time::now();  
+                }
+            }            
         }
     }
-    else if (!m_dont_move && !m_user_stop && Time::now()-m_last_movement >= period_s)
+    
+    if (!m_dont_move && !m_user_stop && Time::now()-m_last_movement >= period_s)
     {
         //Deactivating the control of the head via gaze-controller
         if (Network::exists(m_port_of_gaze_controller)) 

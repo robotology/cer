@@ -45,8 +45,8 @@ private:
     bool                m_use_ctpservice;
     int                 m_min_idle_time_s;
     double              m_last_movement = 0;
-    bool                m_dont_move;
-    bool                m_user_stop;
+    bool                m_dont_move; 
+    bool                m_user_stop; //changes value only via rpc command
     
     bool                m_ar_active;
     int                 m_ar_action_duration_s;
