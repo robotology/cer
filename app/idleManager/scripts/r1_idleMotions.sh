@@ -8,7 +8,7 @@ usage() {
 cat << EOF
 
 ***************************************************************************************
-R1 GREETING SCRIPTING
+R1 IDLE MOTIONS
 
 This script scripts through the commands available for the navigation of R1
 
@@ -170,11 +170,13 @@ fi
 echo "Asked to execute : $1"
 echo ""
 
-if [ "$(type -t $1)" == function ] ; then
-    echo "Executing motion '$1'"
-    $1
+# Check if the argument is a function
+if [ "$(type "$1" 2>/dev/null)" ]; then
+    echo "Executing '$1'"
+    "$1"
     exit 0
 else
-    echo "The motion '$1' has not been defined"
+    echo "'$1' has not been defined or is not a function"
     exit 1
 fi
+
