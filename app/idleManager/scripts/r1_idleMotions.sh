@@ -27,6 +27,7 @@ OPTIONS:
         stretch_shoulders
         look_gripper
         look_watch
+        yawn
 ***************************************************************************************
 EXAMPLE USAGE:
 
@@ -131,6 +132,18 @@ look_watch() {
     sleep 1.5
     go_home
 }
+
+yawn() {
+    echo "ctpq time 1.5 off 0 pos (-3.0 -23.4)" | yarp rpc /ctpservice/head/rpc
+    echo "ctpq time 2.5 off 0 pos (75.90 75.20 -44.20 94.50 0.0)" | yarp rpc /ctpservice/left_arm/rpc
+    echo "ctpq time 2.5 off 0 pos (75.90 75.20 -44.20 94.50 0.0)" | yarp rpc /ctpservice/right_arm/rpc
+    sleep 2.0
+    echo "ctpq time 3.0 off 0 pos (-2.30 46.40 -40.80 5.40 0.00)" | yarp rpc /ctpservice/left_arm/rpc
+    echo "ctpq time 3.0 off 0 pos (-2.30 46.40 -40.80 5.40 0.00)" | yarp rpc /ctpservice/right_arm/rpc
+    sleep 3.0
+    go_home
+}
+
 
 wave() {
     echo "ctpq time 3.0 off 0 pos (17.25 48.0 44.2 94.5 0.0)" | yarp rpc /ctpservice/right_arm/rpc
