@@ -320,9 +320,8 @@ void IdleMotions::run()
 
     if (!m_dont_move && !m_user_stop && m_ar_active && Time::now()-m_last_movement >= m_ar_action_duration_s)
     {
-        Bottle* last_read = m_action_recognition_port.lastRead();
         Bottle* action_btl = m_action_recognition_port.read(false);
-        if (action_btl && action_btl != last_read)
+        if (action_btl && action_btl->toString() != "none")
         {
             yCInfo(IDLE_MOTIONS, "ar read: %s", action_btl->toString().c_str());
             string motion_name = action_btl->toString();
