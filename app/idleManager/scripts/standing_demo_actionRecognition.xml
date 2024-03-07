@@ -92,7 +92,7 @@
 
   <module>
     <name>LLMStream</name>
-    <node>/console2</node>
+    <node>console2</node>
   </module>
     
 
