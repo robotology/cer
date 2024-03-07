@@ -48,9 +48,23 @@
 
   <module>
     <name>yarprobotinterface</name>
-    <parameters>--config yarp_audio_from_mic.xml</parameters>
+    <parameters>--config micAudio.xml</parameters>
     <workdir>/home/r1-user</workdir>
     <node>r1-torso</node>
+  </module>
+
+   <module>
+    <name>voiceActivationDetection</name>
+    <parameters></parameters>
+    <environment>YARP_LOG_PROCESS_LABEL=VAD</environment>
+    <node>console3</node>
+  </module>
+
+  <module>
+    <name>wakeWordDetection</name>
+    <parameters></parameters>
+    <environment>YARP_LOG_PROCESS_LABEL=WAKE-WORD</environment>
+    <node>console3</node>
   </module>
 
   <module>
@@ -72,26 +86,14 @@
   </module>
 
   <module>
-    <name>joystickCtrl</name>
-    <parameters>--from joystick_trigger_8bitdo.ini --silent</parameters>
-    <workdir>/usr/local/src/robot/assistive-rehab/build/share/ICUBcontrib/contexts/AssistiveRehab</workdir>
-    <node>pc</node>
-  </module>
-
-  <module>
-    <name>micActivation</name>
+    <name>yarprobotinterface</name>
+    <parameters>--context idleManager --config LLMDevice.ini</parameters>
     <node>console</node>
   </module>
 
   <module>
-    <name>yarprobotinterface</name>
-    <parameters>--config LLMDevice.xml</parameters>
-    <workdir>/home/user/yarp-devices-llm/assets</workdir>
-    <node>console2</node>
-  </module>
-
-  <module>
     <name>LLMStream</name>
+    <parameters>--remote /yarpgpt/rpc</parameters>
     <node>console2</node>
   </module>
     
@@ -104,11 +106,29 @@
     <protocol>fast_tcp</protocol>
   </connection>
   
+  <connection>
+      <from>/audioRecorder_nws/audio:o</from>
+      <to>/wake/audio:i</to>
+      <protocol>tcp+recv.portmonitor+file.soundfilter_resample+type.dll+channel.0+frequency.16000</protocol>
+   </connection>
+
    <connection>
-    <from>/audioRecorder_nws/audio:o</from>
-    <to>/speechTranscription_nws/sound:i</to>
-    <protocol>fast_tcp</protocol>
-  </connection>
+      <from>/wake/audio:o</from>
+      <to>/vad/audio:i</to>
+      <protocol>tcp+recv.portmonitor+file.soundfilter_resample+type.dll+channel.0+frequency.16000</protocol>
+   </connection>
+
+   <connection>
+      <from>/vad/audio:o</from>
+      <to>/speechTranscription_nws/sound:i</to>
+      <protocol>tcp+recv.portmonitor+file.soundfilter_resample+type.dll+channel.0+frequency.16000</protocol>
+   </connection>
+
+   <connection>
+      <from>/vad/rpc:o</from>
+      <to>/wake/rpc:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
   
   <connection>
     <from>/speechTranscription_nws/text:o</from>
@@ -127,13 +147,6 @@
     <to>/audioPlayerWrapper/audio:i</to>
     <protocol>fast_tcp</protocol>
   </connection>
-
-  <connection>
-    <from>/joystickCtrl/raw_axis:o</from>
-    <to>/micActivation/joystick:i</to>
-    <protocol>fast_tcp</protocol>
-   </connection>
-
 
   <dependencies>
   </dependencies>
