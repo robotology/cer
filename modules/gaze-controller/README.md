@@ -10,4 +10,4 @@ The request to the gaze controller must contain:
 
 ### Example
 
-`(control-frame gaze) (target-type image) (target-location 0.2 0.3 1.0)`
+`(control-frame gaze) (target-type image) (target-location (0.2 0.3 1.0))`

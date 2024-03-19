@@ -1,0 +1,30 @@
+<application>
+  <name>R1_gesticulate</name>
+
+  <module>
+    <name>gesticulate</name>
+    <node>console</node>
+  </module>
+
+  <connection>
+    <from>/gesticulate/larm:rpc</from>
+    <to>/ctpservice/left_arm/rpc</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/gesticulate/rarm:rpc</from>
+    <to>/ctpservice/right_arm/rpc</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+  
+  <connection>
+    <from>/audioPlayerWrapper/status:o</from>
+    <to>/gesticulate/audio:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <dependencies>
+  </dependencies>
+
+</application>
