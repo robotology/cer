@@ -16,3 +16,11 @@ add_subdirectory(tripodJoystickControl)
 add_subdirectory(robotJoystickControl)
 add_subdirectory(textimage)
 add_subdirectory(faceExpression)
+add_subdirectory(handPointing)
+add_subdirectory(imagePatternRecognition)
+
+if(DEFINED ENV{R1_OBR_BUILD_DIR})
+    add_subdirectory(idleManager)
+endif()
+
+add_subdirectory(gesticulate)

@@ -1,0 +1,47 @@
+<application>
+    <name>standing_demo_SIM</name>
+
+    <module>
+      <name>ros2</name>
+      <parameters>launch robot_state_publisher.launch.py use_sim_time:=true</parameters>
+      <workdir>/home/user1/tour-guide-robot/app/navigation2/launch/</workdir>
+      <node>console</node>
+   </module>
+   
+    <module>
+        <name>ctpService</name>
+        <parameters>--robot SIM_CER_ROBOT --part left_arm</parameters>
+        <node>console</node>
+    </module>
+
+    <module>
+        <name>ctpService</name>
+        <parameters>--robot SIM_CER_ROBOT --part right_arm</parameters>
+        <node>console</node>
+    </module>
+
+    <module>
+        <name>ctpService</name>
+        <parameters>--robot SIM_CER_ROBOT --part torso</parameters>
+        <node>console</node>
+    </module>
+
+    <module>
+        <name>ctpService</name>
+        <parameters>--robot SIM_CER_ROBOT --part head</parameters>
+        <node>console</node>
+    </module>
+    
+    <module>
+        <name>idleManager</name>
+        <parameters>--context idleManager --from idleManager_SIM.ini</parameters>
+        <node>console</node>
+    </module>
+
+    <connection>
+        <from>/perception/action_recognition:o</from>
+        <to>/idleManager/idleMotions/action_recognition:i</to>
+        <protocol>fast_tcp</protocol>
+    </connection>
+
+</application>

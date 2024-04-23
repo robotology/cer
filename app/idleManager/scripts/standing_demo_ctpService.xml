@@ -1,0 +1,135 @@
+<application>
+  <name>standing_demo_ctpService</name>
+
+  <application>
+    <name>Navigation_ROS2_R1SN003</name>
+    <prefix></prefix>
+  </application>
+
+  <application>
+    <name>headSynchronizer</name>
+    <prefix></prefix>
+  </application>
+
+  <application>
+    <name>open_pose_stuff</name>
+    <prefix></prefix>
+  </application>
+
+  <module>
+    <name>idleManager</name>
+    <parameters>--context idleManager --from idleManager_ctpservice.ini</parameters>
+    <node>console</node>
+  </module>
+
+  <module>
+    <name>ctpService</name>
+    <parameters>--robot cer --part left_arm</parameters>
+    <node>console</node>
+  </module>
+
+  <module>
+    <name>ctpService</name>
+    <parameters>--robot cer --part right_arm</parameters>
+    <node>console</node>
+  </module>
+
+  <module>
+    <name>ctpService</name>
+    <parameters>--robot cer --part torso</parameters>
+    <node>console</node>
+  </module>
+  
+  <module>
+    <name>ctpService</name>
+    <parameters>--robot cer --part head</parameters>
+    <node>console</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config yarp_audio_from_mic.xml</parameters>
+    <workdir>/home/r1-user</workdir>
+    <node>r1-torso</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--context vadModule --from audioPlayer.ini</parameters>
+    <node>r1-face</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--context google --from googleSpeechToText.ini</parameters>
+    <node>console1</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--context google --from googleSynthesizer.ini</parameters>
+    <node>console1</node>
+  </module>
+
+  <module>
+    <name>joystickCtrl</name>
+    <parameters>--from joystick_trigger_8bitdo.ini --silent</parameters>
+    <workdir>/usr/local/src/robot/assistive-rehab/build/share/ICUBcontrib/contexts/AssistiveRehab</workdir>
+    <node>pc</node>
+  </module>
+
+  <module>
+    <name>micActivation</name>
+    <node>console</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config LLMDevice.xml</parameters>
+    <workdir>/home/user/yarp-devices-llm/assets</workdir>
+    <node>console2</node>
+  </module>
+
+  <module>
+    <name>LLMStream</name>
+    <node>/console2</node>
+  </module>
+    
+
+
+
+  <connection>
+    <from>/audioRecorder_nws/audio:o</from>
+    <to>/speechTranscription_nws/sound:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+  
+  <connection>
+    <from>/speechTranscription_nws/text:o</from>
+    <to>/LLMStream/text:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/LLMStream/text:o</from>
+    <to>/speechSynthesizer_nws/text:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/speechSynthesizer_nws/sound:o</from>
+    <to>/audioPlayerWrapper/audio:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/joystickCtrl/raw_axis:o</from>
+    <to>/micActivation/joystick:i</to>
+    <protocol>fast_tcp</protocol>
+   </connection>
+
+
+  <dependencies>
+  </dependencies>
+
+</application>

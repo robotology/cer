@@ -1,0 +1,154 @@
+<application>
+  <name>standing_demo_actionRecognition</name>
+
+  <application>
+    <name>Navigation_ROS2_R1SN003</name>
+    <prefix></prefix>
+  </application>
+
+  <application>
+    <name>headSynchronizer</name>
+    <prefix></prefix>
+  </application>
+
+  <application>
+    <name>open_pose_stuff</name>
+    <prefix></prefix>
+  </application>
+
+  <module>
+    <name>idleManager</name>
+    <parameters>--context idleManager --from idleManager_ctpservice.ini</parameters>
+    <node>console</node>
+  </module>
+
+  <module>
+    <name>ctpService</name>
+    <parameters>--robot cer --part left_arm</parameters>
+    <node>console</node>
+  </module>
+
+  <module>
+    <name>ctpService</name>
+    <parameters>--robot cer --part right_arm</parameters>
+    <node>console</node>
+  </module>
+
+  <module>
+    <name>ctpService</name>
+    <parameters>--robot cer --part torso</parameters>
+    <node>console</node>
+  </module>
+  
+  <module>
+    <name>ctpService</name>
+    <parameters>--robot cer --part head</parameters>
+    <node>console</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--config micAudio.xml</parameters>
+    <workdir>/home/r1-user</workdir>
+    <node>r1-torso</node>
+  </module>
+
+   <module>
+    <name>voiceActivationDetection</name>
+    <parameters></parameters>
+    <environment>YARP_LOG_PROCESS_LABEL=VAD</environment>
+    <node>console3</node>
+  </module>
+
+  <module>
+    <name>wakeWordDetection</name>
+    <parameters></parameters>
+    <environment>YARP_LOG_PROCESS_LABEL=WAKE-WORD</environment>
+    <node>console3</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--context vadModule --from audioPlayer.ini</parameters>
+    <node>r1-face</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--context google --from googleSpeechToText.ini</parameters>
+    <node>console1</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--context google --from googleSynthesizer.ini</parameters>
+    <node>console1</node>
+  </module>
+
+  <module>
+    <name>yarprobotinterface</name>
+    <parameters>--context idleManager --config LLMDevice.ini</parameters>
+    <node>console</node>
+  </module>
+
+  <module>
+    <name>LLMStream</name>
+    <parameters>--remote /yarpgpt/rpc</parameters>
+    <node>console2</node>
+  </module>
+    
+
+  <!-- connections -->
+
+  <connection>
+    <from>/perception/action_recognition:o</from>
+    <to>/idleManager/idleMotions/action_recognition:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+  
+  <connection>
+      <from>/audioRecorder_nws/audio:o</from>
+      <to>/wake/audio:i</to>
+      <protocol>tcp+recv.portmonitor+file.soundfilter_resample+type.dll+channel.0+frequency.16000</protocol>
+   </connection>
+
+   <connection>
+      <from>/wake/audio:o</from>
+      <to>/vad/audio:i</to>
+      <protocol>tcp+recv.portmonitor+file.soundfilter_resample+type.dll+channel.0+frequency.16000</protocol>
+   </connection>
+
+   <connection>
+      <from>/vad/audio:o</from>
+      <to>/speechTranscription_nws/sound:i</to>
+      <protocol>tcp+recv.portmonitor+file.soundfilter_resample+type.dll+channel.0+frequency.16000</protocol>
+   </connection>
+
+   <connection>
+      <from>/vad/rpc:o</from>
+      <to>/wake/rpc:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
+  
+  <connection>
+    <from>/speechTranscription_nws/text:o</from>
+    <to>/LLMStream/text:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/LLMStream/text:o</from>
+    <to>/speechSynthesizer_nws/text:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <connection>
+    <from>/speechSynthesizer_nws/sound:o</from>
+    <to>/audioPlayerWrapper/audio:i</to>
+    <protocol>fast_tcp</protocol>
+  </connection>
+
+  <dependencies>
+  </dependencies>
+
+</application>
