@@ -69,6 +69,7 @@ public:
 class Controller : public RFModule
 {
     PolyDriver        drivers[3];
+    std::array<std::string, 3> driversPartName; // Dirty way to overcome the removal of the getValue method from yarp::dev::PolyDriver class
     IEncodersTimed*   ienc[3];
     IControlMode*     imod;
     IPositionControl* ipos;
@@ -80,7 +81,7 @@ class Controller : public RFModule
     map<string,HeadSolver> solver;
     map<string,Matrix> intrinsics;
     minJerkTrajGen* gen;
-    
+
     BufferedPort<Property> statePort;
     TargetPort targetPort;
     RpcServer rpcPort;
@@ -123,9 +124,9 @@ class Controller : public RFModule
                     K(1,1)=group.find("fy").asFloat64();
                     K(0,2)=group.find("cx").asFloat64();
                     K(1,2)=group.find("cy").asFloat64();
-                    
+
                     yInfo("%s",K.toString(3,3).c_str());
-                    intrinsics[camera]=pinv(K.transposed()).transposed(); 
+                    intrinsics[camera]=pinv(K.transposed()).transposed();
                     ok=true;
                 }
             }
@@ -188,12 +189,12 @@ class Controller : public RFModule
                 imod->setControlModes(posDirectMode.data());
                 break;
             }
-        }        
+        }
     }
 
     /****************************************************************/
     void stopControl()
-    {        
+    {
         ipos->stop();
         controlling=false;
     }
@@ -220,7 +221,7 @@ class Controller : public RFModule
     {
         for (map<string,HeadSolver>::iterator it=solver.begin();
              it!=solver.end(); it++)
-        {            
+        {
             yInfo("##### Aligning joints bounds for control frame \"%s\"",
                   it->first.c_str());
             HeadSolver &s=it->second;
@@ -228,7 +229,6 @@ class Controller : public RFModule
             HeadParameters p=s.getHeadParameters();
             iKinChain &chain=*p.head.asChain();
             Matrix lim;
-            Value part;
 
             getBounds(drivers[1],lim);
             p.torso.l_min=lim(0,0);
@@ -238,12 +238,10 @@ class Controller : public RFModule
             chain[0].setMin(CTRL_DEG2RAD*lim(3,0));
             chain[0].setMax(CTRL_DEG2RAD*lim(3,1));
 
-            part=drivers[1].getValue("remote");
             yInfo("limits of %s part: heave=[%g,%g] [m], [pitch,roll]=[%g,%g] [deg], yaw=[%g,%g] [deg]",
-                  part.asString().c_str(),p.torso.l_min,p.torso.l_max,-p.torso.alpha_max,p.torso.alpha_max,lim(3,0),lim(3,1));
+                  driversPartName[1].c_str(),p.torso.l_min,p.torso.l_max,-p.torso.alpha_max,p.torso.alpha_max,lim(3,0),lim(3,1));
 
             getBounds(drivers[2],lim);
-            part=drivers[2].getValue("remote");
 
             for (int i=0; i<2; i++)
             {
@@ -251,7 +249,7 @@ class Controller : public RFModule
                 chain[1+i].setMax(CTRL_DEG2RAD*lim(i,1));
 
                 yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                      part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                      driversPartName[2].c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
                       CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
@@ -279,7 +277,6 @@ class Controller : public RFModule
     void applyCustomJointsBounds(const Bottle *pitchLim,
                                  const Bottle *yawLim)
     {
-        Value part=drivers[2].getValue("remote");
         for (map<string,HeadSolver>::iterator it=solver.begin();
              it!=solver.end(); it++)
         {
@@ -288,7 +285,7 @@ class Controller : public RFModule
             HeadSolver &s=it->second;
 
             HeadParameters p=s.getHeadParameters();
-            iKinChain &chain=*p.head.asChain();            
+            iKinChain &chain=*p.head.asChain();
 
             int i=0;
             if (pitchLim!=NULL)
@@ -312,7 +309,7 @@ class Controller : public RFModule
 
                 if (doPrint)
                     yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                          part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                          driversPartName[2].c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
                           CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
@@ -338,7 +335,7 @@ class Controller : public RFModule
 
                 if (doPrint)
                     yInfo("limits of %s part: joint %d=[%g,%g] [deg]",
-                          part.asString().c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
+                          driversPartName[2].c_str(),i,CTRL_RAD2DEG*chain[1+i].getMin(),
                           CTRL_RAD2DEG*chain[1+i].getMax());
             }
 
@@ -387,7 +384,7 @@ public:
             HeadParameters p(frame);
             solver[frame].setHeadParameters(p);
         }
-        control_frame="gaze"; 
+        control_frame="gaze";
     }
 
     /****************************************************************/
@@ -413,13 +410,14 @@ public:
 
         option.put("device","remote_controlboard");
         option.put("remote","/"+robot+"/torso_tripod");
-        option.put("local","/cer_gaze-controller/torso_tripod"); 
+        option.put("local","/cer_gaze-controller/torso_tripod");
         if (!drivers[0].open(option))
         {
             yError("Unable to connect to %s",("/"+robot+"/torso_tripod").c_str());
             close();
             return false;
         }
+        driversPartName[0] = option.find("remote").asString();
 
         option.clear();
         option.put("device","remote_controlboard");
@@ -431,6 +429,7 @@ public:
             close();
             return false;
         }
+        driversPartName[1] = option.find("remote").asString();
 
         option.clear();
         option.put("device","remote_controlboard");
@@ -443,6 +442,7 @@ public:
             close();
             return false;
         }
+        driversPartName[2] = option.find("remote").asString();
 
         drivers[0].view(ienc[0]);
         drivers[1].view(ienc[1]);
@@ -506,17 +506,17 @@ public:
             stopControl();
 
         if (!targetPort.isClosed())
-            targetPort.close(); 
+            targetPort.close();
 
         if (!statePort.isClosed())
             statePort.close();
 
         if (!rpcPort.asPort().isOpen())
-            rpcPort.close(); 
-        
+            rpcPort.close();
+
         for (int i=0; i<3; i++)
             if (drivers[i].isValid())
-                drivers[i].close(); 
+                drivers[i].close();
 
         delete gen;
         return true;
@@ -549,12 +549,12 @@ public:
             string control_frame_=request.find("control-frame").asString();
             const set<string>::iterator it=avFrames.find(control_frame_);
             if (it==avFrames.end())
-                yError("Unrecognized control frame type \"%s\"!",control_frame_.c_str());                
+                yError("Unrecognized control frame type \"%s\"!",control_frame_.c_str());
             else
                 control_frame=control_frame_;
         }
 
-        bool doControl=false;        
+        bool doControl=false;
         Vector xd(3);
         Vector q;
 
@@ -613,15 +613,15 @@ public:
                 yError("Unrecognized image type \"%s\"!",image.c_str());
             else if (intrinsics.find(image)==intrinsics.end())
                 yError("Intrinsics not configured for image type \"%s\"!",image.c_str());
-            else 
-            {                    
+            else
+            {
                 if (target_location->size()>=2)
                 {
                     Vector p(3,1.0);
                     if (target_location->size()>=3)
                         p[2]=target_location->get(2).asFloat64();
 
-                    p[0]=p[2]*target_location->get(0).asFloat64(); 
+                    p[0]=p[2]*target_location->get(0).asFloat64();
                     p[1]=p[2]*target_location->get(1).asFloat64();
 
                     Matrix Hee;
@@ -666,11 +666,11 @@ public:
     bool updateModule()
     {
         lock_guard<mutex> lg(mtx);
-        getCurrentMode();        
+        getCurrentMode();
 
         double timeStamp;
         Vector q=getEncoders(&timeStamp);
-     
+
         if (timeStamp>=0.0)
             txInfo.update(timeStamp);
         else
@@ -690,7 +690,7 @@ public:
 
             if (areJointsHealthy())
             {
-                setPositionDirectMode(); 
+                setPositionDirectMode();
                 iposd->setPositions(ref.data());
 
                 Vector q_=q.subVector(4,5);
@@ -704,7 +704,7 @@ public:
             else
             {
                 yWarning("Detected joints in HW_FAULT and/or IDLE => stopping control");
-                stopControl();                
+                stopControl();
             }
         }
 
@@ -796,7 +796,7 @@ public:
                     lock_guard<mutex> lg(mtx);
                     Vector pitchLim,yawLim;
                     getJointsBounds(pitchLim,yawLim);
-                    reply.addVocab32(Vocab32::encode("ack"));                    
+                    reply.addVocab32(Vocab32::encode("ack"));
                     reply.addList().read(pitchLim);
                 }
                 else if (cmd_1=="joints-limits::yaw")
@@ -804,7 +804,7 @@ public:
                     lock_guard<mutex> lg(mtx);
                     Vector pitchLim,yawLim;
                     getJointsBounds(pitchLim,yawLim);
-                    reply.addVocab32(Vocab32::encode("ack"));                    
+                    reply.addVocab32(Vocab32::encode("ack"));
                     reply.addList().read(yawLim);
                 }
             }
@@ -826,8 +826,8 @@ public:
         }
 
         if (reply.size()==0)
-            reply.addVocab32(Vocab32::encode("nack")); 
-        
+            reply.addVocab32(Vocab32::encode("nack"));
+
         return true;
     }
 };
@@ -850,7 +850,7 @@ int main(int argc, char *argv[])
         yError("YARP server not available!");
         return 1;
     }
-    
+
     ResourceFinder rf;
     rf.configure(argc,argv);
 

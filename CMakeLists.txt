@@ -19,7 +19,8 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 find_package(YCM)
-find_package(YARP 3.7 REQUIRED COMPONENTS os sig dev math rosmsg idl_tools)
+find_package(YARP 3.7 REQUIRED COMPONENTS os sig dev math idl_tools)
+find_package(YARP_rosmsg)
 
 find_package(ICUB REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
@@ -76,7 +77,7 @@ install_basic_package_files(${PROJECT_NAME} VARS_PREFIX ${VARS_PREFIX}
                                             VERSION ${${VARS_PREFIX}_VERSION}
                                             COMPATIBILITY AnyNewerVersion
                                             TARGETS_PROPERTY ${VARS_PREFIX}_TARGETS
-                                            DEPENDENCIES "YARP 3.3.0 REQUIRED COMPONENTS os sig dev math rosmsg idl_tools" "ICUB REQUIRED"
+                                            DEPENDENCIES "YARP 3.3.0 REQUIRED COMPONENTS os sig dev math idl_tools" "ICUB REQUIRED"
                                             NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
 include(AddUninstallTarget)

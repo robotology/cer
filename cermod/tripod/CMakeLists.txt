@@ -6,7 +6,7 @@ yarp_prepare_plugin(tripodMotionControl
                     CATEGORY device
                     TYPE cer::dev::tripodMotionControl
                     INCLUDE tripodMotionControl.h
-                    WRAPPER controlboardwrapper2)
+                    WRAPPER controlboard_nws_yarp)
 
 if(ENABLE_cermod_tripodMotionControl)
 

@@ -26,6 +26,8 @@
 
 using namespace yarp::sig;
 using namespace yarp::math;
+
+#ifdef ROS_MSG
 using namespace yarp::rosmsg;
 
 void ControlThread::updateRVIZ(const Vector &xd, const Vector &od)
@@ -119,6 +121,7 @@ void ControlThread::updateRVIZ(const Vector &xd, const Vector &od)
     */
     rosPublisherPort.write();
 }
+#endif
 
 void ControlThread::reachingHandler(string arm_type, const bool b, const Vector &pos, const Vector &rpy)
 {
@@ -147,8 +150,10 @@ void ControlThread::reachingHandler(string arm_type, const bool b, const Vector 
 
     goToPose(arm_type, xd, od);
     //updateGazebo(xd, od);
-    
+
+#ifdef ROS_MSG
     updateRVIZ(xd, od);
+#endif
 
    /* if (c0 != 0)
     {
@@ -351,7 +356,7 @@ void ControlThread::option1(double* axis)
         torso_vels[2] = torso_velC;
         interface_torso_tripod_iVel->velocityMove(torso_vels);
     }
-    
+
 
     //base control
     if (motors_enabled)
@@ -396,7 +401,7 @@ void ControlThread::getCartesianArmPositions(bool blocking)
         vo = yarp::math::dcm2rpy(m);
 #else
         vo[0] = vi[0]; vo[1] = vi[1]; vo[2] = vi[2];
-#endif 
+#endif
         current_rpy_left[0] = initial_rpy_left[0] = vo[0];
         current_rpy_left[1] = initial_rpy_left[1] = vo[1];
         current_rpy_left[2] = initial_rpy_left[2] = vo[2];
@@ -424,7 +429,7 @@ void ControlThread::getCartesianArmPositions(bool blocking)
         vo = yarp::math::dcm2rpy(m);
 #else
         vo[0] = vi[0]; vo[1] = vi[1]; vo[2] = vi[2];
-#endif 
+#endif
         current_rpy_right[0] = initial_rpy_right[0] = vo[0];
         current_rpy_right[1] = initial_rpy_right[1] = vo[1];
         current_rpy_right[2] = initial_rpy_right[2] = vo[2];
@@ -518,7 +523,7 @@ void ControlThread::run()
             return;
         }
     }
-    else 
+    else
     {
         //yDebug() <<" empty, nothing received from joy port";
         return;
@@ -559,6 +564,7 @@ bool ControlThread::threadInit()
 {
     error_status = false;
     bool autoconnect = false;
+#ifdef ROS_MSG
     rosNode = new yarp::os::Node(localName);
     if (!rosPublisherPort.topic(localName+"_marker"))
     {
@@ -566,7 +572,7 @@ bool ControlThread::threadInit()
         yWarning("Check your yarp-ROS network configuration");
         return false;
     }
-
+#endif
     //open the joystick port
     port_joystick_control.open(localName + "/joystick:i");
 
@@ -574,7 +580,7 @@ bool ControlThread::threadInit()
         if (rf.check("autoconnect"))
         {
             autoconnect = true;
-            int joystick_trials = 0; 
+            int joystick_trials = 0;
             do
             {
                 yarp::os::Time::delay(1.0);
@@ -597,7 +603,7 @@ bool ControlThread::threadInit()
             }
             while (1);
         }
-        
+
     // open the control board driver
     yInfo("Opening the motors interface...\n");
     int trials = 0;
@@ -923,11 +929,13 @@ void ControlThread::goToPose(string arm_type, const Vector &xd, const Vector &od
 
 void ControlThread::threadRelease()
 {
+#ifdef ROS_MSG
     if (rosNode)
     {
         delete rosNode;
         rosNode = 0;
     }
+#endif
 
     if (interface_torso_tripod_iCmd)
     {
