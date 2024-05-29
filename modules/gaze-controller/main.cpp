@@ -21,6 +21,7 @@
 #include <set>
 #include <map>
 #include <cmath>
+#include <array>
 #include <algorithm>
 
 #include <yarp/os/all.h>
