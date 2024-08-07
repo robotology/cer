@@ -1,0 +1,130 @@
+<application>
+   <name>R1_handPointing</name>
+
+   <dependencies>
+   </dependencies>
+
+   <!--              -->
+   <!--   MODULES    -->
+   <!--              -->
+
+   <!-- Gaze controller -->
+   <module>
+      <name>cer_gaze-controller</name>
+      <parameters>--cameras::context cameraCalibration --cameras::file cerEyes_640x480.ini --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+      <node>r1-base</node>
+   </module>
+
+   <!-- EE Target definition -->
+   <module>
+      <name>handPointing</name>
+      <parameters>--context handPointing --from handPointing_R1.ini</parameters>
+      <environment></environment>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>yarpview</name>
+      <parameters>--name /view/cameraView:i --out /view/cameraClick:o </parameters>
+      <node>console</node>
+   </module>
+   
+   <module>
+      <name>cer_reaching-solver</name>
+      <parameters>--robot cer --arm-type right --verbosity 1</parameters>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>cer_reaching-controller</name>
+      <parameters>--robot cer --arm-type right --verbosity 1 --T 1.0</parameters>
+      <node>console</node>
+   </module>
+   
+   <module>
+      <name>cer_reaching-solver</name>
+      <parameters>--robot cer --arm-type left --verbosity 1</parameters>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>cer_reaching-controller</name>
+      <parameters>--robot cer --arm-type left --verbosity 1 --T 1.0</parameters>
+      <node>console</node>
+   </module>
+
+   <!-- Set Navigation position -->
+   <module>
+      <name>./set_navigation_position.sh</name>
+      <parameters></parameters>
+      <workdir>/home/user1/tour-guide-robot/app/navigation2/scripts/</workdir>
+      <node>console</node>
+   </module>
+
+   <!-- Go Home Command -->
+   <module>
+      <name>./goHome.sh</name>
+      <parameters></parameters>
+      <workdir>/home/user1/robotology/cer/app/handPointing/scripts/</workdir>
+      <node>console</node>
+   </module>
+
+   <!--               -->
+   <!--  CONNECTIONS  -->
+   <!--               -->
+
+   <connection>
+      <from>/joystickCtrl:o</from>
+      <to>/baseControl/input/joystick:i</to>
+      <protocol>tcp+recv.portmonitor+type.dll+file.joy2vel</protocol>
+   </connection>
+
+   <connection>
+      <from>/cer/realsense_repeater/rgbImage:o</from>
+      <to>/view/cameraView:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/view/cameraClick:o</from>
+      <to>/handPointing/clicked_point:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/cer_reaching-controller/right/solver:rpc</from>
+      <to>/cer_reaching-solver/right/rpc</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/cer_reaching-controller/left/solver:rpc</from>
+      <to>/cer_reaching-solver/left/rpc</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/handPointing/r_target:o</from>
+      <to>/cer_reaching-controller/right/target:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/handPointing/l_target:o</from>
+      <to>/cer_reaching-controller/left/target:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/handPointing/gazeTarget:o</from>
+      <to>/cer_gaze-controller/target:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/handPointing/get_arm_home:o</from>
+      <to>/handPointing/go_home:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
+
+</application>

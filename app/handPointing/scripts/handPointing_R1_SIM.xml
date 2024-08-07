@@ -1,0 +1,130 @@
+<application>
+   <name>R1_handPointing_SIM</name>
+
+   <dependencies>
+   </dependencies>
+   
+   <!--              -->
+   <!--   MODULES    -->
+   <!--              -->
+
+   <!-- ROS2 Publisher -->
+   <module>
+      <name>ros2</name>
+      <parameters>launch robot_state_publisher.launch.py use_sim_time:=true</parameters>
+      <workdir>/home/user1/tour-guide-robot/app/navigation2/launch/</workdir>
+      <node>console</node>
+   </module>
+
+   <!-- Gaze controller -->
+   <module>
+      <name>cer_gaze-controller</name>
+      <parameters>--cameras::context cameraCalibration --cameras::file cerSimEyes_640x480.ini --robot SIM_CER_ROBOT --joints-limits::pitch "(-20.0 20.0)" --joints-limits::yaw "(-40.0 40.0)"</parameters>
+      <node>console</node>
+   </module>
+
+   <!-- Target definition -->
+   <module>
+      <name>handPointing</name>
+      <parameters>--context handPointing --from handPointing_R1_SIM.ini</parameters>
+      <environment></environment>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>yarpview</name>
+      <parameters>--name /view/cameraView:i --out /view/cameraClick:o </parameters>
+      <node>console</node>
+   </module>
+   
+   <module>
+      <name>cer_reaching-solver</name>
+      <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1</parameters>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>cer_reaching-controller</name>
+      <parameters>--robot SIM_CER_ROBOT --arm-type right --verbosity 1 --T 1.0</parameters>
+      <node>console</node>
+   </module>
+   
+   <module>
+      <name>cer_reaching-solver</name>
+      <parameters>--robot SIM_CER_ROBOT --arm-type left --verbosity 1</parameters>
+      <node>console</node>
+   </module>
+
+   <module>
+      <name>cer_reaching-controller</name>
+      <parameters>--robot SIM_CER_ROBOT --arm-type left --verbosity 1 --T 1.0</parameters>
+      <node>console</node>
+   </module>
+
+   <!-- Go Home Command -->
+   <module>
+      <name>./goHome.sh</name>
+      <parameters></parameters>
+      <workdir>/home/user1/robotology/cer/app/handPointing/scripts/</workdir>
+      <node>console</node>
+   </module>
+
+
+   <!--               -->
+   <!--  CONNECTIONS  -->
+   <!--               -->
+   <connection>
+      <from>/SIM_CER_ROBOT/depthCamera/rgbImage:o</from>
+      <to>/view/cameraView:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/view/cameraClick:o</from>
+      <to>/handPointing/clicked_point:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/cer_reaching-controller/right/solver:rpc</from>
+      <to>/cer_reaching-solver/right/rpc</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/cer_reaching-controller/left/solver:rpc</from>
+      <to>/cer_reaching-solver/left/rpc</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/handPointing/r_target:o</from>
+      <to>/cer_reaching-controller/right/target:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/handPointing/l_target:o</from>
+      <to>/cer_reaching-controller/left/target:i</to>
+      <protocol>tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/handPointing/get_arm_home:o</from>
+      <to>/handPointing/go_home:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/handPointing/gazeTarget:o</from>
+      <to>/cer_gaze-controller/target:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
+
+   <connection>
+      <from>/handPointing/get_arm_home:o</from>
+      <to>/handPointing/go_home:i</to>
+      <protocol>fast_tcp</protocol>
+   </connection>
+      
+</application>
