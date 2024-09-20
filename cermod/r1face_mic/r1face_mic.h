@@ -98,9 +98,15 @@ public:
      */
     virtual bool stopRecording() override;
 
-    virtual bool getRecordingAudioBufferMaxSize(yarp::dev::AudioBufferSize& size) override;
+    bool isRecording(bool& recording_enabled) override;
 
-    virtual bool getRecordingAudioBufferCurrentSize(yarp::dev::AudioBufferSize& size) override;
+    bool setSWGain(double gain) override;
+
+    bool setHWGain(double gain) override;
+
+    virtual bool getRecordingAudioBufferMaxSize(yarp::sig::AudioBufferSize& size) override;
+
+    virtual bool getRecordingAudioBufferCurrentSize(yarp::sig::AudioBufferSize& size) override;
 
     virtual bool resetRecordingAudioBuffer() override;
 
