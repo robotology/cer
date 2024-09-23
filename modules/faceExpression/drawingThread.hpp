@@ -16,8 +16,8 @@
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
-#include <yarp/dev/AudioRecorderStatus.h>
-#include <yarp/dev/AudioPlayerStatus.h>
+#include <yarp/sig/AudioRecorderStatus.h>
+#include <yarp/sig/AudioPlayerStatus.h>
 
 #define VOCAB_AUDIO_START       yarp::os::createVocab32('a','s','t','a')
 #define VOCAB_AUDIO_STOP        yarp::os::createVocab32('a','s','t','o')

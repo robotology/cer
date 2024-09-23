@@ -66,14 +66,14 @@ public:
 
     bool open(yarp::os::Searchable& config);
     bool close();
-    
+
     //IMultipleWrapper interface
     bool attachAll(const yarp::dev::PolyDriverList &p) override;
     bool detachAll() override;
-    
+
     //IRangefinder2D interface
     virtual bool getRawData          (yarp::sig::Vector& data, double* timestamp = nullptr) override;
-    virtual bool getLaserMeasurement (std::vector<yarp::dev::LaserMeasurementData>& data, double* timestamp = nullptr) override;
+    virtual bool getLaserMeasurement (std::vector<yarp::sig::LaserMeasurementData>& data, double* timestamp = nullptr) override;
     virtual bool setDistanceRange    (double min, double max) override;
     virtual bool setScanLimits        (double min, double max) override;
     virtual bool setHorizontalResolution      (double step) override;

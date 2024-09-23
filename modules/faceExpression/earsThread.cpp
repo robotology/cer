@@ -85,7 +85,7 @@ void EarsThread::run()
 
     float percentage = 0.5;
 
-    yarp::dev::AudioRecorderStatus* Rstatus = m_audioRecPort.read(false);
+    yarp::sig::AudioRecorderStatus* Rstatus = m_audioRecPort.read(false);
     if (Rstatus)
     {
         m_audioIsRecording=Rstatus->enabled;

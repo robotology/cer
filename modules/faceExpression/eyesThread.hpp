@@ -15,8 +15,8 @@
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/BufferedPort.h>
 #include <yarp/os/ResourceFinder.h>
-#include <yarp/dev/AudioRecorderStatus.h>
-#include <yarp/dev/AudioPlayerStatus.h>
+#include <yarp/sig/AudioRecorderStatus.h>
+#include <yarp/sig/AudioPlayerStatus.h>
 
 #define VOCAB_AUDIO_START       yarp::os::createVocab32('a','s','t','a')
 #define VOCAB_AUDIO_STOP        yarp::os::createVocab32('a','s','t','o')
@@ -54,7 +54,7 @@ private:
     // Offset values for placing stuff and size
     int eyeWidth=21;
     int eyeHeight=14;
-    
+
     // Where to place the eyes
     float leftEye_x=9;
     float leftEye_y=9;

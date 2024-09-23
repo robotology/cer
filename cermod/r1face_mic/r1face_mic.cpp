@@ -65,11 +65,11 @@ R1faceMic::R1faceMic(): PeriodicThread(0),
                         userChannelsNum(8)
 {
     tmpData     = new inputData;
-    
+
     const size_t _channels = HW_STEREO_CHANNELS * STEREO;
     const size_t _samples = BUFFER_SIZE * CHUNK_SIZE;
     const size_t _depth = 4;
-    yarp::dev::AudioBufferSize size (_samples, _channels, _depth);
+    yarp::sig::AudioBufferSize size (_samples, _channels, _depth);
     inputBuffer = new CircularAudioBuffer_32t("r1_face_mic",size);
     record_waiting_counter=0;
 }
@@ -229,7 +229,7 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, 
     }
     sound.setFrequency(samplingRate);
     sound.clear();
-    
+
     ///////////////////////////////////////////////
     // Extract channels from acquired buffer and
     // manipulate them to get meaningful information
@@ -308,7 +308,7 @@ bool R1faceMic::stopService()
     return false;
 }
 
-bool R1faceMic::getRecordingAudioBufferMaxSize(yarp::dev::AudioBufferSize& size)
+bool R1faceMic::getRecordingAudioBufferMaxSize(yarp::sig::AudioBufferSize& size)
 {
     //no lock guard is needed here
     size = this->inputBuffer->getMaxSize();
@@ -316,7 +316,7 @@ bool R1faceMic::getRecordingAudioBufferMaxSize(yarp::dev::AudioBufferSize& size)
 }
 
 
-bool R1faceMic::getRecordingAudioBufferCurrentSize(yarp::dev::AudioBufferSize& size)
+bool R1faceMic::getRecordingAudioBufferCurrentSize(yarp::sig::AudioBufferSize& size)
 {
     //no lock guard is needed here
     size = this->inputBuffer->size();
@@ -329,5 +329,29 @@ bool R1faceMic::resetRecordingAudioBuffer()
     lock_guard<mutex> lock(m_mutex);
     inputBuffer->clear();
     yDebug() << "R1faceMic::resetRecordingAudioBuffer";
+    return true;
+}
+
+bool R1faceMic::isRecording(bool& recording_enabled)
+{
+    YARP_UNUSED(recording_enabled);
+    yWarning() << "isRecording Not implemented yet";
+
+    return true;
+}
+
+bool R1faceMic::setSWGain(double gain)
+{
+    YARP_UNUSED(gain);
+    yWarning() << "setSWGain Not implemented yet";
+
+    return true;
+}
+
+bool R1faceMic::setHWGain(double gain)
+{
+    YARP_UNUSED(gain);
+    yWarning() << "setHWGain Not implemented yet";
+
     return true;
 }
