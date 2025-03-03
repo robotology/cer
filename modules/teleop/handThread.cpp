@@ -146,71 +146,6 @@ void HandThread::goToPose(const Vector &xd, const Vector &od)
     robotTargetPort.write();
 }
 
-#ifdef ROS_MSG
-void HandThread::updateRVIZ(const Vector &xd, const Vector &od)
-{
-    Matrix   m;
-    double   yarpTimeStamp = yarp::os::Time::now();
-    uint64_t time;
-    uint64_t nsec_part;
-    uint64_t sec_part;
-
-    m = axis2dcm(od);
-    m.setSubcol(xd, 0, 3);
-    mtx.lock();
-    criticalSection.tf = m;
-
-    time      = (uint64_t)(yarpTimeStamp * 1000000000UL);
-    nsec_part = (time % 1000000000UL);
-    sec_part  = (time / 1000000000UL);
-
-    if (sec_part > std::numeric_limits<unsigned int>::max())
-    {
-        yWarning() << "Timestamp exceeded the 64 bit representation, resetting it to 0";
-        sec_part = 0;
-    }
-
-    yarp::rosmsg::visualization_msgs::MarkerArray& markerarray = rosPublisherPort.prepare();
-    yarp::rosmsg::visualization_msgs::Marker       marker;
-
-    markerarray.markers.clear();
-
-    marker.header.frame_id   = "mobile_base_body_link";
-    marker.header.stamp.sec  = (yarp::os::NetUint32)sec_part;
-    marker.header.stamp.nsec = (yarp::os::NetUint32)nsec_part;
-    marker.ns                = "cer-teleop_namespace";
-    marker.type              = yarp::rosmsg::visualization_msgs::Marker::CYLINDER;
-    marker.action            = yarp::rosmsg::visualization_msgs::Marker::ADD;
-
-    //center
-    Quaternion q;
-    q.fromRotationMatrix(axis2dcm(od));
-
-    marker.id                 = arm_type + 1;
-    marker.pose.position.x    = xd[0];
-    marker.pose.position.y    = xd[1];
-    marker.pose.position.z    = xd[2];
-    marker.pose.orientation.x = q.x();
-    marker.pose.orientation.y = q.y();
-    marker.pose.orientation.z = q.z();
-    marker.pose.orientation.w = q.w();
-    marker.scale.x            = 0.05;
-    marker.scale.y            = 0.05;
-    marker.scale.z            = 0.05;
-    marker.color.a            = 0.5;
-    marker.color.r            = 0.0;
-    marker.color.g            = 1.0;
-    marker.color.b            = 0.0;
-    marker.lifetime.sec       = 1.0;
-    marker.lifetime.nsec      = 0.0;
-    marker.mesh_use_embedded_materials = false;
-
-    markerarray.markers.push_back(marker);
-
-    rosPublisherPort.write();
-}
-#endif
-
 /**********************************************************/
 void HandThread::updateGazebo(const Vector& xd, const Vector& od)
 {
@@ -349,9 +284,6 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
             }
 
             updateGazebo(xd, od);
-#ifdef ROS_MSG
-            updateRVIZ(xd, od);
-#endif
         }
     }
     else
@@ -368,9 +300,6 @@ void HandThread::reachingHandler(const bool dragging_switch, const Matrix& pose)
         {
             stopReaching();
             updateGazebo(cur_x, cur_o);
-#ifdef ROS_MSG
-            updateRVIZ(cur_x, cur_o);
-#endif
         }
 
         handDraggingStatus = idle;
@@ -456,14 +385,6 @@ bool HandThread::threadInit()
     fixedPosition.resize(3, 0.0);
     fixedOrientation.resize(4, 0.0);
 
-#ifdef ROS_MSG
-    if (!rosPublisherPort.topic("/cer_teleop_marker_" + hand))
-    {
-        yError("Unable to publish data on /cer_teleop_marker topic");
-        yWarning("Check your yarp-ROS network configuration");
-        return false;
-    }
-#endif
     r = gazeboPort.open("/cer_teleop/gazebo_" + hand+":o");
     r &= robotTargetPort.open("/cer_teleop/target_" + hand + ":o");
     r &= robotStatePort.open("/cer_teleop/state_" + hand + ":i");

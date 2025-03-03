@@ -24,6 +24,7 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/IEncodersTimed.h>
 #include <yarp/dev/WrapperSingle.h>
+#include <yarp/dev/ReturnValue.h>
 
 constexpr double default_period = 0.02;
 #ifndef RAD2DEG
@@ -102,8 +103,8 @@ public:
     bool close() override;
 
     // IOdometry2D
-    bool   getOdometry(yarp::dev::OdometryData& odom, double* timestamp = nullptr) override;
-    bool   resetOdometry() override;
+    yarp::dev::ReturnValue   getOdometry(yarp::dev::OdometryData& odom, double* timestamp = nullptr) override;
+    yarp::dev::ReturnValue   resetOdometry() override;
 
     // auxiliar
 

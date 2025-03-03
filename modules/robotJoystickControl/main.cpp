@@ -211,7 +211,7 @@ public:
         robot_status robstatus;
         static int life_counter = 0;
         char text[1000];
-        int off = sprintf(text, "* Life: %4d", life_counter);
+        int off = snprintf(text, 1000, "* Life: %4d", life_counter);
         if (control_thr)
         {
             control_thr->printStats();

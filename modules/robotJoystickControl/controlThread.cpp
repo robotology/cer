@@ -27,102 +27,6 @@
 using namespace yarp::sig;
 using namespace yarp::math;
 
-#ifdef ROS_MSG
-using namespace yarp::rosmsg;
-
-void ControlThread::updateRVIZ(const Vector &xd, const Vector &od)
-{
-    double yarpTimeStamp = yarp::os::Time::now();
-    uint64_t time;
-    uint64_t nsec_part;
-    uint64_t sec_part;
-    TickTime ret;
-    time = (uint64_t)(yarpTimeStamp * 1000000000UL);
-    nsec_part = (time % 1000000000UL);
-    sec_part = (time / 1000000000UL);
-    if (sec_part > std::numeric_limits<unsigned int>::max())
-    {
-        yWarning() << "Timestamp exceeded the 64 bit representation, resetting it to 0";
-        sec_part = 0;
-    }
-
-    visualization_msgs::MarkerArray& markerarray = rosPublisherPort.prepare();
-    markerarray.markers.clear();
-    visualization_msgs::Marker marker;
-    marker.header.frame_id = "mobile_base_body_link";
-    marker.header.stamp.sec = (yarp::os::NetUint32) sec_part;
-    marker.header.stamp.nsec = (yarp::os::NetUint32) nsec_part;
-    marker.ns = "cer-teleop_namespace";
-    marker.type = visualization_msgs::Marker::SPHERE;
-    marker.action = visualization_msgs::Marker::ADD;
-
-    //center
-    Quaternion q;
-    q.fromRotationMatrix(axis2dcm(od));
-    marker.id = 1;
-    marker.pose.position.x = xd[0];
-    marker.pose.position.y = xd[1];
-    marker.pose.position.z = xd[2];
-    marker.pose.orientation.x = 0.0;
-    marker.pose.orientation.y = 0.0;
-    marker.pose.orientation.z = 0.0;
-    marker.pose.orientation.w = 1.0;
-    marker.scale.x = 0.05;
-    marker.scale.y = 0.05;
-    marker.scale.z = 0.05;
-    marker.color.a = 0.5;
-    marker.color.r = 0.0;
-    marker.color.g = 1.0;
-    marker.color.b = 0.0;
-    markerarray.markers.push_back(marker);
-
-    /*
-    //x
-    marker.id = 2;
-    marker.pose.orientation.x = q[3];
-    marker.pose.orientation.y = q[0];
-    marker.pose.orientation.z = q[1];
-    marker.pose.orientation.w = q[2];
-    marker.scale.x = 0.5;
-    marker.scale.y = 0.05;
-    marker.scale.z = 0.05;
-    marker.color.r = 1.0;
-    marker.color.g = 0.0;
-    marker.color.b = 0.0;
-    markerarray.markers.push_back(marker);
-
-    //y
-    marker.id = 3;
-    marker.pose.orientation.x = q[3];
-    marker.pose.orientation.y = q[0];
-    marker.pose.orientation.z = q[1];
-    marker.pose.orientation.w = q[2];
-    marker.scale.x = 0.05;
-    marker.scale.y = 0.5;
-    marker.scale.z = 0.05;
-    marker.color.r = 0.0;
-    marker.color.g = 1.0;
-    marker.color.b = 0.0;
-    markerarray.markers.push_back(marker);
-
-    //z
-    marker.id = 4;
-    marker.pose.orientation.x = q[3];
-    marker.pose.orientation.y = q[0];
-    marker.pose.orientation.z = q[1];
-    marker.pose.orientation.w = q[2];
-    marker.scale.x = 0.05;
-    marker.scale.y = 0.05;
-    marker.scale.z = 0.5;
-    marker.color.r = 0.0;
-    marker.color.g = 0.0;
-    marker.color.b = 1.0;
-    markerarray.markers.push_back(marker);
-    */
-    rosPublisherPort.write();
-}
-#endif
-
 void ControlThread::reachingHandler(string arm_type, const bool b, const Vector &pos, const Vector &rpy)
 {
     ///yDebug() << "reaching handler";
@@ -150,10 +54,6 @@ void ControlThread::reachingHandler(string arm_type, const bool b, const Vector 
 
     goToPose(arm_type, xd, od);
     //updateGazebo(xd, od);
-
-#ifdef ROS_MSG
-    updateRVIZ(xd, od);
-#endif
 
    /* if (c0 != 0)
     {
@@ -564,15 +464,7 @@ bool ControlThread::threadInit()
 {
     error_status = false;
     bool autoconnect = false;
-#ifdef ROS_MSG
-    rosNode = new yarp::os::Node(localName);
-    if (!rosPublisherPort.topic(localName+"_marker"))
-    {
-        yError()<<"Unable to publish data on " << localName << "_marker" << " topic";
-        yWarning("Check your yarp-ROS network configuration");
-        return false;
-    }
-#endif
+
     //open the joystick port
     port_joystick_control.open(localName + "/joystick:i");
 
@@ -929,14 +821,6 @@ void ControlThread::goToPose(string arm_type, const Vector &xd, const Vector &od
 
 void ControlThread::threadRelease()
 {
-#ifdef ROS_MSG
-    if (rosNode)
-    {
-        delete rosNode;
-        rosNode = 0;
-    }
-#endif
-
     if (interface_torso_tripod_iCmd)
     {
         interface_torso_tripod_iCmd->setControlMode(0, VOCAB_CM_POSITION);

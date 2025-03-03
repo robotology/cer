@@ -52,7 +52,6 @@ protected:
     string             leftHandFrame;
     string             rootHandFrame;
     Matrix             T;
-    Node*              rosNode;
     PolyDriver         drvControlSource;
     PolyDriver         drvJoypad;
     IHapticDevice*     igeo{YARP_NULLPTR};
@@ -169,7 +168,6 @@ public:
 
         if (!drvControlSource.open(optGeo))
         {
-            delete rosNode;
             return false;
         }
 
@@ -211,8 +209,6 @@ public:
             yError() << "frame_source parameter missing in configuration file";
             return false;
         }
-
-        rosNode = new yarp::os::Node("/cer_teleop");
 
         //T =
         //  0-1 0 0
@@ -298,7 +294,6 @@ public:
         left.threadRelease();
         right.threadRelease();
 
-        delete rosNode;
         return true;
     }
 

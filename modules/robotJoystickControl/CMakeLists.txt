@@ -18,12 +18,6 @@ include_directories(${GSL_INCLUDE_DIRS})
 
 add_executable(${PROJECTNAME} ${folder_source} ${folder_header})
 
-if(YARP_rosmsg_FOUND)
-    add_definitions(-DROS_MSG=1)
-    target_link_libraries(${PROJECTNAME} ctrlLib ${GSL_LIBRARIES} YARP::YARP_rosmsg ${YARP_LIBRARIES})
-else()
-    target_link_libraries(${PROJECTNAME} ctrlLib ${GSL_LIBRARIES} ${YARP_LIBRARIES})
-endif()
-
+target_link_libraries(${PROJECTNAME} ctrlLib ${GSL_LIBRARIES} ${YARP_LIBRARIES})
 install(TARGETS ${PROJECTNAME} DESTINATION bin)
 

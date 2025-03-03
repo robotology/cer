@@ -20,6 +20,7 @@
 #include <yarp/math/Rand.h>
 #include <iostream>
 
+using namespace yarp::dev;
 using namespace cer::dev;
 
 namespace {
@@ -49,7 +50,7 @@ bool CerOdometry::close()
     return true;
 }
 
-bool CerOdometry::getOdometry(yarp::dev::OdometryData& odom, double* timestamp)
+ReturnValue CerOdometry::getOdometry(yarp::dev::OdometryData& odom, double* timestamp)
 {
     std::lock_guard lock(m_odometry_mutex);
     odom.odom_x = m_odometryData.odom_x;
@@ -65,10 +66,10 @@ bool CerOdometry::getOdometry(yarp::dev::OdometryData& odom, double* timestamp)
     {
         *timestamp = m_time_encoders;
     }
-    return true;
+    return ReturnValue_ok;
 }
 
-bool CerOdometry::resetOdometry()
+ReturnValue CerOdometry::resetOdometry()
 {
     if (ienct) {
         ienct->getEncoder(0, &encL_offset);
@@ -80,7 +81,7 @@ bool CerOdometry::resetOdometry()
         encvel_estimator->reset();
     }
     yCInfo(CERODOM,"Odometry reset done");
-    return true;
+    return ReturnValue_ok;
 }
 
 bool CerOdometry::open(yarp::os::Searchable& config)
@@ -91,7 +92,7 @@ bool CerOdometry::open(yarp::os::Searchable& config)
     {
         yCError(CERODOM) << "yarp network not found";
         std::cerr << "Sorry YARP network does not seem to be available, is the yarp server available?\n";
-        return -1;
+        return false;
     }
 
     if (!config.check("period"))
