@@ -44,14 +44,14 @@ bool cerDoubleLidar::LaserCfg_t::loadConfig(yarp::os::Searchable& config)
     {
         key="LASERBACK-CFG";
     }
-    
+
     yarp::os::Searchable& l_config = config.findGroup(key);
     if (l_config.check("pose")==false) {yCError(CER_DOUBLE_LIDAR) << "missing pose"; return false; }
     Bottle & b_pose = l_config.findGroup("pose");
     if(b_pose.size()!= 5)
     {
         yCError(CER_DOUBLE_LIDAR) << "wrong size of pose ("<<b_pose.size()<<"). It should be <x y x theta>";
-        return false; 
+        return false;
     }
     pose.x = b_pose.get(1).asFloat64();
     pose.y = b_pose.get(2).asFloat64();
@@ -171,7 +171,7 @@ bool cerDoubleLidar::open(yarp::os::Searchable& config)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     yDebug() << "open()";
-    
+
      //parse all the parameters related to the linear/angular range of the sensor
      yDebug() << config.toString();
     if (this->parseConfiguration(config) == false)
@@ -179,7 +179,7 @@ bool cerDoubleLidar::open(yarp::os::Searchable& config)
         yCError(CER_DOUBLE_LIDAR) << "error parsing parameters";
         return false;
     }
-    
+
     if(!m_lFrontCfg.loadConfig(config))
     {
         yCError(CER_DOUBLE_LIDAR) << "m_lFrontCfg.loadConfig() failed";
@@ -214,7 +214,7 @@ bool cerDoubleLidar::verifyLasersConfigurations(void)
     double min_angle[2], max_angle[2];
     double min_dist[2], max_dist[2];
     double resolution[2];
-        
+
     {
         if(!m_ILaserFrontData->getScanLimits(min_angle[0], max_angle[0]))
         {
@@ -280,87 +280,87 @@ bool cerDoubleLidar::verifyLasersConfigurations(void)
 
 }
 
-bool cerDoubleLidar::setDistanceRange(double min, double max)
+ReturnValue cerDoubleLidar::setDistanceRange(double min, double max)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
     double curmin, curmax;
     if(!m_ILaserFrontData->getDistanceRange(curmin, curmax))
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
 
     if(!m_ILaserFrontData->setDistanceRange(min, max))
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
 
     if(!m_ILaserBackData->setDistanceRange(min,max))
     {
         m_ILaserFrontData->setDistanceRange(curmin, curmax);
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
     }
-    return true;
+    return ReturnValue_ok;
 }
 
-bool cerDoubleLidar::setScanLimits(double min, double max)
+ReturnValue cerDoubleLidar::setScanLimits(double min, double max)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
 
     double curmin, curmax;
     if(!m_ILaserFrontData->getScanLimits(curmin, curmax))
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
 
     if(!m_ILaserFrontData->setScanLimits(min, max))
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
 
     if(!m_ILaserBackData->setScanLimits(min,max))
     {
         m_ILaserFrontData->setScanLimits(curmin, curmax);
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
     }
-    return true;
+    return ReturnValue_ok;
 }
 
-bool cerDoubleLidar::setHorizontalResolution(double step)
+ReturnValue cerDoubleLidar::setHorizontalResolution(double step)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
 
     double curstep;
     if(!m_ILaserFrontData->getHorizontalResolution(curstep))
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
 
     if(!m_ILaserFrontData->setHorizontalResolution(step))
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
 
     if(!m_ILaserBackData->setHorizontalResolution(step))
     {
         m_ILaserFrontData->setHorizontalResolution(curstep);
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
     }
-    return true;
+    return ReturnValue_ok;
 }
 
-bool cerDoubleLidar::setScanRate(double rate)
+ReturnValue cerDoubleLidar::setScanRate(double rate)
 {
    std::lock_guard<std::mutex> guard(m_mutex);
     if(!m_inited)
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
 
     double currate;
     if(!m_ILaserFrontData->getScanRate(currate))
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
 
     if(!m_ILaserFrontData->setScanRate(rate))
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
 
     if(!m_ILaserBackData->setScanRate(rate))
     {
         m_ILaserFrontData->setScanRate(currate);
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
     }
-    return true;
+    return ReturnValue_ok;
 }
 
 void cerDoubleLidar::calculate(int sensNum, double distance, double x_off, double y_off, double t_off)
@@ -372,7 +372,7 @@ void cerDoubleLidar::calculate(int sensNum, double distance, double x_off, doubl
         int newSensNum= (double)(angle /m_resolution);
         if (newSensNum >= (int)m_sensorsNum) newSensNum-= (int) m_sensorsNum;
         if (newSensNum < 0)    newSensNum+= (int)m_sensorsNum;
-        
+
         //assignment on empty slots
         if (std::isnan(m_laser_data[newSensNum]))
         { m_laser_data[newSensNum] = std::numeric_limits<double>::infinity();}
@@ -391,7 +391,7 @@ void cerDoubleLidar::calculate(int sensNum, double distance, double x_off, doubl
         x_off=0;
         y_off=0;
         t_off=0;
-    #endif 
+    #endif
 
         //calculate vertical and horizontal components of input angle
         double Ay = (sin(angle_rad+t_off)*distance);
@@ -411,20 +411,20 @@ void cerDoubleLidar::calculate(int sensNum, double distance, double x_off, doubl
 
         //compute the distance
         double newdistance = std::sqrt((Bx*Bx)+(By*By));
-        
+
         //assignment
         m_laser_data[newSensNum] = newdistance;
     }
 
 }
 
-bool cerDoubleLidar::getRawData(yarp::sig::Vector &out, double* timestamp)
+ReturnValue cerDoubleLidar::getRawData(yarp::sig::Vector &out, double* timestamp)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
 
     if(!m_inited)
     {
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
     }
     yarp::sig::Vector dataFront;
     yarp::sig::Vector dataBack;
@@ -435,19 +435,19 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out, double* timestamp)
     {
          m_laser_data[i] = std::nan("");
     }
-    
+
     if(!m_ILaserFrontData->getRawData(dataFront, &timestampFront))
     {
         out = m_laser_data;
         m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_GENERAL_ERROR;
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
     }
 
     if(!m_ILaserBackData->getRawData(dataBack, &timestampBack))
     {
         out = m_laser_data;
         m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_GENERAL_ERROR;
-        return false;
+        return ReturnValue::return_code::return_value_error_generic;
     }
     m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_OK_IN_USE;
 
@@ -464,7 +464,7 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out, double* timestamp)
             calculate(i, dataBack[i], m_lBackCfg.pose.x, m_lBackCfg.pose.y, m_lBackCfg.pose.theta);
         }
     }
-    
+
     //For now, I am using the front lidar timestamp as the timestamp for the doubleLidar.
     //I think that it does not worth to compute the mean value. It can be eventually improved in the future.
     m_timestamp.update(timestampFront);
@@ -475,17 +475,17 @@ bool cerDoubleLidar::getRawData(yarp::sig::Vector &out, double* timestamp)
 
     // applyLimitsOnLaserData();
     out = m_laser_data;
-    return true;
+    return ReturnValue_ok;
 }
 
-bool cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data, double* timestamp)
+ReturnValue cerDoubleLidar::getLaserMeasurement(std::vector<LaserMeasurementData> &data, double* timestamp)
 {
     yCError(CER_DOUBLE_LIDAR) << "getLaserMeasurement not yet implemented";
     if (timestamp != nullptr)
     {
         *timestamp = m_timestamp.getTime();
     }
-    return false;
+    return YARP_METHOD_NOT_YET_IMPLEMENTED();
 }
 
 bool cerDoubleLidar::acquireDataFromHW()

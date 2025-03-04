@@ -72,12 +72,12 @@ public:
     bool detachAll() override;
 
     //IRangefinder2D interface
-    virtual bool getRawData          (yarp::sig::Vector& data, double* timestamp = nullptr) override;
-    virtual bool getLaserMeasurement (std::vector<yarp::sig::LaserMeasurementData>& data, double* timestamp = nullptr) override;
-    virtual bool setDistanceRange    (double min, double max) override;
-    virtual bool setScanLimits        (double min, double max) override;
-    virtual bool setHorizontalResolution      (double step) override;
-    virtual bool setScanRate         (double rate) override;
+    virtual yarp::dev::ReturnValue getRawData          (yarp::sig::Vector& data, double* timestamp = nullptr) override;
+    virtual yarp::dev::ReturnValue getLaserMeasurement (std::vector<yarp::sig::LaserMeasurementData>& data, double* timestamp = nullptr) override;
+    virtual yarp::dev::ReturnValue setDistanceRange    (double min, double max) override;
+    virtual yarp::dev::ReturnValue setScanLimits        (double min, double max) override;
+    virtual yarp::dev::ReturnValue setHorizontalResolution      (double step) override;
+    virtual yarp::dev::ReturnValue setScanRate         (double rate) override;
 
 public:
     //Lidar2DDeviceBase
