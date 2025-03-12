@@ -29,6 +29,8 @@ if(NOT IPOPT_FOUND)
     message(WARNING "IPOPT library was not found, some kinematics module will not be available.")
 endif()
 
+find_package(gb-ergocub-cartesian-service REQUIRED)
+
 if(NOT WIN32)
     option(CER_SHARED_LIBRARY "Compile shared libraries rather than static libraries" ON)
     if(CER_SHARED_LIBRARY)
