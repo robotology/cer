@@ -1,0 +1,70 @@
+<application>
+   <name>R1Mk3_handPointing_SIM</name>
+
+   <dependencies>
+   </dependencies>
+   
+   <!--              -->
+   <!--   MODULES    -->
+   <!--              -->
+   <module>
+      <name>gzserver</name>
+      <node>localhost</node>
+      <parameters>-e dart -slibgazebo_yarp_clock.so gb-gazebo-world-r1.sdf</parameters>
+   </module>
+
+   <module>
+      <name>gzclient</name>
+      <node>localhost</node>
+   </module>
+
+
+   <module>
+      <name>gb-ergocub-cartesian-controller</name>
+      <node>localhost</node>
+      <environment>YARP_ROBOT_NAME=r1mk3Sim</environment>
+      <parameters>--from config_right_sim_r1.ini</parameters>
+      <dependencies>
+         <port timeout="20">/r1mk3Sim/torso/state:o</port>
+         <port timeout="20">/r1mk3Sim/right_arm/state:o</port>
+      </dependencies>
+   </module>
+
+   <module>
+      <name>gb-ergocub-cartesian-controller</name>
+      <node>localhost</node>
+      <environment>YARP_ROBOT_NAME=r1mk3Sim</environment>
+      <parameters>--from config_left_sim_r1.ini</parameters>
+      <dependencies>
+         <port timeout="20">/r1mk3Sim/torso/state:o</port>
+         <port timeout="20">/r1mk3Sim/left_arm/state:o</port>
+      </dependencies>
+   </module>
+
+   <module>
+      <name>gb-ergocub-joints-publisher</name>
+      <parameters>--from config-r1-sim.ini</parameters>
+      <ensure>
+         <wait when="stop">5</wait>
+      </ensure>
+   </module>
+
+   <module>
+      <name>ros2_launch.sh</name>
+      <parameters>grasping-baselines robot_state_publisher_r1_sim.launch.py use_sim_time:=true</parameters>
+   </module>
+
+   <module>
+      <name>ros2_launch.sh</name>
+      <parameters>grasping-baselines rviz_ergocub.launch.py</parameters>
+   </module>
+
+   <!-- Target definition -->
+   <module>
+      <name>handPointingR1Mk3</name>
+      <parameters>--context handPointing --from handPointing_R1Mk3_SIM.ini</parameters>
+      <environment></environment>
+      <node>localhost</node>
+   </module>
+      
+</application>
