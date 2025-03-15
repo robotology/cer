@@ -60,7 +60,7 @@ jobs:
       matrix:
         build_type: [Release]
         os: [ubuntu-latest, macos-latest, windows-2019]
-      fail-fast: true
+      fail-fast: false
 
     steps:
     - uses: actions/checkout@v3
@@ -83,6 +83,8 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/yarp
+        cd ${GITHUB_WORKSPACE}
+        git clone https://github.com/robotology/icub-main
 
     - name: Dependencies from source [Linux&macOS]
       if: contains(matrix.os, 'macos') || contains(matrix.os, 'ubuntu')
@@ -99,28 +101,15 @@ jobs:
         cmake --build . --config ${{ matrix.build_type }}
         cmake --install . --config ${{ matrix.build_type }}
         echo "YARP_DATA_DIRS=${CONDA_PREFIX}/share/yarp::${YARP_DATA_DIRS}" >> $GITHUB_ENV
-        # curl
+
         cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/curl/curl.git
-        cd curl
-        mkdir -p build
-        cd build
-        cmake -GNinja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} \
-                      -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
-        cmake --build . --config ${{ matrix.build_type }}
-        cmake --install . --config ${{ matrix.build_type }}
-        #liboai
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/D7EAD/liboai.git
-        cd liboai/liboai
+        cd icub-main
         mkdir build
         cd build
-        cmake -GNinja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} \
-                      -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                      -DCMAKE_POSITION_INDEPENDENT_CODE=true ..
+        cmake -G"Visual Studio 16 19" -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}/Library \
+                                        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} .. \
         cmake --build . --config ${{ matrix.build_type }}
         cmake --install . --config ${{ matrix.build_type }}
-
 
     - name: Dependencies from source [Windows]
       if: contains(matrix.os, 'windows')
@@ -128,6 +117,10 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/yarp
+        cd ${GITHUB_WORKSPACE}
+        git clone https://github.com/robotology/icub-main
+        
+        cd ${GITHUB_WORKSPACE}
         cd yarp
         mkdir build
         cd build
@@ -138,26 +131,16 @@ jobs:
         cmake --build . --config ${{ matrix.build_type }}
         cmake --install . --config ${{ matrix.build_type }}
         echo "YARP_DATA_DIRS=${CONDA_PREFIX}/Library/share/yarp;${YARP_DATA_DIRS}" >> $GITHUB_ENV
+ 
         cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/curl/curl.git
-        cd curl
-        mkdir -p build
-        cd build
-        cmake -G"Visual Studio 16 19" -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} \
-                                        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
-        cmake --build . --config ${{ matrix.build_type }}
-        cmake --install . --config ${{ matrix.build_type }}
-        #liboai
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/D7EAD/liboai.git
-        cd liboai/liboai
+        cd icub-main
         mkdir build
         cd build
         cmake -G"Visual Studio 16 19" -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}/Library \
-                      -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                      -DCMAKE_POSITION_INDEPENDENT_CODE=true ..
+                                        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} .. \
         cmake --build . --config ${{ matrix.build_type }}
         cmake --install . --config ${{ matrix.build_type }}
+
 
     - name: Configure [Linux&macOS]
       if: contains(matrix.os, 'macos') || contains(matrix.os, 'ubuntu')
@@ -168,7 +151,6 @@ jobs:
         cmake -GNinja -DBUILD_TESTING:BOOL=ON \
                       -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
                       -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} .. \
-                      -DLIBOAI_INSTALL_PATH=${GITHUB_WORKSPACE}/liboai \
                       -DYARP_COMPILE_TESTS:BOOL=ON
 
     - name: Configure [Windows]
@@ -180,7 +162,6 @@ jobs:
         cmake -G"Visual Studio 16 19" -DBUILD_TESTING:BOOL=ON \
                                         -DCMAKE_PREFIX_PATH=${CONDA_PREFIX}/Library \
                                         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                                        -DLIBOAI_INSTALL_PATH=${GITHUB_WORKSPACE}/liboai \
                                         -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}/Library .. \
                                         -DYARP_COMPILE_TESTS:BOOL=ON
     - name: Build [Linux&macOS]
@@ -255,6 +236,8 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}
         git clone https://github.com/robotology/yarp
+        cd ${GITHUB_WORKSPACE}
+        git clone https://github.com/robotology/icub-main
 
     - name: Dependencies from source [Linux&macOS]
       if: contains(matrix.os, 'macos') || contains(matrix.os, 'ubuntu')
@@ -272,25 +255,13 @@ jobs:
         cmake --build . --config ${{ matrix.build_type }}
         cmake --install . --config ${{ matrix.build_type }}
         echo "YARP_DATA_DIRS=${CONDA_PREFIX}/share/yarp::${YARP_DATA_DIRS}" >> $GITHUB_ENV
-        # curl
+
         cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/curl/curl.git
-        cd curl
-        mkdir -p build
-        cd build
-        cmake -GNinja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} \
-                      -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
-        cmake --build . --config ${{ matrix.build_type }}
-        cmake --install . --config ${{ matrix.build_type }}
-        #liboai
-        cd ${GITHUB_WORKSPACE}
-        git clone https://github.com/D7EAD/liboai.git
-        cd liboai/liboai
+        cd icub-main
         mkdir build
         cd build
-        cmake -GNinja -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} \
-                      -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                      -DCMAKE_POSITION_INDEPENDENT_CODE=true ..
+        cmake -G"Visual Studio 16 19" -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX}/Library \
+                                        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} .. \
         cmake --build . --config ${{ matrix.build_type }}
         cmake --install . --config ${{ matrix.build_type }}
 
@@ -302,7 +273,6 @@ jobs:
         cd build
         cmake -GNinja -DBUILD_TESTING:BOOL=ON \
                       -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-                      -DLIBOAI_INSTALL_PATH=${GITHUB_WORKSPACE}/liboai \
                       -DYARP_VALGRIND_TESTS:BOOL=ON \
                       -DCMAKE_INSTALL_PREFIX=${CONDA_PREFIX} .. \
                       -DYARP_COMPILE_TESTS:BOOL=ON
