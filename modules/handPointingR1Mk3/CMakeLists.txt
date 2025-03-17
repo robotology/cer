@@ -1,8 +1,5 @@
-#
-# Copyright (C) 2016 iCub Facility - IIT Istituto Italiano di Tecnologia
-# Author: Raffaele Colombo raffaele.colombo@iit.it
-# CopyPolicy: Released under the terms of the GNU GPL v2.0.
-#
+# SPDX-FileCopyrightText: 2006-2025 Istituto Italiano di Tecnologia (IIT)
+# SPDX-License-Identifier: BSD-3-Clause
 
 project(handPointingR1Mk3)
 
