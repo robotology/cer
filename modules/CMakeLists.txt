@@ -18,6 +18,6 @@ add_subdirectory(textimage)
 add_subdirectory(faceExpression)
 add_subdirectory(handPointing)
 
-if(gb-ergocub-cartesian-service_FOUND)
+if(ergocub-cartesian-control_FOUND)
     add_subdirectory(handPointingR1Mk3)
 endif()

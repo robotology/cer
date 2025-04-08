@@ -1,0 +1,24 @@
+{
+    "build": { 
+        "dockerfile": "Dockerfile",
+        "args": {
+            "USERNAME": "${localEnv:USER}"
+        }
+    },
+    "runArgs": [
+        "--privileged",
+        "--net=host",
+        "--pid=host",
+        "--gpus=all"
+    ],
+    "containerEnv": {
+        "DISPLAY": "${localEnv:DISPLAY}",
+        "NVIDIA_DRIVER_CAPABILITIES": "all",
+        "QT_X11_NO_MITSHM": "1",
+        "CYCLONEDDS_URI": "file:///home/${localEnv:USER}/.ros2/cyclonedds.xml"
+    },
+    "mounts": [
+        "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind",
+        "source=/home/${localEnv:USER}/.ros2,target=/home/${localEnv:USER}/.ros2,type=bind"
+    ]
+}
