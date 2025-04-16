@@ -106,55 +106,6 @@ bool HandPointingThread::threadInit()
     yCInfo(HAND_POINTING_THREAD) << "Depth Intrinsics:" << m_propIntrinsics.toString();
     m_intrinsics.fromProperty(m_propIntrinsics);
 
-
-    // --------- TransformClient config ---------- //
-    yarp::os::Property tcProp;
-    // Prepare default prop object
-    tcProp.put("device", "frameTransformClient");
-    tcProp.put("ft_client_prefix", "/handPointing");
-    tcProp.put("local_rpc", "/handPointing/ftClient.rpc");
-    bool okTransformRf = m_rf.check("TRANSFORM_CLIENT");
-    if(!okTransformRf)
-    {
-        yCWarning(HAND_POINTING_THREAD,"TRANSFORM_CLIENT section missing in ini file Using default values");
-        tcProp.put("filexml_option","ftc_yarp_only.xml");
-    }
-    else {
-        yarp::os::Searchable &tf_config = m_rf.findGroup("TRANSFORM_CLIENT");
-        if (tf_config.check("ft_client_prefix")) {
-            tcProp.put("ft_client_prefix", tf_config.find("ft_client_prefix").asString());
-        }
-        if (tf_config.check("ft_server_prefix")) {
-            tcProp.put("ft_server_prefix", tf_config.find("ft_server_prefix").asString());
-        }
-        if(tf_config.check("filexml_option") && !(tf_config.check("testxml_from") || tf_config.check("testxml_context")))
-        {
-            tcProp.put("filexml_option", tf_config.find("filexml_option").asString());
-        }
-        else if(!tf_config.check("filexml_option") && (tf_config.check("testxml_from") && tf_config.check("testxml_context")))
-        {
-            tcProp.put("testxml_from", tf_config.find("testxml_from").asString());
-            tcProp.put("testxml_context", tf_config.find("testxml_context").asString());
-        }
-        else
-        {
-            yCError(HAND_POINTING_THREAD,"TRANSFORM_CLIENT is missing information about the frameTransformClient device configuration. Check your config. RETURNING");
-            return false;
-        }
-    }
-    m_tcPoly.open(tcProp);
-    if(!m_tcPoly.isValid())
-    {
-        yCError(HAND_POINTING_THREAD,"Error opening PolyDriver check parameters");
-        return false;
-    }
-    m_tcPoly.view(m_iTc);
-    if(!m_iTc)
-    {
-        yCError(HAND_POINTING_THREAD,"Error opening iFrameTransform interface. Device not available");
-        return false;
-    }
-
     //open target ports
     if(!m_gazeTargetOutPort.open(m_gazeTargetOutPortName)){
         yCError(HAND_POINTING_THREAD) << "Cannot open gazeTargetOut port with name" << m_gazeTargetOutPortName;
@@ -298,6 +249,28 @@ bool HandPointingThread::threadInit()
         return false;
     }
 
+    // --------- Frame Transform config --------- //
+    // Initialize ROS 2 context first
+    try {
+        if (!rclcpp::ok()) {
+            rclcpp::init(0, nullptr);
+            yCInfo(HAND_POINTING_THREAD, "ROS 2 initialized successfully");
+        }
+        
+        m_node = std::make_shared<rclcpp::Node>("hand_pointing_tf_client");
+        m_tf_buffer = std::make_shared<tf2_ros::Buffer>(m_node->get_clock());
+        m_tf_listener = std::make_shared<tf2_ros::TransformListener>(*m_tf_buffer);
+        
+        // Create a thread for ros2 spinning
+        std::thread([this](){
+            rclcpp::spin(m_node);
+        }).detach();
+    }
+    catch (const std::exception& e) {
+        yCError(HAND_POINTING_THREAD, "Failed to initialize ROS 2: %s", e.what());
+        return false;
+    }
+
 
 #ifdef HANDPOINT_DEBUG
     yCDebug(HAND_POINTING_THREAD, "... done!\n");
@@ -341,21 +314,21 @@ void HandPointingThread::run()
 
     // compute the transformation matrix from the camera to the base reference frame
 
-    bool base_frame_exists = m_iTc->getTransform(m_camera_frame_id, m_base_frame_id, m_transform_mtrx_camera);
+    bool base_frame_exists = getTransformTF2(m_base_frame_id,m_camera_frame_id, m_transform_mtrx_camera);
     if (!base_frame_exists)
     {
         yCWarning(HAND_POINTING_THREAD, "Unable to found m matrix (camera-base)");
     }
 
     // compute the transformation matrix from the right shoulder to the base reference frame
-    bool r_shoulder_frame_exists = m_iTc->getTransform(m_r_shoulder_frame_id, m_base_frame_id, m_r_transform_mtrx_shoulder);
+    bool r_shoulder_frame_exists = getTransformTF2(m_base_frame_id,m_r_shoulder_frame_id, m_r_transform_mtrx_shoulder);
     if (!r_shoulder_frame_exists)
     {
         yCWarning(HAND_POINTING_THREAD, "Unable to found m matrix (r_shoulder-base)");
     }
 
     // compute the transformation matrix from the left shoulder to the base reference frame
-    bool l_shoulder_frame_exists = m_iTc->getTransform(m_l_shoulder_frame_id, m_base_frame_id, m_l_transform_mtrx_shoulder);
+    bool l_shoulder_frame_exists = getTransformTF2(m_base_frame_id,m_l_shoulder_frame_id, m_l_transform_mtrx_shoulder);
     if (!l_shoulder_frame_exists)
     {
         yCWarning(HAND_POINTING_THREAD, "Unable to found m matrix (l_shoulder-base)");
@@ -405,13 +378,17 @@ void HandPointingThread::onRead(yarp::os::Bottle &b)
         // We are averaging the depth value in a 10x10 box around the centre
         double av_pixel_value = average_depth(u,v,10);
 
+        
+
         tempPoint[0] = (u - m_intrinsics.principalPointX) / m_intrinsics.focalLengthX * av_pixel_value;
         tempPoint[1] = (v - m_intrinsics.principalPointY) / m_intrinsics.focalLengthY * av_pixel_value;
         tempPoint[2] = av_pixel_value;
         
+        yInfo() << "Clicked point in camera coordinates:" << tempPoint[0] << "," << tempPoint[1] << "," << tempPoint[2];
+
         //decide whether to use the right or left arm depending on the position of the point wrt to the torso
         yarp::sig::Matrix transform_mtrx_torso;
-        bool torso_frame_exists = m_iTc->getTransform(m_camera_frame_id, m_torso_frame_id, transform_mtrx_torso);
+        bool torso_frame_exists = getTransformTF2(m_torso_frame_id,m_camera_frame_id, transform_mtrx_torso);
         if (!torso_frame_exists)
         {
             yCError(HAND_POINTING_THREAD, "Unable to found m matrix (camera-torso)");
@@ -435,6 +412,7 @@ void HandPointingThread::onRead(yarp::os::Bottle &b)
         yarp::sig::Vector v1 = m_transform_mtrx_camera*tempPoint; //clicked point in point cloud coordinates wrt base frame
 
         yarp::sig::Vector vTarget {0.0, 0.0, 0.0};
+        // vTarget = v1;
         if (m_reach_radius == 0.0)
             vTarget = v1;
         else
@@ -445,6 +423,7 @@ void HandPointingThread::onRead(yarp::os::Bottle &b)
         }
     
         // TODO: We need to decide which arm to use. Right now we need to have two services to left and right cartesian controllers.
+        yInfo() << "Moving arm" << armUsed << "to" << vTarget[0] << "," <<  vTarget[1] << "," << vTarget[2];
         if(armUsed == "left-arm")
         {
             if(!m_service_left.go_to_position(vTarget[0], vTarget[1], vTarget[2],m_traj_duration))
@@ -493,7 +472,7 @@ void HandPointingThread::onRead(yarp::os::Bottle &b)
             targetLocationList.addString("target-location");
 
             yarp::sig::Matrix transform_mtrx_gaze;
-            bool gaze_frame_exists = m_iTc->getTransform(m_camera_frame_id, "gaze", transform_mtrx_gaze);
+            bool gaze_frame_exists = getTransformTF2(m_camera_frame_id, "gaze", transform_mtrx_gaze);
             if (!gaze_frame_exists)
             {
                 yCError(HAND_POINTING_THREAD, "Unable to found m matrix (camera-gaze)");
@@ -511,13 +490,32 @@ void HandPointingThread::onRead(yarp::os::Bottle &b)
         }
 
         //output to goHome part
-        yarp::os::Bottle&  toSend2 = m_getArmHomePort.prepare();
-        toSend2.clear();
-        toSend2.addString("goHome");
-        yarp::os::Bottle& getArmHomeList = toSend2.addList();
-        if      (armUsed == "left-arm")  {getArmHomeList.addString("right-arm"); }
-        else if (armUsed == "right-arm") {getArmHomeList.addString("left-arm");  }
-        else {yCError(HAND_POINTING_THREAD,"Neither the left nor the right arm is used"); }
+        if(armUsed == "left-arm")
+        {
+            if(!m_service_right.go_home())
+            {
+                yCWarning(HAND_POINTING_THREAD,"Error in sending command to move the right arm home");
+            }
+        }
+        else if(armUsed == "right-arm")
+        {
+            if(!m_service_left.go_home())
+            {
+                yCWarning(HAND_POINTING_THREAD,"Error in sending command to move the left arm home");
+            }
+        }
+        else
+        {
+            yCError(HAND_POINTING_THREAD,"I don't have more than two arms, sorry");
+        }
+
+        // yarp::os::Bottle&  toSend2 = m_getArmHomePort.prepare();
+        // toSend2.clear();
+        // toSend2.addString("goHome");
+        // yarp::os::Bottle& getArmHomeList = toSend2.addList();
+        // if      (armUsed == "left-arm")  {getArmHomeList.addString("right-arm"); }
+        // else if (armUsed == "right-arm") {getArmHomeList.addString("left-arm");  }
+        // else {yCError(HAND_POINTING_THREAD,"Neither the left nor the right arm is used"); }
         
         // ----- write ports ----- //
         m_getArmHomePort.write();
@@ -554,6 +552,10 @@ void HandPointingThread::threadRelease()
 
     yCInfo(HAND_POINTING_THREAD, "Thread released");
 
+    if (m_node) {
+        rclcpp::shutdown();
+    }
+
 #ifdef HANDPOINT_DEBUG
     yCDebug(HAND_POINTING_THREAD, "... done.");
 #endif
@@ -579,4 +581,62 @@ double HandPointingThread::average_depth(int u, int v, int max_offset)
     }
 
     return av_pixel_value;
+}
+
+bool HandPointingThread::getTransformTF2(const std::string& target_frame, const std::string& source_frame, 
+    yarp::sig::Matrix& transform_matrix)
+{
+    try {
+        // Look up the transform
+        // yDebug() << "Looking up transform from" << source_frame << "to" << target_frame;
+        geometry_msgs::msg::TransformStamped transform = 
+        m_tf_buffer->lookupTransform(target_frame, source_frame, tf2::TimePointZero);
+
+        // Convert to YARP matrix format (4x4 homogeneous transformation matrix)
+        transform_matrix.resize(4, 4);
+
+        // Extract rotation as quaternion
+        double qx = transform.transform.rotation.x;
+        double qy = transform.transform.rotation.y;
+        double qz = transform.transform.rotation.z;
+        double qw = transform.transform.rotation.w;
+
+        // Convert quaternion to rotation matrix (3x3 part)
+        double x2 = qx * qx;
+        double y2 = qy * qy;
+        double z2 = qz * qz;
+        double xy = qx * qy;
+        double xz = qx * qz;
+        double yz = qy * qz;
+        double wx = qw * qx;
+        double wy = qw * qy;
+        double wz = qw * qz;
+
+        transform_matrix(0,0) = 1.0 - 2.0 * (y2 + z2);
+        transform_matrix(0,1) = 2.0 * (xy - wz);
+        transform_matrix(0,2) = 2.0 * (xz + wy);
+        transform_matrix(1,0) = 2.0 * (xy + wz);
+        transform_matrix(1,1) = 1.0 - 2.0 * (x2 + z2);
+        transform_matrix(1,2) = 2.0 * (yz - wx);
+        transform_matrix(2,0) = 2.0 * (xz - wy);
+        transform_matrix(2,1) = 2.0 * (yz + wx);
+        transform_matrix(2,2) = 1.0 - 2.0 * (x2 + y2);
+
+        // Set translation vector
+        transform_matrix(0,3) = transform.transform.translation.x;
+        transform_matrix(1,3) = transform.transform.translation.y;
+        transform_matrix(2,3) = transform.transform.translation.z;
+
+        // Set bottom row for homogeneous matrix
+        transform_matrix(3,0) = 0.0;
+        transform_matrix(3,1) = 0.0;
+        transform_matrix(3,2) = 0.0;
+        transform_matrix(3,3) = 1.0;
+
+        return true;
+    }
+    catch (const tf2::TransformException& ex) {
+        yCError(HAND_POINTING_THREAD, "Failed to get transform: %s", ex.what());
+        return false;
+    }
 }

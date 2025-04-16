@@ -23,6 +23,12 @@
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <gb-ergocub-cartesian-service/ergoCubCartesianService.h>
 
+// Use ros2 for the transform client
+#include <rclcpp/rclcpp.hpp>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+
 #include <math.h>
 
 //Defaults
@@ -101,9 +107,18 @@ public:
     using TypedReaderCallback<yarp::os::Bottle>::onRead;
     void onRead(yarp::os::Bottle& b) override;
 
+    bool getTransformTF2(const std::string& target_frame,
+                         const std::string& source_frame,
+                         yarp::sig::Matrix& transform);
+
 private:
     yarp::sig::Vector& reachablePoint(const yarp::sig::Vector& v0 , const yarp::sig::Vector& v1 , const yarp::sig::Vector& vSC, yarp::sig::Vector& vreach );
     double average_depth(int u,int v,int offset);
+
+    //Tf2 members
+    std::shared_ptr<rclcpp::Node> m_node;
+    std::shared_ptr<tf2_ros::Buffer> m_tf_buffer;
+    std::shared_ptr<tf2_ros::TransformListener> m_tf_listener;
 
 };
 

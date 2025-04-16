@@ -85,7 +85,10 @@ install_basic_package_files(${PROJECT_NAME} VARS_PREFIX ${VARS_PREFIX}
                                             DEPENDENCIES "YARP 3.3.0 REQUIRED COMPONENTS os sig dev math idl_tools" "ICUB REQUIRED"
                                             NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
-include(AddUninstallTarget)
+if(NOT TARGET uninstall)
+    message(STATUS "Adding uninstall target")
+    include(AddUninstallTarget)
+endif()
 
 # Install empty CER file in <prefix>/share/ament_index/resource_index/packages
 # so that CER package is found by ROS2
