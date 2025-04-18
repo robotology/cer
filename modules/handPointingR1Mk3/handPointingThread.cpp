@@ -6,6 +6,7 @@
 
 #include <yarp/os/Log.h>
 #include <yarp/os/LogComponent.h>
+#include <yarp/math/Math.h>
 #define _USE_MATH_DEFINES
 
 #include "handPointingThread.h"
@@ -422,18 +423,151 @@ void HandPointingThread::onRead(yarp::os::Bottle &b)
             vTarget = reachablePoint(v0, v1, v0, vTarget);
         }
     
-        // TODO: We need to decide which arm to use. Right now we need to have two services to left and right cartesian controllers.
-        yInfo() << "Moving arm" << armUsed << "to" << vTarget[0] << "," <<  vTarget[1] << "," << vTarget[2];
+        // Construct the orientation of the target so that the end effector is aligned with the target
+
+        // Let's transform the target in the shoulder frame
+        // Lookup the transform from the base frame to the shoulder used
+        // The transform is already in the correct format
+
+        std::string frame_name;
         if(armUsed == "left-arm")
         {
-            if(!m_service_left.go_to_position(vTarget[0], vTarget[1], vTarget[2],m_traj_duration))
+            frame_name = m_r_shoulder_frame_id;
+        }
+        else if(armUsed == "right-arm")
+        {
+            frame_name = m_l_shoulder_frame_id;
+        }
+        else
+        {
+            yCError(HAND_POINTING_THREAD,"I don't have more than two arms, sorry");
+            return;
+        }
+
+        yarp::sig::Matrix transform_mtrx_shoulder;
+        bool shoulder_frame_exists = getTransformTF2(frame_name, m_base_frame_id, transform_mtrx_shoulder);
+        yarp::sig::Vector vTargetShoulder = transform_mtrx_shoulder*vTarget; //target point in shoulder frame coordinates
+
+        // Check: This makes sense
+        yInfo() << "Target point in shoulder frame coordinates:" << vTargetShoulder[0] << "," << vTargetShoulder[1] << "," << vTargetShoulder[2];
+
+        // Let's suppose vTargetShoulder is 1,0,0
+        // vTargetShoulder[0] = 0;
+        // vTargetShoulder[1] = 0;
+        // vTargetShoulder[2] = -1;
+
+        // Let's first define the frame of the end effector
+        // The end effector frame z axis is aligned with the direction of the vector from the shoulder to the target
+        yarp::sig::Vector ee_z = vTargetShoulder / yarp::math::norm(vTargetShoulder); 
+
+        // // We take the negative of the z axis to have the end effector pointing towards the target
+        ee_z[0] = -ee_z[0];
+        ee_z[1] = -ee_z[1];
+        ee_z[2] = -ee_z[2];
+
+        // The end effector frame x axis must be orthogonal to the z axis
+        // Let's first define the up vector with respect to the world frame
+        // yarp::sig::Vector up_vector {0.0, 0.0, -1.0};
+        yarp::sig::Vector up_vector {0.0, 1.0, 0.0};
+
+        // Let's orthogonalize it with respect to the z axis
+        yarp::sig::Vector ee_y = up_vector - (up_vector * ee_z) * ee_z;
+
+        // Normalize the x axis
+        ee_y = ee_y / yarp::math::norm(ee_y);
+
+        // The end effector frame y axis is defined as the cross product of the z and x axes
+        yarp::sig::Vector ee_x = yarp::math::cross(ee_y,ee_z);
+        
+        // Normalize the y axis
+        ee_x = ee_x / yarp::math::norm(ee_x);
+
+        // Now we can construct the rotation matrix
+        yarp::sig::Matrix rotation_matrix(3, 3);
+        rotation_matrix(0, 0) = ee_x[0];
+        rotation_matrix(1, 0) = ee_x[1];
+        rotation_matrix(2, 0) = ee_x[2];
+        rotation_matrix(0, 1) = ee_y[0];
+        rotation_matrix(1, 1) = ee_y[1];
+        rotation_matrix(2, 1) = ee_y[2];
+        rotation_matrix(0, 2) = ee_z[0];
+        rotation_matrix(1, 2) = ee_z[1];
+        rotation_matrix(2, 2) = ee_z[2];
+        
+        yInfo() << "Rotation matrix:" << rotation_matrix.toString();
+
+        // Convert rotation matrix to rpy for logging
+        yarp::sig::Vector rpy = yarp::math::dcm2rpy(rotation_matrix);
+        // yarp::math::Matrix2RPY(rotation_matrix, rpy);
+
+        // Then we can convert the rotation matrix to a quaternion
+        double qw = sqrt(1.0+ rotation_matrix(0, 0) + rotation_matrix(1, 1) + rotation_matrix(2, 2)) / 2.0;
+        double qx = (rotation_matrix(2, 1) - rotation_matrix(1, 2)) / (4.0 * qw);
+        double qy = (rotation_matrix(0, 2) - rotation_matrix(2, 0)) / (4.0 * qw);
+        double qz = (rotation_matrix(1, 0) - rotation_matrix(0, 1)) / (4.0 * qw);
+
+        // // Now we can construct the transformation matrix w.r.t shoulder frame
+        // yarp::sig::Matrix transform_mtrx_target(4, 4);
+        // transform_mtrx_target(0, 0) = rotation_matrix(0, 0);
+        // transform_mtrx_target(0, 1) = rotation_matrix(0, 1);
+        // transform_mtrx_target(0, 2) = rotation_matrix(0, 2);
+        // transform_mtrx_target(0, 3) = vTargetShoulder[0];
+        // transform_mtrx_target(1, 0) = rotation_matrix(1, 0);
+        // transform_mtrx_target(1, 1) = rotation_matrix(1, 1);
+        // transform_mtrx_target(1, 2) = rotation_matrix(1, 2);
+        // transform_mtrx_target(1, 3) = vTargetShoulder[1];
+        // transform_mtrx_target(2, 0) = rotation_matrix(2, 0);
+        // transform_mtrx_target(2, 1) = rotation_matrix(2, 1);
+        // transform_mtrx_target(2, 2) = rotation_matrix(2, 2);
+        // transform_mtrx_target(2, 3) = vTargetShoulder[2];
+        // transform_mtrx_target(3, 0) = 0.0;
+        // transform_mtrx_target(3, 1) = 0.0;
+        // transform_mtrx_target(3, 2) = 0.0;
+        // transform_mtrx_target(3, 3) = 1.0;
+
+        // // Now we can transform the matrix to the base frame
+        // yarp::sig::Matrix transform_mtrx_target_base(4, 4);
+        // transform_mtrx_target_base = (*matrixShoulderUsed)*transform_mtrx_target;
+
+        // // Extract the rotation matrix from the transformation matrix
+        // yarp::sig::Matrix rotation_matrix_base(3, 3);
+        // rotation_matrix_base(0, 0) = transform_mtrx_target_base(0, 0);
+        // rotation_matrix_base(0, 1) = transform_mtrx_target_base(0, 1);
+        // rotation_matrix_base(0, 2) = transform_mtrx_target_base(0, 2);
+        // rotation_matrix_base(1, 0) = transform_mtrx_target_base(1, 0);
+        // rotation_matrix_base(1, 1) = transform_mtrx_target_base(1, 1);
+        // rotation_matrix_base(1, 2) = transform_mtrx_target_base(1, 2);
+        // rotation_matrix_base(2, 0) = transform_mtrx_target_base(2, 0);
+        // rotation_matrix_base(2, 1) = transform_mtrx_target_base(2, 1);
+        // rotation_matrix_base(2, 2) = transform_mtrx_target_base(2, 2);
+
+
+
+        // Convert rotation matrix to rpy for logging
+        // yarp::sig::Vector rpy = yarp::math::dcm2rpy(rotation_matrix_base);
+        // // yarp::math::Matrix2RPY(rotation_matrix, rpy);
+
+        // // Then we can convert the rotation matrix to a quaternion
+        // double qw = sqrt(1.0 + rotation_matrix_base(0, 0) + rotation_matrix_base(1, 1) + rotation_matrix_base(2, 2)) / 2.0;
+        // double qx = (rotation_matrix_base(2, 1) - rotation_matrix_base(1, 2)) / (4.0 * qw);
+        // double qy = (rotation_matrix_base(0, 2) - rotation_matrix_base(2, 0)) / (4.0 * qw);
+        // double qz = (rotation_matrix_base(1, 0) - rotation_matrix_base(0, 1)) / (4.0 * qw);
+        
+
+        // TODO: We need to decide which arm to use. Right now we need to have two services to left and right cartesian controllers.
+        yInfo() << "Moving arm" << armUsed << "to" << vTarget[0] << "," <<  vTarget[1] << "," << vTarget[2];
+        yInfo() << "With orientation" << qx << "," << qy << "," << qz << "," << qw;
+        yInfo() << "In rpy" << rpy[0] << "," << rpy[1] << "," << rpy[2];
+        if(armUsed == "left-arm")
+        {
+            if(!m_service_left.go_to_pose(vTarget[0], vTarget[1], vTarget[2], qx, qy, qz, qw, m_traj_duration))
             {
                 yCWarning(HAND_POINTING_THREAD,"Error in sending command to move the arm");
             }
         }
         else if(armUsed == "right-arm")
         {
-            if(!m_service_right.go_to_position(vTarget[0], vTarget[1], vTarget[2],m_traj_duration))
+            if(!m_service_right.go_to_pose(vTarget[0], vTarget[1], vTarget[2], qx, qy, qz, qw, m_traj_duration))
             {
                 yCWarning(HAND_POINTING_THREAD,"Error in sending command to move the arm");
             }
