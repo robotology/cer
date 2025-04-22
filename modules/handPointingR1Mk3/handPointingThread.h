@@ -111,9 +111,14 @@ public:
                          const std::string& source_frame,
                          yarp::sig::Matrix& transform);
 
+    std::tuple<double,double,double,double> rot2quats(const yarp::sig::Matrix& rot) const;
+
 private:
     yarp::sig::Vector& reachablePoint(const yarp::sig::Vector& v0 , const yarp::sig::Vector& v1 , const yarp::sig::Vector& vSC, yarp::sig::Vector& vreach );
     double average_depth(int u,int v,int offset);
+
+    // Return a rotation matrix that is aligned with the input vector
+    yarp::sig::Matrix getAlignedRotation(const yarp::sig::Vector& v0) const;
 
     //Tf2 members
     std::shared_ptr<rclcpp::Node> m_node;
