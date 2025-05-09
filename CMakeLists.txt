@@ -19,7 +19,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 find_package(YCM)
-find_package(YARP 3.11.100 REQUIRED COMPONENTS os sig dev math idl_tools)
+find_package(YARP 3.11.1 REQUIRED COMPONENTS os sig dev math idl_tools)
 
 find_package(ICUB REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
@@ -27,6 +27,11 @@ list(APPEND CMAKE_MODULE_PATH ${ICUB_MODULE_PATH})
 find_package(IPOPT)
 if(NOT IPOPT_FOUND)
     message(WARNING "IPOPT library was not found, some kinematics module will not be available.")
+endif()
+
+find_package(ergocub-cartesian-control)
+if(NOT ergocub-cartesian-control_FOUND)
+    message(WARNING "ergocub-cartesian-control library was not found, handPointingR1Mk3 will not be available.")
 endif()
 
 if(NOT WIN32)
@@ -62,6 +67,7 @@ add_subdirectory(libraries/cer_kinematics_alt)
 add_subdirectory(libraries/robot_self_collision)
 
 add_subdirectory(app)
+add_subdirectory(ros2)
 add_subdirectory(cermod)
 add_subdirectory(modules)
 add_subdirectory(tools)
@@ -79,5 +85,16 @@ install_basic_package_files(${PROJECT_NAME} VARS_PREFIX ${VARS_PREFIX}
                                             DEPENDENCIES "YARP 3.3.0 REQUIRED COMPONENTS os sig dev math idl_tools" "ICUB REQUIRED"
                                             NO_CHECK_REQUIRED_COMPONENTS_MACRO)
 
-include(AddUninstallTarget)
+if(NOT TARGET uninstall)
+    message(STATUS "Adding uninstall target")
+    include(AddUninstallTarget)
+endif()
 
+# Install empty CER file in <prefix>/share/ament_index/resource_index/packages
+# so that CER package is found by ROS2
+# See https://github.com/robotology/icub-models/issues/177
+# and https://github.com/icub-tech-iit/ergocub-software/issues/59
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/CER_empty_file "")
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/CER_empty_file
+        DESTINATION share/ament_index/resource_index/packages
+        RENAME CER)

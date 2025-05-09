@@ -17,3 +17,7 @@ add_subdirectory(robotJoystickControl)
 add_subdirectory(textimage)
 add_subdirectory(faceExpression)
 add_subdirectory(handPointing)
+
+if(ergocub-cartesian-control_FOUND)
+    add_subdirectory(handPointingR1Mk3)
+endif()
