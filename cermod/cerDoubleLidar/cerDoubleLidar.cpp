@@ -142,6 +142,7 @@ bool cerDoubleLidar::attachAll(const PolyDriverList &p)
         else
         {
              yCError(CER_DOUBLE_LIDAR) << "attach: the driver called" << p[i]->key << "not belong to my configuration";
+             yCError(CER_DOUBLE_LIDAR) << "acceptable values are: " << m_lFrontCfg.sensorName << " , " << m_lBackCfg.sensorName;
              return false;
         }
     }
@@ -439,6 +440,7 @@ ReturnValue cerDoubleLidar::getRawData(yarp::sig::Vector &out, double* timestamp
     if(!m_ILaserFrontData->getRawData(dataFront, &timestampFront))
     {
         out = m_laser_data;
+        yCError(CER_DOUBLE_LIDAR) << "m_ILaserFrontData->getRawData() failed";
         m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_GENERAL_ERROR;
         return ReturnValue::return_code::return_value_error_generic;
     }
@@ -446,11 +448,29 @@ ReturnValue cerDoubleLidar::getRawData(yarp::sig::Vector &out, double* timestamp
     if(!m_ILaserBackData->getRawData(dataBack, &timestampBack))
     {
         out = m_laser_data;
+        yCError(CER_DOUBLE_LIDAR) << "m_ILaserBackData->getRawData() failed";
         m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_GENERAL_ERROR;
         return ReturnValue::return_code::return_value_error_generic;
     }
-    m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_OK_IN_USE;
 
+    if (m_sensorsNum != dataFront.size())
+    {
+        out = m_laser_data;
+        yCError(CER_DOUBLE_LIDAR) << "m_sensorsNum != dataFront.size()" << m_sensorsNum << " vs " << dataFront.size();
+        m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_GENERAL_ERROR;
+        return ReturnValue::return_code::return_value_error_generic;
+    }
+    
+    if (m_sensorsNum != dataBack.size())
+    {
+        out = m_laser_data;
+        yCError(CER_DOUBLE_LIDAR) << "m_sensorsNum != dataBack.size()" << m_sensorsNum << " vs " << dataBack.size();
+        m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_GENERAL_ERROR;
+        return ReturnValue::return_code::return_value_error_generic;
+    }
+
+    m_device_status = yarp::dev::IRangefinder2D::Device_status::DEVICE_OK_IN_USE;
+    
     for(size_t i=0; i<m_sensorsNum; i++)
     {
      //   yDebug() << i << m_sensorsNum;
