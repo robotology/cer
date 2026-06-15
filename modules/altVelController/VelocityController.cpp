@@ -81,17 +81,17 @@ public:
 
     void modePosition(int part)
     {
-        for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, VOCAB_CM_POSITION);
+        for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION);
     }
 
     void modeDirect(int part)
     {
-        for (int j = 0; j < mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, VOCAB_CM_POSITION_DIRECT);
+        for (int j = 0; j < mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION_DIRECT);
     }
 
     void modeVelocity(int part)
     {
-        for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, VOCAB_CM_VELOCITY);
+        for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
     }
 
     static const char *R1PartName[NUM_R1_PARTS];
@@ -176,9 +176,9 @@ bool R1Driver::open()
 
             if (pEncFbk[part]) pEncFbk[part]->getAxes(&mNumJoints[part]);
 
-            pPosCtrl[part]->setRefSpeeds(ref_vel[part]);
-            pPosCtrl[part]->setRefAccelerations(ref_acc[part]);
-            pVelCtrl[part]->setRefAccelerations(ref_acc[part]);
+            pPosCtrl[part]->setTrajSpeeds(ref_vel[part]);
+            pPosCtrl[part]->setTrajAccelerations(ref_acc[part]);
+            pVelCtrl[part]->setTrajAccelerations(ref_acc[part]);
 
             modeVelocity(part);
         }
