@@ -133,7 +133,7 @@ private:
     IPositionDirect*   ipos;
     IControlLimits*    ilim;
     PolyDriver         drvHand;
-    IntVector          modes;
+    std::vector<yarp::dev::SelectableControlModeEnum> modes;
     Vector             vels;
     Matrix             pose;
     bool               button0;
