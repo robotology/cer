@@ -84,7 +84,7 @@ public:
         driver.view(iposd);
 
         bounds.resize(2);
-        ilim->getLimits(joint,&bounds[0],&bounds[1]);
+        ilim->getPosLimits(joint,&bounds[0],&bounds[1]);
         double tmp=0.1*(bounds[1]-bounds[0]);
 
         bounds[0]+=tmp;
@@ -92,7 +92,7 @@ public:
         
         qd.resize(1);
         ienc->getEncoder(joint,&qd[0]);
-        imod->setControlMode(joint,VOCAB_CM_POSITION_DIRECT);
+        imod->setControlMode(joint, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION_DIRECT);
 
         gen=new minJerkTrajGen(qd,Ts,T);
         outPort.open("/cer_log_joint:o");
@@ -173,4 +173,3 @@ int main(int argc, char *argv[])
     Controller controller;
     return controller.runModule(rf);
 }
-
