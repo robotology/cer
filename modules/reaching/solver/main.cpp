@@ -68,7 +68,7 @@ class IKSolver : public RFModule
 
             lim.resize(nAxes,2);
             for (int i=0; i<nAxes; i++)
-                ilim->getLimits(i,&lim(i,0),&lim(i,1));
+                ilim->getPosLimits(i,&lim(i,0),&lim(i,1));
 
             driver.close();
             return true;
@@ -338,4 +338,3 @@ int main(int argc, char *argv[])
     IKSolver solver;
     return solver.runModule(rf);
 }
-
