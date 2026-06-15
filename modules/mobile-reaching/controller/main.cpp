@@ -80,8 +80,8 @@ class Controller : public RFModule
     IMap2D*           imap;
     INavigation2D*    inav;
 
-    vector<int> posDirectMode;
-    vector<int> curMode;
+    vector<SelectableControlModeEnum> posDirectMode;
+    vector<ControlModeEnum> curMode;
 
     MobileArmSolver solver;
     minJerkTrajGen* gen;
@@ -140,17 +140,21 @@ class Controller : public RFModule
     /****************************************************************/
     void getCurrentMode()
     {
-        imod[0]->getControlModes((int)jointsIndexes[0].size(),jointsIndexes[0].data(),&curMode[0]);
-        imod[1]->getControlModes((int)jointsIndexes[1].size(),jointsIndexes[1].data(),&curMode[3]);
-        imod[2]->getControlModes((int)jointsIndexes[2].size(),jointsIndexes[2].data(),&curMode[4]);
-        imod[3]->getControlModes((int)jointsIndexes[3].size(),jointsIndexes[3].data(),&curMode[9]);
+        const size_t offsets[4] = {0, 3, 4, 9};
+        for (int part = 0; part < 4; part++)
+        {
+            vector<ControlModeEnum> modes;
+            imod[part]->getControlModes(jointsIndexes[part], modes);
+            for (size_t i = 0; i < modes.size(); i++)
+                curMode[offsets[part] + i] = modes[i];
+        }
     }
 
     /****************************************************************/
     bool areJointsHealthy()
     {
         for (size_t i=0; i<curMode.size(); i++)
-            if ((curMode[i]==VOCAB_CM_HW_FAULT) || (curMode[i]==VOCAB_CM_IDLE))
+            if ((curMode[i]==ControlModeEnum::VOCAB_CM_HW_FAULT) || (curMode[i]==ControlModeEnum::VOCAB_CM_IDLE))
                 return false;
         return true;
     }
@@ -158,38 +162,47 @@ class Controller : public RFModule
     /****************************************************************/
     bool setPositionDirectMode()
     {
+        const size_t offsets[4] = {0, 3, 4, 9};
         for (size_t i=0; i<3; i++)
         {
-            if (curMode[i]!=posDirectMode[i])
+            if (static_cast<int>(curMode[i]) != static_cast<int>(posDirectMode[i]))
             {
-                imod[0]->setControlModes((int)jointsIndexes[0].size(),jointsIndexes[0].data(),&posDirectMode[0]);
+                vector<SelectableControlModeEnum> modes(posDirectMode.begin() + offsets[0],
+                                                        posDirectMode.begin() + offsets[0] + jointsIndexes[0].size());
+                imod[0]->setControlModes(jointsIndexes[0], modes);
                 break;
             }
         }
 
         for (size_t i=3; i<4; i++)
         {
-            if (curMode[i]!=posDirectMode[i])
+            if (static_cast<int>(curMode[i]) != static_cast<int>(posDirectMode[i]))
             {
-                imod[1]->setControlModes((int)jointsIndexes[1].size(),jointsIndexes[1].data(),&posDirectMode[3]);
+                vector<SelectableControlModeEnum> modes(posDirectMode.begin() + offsets[1],
+                                                        posDirectMode.begin() + offsets[1] + jointsIndexes[1].size());
+                imod[1]->setControlModes(jointsIndexes[1], modes);
                 break;
             }
         }
 
         for (size_t i=4; i<9; i++)
         {
-            if (curMode[i]!=posDirectMode[i])
+            if (static_cast<int>(curMode[i]) != static_cast<int>(posDirectMode[i]))
             {
-                imod[2]->setControlModes((int)jointsIndexes[2].size(),jointsIndexes[2].data(),&posDirectMode[4]);
+                vector<SelectableControlModeEnum> modes(posDirectMode.begin() + offsets[2],
+                                                        posDirectMode.begin() + offsets[2] + jointsIndexes[2].size());
+                imod[2]->setControlModes(jointsIndexes[2], modes);
                 break;
             }
         }
 
         for (size_t i=9; i<curMode.size(); i++)
         {
-            if (curMode[i]!=posDirectMode[i])
+            if (static_cast<int>(curMode[i]) != static_cast<int>(posDirectMode[i]))
             {
-                imod[3]->setControlModes((int)jointsIndexes[3].size(),jointsIndexes[3].data(),&posDirectMode[9]);
+                vector<SelectableControlModeEnum> modes(posDirectMode.begin() + offsets[3],
+                                                        posDirectMode.begin() + offsets[3] + jointsIndexes[3].size());
+                imod[3]->setControlModes(jointsIndexes[3], modes);
                 break;
             }
         }
@@ -416,8 +429,8 @@ public:
 
         qd=getEncoders();
         for (size_t i=0; i<qd.length(); i++)
-            posDirectMode.push_back(VOCAB_CM_POSITION_DIRECT);
-        curMode=posDirectMode;
+            posDirectMode.push_back(SelectableControlModeEnum::VOCAB_CM_POSITION_DIRECT);
+        curMode.resize(qd.length(), ControlModeEnum::VOCAB_CM_UNKNOWN);
 
         getCurrentMode();
         
@@ -1230,4 +1243,3 @@ int main(int argc, char *argv[])
     Controller controller;
     return controller.runModule(rf);
 }
-
