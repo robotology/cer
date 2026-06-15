@@ -27,21 +27,21 @@ void ControlThread::setVels(double* vels)
     {
         if (1)
         {
-            int mods[3];
+            std::vector<yarp::dev::ControlModeEnum> mods(3);
             iCmd->getControlModes(mods);
-            if (mods[0] != VOCAB_CM_VELOCITY)
+            if (mods[0] != yarp::dev::ControlModeEnum::VOCAB_CM_VELOCITY)
             {
-                iCmd->setControlMode(0, VOCAB_CM_VELOCITY);
+                iCmd->setControlMode(0, yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
                 yarp::os::Time::delay(0.005);
             }
-            if (mods[1] != VOCAB_CM_VELOCITY)
+            if (mods[1] != yarp::dev::ControlModeEnum::VOCAB_CM_VELOCITY)
             {
-                iCmd->setControlMode(1, VOCAB_CM_VELOCITY);
+                iCmd->setControlMode(1, yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
                 yarp::os::Time::delay(0.005);
             }
-            if (mods[2] != VOCAB_CM_VELOCITY)
+            if (mods[2] != yarp::dev::ControlModeEnum::VOCAB_CM_VELOCITY)
             {
-                iCmd->setControlMode(2, VOCAB_CM_VELOCITY);
+                iCmd->setControlMode(2, yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
                 yarp::os::Time::delay(0.005);
             }
         }
@@ -58,7 +58,7 @@ void ControlThread::run()
     Bottle *b = this->port_joystick_control.read(false);
     if (b)
     {
-        double val0 = b->get(joystick_channel_0).asFloat64(); 
+        double val0 = b->get(joystick_channel_0).asFloat64();
         double val1 = b->get(joystick_channel_1).asFloat64();
         double val2 = b->get(joystick_channel_2).asFloat64(); //elong
         double vels[3];
@@ -82,19 +82,19 @@ void ControlThread::run()
         val0=val0*gain_0;
         val1=val1*gain_1;
         val2=val2*gain_2;
-    
+
         double vel1= val2 + val0        + 0;
         double vel2= val2 - val0/2      + val1/1.732050808;
         double vel3= val2 - val0/2      - val1/1.732050808;
-    
+
         //yDebug() << vel1 <<vel2 << vel3;
-    
+
         vels[0]=vel1;
         vels[1]=vel2;
         vels[2]=vel3;
         setVels(vels);
     }
-    else 
+    else
     {
         //yDebug() <<" empty";
         return;
@@ -117,7 +117,7 @@ bool ControlThread::threadInit()
         //try to connect to joystickCtrl output
         if (rf.check("joystick_connect"))
         {
-            int joystick_trials = 0; 
+            int joystick_trials = 0;
             do
             {
                 yarp::os::Time::delay(1.0);
@@ -140,7 +140,7 @@ bool ControlThread::threadInit()
             }
             while (1);
         }
-        
+
     // open the control board driver
     yInfo("Opening the motors interface...\n");
     int trials = 0;
@@ -199,9 +199,9 @@ bool ControlThread::threadInit()
     iEnc->getEncoder(0, &enc_init_elong);
     iEnc->getEncoder(1, &enc_init_roll);
     iEnc->getEncoder(2, &enc_init_pitch);
-    iVel ->setRefAcceleration (0,10000000);
-    iVel ->setRefAcceleration (1,10000000);
-    iVel ->setRefAcceleration (2,10000000);
+    iVel ->setTrajAcceleration (0,10000000);
+    iVel ->setTrajAcceleration (1,10000000);
+    iVel ->setTrajAcceleration (2,10000000);
 
     yDebug() << "Initial vals" << enc_init_elong << enc_init_roll << enc_init_pitch;
     return true;
@@ -251,9 +251,9 @@ void ControlThread::threadRelease()
 {
     if (iCmd)
     {
-        iCmd->setControlMode(0, VOCAB_CM_POSITION);
-        iCmd->setControlMode(1, VOCAB_CM_POSITION);
-        iCmd->setControlMode(2, VOCAB_CM_POSITION);
+        iCmd->setControlMode(0, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION);
+        iCmd->setControlMode(1, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION);
+        iCmd->setControlMode(2, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION);
     }
 
     port_joystick_control.interrupt();
