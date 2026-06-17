@@ -185,7 +185,7 @@ bool tripodMotionControl::tripod_user2HW(yarp::sig::Vector &user, yarp::sig::Vec
 #if USE_IKIN_IPOPT
     // The caller must use mutex or private data
     yAssert(user.length()>=3);
-    
+
     Vector ypr(3,0.0);
     double &zd=user[0];                                     // heave
     ypr[1]=_baseTransformation(0,0)*(M_PI/180.0)*user[1];   // pitch
@@ -197,7 +197,7 @@ bool tripodMotionControl::tripod_user2HW(yarp::sig::Vector &user, yarp::sig::Vec
 #else
     // The caller must use mutex or private data
     yAssert(user.length()>=3);
-    
+
     //Vector ypr(3,0.0);
     //double &zd=user[0];                                     // heave
     //ypr[1]=_baseTransformation(0,0)*(M_PI/180.0)*user[1];   // pitch
@@ -227,7 +227,7 @@ bool tripodMotionControl::tripod_user2HW(yarp::sig::Vector &user, yarp::sig::Vec
 
     robot[2] = 0.5*(A+B);
     robot[1] = 0.5*(A-B);
-    
+
     return true;
 #endif
 }
@@ -713,9 +713,9 @@ bool tripodMotionControl::parseTorquePidsGroup(Bottle& pidsGroup, Pid myPid[], d
     if (!extractGroup(pidsGroup, xtmp, "stictionDwn", "Pid stictionDwn", _njoints))   return false; for (j=0; j<_njoints; j++) myPid[j].stiction_down_val = xtmp.get(j+1).asFloat64();
     if (!extractGroup(pidsGroup, xtmp, "kff",   "Pid kff parameter", _njoints))       return false; for (j=0; j<_njoints; j++) myPid[j].kff  = xtmp.get(j+1).asFloat64();
     if (!extractGroup(pidsGroup, xtmp, "kbemf", "kbemf parameter", _njoints))         return false; for (j=0; j<_njoints; j++) kbemf[j]      = xtmp.get(j+1).asFloat64();
-    if (!extractGroup(pidsGroup, xtmp, "ktau", "ktau parameter", _njoints))           return false; for (j=0; j<_njoints; j++) ktau[j]       = xtmp.get(j+1).asFloat64(); 
+    if (!extractGroup(pidsGroup, xtmp, "ktau", "ktau parameter", _njoints))           return false; for (j=0; j<_njoints; j++) ktau[j]       = xtmp.get(j+1).asFloat64();
     if (!extractGroup(pidsGroup, xtmp, "filterType", "filterType param", _njoints))   return false; for (j=0; j<_njoints; j++) filterType[j] = xtmp.get(j+1).asInt32();
- 
+
 
     //optional PWM limit
     if(_pwmIsLimited)
@@ -998,7 +998,7 @@ bool tripodMotionControl::setPidRaw(int j, const Pid &pid)
 {
     Pid  outPid;
     Pid hwPid = pid;
-    
+
     if (_positionControlUnits==P_METRIC_UNITS)
     {
         hwPid.kp = hwPid.kp / _angleToEncoder[j];  //[PWM/deg]
@@ -1386,7 +1386,7 @@ ReturnValue tripodMotionControl::getTrajSpeedRaw(int j, double *spd)
 {
     if (spd!=NULL)
     {
-        *spd=_refSpeed; 
+        *spd=_refSpeed;
         return ReturnValue_ok;
     }
     else
@@ -1422,7 +1422,17 @@ ReturnValue tripodMotionControl::stopRaw()
 
 ReturnValue tripodMotionControl::getTargetPositionRaw(const int joint, double *ref)
 {
+    if (joint < 0 || joint >= _njoints)
+    {
+        yError() << "tripodMotionControl::getTargetPositionRaw() joint index out of bounds";
+        return ReturnValue_error_input_out_of_bounds;
+    }
     *ref = _userRef_positions[joint];
+    if (ref == nullptr)
+    {
+        yError() << "tripodMotionControl::getTargetPositionRaw() null pointer passed as argument";
+        return ReturnValue_error_method_failed;
+    }
     return ReturnValue_ok;
 }
 
@@ -1739,7 +1749,7 @@ ReturnValue tripodMotionControl::getEncoderTimedRaw(int j, double *value, double
 ReturnValue tripodMotionControl::getNumberOfMotorEncodersRaw(int* num)
 {
     if (_device.iMotEnc==nullptr) return ReturnValue_error_not_ready;
-        
+
     *num=_njoints;  // TODO probably not true
     return ReturnValue_ok;
 }
@@ -1777,14 +1787,14 @@ ReturnValue tripodMotionControl::resetMotorEncodersRaw()
 ReturnValue tripodMotionControl::getMotorEncoderRaw(int m, double *value)
 {
     if (_device.iMotEnc==nullptr) return ReturnValue_error_not_ready;
-        
+
     return toReturnValue(_device.iMotEnc->getMotorEncoder(m, value));
 }
 
 ReturnValue tripodMotionControl::getMotorEncodersRaw(double *encs)
 {
     if (_device.iMotEnc==nullptr) return ReturnValue_error_not_ready;
-    
+
     bool ret = true;
     for(int j=0; j<_njoints; j++)
         ret &= _device.iMotEnc->getMotorEncoder(j, &encs[j]);
@@ -1814,7 +1824,7 @@ ReturnValue tripodMotionControl::getMotorEncoderAccelerationsRaw(double *accs)
 ReturnValue tripodMotionControl::getMotorEncodersTimedRaw(double *encs, double *stamps)
 {
     if (_device.iMotEnc==nullptr) return ReturnValue_error_not_ready;
-        
+
     bool ret = true;
     for(int j=0; j<_njoints; j++)
         ret &= _device.iMotEnc->getMotorEncoderTimed(j, &encs[j], &stamps[j]);
@@ -1824,7 +1834,7 @@ ReturnValue tripodMotionControl::getMotorEncodersTimedRaw(double *encs, double *
 ReturnValue tripodMotionControl::getMotorEncoderTimedRaw(int m, double *encs, double *stamp)
 {
     if (_device.iMotEnc==nullptr) return ReturnValue_error_not_ready;
-        
+
     return toReturnValue(_device.iMotEnc->getMotorEncoderTimed(m, encs, stamp));
 }
 ///////////////////////// END Motor Encoder Interface
@@ -2172,7 +2182,17 @@ ReturnValue tripodMotionControl::setPositionsRaw(const double *refs)
 
 ReturnValue tripodMotionControl::getRefPositionRaw(const int joint, double *ref)
 {
+    if (joint < 0 || joint >= _njoints)
+    {
+        yError() << "tripodMotionControl::getRefPositionRaw() joint index out of bounds";
+        return ReturnValue_error_input_out_of_bounds;
+    }
     *ref = _userRef_positions[joint];
+    if (ref == nullptr)
+    {
+        yError() << "tripodMotionControl::getRefPositionRaw() null pointer passed as argument";
+        return ReturnValue_error_method_failed;
+    }
     return ReturnValue_ok;
 }
 
