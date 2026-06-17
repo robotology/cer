@@ -464,7 +464,7 @@ public:
         ienc[2]->getAxes(&nAxes);
         for (int i=0; i<nAxes; i++)
             posDirectMode.push_back(SelectableControlModeEnum::VOCAB_CM_POSITION_DIRECT);
-        curMode.resize(nAxes, ControlModeEnum::VOCAB_CM_UNKNOWN);
+        curMode.resize(nAxes, ControlModeEnum::VOCAB_CM_POSITION_DIRECT);
 
         Vector q=getEncoders();
         qd=q.subVector(4,5);
