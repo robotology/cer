@@ -67,13 +67,13 @@ class Controller : public RFModule
     IEncodersTimed*   ienc[4];
     IPositionControl* ipos[4];
     IPositionDirect*  iposd[4];
-    
+
     vector<SelectableControlModeEnum> posDirectMode;
     vector<ControlModeEnum> curMode;
 
     ArmSolver solver;
     minJerkTrajGen* gen;
-    
+
     BufferedPort<Vector> statePort;
     TargetPort targetPort;
     RpcServer rpcPort;
@@ -197,7 +197,7 @@ class Controller : public RFModule
 
     /****************************************************************/
     void stopControl()
-    {        
+    {
         for (int i=0; i<4; i++)
             ipos[i]->stop((int)jointsIndexes[i].size(),jointsIndexes[i].data());
         controlling=false;
@@ -353,15 +353,15 @@ public:
         qd=getEncoders();
         for (size_t i=0; i<qd.length(); i++)
             posDirectMode.push_back(SelectableControlModeEnum::VOCAB_CM_POSITION_DIRECT);
-        curMode.resize(qd.length(), ControlModeEnum::VOCAB_CM_UNKNOWN);
+        curMode.resize(qd.length(), ControlModeEnum::VOCAB_CM_POSITION_DIRECT);
 
         getCurrentMode();
-        
+
         ArmParameters arm(arm_type);
         arm.upper_arm.setAllConstraints(false);
         solver.setArmParameters(arm);
 
-        gen=new minJerkTrajGen(qd,Ts,T);        
+        gen=new minJerkTrajGen(qd,Ts,T);
 
         return true;
     }
@@ -375,7 +375,7 @@ public:
             stopControl();
 
         if (!targetPort.isClosed())
-            targetPort.close(); 
+            targetPort.close();
 
         if (!statePort.isClosed())
             statePort.close();
@@ -385,10 +385,10 @@ public:
 
         if (!rpcPort.asPort().isOpen())
             rpcPort.close();
-                
+
         for (int i=0; i<4; i++)
             if (drivers[i].isValid())
-                drivers[i].close(); 
+                drivers[i].close();
 
         delete gen;
         return true;
@@ -522,7 +522,7 @@ public:
     bool updateModule()
     {
         lock_guard<mutex> lg(mtx);
-        getCurrentMode();        
+        getCurrentMode();
 
         Matrix Hee;
         double timeStamp;
@@ -553,7 +553,7 @@ public:
 
             if (areJointsHealthy())
             {
-                setPositionDirectMode(); 
+                setPositionDirectMode();
                 iposd[0]->setPositions((int)jointsIndexes[0].size(),jointsIndexes[0].data(),&ref[0]);
                 iposd[1]->setPositions((int)jointsIndexes[1].size(),jointsIndexes[1].data(),&ref[3]);
                 iposd[2]->setPositions((int)jointsIndexes[2].size(),jointsIndexes[2].data(),&ref[4]);
@@ -569,7 +569,7 @@ public:
             else
             {
                 yWarning("Detected joints in HW_FAULT and/or IDLE => stopping control");
-                stopControl();                
+                stopControl();
             }
         }
 
@@ -769,8 +769,8 @@ public:
         }
 
         if (reply.size()==0)
-            reply.addVocab32(Vocab32::encode("nack")); 
-        
+            reply.addVocab32(Vocab32::encode("nack"));
+
         return true;
     }
 };
@@ -796,7 +796,7 @@ int main(int argc, char *argv[])
         yError("YARP server not available!");
         return 1;
     }
-    
+
     ResourceFinder rf;
     rf.configure(argc,argv);
 
