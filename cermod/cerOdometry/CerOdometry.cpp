@@ -224,8 +224,8 @@ bool CerOdometry::attach(yarp::dev::PolyDriver *driver) {
         yCError(CERODOM) << "iencoder device has not been viewed";
         return false;
     }
-    int axesNumber;
-    ienct->getAxes(&axesNumber);
+    size_t axesNumber=0;
+    ienct->getAxes(axesNumber);
     if(axesNumber != 2){
         yCError(CERODOM) << "failed to get correct number of axes";
         return false;

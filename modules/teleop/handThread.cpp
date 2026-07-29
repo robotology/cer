@@ -76,8 +76,8 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
         return false;
     }
 
-    int nAxes;
-    ienc->getAxes(&nAxes);
+    size_t nAxes;
+    ienc->getAxes(nAxes);
     for (int i = 0; i < nAxes; i++)
     {
         modes.push_back(SelectableControlModeEnum::VOCAB_CM_VELOCITY);

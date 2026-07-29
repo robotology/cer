@@ -74,24 +74,24 @@ public:
         pVelCtrl[RIGHT_HAND]->velocityMove(vel);
     }
 
-    int getNumOfJoints(int part)
+    size_t getNumOfJoints(int part)
     {
         return mNumJoints[part];
     }
 
     void modePosition(int part)
     {
-        for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION);
+        for (size_t j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION);
     }
 
     void modeDirect(int part)
     {
-        for (int j = 0; j < mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION_DIRECT);
+        for (size_t j = 0; j < mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION_DIRECT);
     }
 
     void modeVelocity(int part)
     {
-        for (int j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
+        for (size_t j = 0; j<mNumJoints[part]; ++j) pCmdCtrlMode[part]->setControlMode(j, yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
     }
 
     static const char *R1PartName[NUM_R1_PARTS];
@@ -101,7 +101,7 @@ protected:
 
     yarp::dev::PolyDriver* mDriver[NUM_R1_PARTS];
 
-    int mNumJoints[NUM_R1_PARTS];
+    size_t mNumJoints[NUM_R1_PARTS];
 
     yarp::dev::IEncoders          *pEncFbk[NUM_R1_PARTS];
 
@@ -174,7 +174,7 @@ bool R1Driver::open()
 
             mDriver[part]->view(pCmdCtrlMode[part]);
 
-            if (pEncFbk[part]) pEncFbk[part]->getAxes(&mNumJoints[part]);
+            if (pEncFbk[part]) pEncFbk[part]->getAxes(mNumJoints[part]);
 
             pPosCtrl[part]->setTrajSpeeds(ref_vel[part]);
             pPosCtrl[part]->setTrajAccelerations(ref_acc[part]);

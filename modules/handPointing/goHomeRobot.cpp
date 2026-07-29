@@ -166,8 +166,8 @@ void GoHomeRobot::backToHomePart(const std::string& part)
     else { yCError(GO_HOME_ROBOT, "Incorrect part name sent to goHome command"); }
 
     // ------ set part to Position control mode ------ //
-    int NUMBER_OF_JOINTS;
-    m_iposctrl[i_part]->getAxes(&NUMBER_OF_JOINTS);
+    size_t NUMBER_OF_JOINTS=0;
+    m_iposctrl[i_part]->getAxes(NUMBER_OF_JOINTS);
     for (int i_joint=0; i_joint < NUMBER_OF_JOINTS; i_joint++){ m_ictrlmode[i_part]->setControlMode(i_joint, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION); }
     
     // ------ go home command  ------ //
