@@ -338,7 +338,7 @@ public:
 #endif
 
     /////////// POSITION CONTROL INTERFACE RAW
-    virtual yarp::dev::ReturnValue getAxes(int *ax) override;
+    virtual yarp::dev::ReturnValue getAxes(size_t &ax) override;
     virtual yarp::dev::ReturnValue positionMoveRaw(int j, double ref)  override;
     virtual yarp::dev::ReturnValue positionMoveRaw(const double *refs)  override;
     virtual yarp::dev::ReturnValue relativeMoveRaw(int j, double delta)  override;

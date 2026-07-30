@@ -163,9 +163,9 @@ bool HW_deviceHelper::attach(PolyDriver* subdevice)
     }
 
     // synch with remote device
-    int tmp;
+    size_t tmp;
     if(pos)
-        pos->getAxes(&tmp);
+        pos->getAxes(tmp);
 
     yarp::sig::Vector tmp_encs; tmp_encs.resize(tmp);
     // TODO: if it takes too many cycles to get valid encoder values, warn the user
@@ -1176,9 +1176,9 @@ ReturnValue tripodMotionControl::calibrationDoneRaw(int axis)
 ////////////////////////////////////////
 //     Position control interface     //
 ////////////////////////////////////////
-ReturnValue tripodMotionControl::getAxes(int *ax)
+ReturnValue tripodMotionControl::getAxes(size_t &ax)
 {
-    *ax=_njoints;
+    ax=_njoints;
     return _device.isConfigured() ? ReturnValue_ok : ReturnValue_error_not_ready;
 }
 
