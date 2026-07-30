@@ -63,8 +63,8 @@ class IKSolver : public RFModule
             driver.view(ienc);
             driver.view(ilim);
 
-            int nAxes;
-            ienc->getAxes(&nAxes);
+            size_t nAxes;
+            ienc->getAxes(nAxes);
 
             lim.resize(nAxes,2);
             for (int i=0; i<nAxes; i++)
