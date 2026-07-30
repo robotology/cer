@@ -209,8 +209,8 @@ class Controller : public RFModule
         driver.view(ienc);
         driver.view(ilim);
 
-        int nAxes;
-        ienc->getAxes(&nAxes);
+        size_t nAxes;
+        ienc->getAxes(nAxes);
 
         lim.resize(nAxes,2);
         for (int i=0; i<nAxes; i++)
@@ -460,8 +460,8 @@ public:
         rpcPort.open("/cer_gaze-controller/rpc");
         attach(rpcPort);
 
-        int nAxes;
-        ienc[2]->getAxes(&nAxes);
+        size_t nAxes;
+        ienc[2]->getAxes(nAxes);
         for (int i=0; i<nAxes; i++)
             posDirectMode.push_back(SelectableControlModeEnum::VOCAB_CM_POSITION_DIRECT);
         curMode.resize(nAxes, ControlModeEnum::VOCAB_CM_POSITION_DIRECT);
