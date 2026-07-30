@@ -82,33 +82,33 @@ public:
      * @param sound the sound to be filled
      * @return true/false upon success/failure
      */
-    virtual bool getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, size_t max_number_of_samples, double max_samples_timeout_s) override;
+    yarp::dev::ReturnValue getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, size_t max_number_of_samples, double max_samples_timeout_s) override;
 
     /**
      * Start the recording.
      *
      * @return true/false upon success/failure
      */
-    virtual bool startRecording() override;
+    yarp::dev::ReturnValue startRecording() override;
 
      /**
      * Stop the recording.
      *
      * @return true/false upon success/failure
      */
-    virtual bool stopRecording() override;
+    yarp::dev::ReturnValue stopRecording() override;
 
-    bool isRecording(bool& recording_enabled) override;
+    yarp::dev::ReturnValue isRecording(bool& recording_enabled) override;
 
-    bool setSWGain(double gain) override;
+    yarp::dev::ReturnValue setSWGain(double gain) override;
 
-    bool setHWGain(double gain) override;
+    yarp::dev::ReturnValue setHWGain(double gain) override;
 
-    virtual bool getRecordingAudioBufferMaxSize(yarp::sig::AudioBufferSize& size) override;
+    yarp::dev::ReturnValue getRecordingAudioBufferMaxSize(yarp::sig::AudioBufferSize& size) override;
 
-    virtual bool getRecordingAudioBufferCurrentSize(yarp::sig::AudioBufferSize& size) override;
+    yarp::dev::ReturnValue getRecordingAudioBufferCurrentSize(yarp::sig::AudioBufferSize& size) override;
 
-    virtual bool resetRecordingAudioBuffer() override;
+    yarp::dev::ReturnValue resetRecordingAudioBuffer() override;
 
 private:
 

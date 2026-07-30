@@ -64,9 +64,9 @@ private:
     yarp::sig::Vector           timeStamps;
     yarp::sig::Vector           limitsMax, limitsMin;
 
-    std::vector<int>            modes;
-    yarp::sig::Vector           refSpeeds;
-    yarp::sig::Vector           encSpeeds;
+    std::vector<yarp::dev::ControlModeEnum> modes;
+    yarp::sig::Vector                       refSpeeds;
+    yarp::sig::Vector                       encSpeeds;
 
     bool checkTimeout(double start);
     bool mutualTresholdCheck(yarp::sig::Vector data);

@@ -134,13 +134,13 @@ bool TripodTest::setup(yarp::os::Property& property)
         velTolerance[i] = vel_tolerance;
         iPos->setRefSpeed(i, 0.1);
     }
-    iMode->setControlModes(modes.data());
+    iMode->setControlModes(modes);
 
     yarp::os::Time::delay(1);
-    iMode->getControlModes(modes.data());
+    iMode->getControlModes(modes);
     for( int i=0; i< numberOfJoints; i++)
     {
-        iLim->getLimits(i, &limitsMin[i], &limitsMax[i] );
+        iLim->getPosLimits(i, &limitsMin[i], &limitsMax[i] );
         RTF_ASSERT_ERROR_IF( !(modes[i] != VOCAB_CM_POSITION),
                              Asserter::format("Cannot change control to position mode for joint %d", i));
     }
@@ -220,10 +220,10 @@ void TripodTest::run()
         modes[i] = VOCAB_CM_VELOCITY;
         iPos->setRefSpeed(i, 0.1);
     }
-    iMode->setControlModes(modes.data());
+    iMode->setControlModes(modes);
 
     yarp::os::Time::delay(1);
-    iMode->getControlModes(modes.data());
+    iMode->getControlModes(modes);
     for(int i=0; i< numberOfJoints; i++)
     {
         refSpeeds[i] = 0.1;

@@ -170,7 +170,7 @@ void R1faceMic::threadRelease()
     stopRecording();
 }
 
-bool R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, size_t max_number_of_samples, double max_samples_timeout_s)
+ReturnValue R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, size_t max_number_of_samples, double max_samples_timeout_s)
 {
     //check for something_to_record
     {
@@ -190,7 +190,7 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, 
     if (max_number_of_samples < min_number_of_samples)
     {
         yError() << "max_number_of_samples must be greater than min_number_of_samples!";
-        return false;
+        return ReturnValue_error_method_failed;
     }
     if (max_number_of_samples > this->inputBuffer->getMaxSize().getSamples())
     {
@@ -262,12 +262,12 @@ bool R1faceMic::getSound(yarp::sig::Sound& sound, size_t min_number_of_samples, 
 
      yDebug() << inputBuffer->size().getSamples() << "/" << inputBuffer->getMaxSize().getSamples() << "Samples";
 #endif
-    return true;
+    return ReturnValue_ok;
 }
 
-bool R1faceMic::startRecording()
+ReturnValue R1faceMic::startRecording()
 {
-    if (m_isRecording == true) return true;
+    if (m_isRecording == true) return ReturnValue_ok;
     lock_guard<mutex> lock(m_mutex);
     m_isRecording = true;
 #ifdef BUFFER_AUTOCLEAR
@@ -275,19 +275,19 @@ bool R1faceMic::startRecording()
 #endif
     m_isRecording = true;
     yInfo() << "R1faceMic started recording";
-    return true;
+    return ReturnValue_ok;
 }
 
-bool R1faceMic::stopRecording()
+ReturnValue R1faceMic::stopRecording()
 {
-    if (m_isRecording == false) return true;
+    if (m_isRecording == false) return ReturnValue_ok;
     lock_guard<mutex> lock(m_mutex);
     m_isRecording = false;
 #ifdef BUFFER_AUTOCLEAR
     inputBuffer->clear();
 #endif
     yInfo() << "R1faceMic stopped recording";
-    return true;
+    return ReturnValue_ok;
 }
 
 bool R1faceMic::startService()
@@ -308,50 +308,50 @@ bool R1faceMic::stopService()
     return false;
 }
 
-bool R1faceMic::getRecordingAudioBufferMaxSize(yarp::sig::AudioBufferSize& size)
+ReturnValue R1faceMic::getRecordingAudioBufferMaxSize(yarp::sig::AudioBufferSize& size)
 {
     //no lock guard is needed here
     size = this->inputBuffer->getMaxSize();
-    return true;
+    return ReturnValue_ok;
 }
 
 
-bool R1faceMic::getRecordingAudioBufferCurrentSize(yarp::sig::AudioBufferSize& size)
+ReturnValue R1faceMic::getRecordingAudioBufferCurrentSize(yarp::sig::AudioBufferSize& size)
 {
     //no lock guard is needed here
     size = this->inputBuffer->size();
-    return true;
+    return ReturnValue_ok;
 }
 
 
-bool R1faceMic::resetRecordingAudioBuffer()
+ReturnValue R1faceMic::resetRecordingAudioBuffer()
 {
     lock_guard<mutex> lock(m_mutex);
     inputBuffer->clear();
     yDebug() << "R1faceMic::resetRecordingAudioBuffer";
-    return true;
+    return ReturnValue_ok;
 }
 
-bool R1faceMic::isRecording(bool& recording_enabled)
+ReturnValue R1faceMic::isRecording(bool& recording_enabled)
 {
     YARP_UNUSED(recording_enabled);
     yWarning() << "isRecording Not implemented yet";
 
-    return true;
+    return ReturnValue_ok;
 }
 
-bool R1faceMic::setSWGain(double gain)
+ReturnValue R1faceMic::setSWGain(double gain)
 {
     YARP_UNUSED(gain);
     yWarning() << "setSWGain Not implemented yet";
 
-    return true;
+    return ReturnValue_ok;
 }
 
-bool R1faceMic::setHWGain(double gain)
+ReturnValue R1faceMic::setHWGain(double gain)
 {
     YARP_UNUSED(gain);
     yWarning() << "setHWGain Not implemented yet";
 
-    return true;
+    return ReturnValue_ok;
 }

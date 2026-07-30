@@ -65,7 +65,7 @@ void ControlThread::velMoveHandler(const bool b, std::vector<int> joints, double
 {
     for (size_t i = 0; i < joints.size(); i++)
     {
-        imod->setControlMode(joints[i], VOCAB_CM_VELOCITY);
+        imod->setControlMode(joints[i], yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
         if (b)
         {
             ivel->velocityMove(joints[i], speed);
@@ -233,21 +233,21 @@ void ControlThread::option1(double* axis)
     fabs(torso_velB) >  0.001 &&
     fabs(torso_velC) >  0.001)
     {
-        int mods[3];
+        std::vector<yarp::dev::ControlModeEnum> mods(3);
         interface_torso_tripod_iCmd->getControlModes(mods);
-        if (mods[0] != VOCAB_CM_VELOCITY)
+        if (mods[0] != yarp::dev::ControlModeEnum::VOCAB_CM_VELOCITY)
         {
-            interface_torso_tripod_iCmd->setControlMode(0, VOCAB_CM_VELOCITY);
+            interface_torso_tripod_iCmd->setControlMode(0, yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
             yarp::os::Time::delay(0.005);
         }
-        if (mods[1] != VOCAB_CM_VELOCITY)
+        if (mods[1] != yarp::dev::ControlModeEnum::VOCAB_CM_VELOCITY)
         {
-            interface_torso_tripod_iCmd->setControlMode(1, VOCAB_CM_VELOCITY);
+            interface_torso_tripod_iCmd->setControlMode(1, yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
             yarp::os::Time::delay(0.005);
         }
-        if (mods[2] != VOCAB_CM_VELOCITY)
+        if (mods[2] != yarp::dev::ControlModeEnum::VOCAB_CM_VELOCITY)
         {
-            interface_torso_tripod_iCmd->setControlMode(2, VOCAB_CM_VELOCITY);
+            interface_torso_tripod_iCmd->setControlMode(2, yarp::dev::SelectableControlModeEnum::VOCAB_CM_VELOCITY);
             yarp::os::Time::delay(0.005);
         }
         double torso_vels[3];
@@ -685,23 +685,23 @@ bool ControlThread::threadInit()
     }
 
     yarp::os::Time::delay(1.0);
-    interface_torso_equiv_iVel->setRefAcceleration(0, 10000000);
-    interface_torso_equiv_iVel->setRefAcceleration(1, 10000000);
-    interface_torso_equiv_iVel->setRefAcceleration(2, 10000000);
-    interface_torso_equiv_iVel->setRefAcceleration(3, 10000000);
+    interface_torso_equiv_iVel->setTrajAcceleration(0, 10000000);
+    interface_torso_equiv_iVel->setTrajAcceleration(1, 10000000);
+    interface_torso_equiv_iVel->setTrajAcceleration(2, 10000000);
+    interface_torso_equiv_iVel->setTrajAcceleration(3, 10000000);
 
-    interface_torso_tripod_iVel->setRefAcceleration(0, 10000000);
-    interface_torso_tripod_iVel->setRefAcceleration(1, 10000000);
-    interface_torso_tripod_iVel->setRefAcceleration(2, 10000000);
+    interface_torso_tripod_iVel->setTrajAcceleration(0, 10000000);
+    interface_torso_tripod_iVel->setTrajAcceleration(1, 10000000);
+    interface_torso_tripod_iVel->setTrajAcceleration(2, 10000000);
 
-    interface_left_hand_iVel->setRefAcceleration(0, 10000000);
-    interface_left_hand_iVel->setRefAcceleration(1, 10000000);
+    interface_left_hand_iVel->setTrajAcceleration(0, 10000000);
+    interface_left_hand_iVel->setTrajAcceleration(1, 10000000);
 
-    interface_right_hand_iVel->setRefAcceleration(0, 10000000);
-    interface_right_hand_iVel->setRefAcceleration(1, 10000000);
+    interface_right_hand_iVel->setTrajAcceleration(0, 10000000);
+    interface_right_hand_iVel->setTrajAcceleration(1, 10000000);
 
-    interface_head_iVel->setRefAcceleration(0, 10000000);
-    interface_head_iVel->setRefAcceleration(1, 10000000);
+    interface_head_iVel->setTrajAcceleration(0, 10000000);
+    interface_head_iVel->setTrajAcceleration(1, 10000000);
     return true;
 }
 
@@ -823,9 +823,9 @@ void ControlThread::threadRelease()
 {
     if (interface_torso_tripod_iCmd)
     {
-        interface_torso_tripod_iCmd->setControlMode(0, VOCAB_CM_POSITION);
-        interface_torso_tripod_iCmd->setControlMode(1, VOCAB_CM_POSITION);
-        interface_torso_tripod_iCmd->setControlMode(2, VOCAB_CM_POSITION);
+        interface_torso_tripod_iCmd->setControlMode(0, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION);
+        interface_torso_tripod_iCmd->setControlMode(1, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION);
+        interface_torso_tripod_iCmd->setControlMode(2, yarp::dev::SelectableControlModeEnum::VOCAB_CM_POSITION);
     }
 
     port_joystick_control.interrupt();

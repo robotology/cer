@@ -36,6 +36,8 @@ build*/
 
 # Editor files
 *kdev4*
+.vscode/
+.idea/
 
 # Backup files
 *~

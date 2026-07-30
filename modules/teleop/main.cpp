@@ -139,14 +139,14 @@ public:
             return false;
         }
 
-        unsigned int buttCount;
+        size_t buttCount;
         if(iJoypad->getButtonCount(buttCount) && buttCount < 4)
         {
             yError() << "teleoperation via tf requires at least 4 button";
             return false;
         }
 
-        unsigned int axisCount;
+        size_t axisCount;
         if(iJoypad->getAxisCount(axisCount) && axisCount < 4)
         {
             yError() << "teleoperation via tf requires at least 4 axis";
@@ -306,7 +306,7 @@ public:
     {
         //disclaimer: those static are read only constant value.. (so it's safe for them to be static)
         Matrix                  m(4, 4), m_gripper(4, 4);
-        float                   button0, button1, button2;
+        double                  button0, button1, button2;
         HandThread::CommandData data;
         static const string     enum2frameName[HandThread::hand_count] = {leftHandFrame, rightHandFrame};
         static HandThread*      enum2hands[HandThread::hand_count]     = {&left, &right};
@@ -416,4 +416,3 @@ int main(int argc, char *argv[])
     TeleOp teleop;
     return teleop.runModule(rf);
 }
-

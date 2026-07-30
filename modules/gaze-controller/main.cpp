@@ -76,8 +76,8 @@ class Controller : public RFModule
     IPositionControl* ipos;
     IPositionDirect*  iposd;
 
-    vector<int> posDirectMode;
-    vector<int> curMode;
+    vector<SelectableControlModeEnum> posDirectMode;
+    vector<ControlModeEnum> curMode;
 
     map<string,HeadSolver> solver;
     map<string,Matrix> intrinsics;
@@ -167,15 +167,15 @@ class Controller : public RFModule
     /****************************************************************/
     void getCurrentMode()
     {
-        imod->getControlModes(curMode.data());
+        imod->getControlModes(curMode);
     }
 
     /****************************************************************/
     bool areJointsHealthy()
     {
         for (size_t i=0; i<curMode.size(); i++)
-            if ((curMode[i]==VOCAB_CM_HW_FAULT) ||
-                (curMode[i]==VOCAB_CM_IDLE))
+            if ((curMode[i]==ControlModeEnum::VOCAB_CM_HW_FAULT) ||
+                (curMode[i]==ControlModeEnum::VOCAB_CM_IDLE))
                 return false;
         return true;
     }
@@ -185,9 +185,9 @@ class Controller : public RFModule
     {
         for (size_t i=0; i<curMode.size(); i++)
         {
-            if (curMode[i]!=posDirectMode[i])
+            if (static_cast<int>(curMode[i]) != static_cast<int>(posDirectMode[i]))
             {
-                imod->setControlModes(posDirectMode.data());
+                imod->setControlModes(posDirectMode);
                 break;
             }
         }
@@ -209,12 +209,12 @@ class Controller : public RFModule
         driver.view(ienc);
         driver.view(ilim);
 
-        int nAxes;
-        ienc->getAxes(&nAxes);
+        size_t nAxes;
+        ienc->getAxes(nAxes);
 
         lim.resize(nAxes,2);
         for (int i=0; i<nAxes; i++)
-            ilim->getLimits(i,&lim(i,0),&lim(i,1));
+            ilim->getPosLimits(i,&lim(i,0),&lim(i,1));
     }
 
     /****************************************************************/
@@ -460,11 +460,11 @@ public:
         rpcPort.open("/cer_gaze-controller/rpc");
         attach(rpcPort);
 
-        int nAxes;
-        ienc[2]->getAxes(&nAxes);
+        size_t nAxes;
+        ienc[2]->getAxes(nAxes);
         for (int i=0; i<nAxes; i++)
-            posDirectMode.push_back(VOCAB_CM_POSITION_DIRECT);
-        curMode=posDirectMode;
+            posDirectMode.push_back(SelectableControlModeEnum::VOCAB_CM_POSITION_DIRECT);
+        curMode.resize(nAxes, ControlModeEnum::VOCAB_CM_POSITION_DIRECT);
 
         Vector q=getEncoders();
         qd=q.subVector(4,5);
@@ -858,4 +858,3 @@ int main(int argc, char *argv[])
     Controller controller;
     return controller.runModule(rf);
 }
-

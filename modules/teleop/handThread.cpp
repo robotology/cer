@@ -76,14 +76,14 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
         return false;
     }
 
-    int nAxes;
-    ienc->getAxes(&nAxes);
+    size_t nAxes;
+    ienc->getAxes(nAxes);
     for (int i = 0; i < nAxes; i++)
     {
-        modes.push_back(VOCAB_CM_VELOCITY);
+        modes.push_back(SelectableControlModeEnum::VOCAB_CM_VELOCITY);
         vels.push_back(40.0);
         ctrlRange range;
-        ilim->getLimits(i, &range.min, &range.size);
+        ilim->getPosLimits(i, &range.min, &range.size);
         range.size -= range.min;
         controlRanges.push_back(range);
     }
@@ -400,10 +400,10 @@ void HandThread::threadRelease()
     stopReaching();
     for (size_t i = 0; i < modes.size(); i++)
     {
-        modes[i] = VOCAB_CM_POSITION;
+        modes[i] = SelectableControlModeEnum::VOCAB_CM_POSITION;
     }
 
-    imod->setControlModes(modes.data());
+    imod->setControlModes(modes);
 
     robotTargetPort.interrupt();
     robotTargetPort.close();
