@@ -103,7 +103,7 @@ public:
     bool close() override;
 
     // IOdometry2D
-    yarp::dev::ReturnValue   getOdometry(yarp::dev::OdometryData& odom, double* timestamp = nullptr) override;
+    yarp::dev::ReturnValue   getOdometry(yarp::dev::Nav2D::Odometry& odom, double* timestamp = nullptr) override;
     yarp::dev::ReturnValue   resetOdometry() override;
 
     // auxiliar
@@ -122,7 +122,7 @@ protected:
     void run() override;
 
 private:
-    yarp::dev::OdometryData m_odometryData;
+    yarp::dev::Nav2D::Odometry m_odometryData;
     double base_vel_lin{0.0};
     double m_period{0.01};
 

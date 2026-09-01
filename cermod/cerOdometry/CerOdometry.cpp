@@ -50,7 +50,7 @@ bool CerOdometry::close()
     return true;
 }
 
-ReturnValue CerOdometry::getOdometry(yarp::dev::OdometryData& odom, double* timestamp)
+ReturnValue CerOdometry::getOdometry(yarp::dev::Nav2D::Odometry& odom, double* timestamp)
 {
     std::lock_guard lock(m_odometry_mutex);
     odom.odom_x = m_odometryData.odom_x;
