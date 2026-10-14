@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
     Vector xd(3,0.0);
     if (Bottle *b=rf.find("xd").asList())
     {
-        size_t len=std::min(xd.length(),(size_t)b->size());
+        size_t len=std::min(xd.size(),(size_t)b->size());
         for (size_t i=0; i<len; i++)
             xd[i]=b->get(i).asFloat64();
     }
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     Vector q0(6,0.0);
     if (Bottle *b=rf.find("q0").asList())
     {
-        size_t len=std::min(q0.length(),(size_t)b->size());
+        size_t len=std::min(q0.size(),(size_t)b->size());
         for (size_t i=0; i<len; i++)
             q0[i]=b->get(i).asFloat64();
     }
@@ -87,9 +87,9 @@ int main(int argc, char *argv[])
     Vector q;
     solver.ikin(xd,q);
     cout<<"head="<<solver.getHeadParameters().head.getType()<<endl; 
-    cout<<"q0=("<<q0.toString(3,3)<<")"<<endl;
-    cout<<"xd=("<<xd.toString(3,3)<<")"<<endl;
-    cout<<"q=("<<q.toString(3,3)<<")"<<endl;
+    cout<<"q0=("<<q0.toString()<<")"<<endl;
+    cout<<"xd=("<<xd.toString()<<")"<<endl;
+    cout<<"q=("<<q.toString()<<")"<<endl;
     cout<<endl;
 
     return 0;
