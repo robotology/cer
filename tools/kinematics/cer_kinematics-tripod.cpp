@@ -99,8 +99,8 @@ public:
             solver.setInitialGuess(rho);
             solver.ikin(zd,ud,rho);
 
-            yInfo()<<"zd="<<zd<<"; ud=("<<ud.toString(5,5)
-                   <<"); rho=("<<rho.toString(5,5)<<");";
+            yInfo()<<"zd="<<zd<<"; ud=("<<ud.toString()
+                   <<"); rho=("<<rho.toString()<<");";
         }
         else
         {
