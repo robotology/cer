@@ -84,7 +84,7 @@ int MobileArmSolver::computeMode() const
 bool MobileArmSolver::setInitialGuess(const Vector &q0)
 {
     size_t L=3+3+armParameters.upper_arm.getDOF()+3;
-    yAssert(q0.length()>=L);
+    yAssert(q0.size()>=L);
 
     this->q0=q0.subVector(0,L-1);
     return true;
@@ -95,7 +95,7 @@ bool MobileArmSolver::setInitialGuess(const Vector &q0)
 bool MobileArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
 {
     size_t L=3+3+armParameters.upper_arm.getDOF()+3;
-    yAssert(q.length()>=L);
+    yAssert(q.size()>=L);
 
     Ipopt::SmartPtr<MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff> nlp=new MobileArmFullNoTorsoNoHeaveNLP_ForwardDiff(*this);
     H=nlp->fkin(q,frame);
@@ -130,7 +130,7 @@ bool MobileArmSolver::ikin(const vector<Matrix> &Hd, Vector &q, int *exit_code)
     app->Options()->SetIntegerValue("print_level",print_level);
     if (slvParameters.warm_start)
     {
-        if ((zL.length()>0) && (zU.length()>0) && (lambda.length()>0) && (curMode==mode))
+        if ((zL.size()>0) && (zU.size()>0) && (lambda.size()>0) && (curMode==mode))
         {
             warm_start_str="yes";
             app->Options()->SetNumericValue("warm_start_bound_push",1e-6);
@@ -212,7 +212,7 @@ bool MobileArmSolver::ikin(const vector<Matrix> &Hd, Vector &q, int *exit_code)
         yInfo()<<" *** Arm Solver:   constr_tol [*] ="<<slvParameters.constr_tol;
         yInfo()<<" *** Arm Solver:     max_iter [#] ="<<slvParameters.max_iter;
         yInfo()<<" *** Arm Solver: max_cpu_time [s] ="<<slvParameters.max_cpu_time;
-        yInfo()<<" *** Arm Solver:           q0 [*] = ("<<q0.toString(4,4)<<")";
+        yInfo()<<" *** Arm Solver:           q0 [*] = ("<<q0.toString()<<")";
         yInfo()<<" *** Arm Solver:          hd1 [m] ="<<slvParameters.torso_heave;
         yInfo()<<" *** Arm Solver:          hd2 [m] ="<<slvParameters.lower_arm_heave;
         yInfo()<<" *** Arm Solver:          dt [ms] ="<<1000.0*(t1-t0);
@@ -222,8 +222,8 @@ bool MobileArmSolver::ikin(const vector<Matrix> &Hd, Vector &q, int *exit_code)
             Vector xd=Hd[i].getCol(3).subVector(0,2);
             Vector ud=dcm2axis(Hd[i]);
             Vector qt(3+nb_kin_DOF);
-            qt.setSubvector(0,q.subVector(0,2));
-            qt.setSubvector(3,q.subVector(3+i*nb_kin_DOF,3+(i+1)*nb_kin_DOF-1));
+            setSubvector_local(qt, 0, q.subVector(0,2));
+            setSubvector_local(qt, 3, q.subVector(3+i*nb_kin_DOF, 3+(i+1)*nb_kin_DOF-1));
             Matrix H=nlp->fkin(qt);
             TripodState din1,din2;
             nlp->tripod_fkin(1,qt,&din1);
@@ -234,9 +234,9 @@ bool MobileArmSolver::ikin(const vector<Matrix> &Hd, Vector &q, int *exit_code)
             e_u*=e_u[3]; e_u.pop_back();
 
             yInfo()<<" *** Arm Solver: ** Target" << i;
-            yInfo()<<" *** Arm Solver:           xd [m] = ("<<xd.toString(4,4)<<")";
-            yInfo()<<" *** Arm Solver:         ud [rad] = ("<<ud.toString(4,4)<<")";
-            yInfo()<<" *** Arm Solver:            q [*] = ("<<qt.toString(4,4)<<")";
+            yInfo()<<" *** Arm Solver:           xd [m] = ("<<xd.toString()<<")";
+            yInfo()<<" *** Arm Solver:         ud [rad] = ("<<ud.toString()<<")";
+            yInfo()<<" *** Arm Solver:            q [*] = ("<<qt.toString()<<")";
             yInfo()<<" *** Arm Solver:          e_x [m] ="<<norm(xd-x);
             yInfo()<<" *** Arm Solver:        e_u [rad] ="<<norm(e_u);
             yInfo()<<" *** Arm Solver:         e_h1 [m] ="<<fabs(slvParameters.torso_heave-din1.p[2]);
