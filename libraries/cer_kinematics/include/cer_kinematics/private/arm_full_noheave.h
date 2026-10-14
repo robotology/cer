@@ -35,7 +35,7 @@ public:
     bool get_nlp_info(Ipopt::Index &n, Ipopt::Index &m, Ipopt::Index &nnz_jac_g,
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
-        n=x0.length();
+        n=x0.size();
         m=2+2+1+1;
         nnz_jac_g=6+6+n+2;
         nnz_h_lag=0;
@@ -192,7 +192,7 @@ public:
         eax*=eax[3]; eax.pop_back();
         Vector grad=-2.0*(J_.submatrix(3,5,0,upper_arm.getDOF()-1).transposed()*eax);
         grad_f[3]=grad[0] + 2.0*wpostural_torso_yaw*x[3];
-        for (size_t i=1; i<grad.length(); i++)
+        for (size_t i=1; i<grad.size(); i++)
             grad_f[3+i]=grad[i] + 2.0*wpostural_upper_arm*(x[3+i]-x0[3+i]);
 
         // lower_arm
@@ -361,7 +361,7 @@ public:
 
             // g[4] (upper_arm)
             Vector grad=-2.0*(J_.submatrix(0,2,0,upper_arm.getDOF()-1).transposed()*e);
-            for (size_t i=0; i<grad.length(); i++)
+            for (size_t i=0; i<grad.size(); i++)
                 values[15+i]=grad[i];
 
             // g[4] (lower_arm)
@@ -462,7 +462,7 @@ public:
         eax*=eax[3]; eax.pop_back();
         Vector grad=-2.0*(J_.submatrix(3,5,0,upper_arm.getDOF()-1).transposed()*eax);
         grad_f[3]=grad[0] + 2.0*wpostural_torso_yaw*x[3];
-        for (size_t i=1; i<grad.length(); i++)
+        for (size_t i=1; i<grad.size(); i++)
             grad_f[3+i]=grad[i] + 2.0*wpostural_upper_arm*(x[3+i]-x0[3+i]);
 
         // lower_arm
@@ -638,7 +638,7 @@ public:
 
             // g[4] (upper_arm)
             Vector grad=-2.0*(J_.submatrix(0,2,0,upper_arm.getDOF()-1).transposed()*e);
-            for (size_t i=0; i<grad.length(); i++)
+            for (size_t i=0; i<grad.size(); i++)
                 values[15+i]=grad[i];
 
             // g[4] (lower_arm)

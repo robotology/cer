@@ -86,7 +86,7 @@ int ArmSolver::computeMode() const
 bool ArmSolver::setInitialGuess(const Vector &q0)
 {
     size_t L=3+armParameters.upper_arm.getDOF()+3;
-    yAssert(q0.length()>=L);
+    yAssert(q0.size()>=L);
 
     this->q0=q0.subVector(0,L-1);
     return true;
@@ -97,7 +97,7 @@ bool ArmSolver::setInitialGuess(const Vector &q0)
 bool ArmSolver::fkin(const Vector &q, Matrix &H, const int frame)
 {
     size_t L=3+armParameters.upper_arm.getDOF()+3;
-    yAssert(q.length()>=L);
+    yAssert(q.size()>=L);
 
     Ipopt::SmartPtr<ArmFullNoHeaveNLP_ForwardDiff> nlp=new ArmFullNoHeaveNLP_ForwardDiff(*this);
     H=nlp->fkin(q,frame);
@@ -131,7 +131,7 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
     app->Options()->SetIntegerValue("print_level",print_level);
     if (slvParameters.warm_start)
     {
-        if ((zL.length()>0) && (zU.length()>0) && (lambda.length()>0) && (curMode==mode))
+        if ((zL.size()>0) && (zU.size()>0) && (lambda.size()>0) && (curMode==mode))
         {
             warm_start_str="yes";
             app->Options()->SetNumericValue("warm_start_bound_push",1e-6);
@@ -241,12 +241,12 @@ bool ArmSolver::ikin(const Matrix &Hd, Vector &q, int *exit_code)
         yInfo()<<" *** Arm Solver:   constr_tol [*] ="<<slvParameters.constr_tol;
         yInfo()<<" *** Arm Solver:     max_iter [#] ="<<slvParameters.max_iter;
         yInfo()<<" *** Arm Solver: max_cpu_time [s] ="<<slvParameters.max_cpu_time;
-        yInfo()<<" *** Arm Solver:           q0 [*] = ("<<q0.toString(4,4)<<")";
+        yInfo()<<" *** Arm Solver:           q0 [*] = ("<<q0.toString()<<")";
         yInfo()<<" *** Arm Solver:          hd1 [m] ="<<slvParameters.torso_heave;
         yInfo()<<" *** Arm Solver:          hd2 [m] ="<<slvParameters.lower_arm_heave;
-        yInfo()<<" *** Arm Solver:           xd [m] = ("<<xd.toString(4,4)<<")";
-        yInfo()<<" *** Arm Solver:         ud [rad] = ("<<ud.toString(4,4)<<")";
-        yInfo()<<" *** Arm Solver:            q [*] = ("<<q.toString(4,4)<<")";
+        yInfo()<<" *** Arm Solver:           xd [m] = ("<<xd.toString()<<")";
+        yInfo()<<" *** Arm Solver:         ud [rad] = ("<<ud.toString()<<")";
+        yInfo()<<" *** Arm Solver:            q [*] = ("<<q.toString()<<")";
         yInfo()<<" *** Arm Solver:          e_x [m] ="<<norm(xd-x);
         yInfo()<<" *** Arm Solver:        e_u [rad] ="<<norm(e_u);
         yInfo()<<" *** Arm Solver:         e_h1 [m] ="<<fabs(slvParameters.torso_heave-din1.p[2]);
@@ -341,7 +341,7 @@ ArmCOM::ArmCOM(ArmSolver &solver_, const double external_weight,
     weights.push_back(1.43);
     weights.push_back(1.13);
     weights.push_back(0.667+external_weight);
-    weight_tot=dot(weights,Vector(weights.length(),1.0));
+    weight_tot=dot(weights,Vector(weights.size(),1.0));
 
     // support polygon
     Vector c1(4,1.0);
@@ -388,7 +388,7 @@ ArmCOM::ArmCOM(ArmSolver &solver_, const double external_weight,
 bool ArmCOM::getCOMs(const Vector &q, deque<Vector> &coms) const
 {
     int nJoints=3+solver.getArmParameters().upper_arm.getDOF()+3;
-    yAssert(q.length()==nJoints);
+    yAssert(q.size()==nJoints);
 
     coms.clear(); 
     coms.push_back(relComs[0]);
@@ -422,7 +422,7 @@ bool ArmCOM::getCOMs(const Vector &q, deque<Vector> &coms) const
 /****************************************************************/
 bool ArmCOM::getSupportMargin(const Vector &com, double &margin) const
 {
-    yAssert(com.length()==4);
+    yAssert(com.size()==4);
     margin=std::numeric_limits<double>::max();
     Vector neg_mrg;
 
@@ -456,7 +456,7 @@ bool ArmCOM::getSupportMargin(const Vector &com, double &margin) const
     if (margin<0.0)
     {
         margin=-std::numeric_limits<double>::max();
-        for (size_t i=0; i<neg_mrg.length(); i++)
+        for (size_t i=0; i<neg_mrg.size(); i++)
             margin=std::max(neg_mrg[i],margin);
 
         Vector com_xy=com.subVector(0,1);
