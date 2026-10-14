@@ -39,7 +39,7 @@ public:
     bool exec(const int iter, const Matrix &Hd, const Vector &q,
               const Matrix &Hee)
     {
-        yDebug()<<"q["<<iter<<"]=("<<q.toString(3,3)<<")";
+        yDebug()<<"q["<<iter<<"]=("<<q.toString()<<")";
         return true;
     }
 };
