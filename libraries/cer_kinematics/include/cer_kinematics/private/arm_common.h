@@ -85,7 +85,7 @@ protected:
     {
         if (verify_alpha(x,g))
         {
-            if (latch_x.length()==0)
+            if (latch_x.size()==0)
                 latch_x.resize(n);
 
             for (Ipopt::Index i=0; i<n; i++)
@@ -107,7 +107,7 @@ protected:
             Ipopt::Number *g=(Ipopt::Number*)g_data.data();
 
             eval_g(n,x,true,m,g);
-            if (!verify_alpha(x,g) && (latch_x.length()>0))
+            if (!verify_alpha(x,g) && (latch_x.size()>0))
                 solution=latch_x;
         }
 
@@ -258,7 +258,7 @@ public:
 
         if (init_z)
         {
-            yAssert((zL.length()==n) && (zU.length()==n));
+            yAssert((zL.size()==n) && (zU.size()==n));
             for (Ipopt::Index i=0; i<n; i++)
             {
                 z_L[i]=zL[i];
@@ -268,7 +268,7 @@ public:
 
         if (init_lambda)
         {
-            yAssert(this->lambda.length()==m);
+            yAssert(this->lambda.size()==m);
             for (Ipopt::Index i=0; i<m; i++)
                 lambda[i]=this->lambda[i];
         }
@@ -281,10 +281,10 @@ public:
     {        
         if (new_x)
         {
-            for (size_t i=0; i<this->x.length(); i++)
+            for (size_t i=0; i<this->x.size(); i++)
                 this->x[i]=x[i];
 
-            for (size_t i=0; i<q.length(); i++)
+            for (size_t i=0; i<q.size(); i++)
                 q[i]=x[3+i];
 
             d1=tripod_fkin(1,x,&din1);

@@ -35,7 +35,7 @@ public:
     bool get_nlp_info(Ipopt::Index &n, Ipopt::Index &m, Ipopt::Index &nnz_jac_g,
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
-        n=x0.length();
+        n=x0.size();
         m=1+1+1;
         nnz_jac_g=3+3+2;
         nnz_h_lag=0;
@@ -197,7 +197,7 @@ public:
     bool get_nlp_info(Ipopt::Index &n, Ipopt::Index &m, Ipopt::Index &nnz_jac_g,
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
-        n=x0.length();
+        n=x0.size();
         m=1+1+1;
         nnz_jac_g=3+3+2;
         nnz_h_lag=0;

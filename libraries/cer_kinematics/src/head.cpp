@@ -70,7 +70,7 @@ public:
     /****************************************************************/
     void set_q0(const Vector &q0)
     {
-        size_t len=std::min(this->q0.length(),q0.length());
+        size_t len=std::min(this->q0.size(),q0.size());
 
         size_t l1=std::min((size_t)3,len);
         for (size_t i=0; i<l1; i++)
@@ -92,7 +92,7 @@ public:
     /****************************************************************/
     void set_xd(const Vector &xd)
     {
-        size_t len=std::min(this->xd.length(),xd.length());
+        size_t len=std::min(this->xd.size(),xd.size());
         for (size_t i=0; i<len; i++)
             this->xd[i]=xd[i];
     }
@@ -133,8 +133,8 @@ public:
                             bool init_z, Ipopt::Number *z_L, Ipopt::Number *z_U,
                             Ipopt::Index m, bool init_lambda, Ipopt::Number *lambda)
     {
-        x[0]=q0[q0.length()-2];
-        x[1]=q0[q0.length()-1];
+        x[0]=q0[q0.size()-2];
+        x[1]=q0[q0.size()-1];
         return true;
     }
 
@@ -268,7 +268,7 @@ void HeadSolver::setVerbosity(const int verb)
 bool HeadSolver::setInitialGuess(const Vector &q0)
 {
     size_t L=3+headParameters.head.getDOF();
-    yAssert(q0.length()>=L);
+    yAssert(q0.size()>=L);
 
     this->q0=q0.subVector(0,L-1);
     return true;
@@ -279,7 +279,7 @@ bool HeadSolver::setInitialGuess(const Vector &q0)
 bool HeadSolver::fkin(const Vector &q, Matrix &H, const int frame)
 {
     size_t L=3+headParameters.head.getDOF();
-    yAssert(q.length()>=L);
+    yAssert(q.size()>=L);
 
     torso.fkin(q.subVector(0,2),H);
     headParameters.head.setAng(CTRL_DEG2RAD*q.subVector(3,5));
@@ -296,7 +296,7 @@ bool HeadSolver::fkin(const Vector &q, Matrix &H, const int frame)
 bool HeadSolver::ikin(const Vector &xd, Vector &q, int *exit_code)
 {
     lock_guard<mutex> lg(makeThreadSafe);
-    yAssert(xd.length()==3);
+    yAssert(xd.size()==3);
 
     int print_level=std::max(verbosity-5,0);
 
@@ -333,9 +333,9 @@ bool HeadSolver::ikin(const Vector &xd, Vector &q, int *exit_code)
         yInfo()<<" *** Head Solver:   constr_tol [*] ="<<slvParameters.constr_tol;
         yInfo()<<" *** Head Solver:     max_iter [#] ="<<slvParameters.max_iter;
         yInfo()<<" *** Head Solver: max_cpu_time [s] ="<<slvParameters.max_cpu_time;
-        yInfo()<<" *** Head Solver:           q0 [*] = ("<<q0.toString(4,4)<<")";
-        yInfo()<<" *** Head Solver:           xd [m] = ("<<xd.toString(4,4)<<")";
-        yInfo()<<" *** Head Solver:          q [deg] = ("<<q.toString(4,4)<<")";
+        yInfo()<<" *** Head Solver:           q0 [*] = ("<<q0.toString()<<")";
+        yInfo()<<" *** Head Solver:           xd [m] = ("<<xd.toString()<<")";
+        yInfo()<<" *** Head Solver:          q [deg] = ("<<q.toString()<<")";
         yInfo()<<" *** Head Solver:      e_ang [deg] ="<<e_ang;
         yInfo()<<" *** Head Solver:          dt [ms] ="<<1000.0*(t1-t0);
         yInfo()<<" *** Head Solver ******************************";

@@ -35,7 +35,7 @@ public:
     bool get_nlp_info(Ipopt::Index &n, Ipopt::Index &m, Ipopt::Index &nnz_jac_g,
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
-        n=x0.length();
+        n=x0.size();
         m=1+1+1+1;
         nnz_jac_g=3+3+n+2;
         nnz_h_lag=0;
@@ -207,7 +207,7 @@ public:
 
             // g[2] (upper_arm)
             Vector grad=-2.0*(J_.submatrix(0,2,0,upper_arm.getDOF()-1).transposed()*e);
-            for (size_t i=0; i<grad.length(); i++)
+            for (size_t i=0; i<grad.size(); i++)
                 values[9+i]=grad[i];
 
             // g[2] (lower_arm)
@@ -260,7 +260,7 @@ public:
     bool get_nlp_info(Ipopt::Index &n, Ipopt::Index &m, Ipopt::Index &nnz_jac_g,
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
-        n=x0.length();
+        n=x0.size();
         m=1+1+1+1;
         nnz_jac_g=3+3+n+2;
         nnz_h_lag=0;
@@ -453,7 +453,7 @@ public:
 
             // g[2] (upper_arm)
             Vector grad=-2.0*(J_.submatrix(0,2,0,upper_arm.getDOF()-1).transposed()*e);
-            for (size_t i=0; i<grad.length(); i++)
+            for (size_t i=0; i<grad.size(); i++)
                 values[9+i]=grad[i];
 
             // g[2] (lower_arm)
