@@ -28,6 +28,12 @@
 #include <iCub/ctrl/minJerkCtrl.h>
 #include <cer_kinematics/arm.h>
 
+static inline void setSubvector_local(yarp::sig::Vector &v, size_t start, const yarp::sig::Vector &sub)
+{
+    for (size_t i = 0; i < sub.size(); i++)
+        v[start + i] = sub[i];
+}
+
 #define MIN_TS  0.01    // [s]
 
 using namespace std;
@@ -95,26 +101,26 @@ class Controller : public RFModule
     Vector getEncoders(double *timeStamp=NULL)
     {
         Vector encs(12,0.0);
-        Vector stamps(encs.length());
+        Vector stamps(encs.size());
 
         Vector encs_=encs;
         Vector stamps_=stamps;
 
         ienc[0]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(0,encs_.subVector(0,2));
-        stamps.setSubvector(0,stamps_.subVector(0,2));
+        setSubvector_local(encs,0,encs_.subVector(0,2));
+        setSubvector_local(stamps,0,stamps_.subVector(0,2));
 
         ienc[1]->getEncodersTimed(&encs_[0],&stamps_[0]);
         encs[3]=encs_[3];
         stamps[3]=stamps_[3];
 
         ienc[2]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(4,encs_.subVector(0,4));
-        stamps.setSubvector(4,stamps_.subVector(0,4));
+        setSubvector_local(encs,4,encs_.subVector(0,4));
+        setSubvector_local(stamps,4,stamps_.subVector(0,4));
 
         ienc[3]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(9,encs_.subVector(0,2));
-        stamps.setSubvector(9,stamps_.subVector(0,2));
+        setSubvector_local(encs,9,encs_.subVector(0,2));
+        setSubvector_local(stamps,9,stamps_.subVector(0,2));
 
         if (timeStamp!=NULL)
             *timeStamp=findMax(stamps);
@@ -351,9 +357,9 @@ public:
         payLoadPose.addList();
 
         qd=getEncoders();
-        for (size_t i=0; i<qd.length(); i++)
+        for (size_t i=0; i<qd.size(); i++)
             posDirectMode.push_back(SelectableControlModeEnum::VOCAB_CM_POSITION_DIRECT);
-        curMode.resize(qd.length(), ControlModeEnum::VOCAB_CM_POSITION_DIRECT);
+        curMode.resize(qd.size(), ControlModeEnum::VOCAB_CM_POSITION_DIRECT);
 
         getCurrentMode();
 
@@ -445,26 +451,26 @@ public:
                         lock_guard<mutex> lg(mtx);
                         // process only if we didn't receive
                         // a stop request in the meanwhile
-                        if (controlling==latch_controlling)
-                        {
-                            for (size_t i=0; i<qd.length(); i++)
-                                qd[i]=payLoadJoints->get(i).asFloat64();
+                            if (controlling==latch_controlling)
+                            {
+                                for (size_t i=0; i<qd.size(); i++)
+                                    qd[i]=payLoadJoints->get(i).asFloat64();
 
-                            if (xd.length()==0)
-                                xd.resize((size_t)payLoadPose->size());
+                                if (xd.size()==0)
+                                    xd.resize((size_t)payLoadPose->size());
 
-                            for (size_t i=0; i<xd.length(); i++)
-                                xd[i]=payLoadPose->get(i).asFloat64();
+                                for (size_t i=0; i<xd.size(); i++)
+                                    xd[i]=payLoadPose->get(i).asFloat64();
 
-                            target=reply.tail();
+                                target=reply.tail();
 
-                            if (!controlling)
-                                gen->init(getEncoders());
+                                if (!controlling)
+                                    gen->init(getEncoders());
 
-                            controlling=true;
-                            if (verbosity>0)
-                                yInfo("Going to: %s",qd.toString(3,3).c_str());
-                        }
+                                controlling=true;
+                                if (verbosity>0)
+                                    yInfo("Going to: %s",qd.toString().c_str());
+                            }
                     }
                 }
 
@@ -549,7 +555,7 @@ public:
             Vector ref=gen->getPos();
 
             if (verbosity>1)
-                yInfo("Commanding new set-points: %s",ref.toString(3,3).c_str());
+                yInfo("Commanding new set-points: %s",ref.toString().c_str());
 
             if (areJointsHealthy())
             {
@@ -563,7 +569,7 @@ public:
                 {
                     controlling=false;
                     if (verbosity>0)
-                        yInfo("Just stopped at: %s",q.toString(3,3).c_str());
+                        yInfo("Just stopped at: %s",q.toString().c_str());
                 }
             }
             else
