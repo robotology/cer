@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
         
     if (Bottle *b=rf.find("q").asList())
     {
-        size_t len=std::min(q.length(),(size_t)b->size());
+        size_t len=std::min(q.size(),(size_t)b->size());
         for (size_t i=0; i<len; i++)
             q[i]=b->get(i).asFloat64();
     }
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
         else
             cout<<dynamic_cast<HeadSolver*>(solver)->getHeadParameters().head.getType();
         cout<<endl;
-        cout<<"q=("<<q.toString(5,5)<<")"<<endl;
+        cout<<"q=("<<q.toString()<<")"<<endl;
         cout<<"H="<<H.toString(5,5)<<endl;
         cout<<endl;
     }
