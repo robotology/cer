@@ -17,6 +17,12 @@
 
 
 /****************************************************************/
+static inline void setSubvector_local(yarp::sig::Vector &v, size_t start, const yarp::sig::Vector &sub)
+{
+    for (size_t i = 0; i < sub.size(); i++)
+        v[start + i] = sub[i];
+}
+
 class MobileArmCommonNLP : public TripodNLPHelper,
                      public Ipopt::TNLP
 {
@@ -95,7 +101,7 @@ protected:
     {
         if (verify_alpha(x,g))
         {
-            if (latch_x.length()==0)
+            if (latch_x.size()==0)
                 latch_x.resize(n);
 
             for (Ipopt::Index i=0; i<n; i++)
@@ -117,7 +123,7 @@ protected:
             Ipopt::Number *g=(Ipopt::Number*)g_data.data();
 
             eval_g(n,x,true,m,g);
-            if (!verify_alpha(x,g) && (latch_x.length()>0))
+            if (!verify_alpha(x,g) && (latch_x.size()>0))
                 solution=latch_x;
         }
 
@@ -177,9 +183,9 @@ public:
 
         xref=x0;
         x.resize(3+nb_targets*nb_kin_DOF);
-        x.setSubvector(0, x0.subVector(0,2));
+        setSubvector_local(x, 0, x0.subVector(0,2));
         for (size_t i=0; i<nb_targets; i++)
-            x.setSubvector(3+i*nb_kin_DOF, x0.subVector(3,x0.size()-1));
+            setSubvector_local(x, 3+i*nb_kin_DOF, x0.subVector(3,x0.size()-1));
 
         d1.resize(nb_targets);
         d2.resize(nb_targets);
@@ -397,7 +403,7 @@ public:
 
         if (init_z)
         {
-            yAssert((zL.length()==n) && (zU.length()==n));
+            yAssert((zL.size()==n) && (zU.size()==n));
             for (Ipopt::Index i=0; i<n; i++)
             {
                 z_L[i]=zL[i];
@@ -407,7 +413,7 @@ public:
 
         if (init_lambda)
         {
-            yAssert(this->lambda.length()==m);
+            yAssert(this->lambda.size()==m);
             for (Ipopt::Index i=0; i<m; i++)
                 lambda[i]=this->lambda[i];
         }
@@ -420,7 +426,7 @@ public:
     {
         if (new_x)
         {
-            for (size_t i=0; i<this->x.length(); i++)
+            for (size_t i=0; i<this->x.size(); i++)
                 this->x[i]=x[i];
 
             Vector b(4,0.0);
@@ -433,7 +439,7 @@ public:
 
             for(size_t i=0; i<nb_targets; i++)
             {
-                for (size_t j=0; j<q[i].length(); j++)
+                for (size_t j=0; j<q[i].size(); j++)
                     q[i][j]=x[idx_ua[i]+j];
 
                 d1[i]=tripod_fkin(1,x,&(din1[i]),i);
