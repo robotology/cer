@@ -138,7 +138,7 @@ int main()
         for (size_t j=0; j<armParams.upper_arm.getN(); j++)
             jconstr<<(((q_1[3+j]>=R2D*c[j].getMin())&&(q_1[3+j]<=R2D*c[j].getMax()))?"ok":"fail")<<" ";
 
-        for (size_t j=3+armParams.upper_arm.getN(); j<q_1.length(); j++)
+        for (size_t j=3+armParams.upper_arm.getN(); j<q_1.size(); j++)
             jconstr<<(((q_1[j]>=armParams.lower_arm.l_min)&&(q_1[j]<=armParams.lower_arm.l_max))?"ok":"fail")<<" ";
 
         Matrix H_tmp0;
@@ -157,7 +157,7 @@ int main()
         Vector e_u=dcm2axis(input[i].Hd*H_1.transposed());
         e_u*=e_u[3]; e_u.pop_back();
 
-        yInfo()<<"           q_1 [*] = ("<<q_1.toString(5,5)<<")";
+        yInfo()<<"           q_1 [*] = ("<<q_1.toString()<<")";
         yInfo()<<"joints-constraints = ("<<jconstr.str()<<")";
         yInfo()<<"         e_x_1 [m] ="<<norm(input[i].xd-x_1);
         yInfo()<<"       e_u_1 [rad] ="<<norm(e_u);
