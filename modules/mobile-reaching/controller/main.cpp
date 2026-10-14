@@ -36,6 +36,12 @@
 
 #define MIN_TS  0.01    // [s]
 
+static inline void setSubvector_local(yarp::sig::Vector &v, size_t start, const yarp::sig::Vector &sub)
+{
+    for (size_t i = 0; i < sub.size(); i++)
+        v[start + i] = sub[i];
+}
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -110,26 +116,26 @@ class Controller : public RFModule
     Vector getEncoders(double *timeStamp=NULL)
     {
         Vector encs(12,0.0);
-        Vector stamps(encs.length());
+        Vector stamps(encs.size());
 
         Vector encs_=encs;
         Vector stamps_=stamps;
 
         ienc[0]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(0,encs_.subVector(0,2));
-        stamps.setSubvector(0,stamps_.subVector(0,2));
+        setSubvector_local(encs, 0,encs_.subVector(0,2));
+        setSubvector_local(stamps, 0,stamps_.subVector(0,2));
 
         ienc[1]->getEncodersTimed(&encs_[0],&stamps_[0]);
         encs[3]=encs_[3];
         stamps[3]=stamps_[3];
 
         ienc[2]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(4,encs_.subVector(0,4));
-        stamps.setSubvector(4,stamps_.subVector(0,4));
+        setSubvector_local(encs, 4,encs_.subVector(0,4));
+        setSubvector_local(stamps, 4,stamps_.subVector(0,4));
 
         ienc[3]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(9,encs_.subVector(0,2));
-        stamps.setSubvector(9,stamps_.subVector(0,2));
+        setSubvector_local(encs, 9,encs_.subVector(0,2));
+        setSubvector_local(stamps, 9,stamps_.subVector(0,2));
 
         if (timeStamp!=NULL)
             *timeStamp=findMax(stamps);
@@ -428,9 +434,9 @@ public:
         payLoadPose.addList();
 
         qd=getEncoders();
-        for (size_t i=0; i<qd.length(); i++)
+        for (size_t i=0; i<qd.size(); i++)
             posDirectMode.push_back(SelectableControlModeEnum::VOCAB_CM_POSITION_DIRECT);
-        curMode.resize(qd.length(), ControlModeEnum::VOCAB_CM_POSITION_DIRECT);
+        curMode.resize(qd.size(), ControlModeEnum::VOCAB_CM_POSITION_DIRECT);
 
         getCurrentMode();
 
@@ -536,13 +542,13 @@ public:
                         return false;
                     }
 
-                    for (size_t i=0; i<qd.length(); i++)
+                    for (size_t i=0; i<qd.size(); i++)
                         qd[i]=payLoadJoints->get(3+i).asFloat64();
 
-                    if (xd.length()==0)
+                    if (xd.size()==0)
                         xd.resize((size_t)payLoadPose->size());
 
-                    for (size_t i=0; i<xd.length(); i++)
+                    for (size_t i=0; i<xd.size(); i++)
                         xd[i]=payLoadPose->get(i).asFloat64();
 
                     target=reply.tail();
@@ -552,7 +558,7 @@ public:
 
                     controlling=true;
                     if (verbosity>0)
-                        yInfo("Going to: %s",qd.toString(3,3).c_str());
+                        yInfo("Going to: %s",qd.toString().c_str());
 
                     return true;
                 }
@@ -576,7 +582,7 @@ public:
             Vector qj=getEncoders();
 
             Vector q(3+qj.size(), 0.0);
-            q.setSubvector(3,qj);
+            setSubvector_local(q, 3,qj);
 
             if(iloc)
             {
@@ -757,24 +763,24 @@ public:
                                 Vector newTarget(7);
                                 if(globalNoise)
                                 {
-                                    newTarget.setSubvector(0, xd);
+                                    setSubvector_local(newTarget, 0, xd);
                                     newTarget[j]+=marginP[j];
                                 }
                                 else
-                                    newTarget.setSubvector(0, xd+marginP[j]*Rd.getCol(j));
+                                    setSubvector_local(newTarget, 0, xd+marginP[j]*Rd.getCol(j));
 
-                                newTarget.setSubvector(3, ud);
+                                setSubvector_local(newTarget, 3, ud);
 
                                 targetList->addList().read(newTarget);
                                 nbAddedTargets++;
 
                                 if(globalNoise)
                                 {
-                                    newTarget.setSubvector(0, xd);
+                                    setSubvector_local(newTarget, 0, xd);
                                     newTarget[j]-=marginP[j];
                                 }
                                 else
-                                    newTarget.setSubvector(0, xd-marginP[j]*Rd.getCol(j));
+                                    setSubvector_local(newTarget, 0, xd-marginP[j]*Rd.getCol(j));
 
                                 targetList->addList().read(newTarget);
                                 nbAddedTargets++;
@@ -783,23 +789,23 @@ public:
                             if(fabs(marginO[j]) > std::numeric_limits<double>::epsilon())
                             {
                                 Vector newTarget(7);
-                                newTarget.setSubvector(0, xd);
+                                setSubvector_local(newTarget, 0, xd);
                                 Vector o(4,0.0);
                                 o[j]=1.0;
                                 o[3]=marginO[j];
                                 Matrix R=axis2dcm(o);
                                 if(globalNoise)
-                                    newTarget.setSubvector(3, dcm2axis(R*Hd));
+                                    setSubvector_local(newTarget, 3, dcm2axis(R*Hd));
                                 else
-                                    newTarget.setSubvector(3, dcm2axis(Hd*R));
+                                    setSubvector_local(newTarget, 3, dcm2axis(Hd*R));
 
                                 targetList->addList().read(newTarget);
                                 nbAddedTargets++;
 
                                 if(globalNoise)
-                                    newTarget.setSubvector(3, dcm2axis(R.transposed()*Hd));
+                                    setSubvector_local(newTarget, 3, dcm2axis(R.transposed()*Hd));
                                 else
-                                    newTarget.setSubvector(3, dcm2axis(Hd*R.transposed()));
+                                    setSubvector_local(newTarget, 3, dcm2axis(Hd*R.transposed()));
 
                                 targetList->addList().read(newTarget);
                                 nbAddedTargets++;
@@ -943,7 +949,7 @@ public:
         double timeStamp;
         Vector qj=getEncoders(&timeStamp);
         Vector q(3+qj.size(), 0.0);
-        q.setSubvector(3,qj);
+        setSubvector_local(q, 3,qj);
         solver.fkin(q,Hee);
 
         Vector &pose=statePort.prepare();
@@ -966,7 +972,7 @@ public:
             Vector ref=gen->getPos();
 
             if (verbosity>1)
-                yInfo("Commanding new set-points: %s",ref.toString(3,3).c_str());
+                yInfo("Commanding new set-points: %s",ref.toString().c_str());
 
             if (areJointsHealthy())
             {
@@ -980,7 +986,7 @@ public:
                 {
                     controlling=false;
                     if (verbosity>0)
-                        yInfo("Just stopped at: %s",q.toString(3,3).c_str());
+                        yInfo("Just stopped at: %s",q.toString().c_str());
                 }
             }
             else
