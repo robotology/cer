@@ -93,9 +93,11 @@ bool HandThread::openControlBoards(yarp::os::Searchable& rf)
 
 void HandThread::stopReaching()
 {
-    Property& req = robotTargetPort.prepare();
-    req.clear();
+    Bottle& b = robotTargetPort.prepare();
+    b.clear();
+    Property req;
     req.put("stop", Value());
+    b.fromString(req.toString());
     robotTargetPort.write();
 
     Bottle cmd, reply;
@@ -139,10 +141,12 @@ void HandThread::goToPose(const Vector &xd, const Vector &od)
     blower_arm_heave.addString("lower_arm_heave");
     blower_arm_heave.addFloat64(wrist_heave);
 
-    Property& prop = robotTargetPort.prepare();
-    prop.clear();
+    Property prop;
     prop.put("parameters",params.get(0));
     prop.put("target",target.get(0));
+    Bottle& b = robotTargetPort.prepare();
+    b.clear();
+    b.fromString(prop.toString());
     robotTargetPort.write();
 }
 

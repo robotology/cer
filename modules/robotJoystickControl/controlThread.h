@@ -77,8 +77,8 @@ protected:
     BufferedPort<Bottle>      robotStatusPort_larm;
     BufferedPort<Bottle>      robotStatusPort_rarm;
 
-    BufferedPort<Property>    robotTargetPort_larm;
-    BufferedPort<Property>    robotTargetPort_rarm;
+    BufferedPort<Bottle>      robotTargetPort_larm;
+    BufferedPort<Bottle>      robotTargetPort_rarm;
     BufferedPort<Bottle>      robotCmdPort_base;
 
     IPositionControl*         interface_torso_tripod_iPos;

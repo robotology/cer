@@ -86,7 +86,6 @@ private:
     };
 
     typedef yarp::os::BufferedPort<yarp::os::Bottle>             BottlePort;
-    typedef yarp::os::BufferedPort<yarp::os::Property>           PropertyPort;
     typedef yarp::os::BufferedPort<yarp::sig::Vector>            VectorPort;
     typedef yarp::sig::Vector                                    Vector;
     typedef std::vector<int>                                     IntVector;
@@ -120,7 +119,7 @@ private:
     Vector             o0;
     Vector             fixedPosition;
     Vector             fixedOrientation;
-    PropertyPort       robotTargetPort;
+    BottlePort         robotTargetPort;
     VectorPort         robotStatePort;
     RpcClient          robotCmdPort;
     bool               reachState;
