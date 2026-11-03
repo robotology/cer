@@ -50,12 +50,12 @@ using namespace cer::kinematics;
 class Controller;
 
 /****************************************************************/
-class TargetPort : public BufferedPort<Property>
+class TargetPort : public BufferedPort<Bottle>
 {
     Controller *ctrl;
 
     /****************************************************************/
-    void onRead(Property &request);
+    void onRead(Bottle &target);
 
 public:
     /****************************************************************/
@@ -83,7 +83,7 @@ class Controller : public RFModule
     map<string,Matrix> intrinsics;
     minJerkTrajGen* gen;
 
-    BufferedPort<Property> statePort;
+    BufferedPort<Bottle> statePort;
     TargetPort targetPort;
     RpcServer rpcPort;
     Stamp txInfo;
@@ -677,7 +677,11 @@ public:
         else
             txInfo.update();
 
-        fillState(q,statePort.prepare());
+        Property state;
+        fillState(q,state);
+        Bottle &b=statePort.prepare();
+        b.clear();
+        b.fromString(state.toString());
         statePort.setEnvelope(txInfo);
         statePort.writeStrict();
 
@@ -835,10 +839,13 @@ public:
 
 
 /****************************************************************/
-void TargetPort::onRead(Property &request)
+void TargetPort::onRead(Bottle &target)
 {
     if (ctrl!=NULL)
+    {
+        Property request(target.toString().c_str());
         ctrl->look(request);
+    }
 }
 
 

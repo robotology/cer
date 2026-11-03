@@ -791,11 +791,13 @@ void ControlThread::goToPose(string arm_type, const Vector &xd, const Vector &od
 
     if (arm_type == "left_arm")
     {
-        Property &prop = robotTargetPort_larm.prepare();
-        prop.clear();
+        Property prop;
         prop.put("parameters", params.get(0));
         prop.put("target", target.get(0));
         string s = prop.toString(); //debug only
+        Bottle& b = robotTargetPort_larm.prepare();
+        b.clear();
+        b.fromString(s);
         if (motors_enabled)
         {
             robotTargetPort_larm.write();
@@ -803,11 +805,13 @@ void ControlThread::goToPose(string arm_type, const Vector &xd, const Vector &od
     }
     else if (arm_type == "right_arm")
     {
-        Property &prop = robotTargetPort_rarm.prepare();
-        prop.clear();
+        Property prop;
         prop.put("parameters", params.get(0));
         prop.put("target", target.get(0));
         string s = prop.toString(); //debug only
+        Bottle& b = robotTargetPort_rarm.prepare();
+        b.clear();
+        b.fromString(s);
         if (motors_enabled)
         {
             robotTargetPort_rarm.write();

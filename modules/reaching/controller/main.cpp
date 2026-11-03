@@ -42,12 +42,12 @@ using namespace cer::kinematics;
 class Controller;
 
 /****************************************************************/
-class TargetPort : public BufferedPort<Property>
+class TargetPort : public BufferedPort<Bottle>
 {
     Controller *ctrl;
 
     /****************************************************************/
-    void onRead(Property &request);
+    void onRead(Bottle &target);
 
 public:
     /****************************************************************/
@@ -415,7 +415,7 @@ public:
 
         Bottle reply;
         bool latch_controlling=controlling;
-        if (solverPort.write(request,reply))
+        if (solverPort.write(Bottle(request.toString()),reply))
         {
             if (verbosity>0)
                 yInfo("Received reply from solver: %s",reply.toString().c_str());
@@ -486,7 +486,7 @@ public:
             yInfo("Forwarding request to solver: %s",request.toString().c_str());
 
         reply.clear();
-        if (solverPort.write(request,reply))
+        if (solverPort.write(Bottle(request.toString()),reply))
         {
             if (verbosity>0)
                 yInfo("Received reply from solver: %s",reply.toString().c_str());
@@ -764,10 +764,13 @@ public:
 
 
 /****************************************************************/
-void TargetPort::onRead(Property &request)
+void TargetPort::onRead(Bottle &target)
 {
     if (ctrl!=NULL)
+    {
+        Property request(target.toString().c_str());
         ctrl->go(request);
+    }
 }
 
 
