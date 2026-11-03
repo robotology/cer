@@ -91,7 +91,7 @@ public:
     /****************************************************************/
     void set_rho0(const Vector &rho0)
     {
-        size_t len=std::min(this->rho0.length(),rho0.length());
+        size_t len=std::min(this->rho0.size(),rho0.size());
         for (size_t i=0; i<len; i++)
             this->rho0[i]=std::max(params.l_min,std::min(params.l_max,rho0[i]));
     }
@@ -105,7 +105,7 @@ public:
     /****************************************************************/
     void set_ud(const Vector &ud)
     {
-        yAssert(ud.length()>=4);
+        yAssert(ud.size()>=4);
         Rd=axis2dcm(ud);
     }
 
@@ -160,7 +160,7 @@ public:
     {        
         if (new_x)
         {
-            for (size_t i=0; i<this->lll.length(); i++)
+            for (size_t i=0; i<this->lll.size(); i++)
                 this->lll[i]=x[i];
 
             d=fkin(x,&din);
@@ -350,7 +350,7 @@ TripodSolver::TripodSolver(const TripodParameters &params,
 /****************************************************************/
 bool TripodSolver::setInitialGuess(const Vector &lll0)
 {
-    yAssert(lll0.length()>=3);
+    yAssert(lll0.size()>=3);
     this->lll0=lll0.subVector(0,2);
     return true;
 }
@@ -359,7 +359,7 @@ bool TripodSolver::setInitialGuess(const Vector &lll0)
 /****************************************************************/
 bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u)
 {
-    yAssert(lll.length()>=3);
+    yAssert(lll.size()>=3);
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(lll);
     p=d.p;
@@ -372,7 +372,7 @@ bool TripodSolver::fkin(const Vector &lll, Vector &p, Vector &u)
 /****************************************************************/
 bool TripodSolver::fkin(const Vector &q, Matrix &H, const int frame)
 {
-    yAssert(q.length()>=3);
+    yAssert(q.size()>=3);
     Ipopt::SmartPtr<TripodNLP> nlp=new TripodNLP(*this);
     TripodState d=nlp->fkin(q);
     H=d.T;
@@ -386,7 +386,7 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
                         Vector &lll, int *exit_code)
 {
     lock_guard<mutex> lg(makeThreadSafe);
-    yAssert(ud.length()>=4);
+    yAssert(ud.size()>=4);
 
     int print_level=std::max(verbosity-5,0);
 
@@ -426,12 +426,12 @@ bool TripodSolver::ikin(const double zd, const Vector &ud,
         e_u*=e_u[3]; e_u.pop_back();
 
         yInfo()<<" *** Tripod Solver ******************************";
-        yInfo()<<" *** Tripod Solver:    lll0 [m] = ("<<lll0.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:    lll0 [m] = ("<<lll0.toString()<<")";
         yInfo()<<" *** Tripod Solver:      zd [m] ="<<zd;
-        yInfo()<<" *** Tripod Solver:    ud [rad] = ("<<ud.toString(4,4)<<")";
-        yInfo()<<" *** Tripod Solver:     lll [m] = ("<<lll.toString(4,4)<<")";
-        yInfo()<<" *** Tripod Solver:     u [rad] = ("<<d.u.toString(4,4)<<")";
-        yInfo()<<" *** Tripod Solver:       p [m] = ("<<d.p.toString(4,4)<<")";
+        yInfo()<<" *** Tripod Solver:    ud [rad] = ("<<ud.toString()<<")";
+        yInfo()<<" *** Tripod Solver:     lll [m] = ("<<lll.toString()<<")";
+        yInfo()<<" *** Tripod Solver:     u [rad] = ("<<d.u.toString()<<")";
+        yInfo()<<" *** Tripod Solver:       p [m] = ("<<d.p.toString()<<")";
         yInfo()<<" *** Tripod Solver:   e_u [rad] ="<<norm(e_u);
         yInfo()<<" *** Tripod Solver:     e_z [m] ="<<fabs(zd-din.p[2]);
         yInfo()<<" *** Tripod Solver: alpha [deg] ="<<CTRL_RAD2DEG*acos(din.n[2]);

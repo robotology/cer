@@ -144,13 +144,13 @@ int main(int argc, char *argv[])
             stream.precision(5);
             stream<<fixed;
 
-            stream<<xd.toString(3,3);
+            stream<<xd.toString();
             stream<<"\t";
-            stream<<x.toString(3,3);
+            stream<<x.toString();
             stream<<"\t";
-            stream<<u.toString(3,3);
+            stream<<u.toString();
             stream<<"\t";
-            stream<<com.subVector(0,2).toString(3,3);
+            stream<<com.subVector(0,2).toString();
             stream<<"\t";
             stream<<margin;
 

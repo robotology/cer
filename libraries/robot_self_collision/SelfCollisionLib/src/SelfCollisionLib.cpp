@@ -69,7 +69,7 @@ bool SelfCollisionLib::checkNextConfiguration(const yarp::sig::Vector& qnext, ya
 
 	int dof = robotModel->getNDOF();
 
-	if (qnext.length() != dof) return false;
+	if (qnext.size() != dof) return false;
 
 	Matrix q(dof);
 

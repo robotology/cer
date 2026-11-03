@@ -184,7 +184,7 @@ bool tripodMotionControl::tripod_user2HW(yarp::sig::Vector &user, yarp::sig::Vec
 {
 #if USE_IKIN_IPOPT
     // The caller must use mutex or private data
-    yAssert(user.length()>=3);
+    yAssert(user.size()>=3);
 
     Vector ypr(3,0.0);
     double &zd=user[0];                                     // heave
@@ -196,7 +196,7 @@ bool tripodMotionControl::tripod_user2HW(yarp::sig::Vector &user, yarp::sig::Vec
     return solver.ikin(Rd,robot);
 #else
     // The caller must use mutex or private data
-    yAssert(user.length()>=3);
+    yAssert(user.size()>=3);
 
     //Vector ypr(3,0.0);
     //double &zd=user[0];                                     // heave

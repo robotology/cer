@@ -29,6 +29,12 @@
 #include <cer_kinematics/utils.h>
 #include <cer_mobile_kinematics/mobile_arm.h>
 
+static inline void setSubvector_local(yarp::sig::Vector &v, size_t start, const yarp::sig::Vector &sub)
+{
+    for (size_t i = 0; i < sub.size(); i++)
+        v[start + i] = sub[i];
+}
+
 using namespace std;
 using namespace yarp::os;
 using namespace yarp::dev;
@@ -339,7 +345,7 @@ public:
 
         if (Bottle *payLoad=cmd.find("q").asList())
         {
-            int len=std::min(payLoad->size(),q.length());
+            int len=std::min(payLoad->size(),q.size());
             for (int i=0; i<len; i++)
                 q[i]=payLoad->get(i).asFloat64();
 
@@ -411,8 +417,8 @@ public:
             for(size_t i=0; i<Hd.size(); i++)
             {
                 Vector qt(3+nb_kin_DOF);
-                qt.setSubvector(0,q.subVector(0,2));
-                qt.setSubvector(3,q.subVector(3+i*nb_kin_DOF,3+(i+1)*nb_kin_DOF-1));
+                setSubvector_local(qt,0,q.subVector(0,2));
+                setSubvector_local(qt,3,q.subVector(3+i*nb_kin_DOF,3+(i+1)*nb_kin_DOF-1));
                 payLoadJoints.addList().read(qt);
 
                 Matrix H;

@@ -38,7 +38,7 @@ public:
     bool get_nlp_info(Ipopt::Index &n, Ipopt::Index &m, Ipopt::Index &nnz_jac_g,
                       Ipopt::Index &nnz_h_lag, IndexStyleEnum &index_style)
     {
-        n=x.length();
+        n=x.size();
         m=nb_targets*(2+3+3+1+1);
         nnz_jac_g=nb_targets*(2*3+3*(3+nb_kin_DOF-3)+3*(1+nb_kin_DOF-3)+2+4);
         if(domain_constr)

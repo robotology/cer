@@ -35,6 +35,12 @@
 #include <iCub/iKin/iKinFwd.h>
 #include <cer_kinematics/head.h>
 
+static inline void setSubvector_local(yarp::sig::Vector &v, size_t start, const yarp::sig::Vector &sub)
+{
+    for (size_t i = 0; i < sub.size(); i++)
+        v[start + i] = sub[i];
+}
+
 #define MIN_TS  0.01    // [s]
 
 using namespace std;
@@ -141,22 +147,22 @@ class Controller : public RFModule
     Vector getEncoders(double *timeStamp=NULL)
     {
         Vector encs(6,0.0);
-        Vector stamps(encs.length());
+        Vector stamps(encs.size());
 
         Vector encs_=encs;
         Vector stamps_=stamps;
 
         ienc[0]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(0,encs_.subVector(0,2));
-        stamps.setSubvector(0,stamps_.subVector(0,2));
+        setSubvector_local(encs,0,encs_.subVector(0,2));
+        setSubvector_local(stamps,0,stamps_.subVector(0,2));
 
         ienc[1]->getEncodersTimed(&encs_[0],&stamps_[0]);
         encs[3]=encs_[3];
         stamps[3]=stamps_[3];
 
         ienc[2]->getEncodersTimed(&encs_[0],&stamps_[0]);
-        encs.setSubvector(4,encs_.subVector(0,1));
-        stamps.setSubvector(4,stamps_.subVector(0,1));
+        setSubvector_local(encs,4,encs_.subVector(0,1));
+        setSubvector_local(stamps,4,stamps_.subVector(0,1));
 
         if (timeStamp!=NULL)
             *timeStamp=findMax(stamps);
@@ -657,7 +663,7 @@ public:
 
             controlling=true;
             if (verbosity>0)
-                yInfo("Going to: %s",qd.toString(3,3).c_str());
+                yInfo("Going to: %s",qd.toString().c_str());
         }
 
         return doControl;
@@ -691,7 +697,7 @@ public:
             Vector ref=gen->getPos();
 
             if (verbosity>1)
-                yInfo("Commanding new set-points: %s",ref.toString(3,3).c_str());
+                yInfo("Commanding new set-points: %s",ref.toString().c_str());
 
             if (areJointsHealthy())
             {
@@ -703,7 +709,7 @@ public:
                 {
                     controlling=false;
                     if (verbosity>0)
-                        yInfo("Just stopped at: %s",q_.toString(3,3).c_str());
+                        yInfo("Just stopped at: %s",q_.toString().c_str());
                 }
             }
             else
